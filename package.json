@@ -3,8 +3,15 @@
   "version": "0.1.0",
   "description": "Use Typescript to develop Genshin UGC - Miliastra Wonderland",
   "type": "module",
-  "author": "josStorer",
+  "author": "josStorer <josstorer@outlook.com> (https://github.com/josStorer)",
   "homepage": "https://gsts.moe",
+  "keywords": [
+    "genshin",
+    "genshin-ts",
+    "typescript",
+    "compiler"
+  ],
+  "license": "MIT",
   "bin": {
     "gsts": "bin/gsts.mjs"
   },

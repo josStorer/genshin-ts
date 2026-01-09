@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "Create a Genshin-TS project",
   "type": "module",
+  "author": "josStorer <josstorer@outlook.com> (https://github.com/josStorer)",
+  "homepage": "https://github.com/josStorer/genshin-ts",
+  "keywords": [
+    "genshin",
+    "genshin-ts",
+    "typescript",
+    "compiler"
+  ],
+  "license": "MIT",
   "bin": {
     "create-genshin-ts": "bin/create-genshin-ts.mjs"
   },
