@@ -13,7 +13,7 @@
 
 [English](README.md) · 简体中文
 
-[文档站](https://gsts.moe/zh) · [介绍视频](https://www.bilibili.com/video/BV1qdrTBpEQw) · [模板文档和使用细节](create-genshin-ts/templates/start/README_ZH.md)
+[文档站](https://gsts.moe/zh) · [介绍视频](https://www.bilibili.com/video/BV1qdrTBpEQw) · [模板文档和使用细节](create-genshin-ts/templates/start/README_ZH.md) · QQ群: 283430436
 
 </div>
 
