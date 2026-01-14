@@ -1,6 +1,6 @@
 * text eol=lf
 
 resources/** linguist-generated
-src/definitions/nodes.ts linguist-generated
-src/definitions/events.ts linguist-generated
-src/definitions/events-payload.ts linguist-generated
+src/definitions/** linguist-generated
+src/thirdparty/** linguist-vendored
+src/tests/** linguist-generated
