@@ -3621,6 +3621,37 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
+   * You can set the preset state value for a specified preset state index of a complex creation
+   *
+   * 设置复杂造物预设状态值: 设置复杂造物指定预设状态索引的值
+   *
+   * @param targetEntity Only applies to complex creations
+   *
+   * 目标实体: 仅对复杂造物生效
+   * @param presetStatusIndex
+   *
+   * 预设状态索引
+   * @param presetStatusValue
+   *
+   * 预设状态值
+   */
+  setThePresetStatusValueOfTheComplexCreation(
+    targetEntity: CreationEntity,
+    presetStatusIndex: IntValue,
+    presetStatusValue: IntValue
+  ): void {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const presetStatusIndexObj = parseValue(presetStatusIndex, 'int')
+    const presetStatusValueObj = parseValue(presetStatusValue, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'set_the_preset_status_value_of_the_complex_creation',
+      args: [targetEntityObj, presetStatusIndexObj, presetStatusValueObj]
+    })
+  }
+
+  /**
    * Create an Entity by GUID. The Entity must be pre-placed in the Scene
    *
    * 创建实体: 根据GUID创建实体。要求预先将其布设在场景内
@@ -4299,6 +4330,61 @@ export class ServerExecutionFlowFunctions {
       type: 'exec',
       nodeType: 'activate_disable_collision_trigger',
       args: [targetEntityObj, triggerIdObj, activateObj]
+    })
+  }
+
+  /**
+   * You can modify whether the pathfinding obstacle component of the target entity, corresponding to the specified
+   * index, is active
+   *
+   * 激活/关闭寻路阻挡: 修改目标实体的寻路阻挡组件中指定序号的激活状态
+   *
+   * @param targetEntity Only applies to objects
+   *
+   * 目标实体: 仅对物件生效
+   * @param pathfindingObstacleId Identifier for this Pathfinding Obstacle
+   *
+   * 寻路阻挡序号: 该寻路阻挡的标识
+   * @param activate
+   *
+   * 是否激活
+   */
+  activateDisablePathfindingObstacle(
+    targetEntity: EntityValue,
+    pathfindingObstacleId: IntValue,
+    activate: BoolValue
+  ): void {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const pathfindingObstacleIdObj = parseValue(pathfindingObstacleId, 'int')
+    const activateObj = parseValue(activate, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'activate_disable_pathfinding_obstacle',
+      args: [targetEntityObj, pathfindingObstacleIdObj, activateObj]
+    })
+  }
+
+  /**
+   * You can modify whether the pathfinding obstacle feature of the target entity is activated
+   *
+   * 激活/关闭寻路阻挡功能: 修改目标实体的寻路阻挡功能是否启用
+   *
+   * @param targetEntity Only applies to objects
+   *
+   * 目标实体: 仅对物件生效
+   * @param activate
+   *
+   * 是否激活
+   */
+  activateDisablePathfindingObstacleFeature(targetEntity: EntityValue, activate: BoolValue): void {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const activateObj = parseValue(activate, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'activate_disable_pathfinding_obstacle_feature',
+      args: [targetEntityObj, activateObj]
     })
   }
 
@@ -6027,6 +6113,55 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
+   * Available only in Classic Mode, sets the elemental energy for a specific character
+   *
+   * 设置角色元素能量: 仅经典模式可用，设置指定角色的元素能量
+   *
+   * @param targetEntity Active Character Entity
+   *
+   * 目标实体: 生效的角色实体
+   * @param elementalEnergy
+   *
+   * 元素能量
+   */
+  setCharacterSElementalEnergy(targetEntity: CharacterEntity, elementalEnergy: FloatValue): void {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const elementalEnergyObj = parseValue(elementalEnergy, 'float')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'set_character_s_elemental_energy',
+      args: [targetEntityObj, elementalEnergyObj]
+    })
+  }
+
+  /**
+   * Available only in Classic Mode, increases the elemental energy for a specific character
+   *
+   * 增加角色元素能量: 仅经典模式可用，增加指定角色的元素能量
+   *
+   * @param targetEntity Active Character Entity
+   *
+   * 目标实体: 生效的角色实体
+   * @param increaseValue
+   *
+   * 增加值
+   */
+  increasesCharacterSElementalEnergy(
+    targetEntity: CharacterEntity,
+    increaseValue: FloatValue
+  ): void {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const increaseValueObj = parseValue(increaseValue, 'float')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'increases_character_s_elemental_energy',
+      args: [targetEntityObj, increaseValueObj]
+    })
+  }
+
+  /**
    * Edit the cooldown of the specified Skill Slot on the Target Character. The edit value is added to the current cooldown and can be negative
    *
    * 修改角色技能冷却: 修改目标角色某个技能槽位的冷却，会在当前冷却时间上加修改值，修改值可以为负数
@@ -7713,6 +7848,44 @@ export class ServerExecutionFlowFunctions {
       type: 'exec',
       nodeType: 'add_affix_to_equipment_at_specified_id',
       args: [equipmentIdObj, affixConfigIdObj, insertIdObj, overwriteAffixValueObj, affixValueObj]
+    })
+  }
+
+  /**
+   * Replaces the specified equipment in the corresponding equipment slot of the target entity. If the equipment is
+   * already equipped in the equipment slot, the replacement will not take effect. If the target slot already
+   * contains an equipped item, that item will be replaced.
+   *
+   * 替换装备到指定栏位: 将指定装备替换到目标实体的指定装备栏位。若该装备已在该栏位，则不生效；若该栏位已有装备，则会被替换
+   *
+   * @param targetEntity
+   *
+   * 目标实体
+   * @param equipmentRow
+   *
+   * 装备栏位行
+   * @param equipmentColumn
+   *
+   * 装备栏位列
+   * @param equipmentIndex The equipment instance is identified by an integer index generated during equipment initialization
+   *
+   * 装备索引: 通过装备初始化时生成的整数索引标识装备实例
+   */
+  replaceEquipmentToTheSpecifiedSlot(
+    targetEntity: EntityValue,
+    equipmentRow: IntValue,
+    equipmentColumn: IntValue,
+    equipmentIndex: IntValue
+  ): void {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const equipmentRowObj = parseValue(equipmentRow, 'int')
+    const equipmentColumnObj = parseValue(equipmentColumn, 'int')
+    const equipmentIndexObj = parseValue(equipmentIndex, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'replace_equipment_to_the_specified_slot',
+      args: [targetEntityObj, equipmentRowObj, equipmentColumnObj, equipmentIndexObj]
     })
   }
 
@@ -11256,6 +11429,39 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
+   * Returns the preset status value of the specified complex creation
+   *
+   * 获取复杂造物的预设状态值: 查询指定复杂造物的预设状态值
+   *
+   * @param targetEntity
+   *
+   * 目标实体
+   * @param presetStatusIndex
+   *
+   * 预设状态索引
+   *
+   * @returns
+   *
+   * 预设状态值
+   */
+  getThePresetStatusValueOfTheComplexCreation(
+    targetEntity: CreationEntity,
+    presetStatusIndex: IntValue
+  ): bigint {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const presetStatusIndexObj = parseValue(presetStatusIndex, 'int')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_the_preset_status_value_of_the_complex_creation',
+      args: [targetEntityObj, presetStatusIndexObj]
+    })
+    const ret = new int()
+    ret.markPin(ref, 'presetStatusValue', 0)
+    return ret as unknown as bigint
+  }
+
+  /**
    * Can only be searched when the Character has the [Monitor Movement Speed] Unit Status effect
    *
    * 查询角色当前移动速度: 仅当角色拥有【监听移动速率】的单位状态效果时，才能查询
@@ -11969,6 +12175,148 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
+   * Check entity's elemental effect status
+   *
+   * 查询实体的元素附着状态
+   *
+   * @param targetEntity
+   *
+   * 目标实体
+   */
+  checkEntitySElementalEffectStatus(targetEntity: EntityValue): {
+    /**
+     *
+     * 是否附着水元素
+     */
+    affectedByHydro: boolean
+    /**
+     *
+     * 是否附着冰元素
+     */
+    affectedByCryo: boolean
+    /**
+     *
+     * 是否附着雷元素
+     */
+    affectedByElectro: boolean
+    /**
+     *
+     * 是否附着火元素
+     */
+    affectedByPyro: boolean
+    /**
+     *
+     * 是否附着草元素
+     */
+    affectedByDendro: boolean
+    /**
+     *
+     * 是否附着风元素
+     */
+    affectedByAnemo: boolean
+    /**
+     *
+     * 是否附着岩元素
+     */
+    affectedByGeo: boolean
+    /**
+     *
+     * 是否处于冻结
+     */
+    affectedByFrozen: boolean
+    /**
+     *
+     * 是否处于感电（不包含月感电）
+     */
+    affectedByElectroCharged: boolean
+    /**
+     *
+     * 是否处于燃烧
+     */
+    affectedByBurning: boolean
+    /**
+     *
+     * 是否处于石化
+     */
+    affectedByPetrification: boolean
+    /**
+     *
+     * 是否处于激化
+     */
+    affectedByCatalyze: boolean
+  } {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'check_entity_s_elemental_effect_status',
+      args: [targetEntityObj]
+    })
+    return {
+      affectedByHydro: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByHydro', 0)
+        return ret as unknown as boolean
+      })(),
+      affectedByCryo: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByCryo', 1)
+        return ret as unknown as boolean
+      })(),
+      affectedByElectro: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByElectro', 2)
+        return ret as unknown as boolean
+      })(),
+      affectedByPyro: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByPyro', 3)
+        return ret as unknown as boolean
+      })(),
+      affectedByDendro: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByDendro', 4)
+        return ret as unknown as boolean
+      })(),
+      affectedByAnemo: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByAnemo', 5)
+        return ret as unknown as boolean
+      })(),
+      affectedByGeo: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByGeo', 6)
+        return ret as unknown as boolean
+      })(),
+      affectedByFrozen: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByFrozen', 7)
+        return ret as unknown as boolean
+      })(),
+      affectedByElectroCharged: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByElectroCharged', 8)
+        return ret as unknown as boolean
+      })(),
+      affectedByBurning: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByBurning', 9)
+        return ret as unknown as boolean
+      })(),
+      affectedByPetrification: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByPetrification', 10)
+        return ret as unknown as boolean
+      })(),
+      affectedByCatalyze: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'affectedByCatalyze', 11)
+        return ret as unknown as boolean
+      })()
+    }
+  }
+
+  /**
    * Returns the Base Attributes of the Object
    *
    * 获取物件属性: 获取物件的相关基础属性
@@ -12666,6 +13014,58 @@ export class ServerExecutionFlowFunctions {
     const ret = new list('entity')
     ret.markPin(ref, 'characterEntityList', 0)
     return ret as unknown as CharacterEntity[]
+  }
+
+  /**
+   * Available only in Classic Mode. Returns the Character ID for the target character
+   *
+   * 查询经典模式角色编号: 仅经典模式可用，查询指定角色的角色编号
+   *
+   * @param targetCharacter
+   *
+   * 目标角色
+   *
+   * @returns
+   *
+   * 角色编号
+   */
+  checkClassicModeCharacterId(targetCharacter: CharacterEntity): bigint {
+    const targetCharacterObj = parseValue(targetCharacter, 'entity')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'check_classic_mode_character_id',
+      args: [targetCharacterObj]
+    })
+    const ret = new int()
+    ret.markPin(ref, 'characterId', 0)
+    return ret as unknown as bigint
+  }
+
+  /**
+   * Available only in Classic Mode, get the active character in the player's party
+   *
+   * 获取指定玩家的前台角色: 仅经典模式可用，获取玩家队伍内的前台角色
+   *
+   * @param playerEntity
+   *
+   * 玩家实体
+   *
+   * @returns
+   *
+   * 前台角色实体
+   */
+  getActiveCharacterOfSpecifiedPlayer(playerEntity: PlayerEntity): CharacterEntity {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_active_character_of_specified_player',
+      args: [playerEntityObj]
+    })
+    const ret = new entity()
+    ret.markPin(ref, 'activeCharacterEntity', 0)
+    return ret as unknown as CharacterEntity
   }
 
   /**
@@ -13414,6 +13814,32 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
+   * Get the number of Waypoints in the Global Path
+   *
+   * 获得全局路径的路点个数
+   *
+   * @param pathIndex
+   *
+   * 路径索引
+   *
+   * @returns
+   *
+   * 路点数量
+   */
+  getTheNumberOfWaypointsInTheGlobalPath(pathIndex: IntValue): bigint {
+    const pathIndexObj = parseValue(pathIndex, 'int')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_the_number_of_waypoints_in_the_global_path',
+      args: [pathIndexObj]
+    })
+    const ret = new int()
+    ret.markPin(ref, 'numberOfWaypoints', 0)
+    return ret as unknown as bigint
+  }
+
+  /**
    * Searches the specified Waypoint information for the given Path
    *
    * 获取指定路径点信息: 查询指定路径的特定路点信息
@@ -14033,6 +14459,44 @@ export class ServerExecutionFlowFunctions {
         return ret as unknown as boolean
       })()
     }
+  }
+
+  /**
+   * Get the equipment index of the specified equipment slot
+   *
+   * 获取指定装备栏位的装备索引
+   *
+   * @param targetEntity
+   *
+   * 目标实体
+   * @param row
+   *
+   * 装备栏位行
+   * @param column
+   *
+   * 装备栏位列
+   *
+   * @returns
+   *
+   * 装备索引
+   */
+  getTheEquipmentIndexOfTheSpecifiedEquipmentSlot(
+    targetEntity: EntityValue,
+    row: IntValue,
+    column: IntValue
+  ): bigint {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const rowObj = parseValue(row, 'int')
+    const columnObj = parseValue(column, 'int')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_the_equipment_index_of_the_specified_equipment_slot',
+      args: [targetEntityObj, rowObj, columnObj]
+    })
+    const ret = new int()
+    ret.markPin(ref, 'equipmentIndex', 0)
+    return ret as unknown as bigint
   }
 
   /**

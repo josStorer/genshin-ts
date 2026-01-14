@@ -57,6 +57,8 @@ const ENTITY_HELPER_METHODS = [
   'activateDisableModelDisplay',
   'activateDisableNativeCollision',
   'activateDisableNativeCollisionClimbability',
+  'activateDisablePathfindingObstacle',
+  'activateDisablePathfindingObstacleFeature',
   'activateDisableTab',
   'activateFixedPointMotionDevice',
   'activateRevivePoint',
@@ -77,6 +79,8 @@ const ENTITY_HELPER_METHODS = [
   'changeAchievementProgressTally',
   'changePlayerClass',
   'changePlayerSCurrentClassLevel',
+  'checkClassicModeCharacterId',
+  'checkEntitySElementalEffectStatus',
   'clearSpecialEffectsBasedOnSpecialEffectAssets',
   'clearSpecifiedTargetSAggroList',
   'clearUnitTagsFromEntity',
@@ -90,6 +94,7 @@ const ENTITY_HELPER_METHODS = [
   'deleteCharacterSkillBySlot',
   'destroyEntity',
   'forwardingEvent',
+  'getActiveCharacterOfSpecifiedPlayer',
   'getAggroListOfCreationInDefaultMode',
   'getAllBasicItemsFromInventory',
   'getAllCharacterEntitiesOfSpecifiedPlayer',
@@ -140,8 +145,11 @@ const ENTITY_HELPER_METHODS = [
   'getTheAggroListOfTheSpecifiedEntity',
   'getTheAggroTargetOfTheSpecifiedEntity',
   'getTheCurrentlyActiveScanTagConfigId',
+  'getTheEquipmentIndexOfTheSpecifiedEquipmentSlot',
+  'getThePresetStatusValueOfTheComplexCreation',
   'hpLoss',
   'increaseMaximumInventoryCapacity',
+  'increasesCharacterSElementalEnergy',
   'increasePlayerSCurrentClassExp',
   'initializeCharacterSkill',
   'initiateAttack',
@@ -208,10 +216,12 @@ const ENTITY_HELPER_METHODS = [
   'removeTargetEntityFromAggroList',
   'removeUnitStatus',
   'removeUnitTagFromEntity',
+  'replaceEquipmentToTheSpecifiedSlot',
   'resumeTimer',
   'reviveAllPlayerSCharacters',
   'reviveCharacter',
   'setAchievementProgressTally',
+  'setCharacterSElementalEnergy',
   'setCharacterSkillCd',
   'setCustomVariable',
   'setEntityActiveNameplate',
@@ -230,6 +240,7 @@ const ENTITY_HELPER_METHODS = [
   'setScanTagRules',
   'setSkillResourceAmount',
   'setTheAggroValueOfSpecifiedEntity',
+  'setThePresetStatusValueOfTheComplexCreation',
   'startGlobalTimer',
   'startPausePlayerBackgroundMusic',
   'startPauseSpecifiedSoundEffectPlayer',
@@ -283,6 +294,7 @@ const ENTITY_HELPER_ALIAS_SOURCES = {
   patrolTemplate: 'getCurrentCreationSPatrolTemplate',
   defaultAggroList: 'getAggroListOfCreationInDefaultMode',
   characters: 'getAllCharacterEntitiesOfSpecifiedPlayer',
+  activeCharacter: 'getActiveCharacterOfSpecifiedPlayer',
   class: 'queryPlayerClass',
   classLevel: 'queryPlayerClassLevel',
   inputDevice: 'getPlayerClientInputDeviceType'
@@ -373,6 +385,8 @@ const ENTITY_HELPER_KIND_BY_KEY = {
     'object',
     'creation'
   ],
+  activateDisablePathfindingObstacle: ['player', 'character', 'stage', 'object', 'creation'],
+  activateDisablePathfindingObstacleFeature: ['player', 'character', 'stage', 'object', 'creation'],
   activateDisableTab: ['player', 'character', 'stage', 'object', 'creation'],
   activateFixedPointMotionDevice: ['player', 'character', 'stage', 'object', 'creation'],
   activateRevivePoint: ['player'],
@@ -403,9 +417,12 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   changeAchievementProgressTally: ['player', 'character', 'stage', 'object', 'creation'],
   changePlayerClass: ['player'],
   changePlayerSCurrentClassLevel: ['player'],
+  checkClassicModeCharacterId: ['character'],
+  checkEntitySElementalEffectStatus: ['player', 'character', 'stage', 'object', 'creation'],
   character: ['player'],
   characterAttr: ['character'],
   characters: ['player'],
+  activeCharacter: ['player'],
   class: ['player'],
   classLevel: ['player'],
   clearLoopingSpecialEffect: ['player', 'character', 'stage', 'object', 'creation'],
@@ -438,6 +455,7 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   forward: ['player', 'character', 'stage', 'object', 'creation'],
   forwardingEvent: ['player', 'character', 'stage', 'object', 'creation'],
   get: ['player', 'character', 'stage', 'object', 'creation'],
+  getActiveCharacterOfSpecifiedPlayer: ['player'],
   getAggroListOfCreationInDefaultMode: ['creation'],
   getAllBasicItemsFromInventory: ['player', 'character', 'stage', 'object', 'creation'],
   getAllCharacterEntitiesOfSpecifiedPlayer: ['player'],
@@ -501,10 +519,19 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   getTheAggroListOfTheSpecifiedEntity: ['player', 'character', 'stage', 'object', 'creation'],
   getTheAggroTargetOfTheSpecifiedEntity: ['player', 'character', 'stage', 'object', 'creation'],
   getTheCurrentlyActiveScanTagConfigId: ['player', 'character', 'stage', 'object', 'creation'],
+  getTheEquipmentIndexOfTheSpecifiedEquipmentSlot: [
+    'player',
+    'character',
+    'stage',
+    'object',
+    'creation'
+  ],
+  getThePresetStatusValueOfTheComplexCreation: ['creation'],
   guid: ['player', 'character', 'stage', 'object', 'creation'],
   hasUnitStatus: ['player', 'character', 'stage', 'object', 'creation'],
   hpLoss: ['player', 'character', 'stage', 'object', 'creation'],
   increaseMaximumInventoryCapacity: ['player', 'character', 'stage', 'object', 'creation'],
+  increasesCharacterSElementalEnergy: ['character'],
   increasePlayerSCurrentClassExp: ['player'],
   initializeCharacterSkill: ['character'],
   initiateAttack: ['player', 'character', 'stage', 'object', 'creation'],
@@ -598,6 +625,7 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   removeUnitStatus: ['player', 'character', 'stage', 'object', 'creation'],
   removeUnitTagFromEntity: ['player', 'character', 'stage', 'object', 'creation'],
   removeTag: ['player', 'character', 'stage', 'object', 'creation'],
+  replaceEquipmentToTheSpecifiedSlot: ['player', 'character', 'stage', 'object', 'creation'],
   resumeTimer: ['player', 'character', 'stage', 'object', 'creation'],
   revive: ['character'],
   reviveAllCharacters: ['player'],
@@ -608,6 +636,7 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   rotation: ['character', 'object', 'creation'],
   set: ['player', 'character', 'stage', 'object', 'creation'],
   setAchievementProgressTally: ['player', 'character', 'stage', 'object', 'creation'],
+  setCharacterSElementalEnergy: ['character'],
   setAggroValue: ['player', 'character', 'stage', 'object', 'creation'],
   setCharacterSkillCd: ['character'],
   setCustomVariable: ['player', 'character', 'stage', 'object', 'creation'],
@@ -630,6 +659,7 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   setScanTagRules: ['player', 'character', 'stage', 'object', 'creation'],
   setSkillResourceAmount: ['character'],
   setTheAggroValueOfSpecifiedEntity: ['player', 'character', 'stage', 'object', 'creation'],
+  setThePresetStatusValueOfTheComplexCreation: ['creation'],
   settlementRanking: ['player'],
   settlementStatus: ['player'],
   speed: ['character'],
@@ -831,6 +861,32 @@ interface EntityHelperFromFirstParam {
    * 是否激活: “是”为激活
    */
   activateDisableNativeCollisionClimbability: (activate: BoolValue) => void
+
+  /**
+   * You can modify whether the pathfinding obstacle component of the target entity, corresponding to the specified
+   * index, is active
+   *
+   * 激活/关闭寻路阻挡: 修改目标实体的寻路阻挡组件中指定序号的激活状态
+   *
+   * @param pathfindingObstacleId Identifier for this Pathfinding Obstacle
+   *
+   * 寻路阻挡序号: 该寻路阻挡的标识
+   * @param activate
+   *
+   * 是否激活
+   */
+  activateDisablePathfindingObstacle: (pathfindingObstacleId: IntValue, activate: BoolValue) => void
+
+  /**
+   * You can modify whether the pathfinding obstacle feature of the target entity is activated
+   *
+   * 激活/关闭寻路阻挡功能: 修改目标实体的寻路阻挡功能是否启用
+   *
+   * @param activate
+   *
+   * 是否激活
+   */
+  activateDisablePathfindingObstacleFeature: (activate: BoolValue) => void
 
   /**
    * Edit the Tab state by ID in the Target Entity's Tab Component
@@ -1278,6 +1334,81 @@ interface EntityHelperFromFirstParam {
   changePlayerSCurrentClassLevel: (level: IntValue) => void
 
   /**
+   * Available only in Classic Mode. Returns the Character ID for the target character
+   *
+   * 查询经典模式角色编号: 仅经典模式可用，查询指定角色的角色编号
+   */
+  checkClassicModeCharacterId: () => bigint
+
+  /**
+   * Check entity's elemental effect status
+   *
+   * 查询实体的元素附着状态
+   */
+  checkEntitySElementalEffectStatus: () => {
+    /**
+     *
+     * 是否附着水元素
+     */
+    affectedByHydro: boolean
+    /**
+     *
+     * 是否附着冰元素
+     */
+    affectedByCryo: boolean
+    /**
+     *
+     * 是否附着雷元素
+     */
+    affectedByElectro: boolean
+    /**
+     *
+     * 是否附着火元素
+     */
+    affectedByPyro: boolean
+    /**
+     *
+     * 是否附着草元素
+     */
+    affectedByDendro: boolean
+    /**
+     *
+     * 是否附着风元素
+     */
+    affectedByAnemo: boolean
+    /**
+     *
+     * 是否附着岩元素
+     */
+    affectedByGeo: boolean
+    /**
+     *
+     * 是否处于冻结
+     */
+    affectedByFrozen: boolean
+    /**
+     *
+     * 是否处于感电（不包含月感电）
+     */
+    affectedByElectroCharged: boolean
+    /**
+     *
+     * 是否处于燃烧
+     */
+    affectedByBurning: boolean
+    /**
+     *
+     * 是否处于石化
+     */
+    affectedByPetrification: boolean
+    /**
+     *
+     * 是否处于激化
+     */
+    affectedByCatalyze: boolean
+  }
+
+  /**
    * Clear all Effects on the specified Target Entity that use the given Effect Asset. Applies to Looping Effects only
    *
    * 根据特效资产清除特效: 清除指定目标实体上所有使用该特效资产的特效。仅限循环特效
@@ -1437,6 +1568,17 @@ interface EntityHelperFromFirstParam {
    * 角色实体列表
    */
   getAllCharacterEntitiesOfSpecifiedPlayer: () => CharacterEntity[]
+
+  /**
+   * Available only in Classic Mode, get the active character in the player's party
+   *
+   * 获取指定玩家的前台角色: 仅经典模式可用，获取玩家队伍内的前台角色
+   *
+   * @returns
+   *
+   * 前台角色实体
+   */
+  getActiveCharacterOfSpecifiedPlayer: () => CharacterEntity
 
   /**
    * Returns all Currencies in the Inventory, including types and corresponding amounts
@@ -2286,6 +2428,39 @@ interface EntityHelperFromFirstParam {
    * 扫描标签配置ID
    */
   getTheCurrentlyActiveScanTagConfigId: () => configId
+
+  /**
+   * Get the equipment index of the specified equipment slot
+   *
+   * 获取指定装备栏位的装备索引
+   *
+   * @param row
+   *
+   * 装备栏位行
+   * @param column
+   *
+   * 装备栏位列
+   *
+   * @returns
+   *
+   * 装备索引
+   */
+  getTheEquipmentIndexOfTheSpecifiedEquipmentSlot: (row: IntValue, column: IntValue) => bigint
+
+  /**
+   * Returns the preset status value of the specified complex creation
+   *
+   * 获取复杂造物的预设状态值: 查询指定复杂造物的预设状态值
+   *
+   * @param presetStatusIndex
+   *
+   * 预设状态索引
+   *
+   * @returns
+   *
+   * 预设状态值
+   */
+  getThePresetStatusValueOfTheComplexCreation: (presetStatusIndex: IntValue) => bigint
 
   /**
    * Directly cause the specified target to lose HP. Losing HP is not an attack, so it does not trigger attack-related events
@@ -3520,6 +3695,29 @@ interface EntityHelperFromFirstParam {
   removeUnitTagFromEntity: (unitTagIndex: IntValue) => void
 
   /**
+   * Replaces the specified equipment in the corresponding equipment slot of the target entity. If the equipment is
+   * already equipped in the equipment slot, the replacement will not take effect. If the target slot already
+   * contains an equipped item, that item will be replaced.
+   *
+   * 替换装备到指定栏位: 将指定装备替换到目标实体的指定装备栏位。若该装备已在该栏位，则不生效；若该栏位已有装备，则会被替换
+   *
+   * @param equipmentRow
+   *
+   * 装备栏位行
+   * @param equipmentColumn
+   *
+   * 装备栏位列
+   * @param equipmentIndex The equipment instance is identified by an integer index generated during equipment initialization
+   *
+   * 装备索引: 通过装备初始化时生成的整数索引标识装备实例
+   */
+  replaceEquipmentToTheSpecifiedSlot: (
+    equipmentRow: IntValue,
+    equipmentColumn: IntValue,
+    equipmentIndex: IntValue
+  ) => void
+
+  /**
    * Resume a paused Timer on the Target Entity
    *
    * 恢复定时器: 使目标实体上一个处于暂停状态的定时器恢复运行
@@ -3583,6 +3781,28 @@ interface EntityHelperFromFirstParam {
     remainingCdTime: FloatValue,
     limitMaximumCdTime: BoolValue
   ) => void
+
+  /**
+   * Available only in Classic Mode, sets the elemental energy for a specific character
+   *
+   * 设置角色元素能量: 仅经典模式可用，设置指定角色的元素能量
+   *
+   * @param elementalEnergy
+   *
+   * 元素能量
+   */
+  setCharacterSElementalEnergy: (elementalEnergy: FloatValue) => void
+
+  /**
+   * Available only in Classic Mode, increases the elemental energy for a specific character
+   *
+   * 增加角色元素能量: 仅经典模式可用，增加指定角色的元素能量
+   *
+   * @param increaseValue
+   *
+   * 增加值
+   */
+  increasesCharacterSElementalEnergy: (increaseValue: FloatValue) => void
 
   /**
    * Set the value of the specified Custom Variable on the Target Entity
@@ -3826,6 +4046,23 @@ interface EntityHelperFromFirstParam {
    * 仇恨值
    */
   setTheAggroValueOfSpecifiedEntity: (aggroOwnerEntity: EntityValue, aggroValue: IntValue) => void
+
+  /**
+   * You can set the preset state value for a specified preset state index of a complex creation
+   *
+   * 设置复杂造物预设状态值: 设置复杂造物指定预设状态索引的值
+   *
+   * @param presetStatusIndex
+   *
+   * 预设状态索引
+   * @param presetStatusValue
+   *
+   * 预设状态值
+   */
+  setThePresetStatusValueOfTheComplexCreation: (
+    presetStatusIndex: IntValue,
+    presetStatusValue: IntValue
+  ) => void
 
   /**
    * Start a Global Timer on the Target Entity; The Timer on the Target Entity is uniquely identified by its name; Based on Timer Management settings, Countdown and Stopwatch Timers are created accordingly
@@ -4558,6 +4795,17 @@ interface EntityHelperAliases {
    * 属性: 玩家拥有的角色实体列表。
    */
   readonly characters: AliasReturn<'characters'>
+
+  /**
+   * Available only in Classic Mode, get the active character in the player's party
+   *
+   * 获取指定玩家的前台角色: 仅经典模式可用，获取玩家队伍内的前台角色
+   *
+   * Property: active character entity of the player.
+   *
+   * 属性: 玩家前台角色实体。
+   */
+  readonly activeCharacter: AliasReturn<'activeCharacter'>
 
   /**
    * Returns the first Character Entity of the Player (index 0).

@@ -4255,6 +4255,103 @@ export const NODE_PIN_RECORDS = [
     outputs: ['Int']
   },
   {
+    name: 'Get the Number of Waypoints in the Global Path',
+    id: 787,
+    inputs: ['Int'],
+    outputs: ['Int']
+  },
+  {
+    name: "Check Entity's Elemental Effect Status",
+    id: 788,
+    inputs: ['Ety'],
+    outputs: [
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol',
+      'Bol'
+    ]
+  },
+  {
+    name: 'Enable/Disable Pathfinding Obstacle Feature',
+    id: 789,
+    inputs: ['Ety', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'Enable/Disable Pathfinding Obstacle',
+    id: 790,
+    inputs: ['Ety', 'Int', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'Replace Equipment to the Specified Slot',
+    id: 791,
+    inputs: ['Ety', 'Int', 'Int', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Get the Equipment Index of the Specified Equipment Slot',
+    id: 792,
+    inputs: ['Ety', 'Int', 'Int'],
+    outputs: ['Int']
+  },
+  {
+    name: 'Check Classic Mode Character ID',
+    id: 793,
+    inputs: ['Ety'],
+    outputs: ['Int']
+  },
+  {
+    name: 'When the Active Character Changes',
+    id: 794,
+    inputs: [],
+    outputs: ['Ety', 'Gid', 'Ety', 'Ety']
+  },
+  {
+    name: "Set Character's Elemental Energy",
+    id: 795,
+    inputs: ['Ety', 'Flt'],
+    outputs: []
+  },
+  {
+    name: "Increases Character's Elemental Energy",
+    id: 796,
+    inputs: ['Ety', 'Flt'],
+    outputs: []
+  },
+  {
+    name: 'Get the Preset Status Value of the Complex Creation',
+    id: 797,
+    inputs: ['Ety', 'Int'],
+    outputs: ['Int']
+  },
+  {
+    name: 'Set the Preset Status Value of the Complex Creation',
+    id: 798,
+    inputs: ['Ety', 'Int', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'When Complex Creation Preset Status Changes',
+    id: 799,
+    inputs: [],
+    outputs: ['Ety', 'Gid', 'Int', 'Int', 'Int']
+  },
+  {
+    name: 'Get Active Character of Specified Player',
+    id: 804,
+    inputs: ['Ety'],
+    outputs: ['Ety']
+  },
+  {
     name: 'When Character Movement SPD Meets Condition',
     id: 946,
     inputs: [],

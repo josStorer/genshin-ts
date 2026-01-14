@@ -128,6 +128,40 @@ export type ServerEventPayloads = {
     postChangeValue: bigint
   }
   /**
+   * This event is triggered when the preset state of a complex creation is changed using the "Set the preset status
+   * value of the complex creation" node (the modified and unmodified values must be different for this event to
+   * trigger).; This node graph event can only be received by the node graph of the complex creation.
+   *
+   * 复杂造物预设状态变化时: 使用“设置复杂造物预设状态值”节点更改复杂造物预设状态时触发（修改前后值需不同才触发）；该事件仅复杂造物节点图可接收
+   */
+  whenComplexCreationPresetStatusChanges: {
+    /**
+     *
+     * 事件源实体
+     */
+    eventSourceEntity: entity
+    /**
+     *
+     * 事件源GUID
+     */
+    eventSourceGuid: guid
+    /**
+     *
+     * 预设状态索引
+     */
+    presetStatusIndex: bigint
+    /**
+     *
+     * 变化前值
+     */
+    preChangeValue: bigint
+    /**
+     *
+     * 变化后值
+     */
+    postChangeValue: bigint
+  }
+  /**
    * Adds the Unit Status effect [Monitor Movement Speed] to the Character Entity. This event is triggered when the conditions are met
    *
    * 角色移动速度达到条件时: 为角色实体添加单位状态效果【监听移动速率】，达成条件会触发该事件
@@ -367,6 +401,33 @@ export type ServerEventPayloads = {
      * 玩家实体
      */
     playerEntity: entity
+  }
+  /**
+   * Available only in Classic Mode. This event is triggered on the player entity when the active character changes.
+   *
+   * 前台角色变化时: 仅经典模式可用，前台角色变化时在玩家实体上触发该事件
+   */
+  whenTheActiveCharacterChanges: {
+    /**
+     *
+     * 玩家实体
+     */
+    playerEntity: entity
+    /**
+     *
+     * 玩家GUID
+     */
+    playerGuid: guid
+    /**
+     *
+     * 换下的角色实体
+     */
+    previousActiveCharacterEntity: entity
+    /**
+     *
+     * 当前前台角色实体
+     */
+    currentActiveCharacterEntity: entity
   }
   /**
    * The "Collision Trigger Source" range of a runtime entity A enters the "Collision Trigger" range of another runtime entity B; Node graph events will be sent to the entity B configured with "Collision Trigger"

@@ -37,6 +37,13 @@ export const ServerEventMetadata = {
     { name: 'preChangeValue', typeBase: int, typeName: 'int', isArray: false },
     { name: 'postChangeValue', typeBase: int, typeName: 'int', isArray: false }
   ],
+  whenComplexCreationPresetStatusChanges: [
+    { name: 'eventSourceEntity', typeBase: entity, typeName: 'entity', isArray: false },
+    { name: 'eventSourceGuid', typeBase: guid, typeName: 'guid', isArray: false },
+    { name: 'presetStatusIndex', typeBase: int, typeName: 'int', isArray: false },
+    { name: 'preChangeValue', typeBase: int, typeName: 'int', isArray: false },
+    { name: 'postChangeValue', typeBase: int, typeName: 'int', isArray: false }
+  ],
   whenCharacterMovementSpdMeetsCondition: [
     { name: 'eventSourceEntity', typeBase: entity, typeName: 'entity', isArray: false },
     { name: 'eventSourceGuid', typeBase: guid, typeName: 'guid', isArray: false },
@@ -100,6 +107,17 @@ export const ServerEventMetadata = {
   ],
   whenPlayerIsAbnormallyDownedAndRevives: [
     { name: 'playerEntity', typeBase: entity, typeName: 'entity', isArray: false }
+  ],
+  whenTheActiveCharacterChanges: [
+    { name: 'playerEntity', typeBase: entity, typeName: 'entity', isArray: false },
+    { name: 'playerGuid', typeBase: guid, typeName: 'guid', isArray: false },
+    {
+      name: 'previousActiveCharacterEntity',
+      typeBase: entity,
+      typeName: 'entity',
+      isArray: false
+    },
+    { name: 'currentActiveCharacterEntity', typeBase: entity, typeName: 'entity', isArray: false }
   ],
   whenEnteringCollisionTrigger: [
     { name: 'enteringEntity', typeBase: entity, typeName: 'entity', isArray: false },

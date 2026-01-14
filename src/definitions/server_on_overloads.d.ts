@@ -39,6 +39,18 @@ export interface ServerOnOverloads<
   ): this
 
   /**
+   * This event is triggered when the preset state of a complex creation is changed using the "Set the preset status
+   * value of the complex creation" node (the modified and unmodified values must be different for this event to
+   * trigger).; This node graph event can only be received by the node graph of the complex creation.
+   *
+   * 复杂造物预设状态变化时: 使用“设置复杂造物预设状态值”节点更改复杂造物预设状态时触发（修改前后值需不同才触发）；该事件仅复杂造物节点图可接收
+   */
+  on(
+    eventName: 'whenComplexCreationPresetStatusChanges',
+    handler: (evt: ServerEventPayloads['whenComplexCreationPresetStatusChanges'], f: F) => void
+  ): this
+
+  /**
    * Adds the Unit Status effect [Monitor Movement Speed] to the Character Entity. This event is triggered when the conditions are met
    *
    * 角色移动速度达到条件时: 为角色实体添加单位状态效果【监听移动速率】，达成条件会触发该事件
@@ -146,6 +158,16 @@ export interface ServerOnOverloads<
   on(
     eventName: 'whenPlayerIsAbnormallyDownedAndRevives',
     handler: (evt: ServerEventPayloads['whenPlayerIsAbnormallyDownedAndRevives'], f: F) => void
+  ): this
+
+  /**
+   * Available only in Classic Mode. This event is triggered on the player entity when the active character changes.
+   *
+   * 前台角色变化时: 仅经典模式可用，前台角色变化时在玩家实体上触发该事件
+   */
+  on(
+    eventName: 'whenTheActiveCharacterChanges',
+    handler: (evt: ServerEventPayloads['whenTheActiveCharacterChanges'], f: F) => void
   ): this
 
   /**
