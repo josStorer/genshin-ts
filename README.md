@@ -9,6 +9,7 @@ Use TypeScript to develop Genshin UGC (Miliastra Wonderland) projects. Full type
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/josStorer/genshin-ts/blob/master/LICENSE)
 [![release](https://img.shields.io/github/release/josStorer/genshin-ts.svg)](https://github.com/josStorer/genshin-ts/releases/latest)
+[![downloads](https://img.shields.io/npm/dm/genshin-ts.svg)](https://www.npmjs.com/package/genshin-ts)
 [![typescript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 English · [简体中文](README_ZH.md)
