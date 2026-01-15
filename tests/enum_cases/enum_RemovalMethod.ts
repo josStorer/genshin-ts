@@ -7,6 +7,8 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741853 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
   f.removeUnitStatus(e, new configId(1n), E.RemovalMethod.AllCoexistingStatusesWithTheSameName, e)
   f.removeUnitStatus(e, new configId(1n), E.RemovalMethod.StatusWithFastestStackLoss, e)
 })

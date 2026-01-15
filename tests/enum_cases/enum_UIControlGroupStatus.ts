@@ -7,7 +7,9 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741853 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
-  f.modifyUiControlStatusWithinTheInterfaceLayout(e, 1n, E.UIControlGroupStatus.Off)
-  f.modifyUiControlStatusWithinTheInterfaceLayout(e, 1n, E.UIControlGroupStatus.On)
-  f.modifyUiControlStatusWithinTheInterfaceLayout(e, 1n, E.UIControlGroupStatus.Hidden)
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
+  f.modifyUiControlStatusWithinTheInterfaceLayout(pe, 1n, E.UIControlGroupStatus.Off)
+  f.modifyUiControlStatusWithinTheInterfaceLayout(pe, 1n, E.UIControlGroupStatus.On)
+  f.modifyUiControlStatusWithinTheInterfaceLayout(pe, 1n, E.UIControlGroupStatus.Hidden)
 })

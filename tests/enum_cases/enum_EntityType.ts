@@ -7,6 +7,8 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741857 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
   f.getSpecifiedTypeOfEntitiesOnTheField(E.EntityType.Stage)
   f.getSpecifiedTypeOfEntitiesOnTheField(E.EntityType.Object)
   f.getSpecifiedTypeOfEntitiesOnTheField(E.EntityType.Player)
