@@ -37,7 +37,12 @@ function isFuncType(typeText: string): boolean {
 }
 
 function isRecordBranches(typeText: string): boolean {
-  return /Record<\s*(number|string)\s*,\s*\(\)\s*=>\s*void\s*>/.test(typeText)
+  // 处理多行和复杂类型定义
+  const normalized = typeText.replace(/\s+/g, '') // 移除所有空白字符以简化匹配
+  return (
+    normalized.includes('Record<number,(()=>void)|number>&{default?:(()=>void)|number}') ||
+    normalized.includes('Record<string,(()=>void)|string>&{default?:(()=>void)|string}')
+  )
 }
 
 function pickFromStringUnion(t: string): string | null {
