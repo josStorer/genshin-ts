@@ -31,6 +31,10 @@ function splitTopLevelComma(s: string): string[] {
   return out
 }
 
+function isPlayerEntity(t: string): boolean {
+  return /^PlayerEntity/.test(t)
+}
+
 function isFuncType(typeText: string): boolean {
   const t = trim(typeText)
   return /^\([^)]*\)\s*=>/.test(t)
@@ -189,7 +193,9 @@ export function emitArgFromNodesTypeText(
     const v2 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.vType, ctx, enumPick, assign)
     return `[{ k: ${k1}, v: ${v1} }, { k: ${k2}, v: ${v2} }]`
   }
-
+  if (isPlayerEntity(t)) {
+    return 'f.getListOfPlayerEntitiesOnTheField()[0]'
+  }
   if (isFuncType(t)) {
     return `() => { f.printString(${JSON.stringify(`${mode}_cb_${m.name}_${paramIndex}`)}) }`
   }
