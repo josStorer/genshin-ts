@@ -72,7 +72,7 @@ export function emitValueLiteral(spec: TypeSpec, ctx: Ctx): string {
         case 'str':
           return JSON.stringify(String(n))
         case 'vec3':
-          return `[${n}, ${n + 1}, ${n + 2}]`
+          return `f.create3dVector(${n}, ${n + 1}, ${n + 2})`
         case 'guid':
           return `new guid(${n}n)`
         case 'entity':

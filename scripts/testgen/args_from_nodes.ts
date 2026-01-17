@@ -100,6 +100,8 @@ function typeSpecFromNodesValueType(t: string): TypeSpec | null {
       return { kind: 'primitive', name: 'configId' }
     case 'PrefabIdValue':
       return { kind: 'primitive', name: 'prefabId' }
+    case 'Vector3Value':
+      return { kind: 'primitive', name: 'vec3' }
     case 'FactionValue':
       return { kind: 'primitive', name: 'faction' }
     default:
