@@ -159,9 +159,15 @@ function tryParseKvObjectArray(typeText: string): { kType: string; vType: string
   return { kType, vType }
 }
 
+/** 获取字段名（去除可能的 ? 修饰符） */
+function getBaseFieldName(fieldPart: string): string | undefined {
+  const fieldNameMatch = /^(\w+)(\?)?$/.exec(fieldPart)
+  return fieldNameMatch?.[1]
+}
+
 // 新增函数处理通用对象数组类型
 function tryParseObjectArrayType(typeText: string): { fields: Record<string, string> } | null {
-  const base = typeText.trim().slice(0, -2) // remove []
+  const base = typeText.endsWith('[]') ? typeText.slice(0, -2) : typeText // remove []
 
   // 检查是否为对象类型
   if (!base.startsWith('{') || !base.endsWith('}')) return null
@@ -196,13 +202,9 @@ function tryParseObjectArrayType(typeText: string): { fields: Record<string, str
       const typePart = content.substring(colonPos + 1, fieldEnd).trim()
 
       // 提取字段名（去除可能的 ? 修饰符）
-      const fieldNameMatch = /^(\w+)(\?)?$/.exec(fieldPart)
-      if (fieldNameMatch) {
-        const fieldName = fieldNameMatch[1]
-        if (fieldName) {
-          fields[fieldName] = typePart
-        }
-      }
+
+      const fieldName = getBaseFieldName(fieldPart)
+      if (fieldName) fields[fieldName] = typePart
 
       // 重置状态以处理下一个字段
       fieldStart = fieldEnd + 1
@@ -216,82 +218,8 @@ function tryParseObjectArrayType(typeText: string): { fields: Record<string, str
     const fieldPart = content.substring(fieldStart, colonPos).trim()
     const typePart = content.substring(colonPos + 1).trim()
 
-    const fieldNameMatch = /^(\w+)(\?)?$/.exec(fieldPart)
-    if (fieldNameMatch) {
-      const fieldName = fieldNameMatch[1]
-      if (fieldName) {
-        fields[fieldName] = typePart
-      }
-    }
-  }
-
-  if (Object.keys(fields).length === 0) return null
-  return { fields }
-}
-
-// 新增函数处理普通对象类型（非数组）
-function tryParseObjectType(typeText: string): { fields: Record<string, string> } | null {
-  const base = typeText.trim()
-
-  // 检查是否为对象类型
-  if (!base.startsWith('{') || !base.endsWith('}')) return null
-
-  // 提取对象内容
-  const content = base.substring(1, base.length - 1).trim()
-  const fields: Record<string, string> = {}
-
-  // 手动遍历内容，处理嵌套的大括号，正确分割字段
-  let braceDepth = 0
-  let fieldStart = 0
-  let colonPos = -1
-  let fieldEnd = -1
-
-  for (let i = 0; i < content.length; i++) {
-    const char = content[i]
-
-    if (char === '{') {
-      braceDepth++
-    } else if (char === '}') {
-      braceDepth--
-    } else if (char === ':' && braceDepth === 0 && colonPos === -1) {
-      colonPos = i
-    } else if ((char === ';' || char === ',') && braceDepth === 0) {
-      fieldEnd = i
-    }
-
-    // 当找到一个完整的字段定义时
-    if (colonPos !== -1 && fieldEnd !== -1) {
-      const fieldPart = content.substring(fieldStart, colonPos).trim()
-      const typePart = content.substring(colonPos + 1, fieldEnd).trim()
-
-      // 提取字段名（去除可能的 ? 修饰符）
-      const fieldNameMatch = /^(\w+)(\?)?$/.exec(fieldPart)
-      if (fieldNameMatch) {
-        const fieldName = fieldNameMatch[1]
-        if (fieldName) {
-          fields[fieldName] = typePart
-        }
-      }
-
-      // 重置状态以处理下一个字段
-      fieldStart = fieldEnd + 1
-      colonPos = -1
-      fieldEnd = -1
-    }
-  }
-
-  // 处理最后一个字段（如果没有以分号或逗号结尾）
-  if (colonPos !== -1 && fieldStart < content.length) {
-    const fieldPart = content.substring(fieldStart, colonPos).trim()
-    const typePart = content.substring(colonPos + 1).trim()
-
-    const fieldNameMatch = /^(\w+)(\?)?$/.exec(fieldPart)
-    if (fieldNameMatch) {
-      const fieldName = fieldNameMatch[1]
-      if (fieldName) {
-        fields[fieldName] = typePart
-      }
-    }
+    const fieldName = getBaseFieldName(fieldPart)
+    if (fieldName) fields[fieldName] = typePart
   }
 
   if (Object.keys(fields).length === 0) return null
@@ -360,10 +288,9 @@ export function emitArgFromNodesTypeText(
   // pairs array: must be a plain JS array for nodes.ts implementation (uses pairs.map)
   const kv = tryParseKvObjectArray(t)
   if (kv) {
-    const k1 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.kType, ctx, enumPick, assign)
-    const v1 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.vType, ctx, enumPick, assign)
-    const k2 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.kType, ctx, enumPick, assign)
-    const v2 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.vType, ctx, enumPick, assign)
+    const [k1, v1, k2, v2] = [kv.kType, kv.vType, kv.kType, kv.vType].map((type) =>
+      emitArgFromNodesTypeText(mode, m, paramIndex, type, ctx, enumPick, assign)
+    )
     return `[{ k: ${k1}, v: ${v1} }, { k: ${k2}, v: ${v2} }]`
   }
 
@@ -392,30 +319,7 @@ export function emitArgFromNodesTypeText(
       const obj2 = `{ ${fieldEntries.join(', ')} }`
 
       return `[${obj1}, ${obj2}]`
-    } else {
-      // 返回单个对象
-      return `{ ${fieldEntries.join(', ')} }`
     }
-  }
-
-  // 处理普通对象类型（非数组）
-  const objType = tryParseObjectType(typeText)
-  if (objType) {
-    const fieldEntries: string[] = []
-    for (const [fieldName, fieldType] of Object.entries(objType.fields)) {
-      // 为每个字段生成对应的值，使用正确的类型
-      const fieldValue = emitArgFromNodesTypeText(
-        mode,
-        m,
-        paramIndex,
-        fieldType,
-        ctx,
-        enumPick,
-        assign
-      )
-      fieldEntries.push(`${fieldName}: ${fieldValue}`)
-    }
-
     // 返回单个对象
     return `{ ${fieldEntries.join(', ')} }`
   }
@@ -463,18 +367,18 @@ export function emitArgFromNodesTypeText(
   }
 
   // RuntimeParameterValueTypeMap[T] / ...[]
-  const rpm = /^RuntimeParameterValueTypeMap\s*\[\s*([^\]]+)\s*\]$/.exec(t)
   const rpmArr = /^RuntimeParameterValueTypeMap\s*\[\s*([^\]]+)\s*\]\s*\[\]$/.exec(t)
   if (rpmArr) {
     const inner = rpmArr[1] ?? ''
     const spec = resolveRuntimeParameterValueTypeMap(inner, assign) ?? { kind: 'unknown', raw: t }
     const listSpec: TypeSpec = { kind: 'list', elem: spec }
-    return mode === 'literal' ? emitValueLiteral(listSpec, ctx) : emitValueWire(listSpec, ctx)
+    return emitValueByMode(mode, listSpec, ctx)
   }
+  const rpm = /^RuntimeParameterValueTypeMap\s*\[\s*([^\]]+)\s*\]$/.exec(t)
   if (rpm) {
     const inner = rpm[1] ?? ''
     const spec = resolveRuntimeParameterValueTypeMap(inner, assign) ?? { kind: 'unknown', raw: t }
-    return mode === 'literal' ? emitValueLiteral(spec, ctx) : emitValueWire(spec, ctx)
+    return emitValueByMode(mode, spec, ctx)
   }
 
   // XxxValue[]
@@ -488,12 +392,12 @@ export function emitArgFromNodesTypeText(
         CharacterEntity: { kind: 'primitive', name: 'CharacterEntityList' }
       } satisfies Record<string, TypeSpec>
     )[base] ?? { kind: 'list', elem: baseSpec }
-    return mode === 'literal' ? emitValueLiteral(listSpec, ctx) : emitValueWire(listSpec, ctx)
+    return emitValueByMode(mode, listSpec, ctx)
   }
 
   if (/^EntityOf<[^>]+>$/.test(t)) {
     const spec: TypeSpec = { kind: 'primitive', name: 'entity' }
-    return mode === 'literal' ? emitValueLiteral(spec, ctx) : emitValueWire(spec, ctx)
+    return emitValueByMode(mode, spec, ctx)
   }
 
   // dict / dict<K,V> / DictValue
@@ -504,19 +408,15 @@ export function emitArgFromNodesTypeText(
     const dm = /^dict<([\s\S]+)>$/.exec(t)
     if (dm) {
       const parts = splitTopLevelComma(dm[1] ?? '')
-      const k = parts[0]
-      const v = parts[1]
-      if (k) {
-        const kk = k.trim().replace(/'([^']+)'/g, '$1')
-        keySpec = assign.get(kk) ?? parseTypeSpec(kk)
-      }
-      if (v) {
-        const vv = v.trim().replace(/'([^']+)'/g, '$1')
-        valSpec = assign.get(vv) ?? parseTypeSpec(vv)
-      }
+      const specTuple = parts.map((s) => {
+        const ss = s.trim().replace(/'([^']+)'/g, '$1')
+        return assign.get(ss) ?? parseTypeSpec(ss)
+      })
+      keySpec = specTuple[0]
+      valSpec = specTuple[1]
     }
     const dictSpec: TypeSpec = { kind: 'dict', key: keySpec, value: valSpec }
-    return mode === 'literal' ? emitValueLiteral(dictSpec, ctx) : emitValueWire(dictSpec, ctx)
+    return emitValueByMode(mode, dictSpec, ctx)
   }
 
   // string params
@@ -529,8 +429,12 @@ export function emitArgFromNodesTypeText(
 
   // primitives / wrappers
   const prim = typeSpecFromNodesValueType(t)
-  if (prim) return mode === 'literal' ? emitValueLiteral(prim, ctx) : emitValueWire(prim, ctx)
+  if (prim) return emitValueByMode(mode, prim, ctx)
 
   // fallback: unknown（避免把 as any 注入到数组参数里）
   return emitValueUnknown(mode, ctx)
+}
+
+function emitValueByMode(mode: Mode, spec: TypeSpec, ctx: Ctx) {
+  return mode === 'literal' ? emitValueLiteral(spec, ctx) : emitValueWire(spec, ctx)
 }

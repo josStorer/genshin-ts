@@ -58,40 +58,33 @@ function listItemExprOfPrimitive(name: string, n: number): string {
   }
 }
 
+function getLiteralPrimitiveTranslate(name: PrimitiveSpec, n: number) {
+  return {
+    bool: (n: number) => (n % 2 ? 'true' : 'false'),
+    int: (n: number) => `${n}n`,
+    float: (n: number) => `${n}.25`,
+    str: (n: number) => JSON.stringify(String(n)),
+    vec3: (n: number) => `f.create3dVector(${n}, ${n + 1}, ${n + 2})`,
+    guid: (n: number) => `new guid(${n}n)`,
+    entity: (n: number) => `f.getSelfEntity()`,
+    PlayerEntityList: (n: number) => `f.getListOfPlayerEntitiesOnTheField()`,
+    PlayerEntity: (n: number) => `f.getListOfPlayerEntitiesOnTheField()[0]`,
+    CharacterEntityList: (n: number) =>
+      `f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])`,
+    CharacterEntity: (n: number) =>
+      `f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0]`,
+    configId: (n: number) => `new configId(${n}n)`,
+    prefabId: (n: number) => `new prefabId(${n}n)`,
+    faction: (n: number) => `new faction(${n}n)`
+  }[name]?.(n)
+}
+
 export function emitValueLiteral(spec: TypeSpec, ctx: Ctx): string {
   const n = nextN(ctx)
   switch (spec.kind) {
     case 'primitive': {
-      switch (spec.name) {
-        case 'bool':
-          return n % 2 ? 'true' : 'false'
-        case 'int':
-          return `${n}n`
-        case 'float':
-          return `${n}.25`
-        case 'str':
-          return JSON.stringify(String(n))
-        case 'vec3':
-          return `f.create3dVector(${n}, ${n + 1}, ${n + 2})`
-        case 'guid':
-          return `new guid(${n}n)`
-        case 'entity':
-          return `f.getSelfEntity()`
-        case 'PlayerEntityList':
-          return `f.getListOfPlayerEntitiesOnTheField()`
-        case 'PlayerEntity':
-          return `f.getListOfPlayerEntitiesOnTheField()[0]`
-        case 'CharacterEntityList':
-          return `f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])`
-        case 'CharacterEntity':
-          return `f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0]`
-        case 'configId':
-          return `new configId(${n}n)`
-        case 'prefabId':
-          return `new prefabId(${n}n)`
-        case 'faction':
-          return `new faction(${n}n)`
-      }
+      const v = getLiteralPrimitiveTranslate(spec.name, n)
+      if (v) return v
       break
     }
     case 'list': {
@@ -138,40 +131,31 @@ export function emitValueUnknown(mode: Mode, ctx: Ctx): string {
   return mode === 'literal' ? String(n) : `vInt`
 }
 
+function getWirePrimitiveTranslate(name: PrimitiveSpec) {
+  return {
+    bool: 'vBool',
+    int: 'vInt',
+    float: 'vFloat',
+    str: 'vStr',
+    vec3: 'vVec3',
+    guid: 'vGuid',
+    entity: 'e',
+    PlayerEntityList: 'pes',
+    PlayerEntity: 'pes[0]',
+    CharacterEntityList: 'ces',
+    CharacterEntity: 'ces[0]',
+    configId: 'vConfig',
+    prefabId: 'new prefabId(1n)',
+    faction: 'vFaction'
+  }[name]
+}
+
 export function emitValueWire(spec: TypeSpec, ctx: Ctx): string {
   // 连线模式：尽量使用已有 producer；缺失时退化为 literal（并在 report 标记）
   switch (spec.kind) {
     case 'primitive': {
-      switch (spec.name) {
-        case 'bool':
-          return `vBool`
-        case 'int':
-          return `vInt`
-        case 'float':
-          return `vFloat`
-        case 'str':
-          return `vStr`
-        case 'vec3':
-          return `vVec3`
-        case 'guid':
-          return `vGuid`
-        case 'entity':
-          return `e`
-        case 'PlayerEntityList':
-          return `pes`
-        case 'PlayerEntity':
-          return `pes[0]`
-        case 'CharacterEntityList':
-          return `ces`
-        case 'CharacterEntity':
-          return `ces[0]`
-        case 'configId':
-          return `vConfig`
-        case 'prefabId':
-          return `new prefabId(1n)`
-        case 'faction':
-          return `vFaction`
-      }
+      const v = getWirePrimitiveTranslate(spec.name)
+      if (v) return v
       break
     }
     case 'list': {
