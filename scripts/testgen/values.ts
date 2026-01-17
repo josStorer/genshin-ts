@@ -1,4 +1,4 @@
-import type { TypeSpec } from './typespec.js'
+import type { PrimitiveSpec, TypeSpec } from './typespec.js'
 
 export type Mode = 'literal' | 'wire'
 
@@ -11,7 +11,7 @@ export function nextN(ctx: Ctx): number {
   return ctx.n
 }
 
-function listConcreteOfPrimitive(name: string): string | null {
+function listConcreteOfPrimitive(name: PrimitiveSpec): string | null {
   switch (name) {
     case 'bool':
     case 'int':
@@ -26,6 +26,8 @@ function listConcreteOfPrimitive(name: string): string | null {
     case 'prefabId':
       return 'prefab_id'
     case 'entity':
+    case 'PlayerEntity':
+    case 'CharacterEntity':
       // entity_list 字面量无法可靠 JSON 化（元素是 entity 对象），用 assemblyList 走连线
       return null
     default:
@@ -75,6 +77,14 @@ export function emitValueLiteral(spec: TypeSpec, ctx: Ctx): string {
           return `new guid(${n}n)`
         case 'entity':
           return `f.getSelfEntity()`
+        case 'PlayerEntityList':
+          return `f.getListOfPlayerEntitiesOnTheField()`
+        case 'PlayerEntity':
+          return `f.getListOfPlayerEntitiesOnTheField()[0]`
+        case 'CharacterEntityList':
+          return `f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])`
+        case 'CharacterEntity':
+          return `f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0]`
         case 'configId':
           return `new configId(${n}n)`
         case 'prefabId':
@@ -147,6 +157,14 @@ export function emitValueWire(spec: TypeSpec, ctx: Ctx): string {
           return `vGuid`
         case 'entity':
           return `e`
+        case 'PlayerEntityList':
+          return `pes`
+        case 'PlayerEntity':
+          return `pes[0]`
+        case 'CharacterEntityList':
+          return `ces`
+        case 'CharacterEntity':
+          return `ces[0]`
         case 'configId':
           return `vConfig`
         case 'prefabId':
@@ -185,6 +203,8 @@ export function emitValueWire(spec: TypeSpec, ctx: Ctx): string {
 export function emitProducers(): string {
   return [
     `const e = f.getSelfEntity()`,
+    `const pes = f.getListOfPlayerEntitiesOnTheField()`,
+    `const ces = f.getAllCharacterEntitiesOfSpecifiedPlayer(pes[0])`,
     `const vInt = f.addition(1n, 2n)`,
     `const vFloat = f.pi()`,
     `const vBool = f.equal(1n, 1n)`,
@@ -193,5 +213,7 @@ export function emitProducers(): string {
     `const vVec3 = f.create3dVector(1, 2, 3)`,
     `const vStr = f.dataTypeConversion(1n, 'str')`,
     `const vConfig = f.queryPlayerClass(e)`
-  ].join('\n')
+  ]
+    .map((s) => `  ${s}`) // 缩进
+    .join('\n')
 }

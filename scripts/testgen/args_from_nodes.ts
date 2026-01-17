@@ -31,10 +31,6 @@ function splitTopLevelComma(s: string): string[] {
   return out
 }
 
-function isPlayerEntity(t: string): boolean {
-  return /^PlayerEntity/.test(t)
-}
-
 function isFuncType(typeText: string): boolean {
   const t = trim(typeText)
   return /^\([^)]*\)\s*=>/.test(t)
@@ -93,7 +89,13 @@ function typeSpecFromNodesValueType(t: string): TypeSpec | null {
     case 'GuidValue':
       return { kind: 'primitive', name: 'guid' }
     case 'EntityValue':
+    case 'ObjectEntity':
+    case 'CreationEntity':
       return { kind: 'primitive', name: 'entity' }
+    case 'PlayerEntity':
+      return { kind: 'primitive', name: 'PlayerEntity' }
+    case 'CharacterEntity':
+      return { kind: 'primitive', name: 'CharacterEntity' }
     case 'ConfigIdValue':
       return { kind: 'primitive', name: 'configId' }
     case 'PrefabIdValue':
@@ -185,7 +187,7 @@ export function emitArgFromNodesTypeText(
   const t = trim(typeText)
 
   // pairs array: must be a plain JS array for nodes.ts implementation (uses pairs.map)
-  const kv = tryParseKvObjectArray(typeText)
+  const kv = tryParseKvObjectArray(t)
   if (kv) {
     const k1 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.kType, ctx, enumPick, assign)
     const v1 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.vType, ctx, enumPick, assign)
@@ -243,7 +245,13 @@ export function emitArgFromNodesTypeText(
   if (t.endsWith('[]')) {
     const base = t.slice(0, -2).trim()
     const baseSpec = typeSpecFromNodesValueType(base) ?? { kind: 'unknown', raw: base }
-    const listSpec: TypeSpec = { kind: 'list', elem: baseSpec }
+    // 特殊处理使生成的代码更简洁
+    const listSpec: TypeSpec = (
+      {
+        PlayerEntity: { kind: 'primitive', name: 'PlayerEntityList' },
+        CharacterEntity: { kind: 'primitive', name: 'CharacterEntityList' }
+      } satisfies Record<string, TypeSpec>
+    )[base] ?? { kind: 'list', elem: baseSpec }
     return mode === 'literal' ? emitValueLiteral(listSpec, ctx) : emitValueWire(listSpec, ctx)
   }
 

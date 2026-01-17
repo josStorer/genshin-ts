@@ -31,7 +31,8 @@ export function inferConcreteTypeFromString(s: string): ListType | null {
     return 'vec3'
   }
   if (t === 'guid' || t === 'GuidValue') return 'guid'
-  if (t === 'entity' || t === 'EntityValue') return 'entity'
+  if (t === 'entity' || t === 'EntityValue' || t === 'PlayerEntity' || t === 'CharacterEntity')
+    return 'entity'
   if (t === 'prefabId' || t === 'PrefabIdValue') return 'prefab_id'
   if (t === 'configId' || t === 'ConfigIdValue') return 'config_id'
   if (t === 'faction' || t === 'FactionValue') return 'faction'
