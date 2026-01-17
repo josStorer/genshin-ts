@@ -1,12 +1,14 @@
-import * as E from 'genshin-ts/definitions/enum'
 import { g } from 'genshin-ts/runtime/core'
 import { configId, faction, guid, prefabId } from 'genshin-ts/runtime/value'
+import * as E from 'genshin-ts/definitions/enum'
 
 // AUTO-GENERATED: group_03 (wire)
 // Run: npx tsx scripts/generate-node-gia-tests.ts
 
-g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073741832 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
+  const pes = f.getListOfPlayerEntitiesOnTheField()
+  const ces = f.getAllCharacterEntitiesOfSpecifiedPlayer(pes[0])
   const vInt = f.addition(1n, 2n)
   const vFloat = f.pi()
   const vBool = f.equal(1n, 1n)
@@ -36,30 +38,25 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setCustomVariable :: vec3
   f.setCustomVariable(e, vStr, vVec3, vBool)
   // setCustomVariable :: list<bool>
-  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setCustomVariable :: list<configId>
-  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setCustomVariable :: list<entity>
-  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setCustomVariable :: list<faction>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setCustomVariable :: list<float>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setCustomVariable :: list<guid>
-  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setCustomVariable :: list<int>
-  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setCustomVariable :: list<prefabId>
-  f.setCustomVariable(
-    e,
-    vStr,
-    f.assemblyList([new prefabId(1n), new prefabId(1n), new prefabId(1n)], 'prefab_id'),
-    vBool
-  )
+  f.setCustomVariable(e, vStr, f.assemblyList([new prefabId(1n), new prefabId(1n), new prefabId(1n)], "prefab_id"), vBool)
   // setCustomVariable :: list<str>
-  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setCustomVariable :: list<vec3>
-  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setCustomVariable :: dict<configId, bool>
   f.setCustomVariable(e, vStr, vBool, vBool)
   // setCustomVariable :: dict<configId, configId>
@@ -75,23 +72,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setCustomVariable :: dict<configId, int>
   f.setCustomVariable(e, vStr, vInt, vBool)
   // setCustomVariable :: dict<configId, list<bool>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setCustomVariable :: dict<configId, list<configId>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setCustomVariable :: dict<configId, list<entity>>
-  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setCustomVariable :: dict<configId, list<faction>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setCustomVariable :: dict<configId, list<float>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setCustomVariable :: dict<configId, list<guid>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setCustomVariable :: dict<configId, list<int>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setCustomVariable :: dict<configId, list<str>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setCustomVariable :: dict<configId, list<vec3>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setCustomVariable :: dict<configId, prefabId>
   f.setCustomVariable(e, vStr, new prefabId(1n), vBool)
   // setCustomVariable :: dict<configId, str>
@@ -113,23 +110,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setCustomVariable :: dict<entity, int>
   f.setCustomVariable(e, vStr, vInt, vBool)
   // setCustomVariable :: dict<entity, list<bool>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setCustomVariable :: dict<entity, list<configId>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setCustomVariable :: dict<entity, list<entity>>
-  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setCustomVariable :: dict<entity, list<faction>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setCustomVariable :: dict<entity, list<float>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setCustomVariable :: dict<entity, list<guid>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setCustomVariable :: dict<entity, list<int>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setCustomVariable :: dict<entity, list<str>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setCustomVariable :: dict<entity, list<vec3>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setCustomVariable :: dict<entity, prefabId>
   f.setCustomVariable(e, vStr, new prefabId(1n), vBool)
   // setCustomVariable :: dict<entity, str>
@@ -151,23 +148,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setCustomVariable :: dict<faction, int>
   f.setCustomVariable(e, vStr, vInt, vBool)
   // setCustomVariable :: dict<faction, list<bool>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setCustomVariable :: dict<faction, list<configId>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setCustomVariable :: dict<faction, list<entity>>
-  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setCustomVariable :: dict<faction, list<faction>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setCustomVariable :: dict<faction, list<float>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setCustomVariable :: dict<faction, list<guid>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setCustomVariable :: dict<faction, list<int>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setCustomVariable :: dict<faction, list<str>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setCustomVariable :: dict<faction, list<vec3>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setCustomVariable :: dict<faction, prefabId>
   f.setCustomVariable(e, vStr, new prefabId(1n), vBool)
   // setCustomVariable :: dict<faction, str>
@@ -189,23 +186,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setCustomVariable :: dict<guid, int>
   f.setCustomVariable(e, vStr, vInt, vBool)
   // setCustomVariable :: dict<guid, list<bool>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setCustomVariable :: dict<guid, list<configId>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setCustomVariable :: dict<guid, list<entity>>
-  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setCustomVariable :: dict<guid, list<faction>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setCustomVariable :: dict<guid, list<float>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setCustomVariable :: dict<guid, list<guid>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setCustomVariable :: dict<guid, list<int>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setCustomVariable :: dict<guid, list<str>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setCustomVariable :: dict<guid, list<vec3>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setCustomVariable :: dict<guid, prefabId>
   f.setCustomVariable(e, vStr, new prefabId(1n), vBool)
   // setCustomVariable :: dict<guid, str>
@@ -227,23 +224,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setCustomVariable :: dict<int, int>
   f.setCustomVariable(e, vStr, vInt, vBool)
   // setCustomVariable :: dict<int, list<bool>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setCustomVariable :: dict<int, list<configId>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setCustomVariable :: dict<int, list<entity>>
-  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setCustomVariable :: dict<int, list<faction>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setCustomVariable :: dict<int, list<float>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setCustomVariable :: dict<int, list<guid>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setCustomVariable :: dict<int, list<int>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setCustomVariable :: dict<int, list<str>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setCustomVariable :: dict<int, list<vec3>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setCustomVariable :: dict<int, prefabId>
   f.setCustomVariable(e, vStr, new prefabId(1n), vBool)
   // setCustomVariable :: dict<int, str>
@@ -265,23 +262,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setCustomVariable :: dict<prefabId, int>
   f.setCustomVariable(e, vStr, vInt, vBool)
   // setCustomVariable :: dict<prefabId, list<bool>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setCustomVariable :: dict<prefabId, list<configId>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setCustomVariable :: dict<prefabId, list<entity>>
-  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setCustomVariable :: dict<prefabId, list<faction>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setCustomVariable :: dict<prefabId, list<float>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setCustomVariable :: dict<prefabId, list<guid>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setCustomVariable :: dict<prefabId, list<int>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setCustomVariable :: dict<prefabId, list<str>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setCustomVariable :: dict<prefabId, list<vec3>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setCustomVariable :: dict<prefabId, prefabId>
   f.setCustomVariable(e, vStr, new prefabId(1n), vBool)
   // setCustomVariable :: dict<prefabId, str>
@@ -303,23 +300,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setCustomVariable :: dict<str, int>
   f.setCustomVariable(e, vStr, vInt, vBool)
   // setCustomVariable :: dict<str, list<bool>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setCustomVariable :: dict<str, list<configId>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setCustomVariable :: dict<str, list<entity>>
-  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setCustomVariable :: dict<str, list<faction>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setCustomVariable :: dict<str, list<float>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setCustomVariable :: dict<str, list<guid>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setCustomVariable :: dict<str, list<int>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setCustomVariable :: dict<str, list<str>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setCustomVariable :: dict<str, list<vec3>>
-  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setCustomVariable(e, vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setCustomVariable :: dict<str, prefabId>
   f.setCustomVariable(e, vStr, new prefabId(1n), vBool)
   // setCustomVariable :: dict<str, str>
@@ -653,29 +650,25 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setNodeGraphVariable :: vec3
   f.setNodeGraphVariable(vStr, vVec3, vBool)
   // setNodeGraphVariable :: list<bool>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setNodeGraphVariable :: list<configId>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setNodeGraphVariable :: list<entity>
-  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setNodeGraphVariable :: list<faction>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setNodeGraphVariable :: list<float>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setNodeGraphVariable :: list<guid>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setNodeGraphVariable :: list<int>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setNodeGraphVariable :: list<prefabId>
-  f.setNodeGraphVariable(
-    vStr,
-    f.assemblyList([new prefabId(1n), new prefabId(1n), new prefabId(1n)], 'prefab_id'),
-    vBool
-  )
+  f.setNodeGraphVariable(vStr, f.assemblyList([new prefabId(1n), new prefabId(1n), new prefabId(1n)], "prefab_id"), vBool)
   // setNodeGraphVariable :: list<str>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setNodeGraphVariable :: list<vec3>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setNodeGraphVariable :: dict<configId, bool>
   f.setNodeGraphVariable(vStr, vBool, vBool)
   // setNodeGraphVariable :: dict<configId, configId>
@@ -691,23 +684,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setNodeGraphVariable :: dict<configId, int>
   f.setNodeGraphVariable(vStr, vInt, vBool)
   // setNodeGraphVariable :: dict<configId, list<bool>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setNodeGraphVariable :: dict<configId, list<configId>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setNodeGraphVariable :: dict<configId, list<entity>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setNodeGraphVariable :: dict<configId, list<faction>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setNodeGraphVariable :: dict<configId, list<float>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setNodeGraphVariable :: dict<configId, list<guid>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setNodeGraphVariable :: dict<configId, list<int>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setNodeGraphVariable :: dict<configId, list<str>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setNodeGraphVariable :: dict<configId, list<vec3>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setNodeGraphVariable :: dict<configId, prefabId>
   f.setNodeGraphVariable(vStr, new prefabId(1n), vBool)
   // setNodeGraphVariable :: dict<configId, str>
@@ -729,23 +722,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setNodeGraphVariable :: dict<entity, int>
   f.setNodeGraphVariable(vStr, vInt, vBool)
   // setNodeGraphVariable :: dict<entity, list<bool>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setNodeGraphVariable :: dict<entity, list<configId>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setNodeGraphVariable :: dict<entity, list<entity>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setNodeGraphVariable :: dict<entity, list<faction>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setNodeGraphVariable :: dict<entity, list<float>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setNodeGraphVariable :: dict<entity, list<guid>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setNodeGraphVariable :: dict<entity, list<int>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setNodeGraphVariable :: dict<entity, list<str>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setNodeGraphVariable :: dict<entity, list<vec3>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setNodeGraphVariable :: dict<entity, prefabId>
   f.setNodeGraphVariable(vStr, new prefabId(1n), vBool)
   // setNodeGraphVariable :: dict<entity, str>
@@ -767,23 +760,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setNodeGraphVariable :: dict<faction, int>
   f.setNodeGraphVariable(vStr, vInt, vBool)
   // setNodeGraphVariable :: dict<faction, list<bool>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setNodeGraphVariable :: dict<faction, list<configId>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setNodeGraphVariable :: dict<faction, list<entity>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setNodeGraphVariable :: dict<faction, list<faction>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setNodeGraphVariable :: dict<faction, list<float>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setNodeGraphVariable :: dict<faction, list<guid>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setNodeGraphVariable :: dict<faction, list<int>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setNodeGraphVariable :: dict<faction, list<str>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setNodeGraphVariable :: dict<faction, list<vec3>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setNodeGraphVariable :: dict<faction, prefabId>
   f.setNodeGraphVariable(vStr, new prefabId(1n), vBool)
   // setNodeGraphVariable :: dict<faction, str>
@@ -805,23 +798,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setNodeGraphVariable :: dict<guid, int>
   f.setNodeGraphVariable(vStr, vInt, vBool)
   // setNodeGraphVariable :: dict<guid, list<bool>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setNodeGraphVariable :: dict<guid, list<configId>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setNodeGraphVariable :: dict<guid, list<entity>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setNodeGraphVariable :: dict<guid, list<faction>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setNodeGraphVariable :: dict<guid, list<float>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setNodeGraphVariable :: dict<guid, list<guid>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setNodeGraphVariable :: dict<guid, list<int>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setNodeGraphVariable :: dict<guid, list<str>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setNodeGraphVariable :: dict<guid, list<vec3>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setNodeGraphVariable :: dict<guid, prefabId>
   f.setNodeGraphVariable(vStr, new prefabId(1n), vBool)
   // setNodeGraphVariable :: dict<guid, str>
@@ -843,23 +836,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setNodeGraphVariable :: dict<int, int>
   f.setNodeGraphVariable(vStr, vInt, vBool)
   // setNodeGraphVariable :: dict<int, list<bool>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setNodeGraphVariable :: dict<int, list<configId>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setNodeGraphVariable :: dict<int, list<entity>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setNodeGraphVariable :: dict<int, list<faction>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setNodeGraphVariable :: dict<int, list<float>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setNodeGraphVariable :: dict<int, list<guid>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setNodeGraphVariable :: dict<int, list<int>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setNodeGraphVariable :: dict<int, list<str>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setNodeGraphVariable :: dict<int, list<vec3>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setNodeGraphVariable :: dict<int, prefabId>
   f.setNodeGraphVariable(vStr, new prefabId(1n), vBool)
   // setNodeGraphVariable :: dict<int, str>
@@ -881,23 +874,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setNodeGraphVariable :: dict<prefabId, int>
   f.setNodeGraphVariable(vStr, vInt, vBool)
   // setNodeGraphVariable :: dict<prefabId, list<bool>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setNodeGraphVariable :: dict<prefabId, list<configId>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setNodeGraphVariable :: dict<prefabId, list<entity>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setNodeGraphVariable :: dict<prefabId, list<faction>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setNodeGraphVariable :: dict<prefabId, list<float>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setNodeGraphVariable :: dict<prefabId, list<guid>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setNodeGraphVariable :: dict<prefabId, list<int>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setNodeGraphVariable :: dict<prefabId, list<str>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setNodeGraphVariable :: dict<prefabId, list<vec3>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setNodeGraphVariable :: dict<prefabId, prefabId>
   f.setNodeGraphVariable(vStr, new prefabId(1n), vBool)
   // setNodeGraphVariable :: dict<prefabId, str>
@@ -919,23 +912,23 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // setNodeGraphVariable :: dict<str, int>
   f.setNodeGraphVariable(vStr, vInt, vBool)
   // setNodeGraphVariable :: dict<str, list<bool>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], 'bool'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vBool, vBool, vBool], "bool"), vBool)
   // setNodeGraphVariable :: dict<str, list<configId>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vConfig, vConfig, vConfig], "config_id"), vBool)
   // setNodeGraphVariable :: dict<str, list<entity>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], 'entity'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([e, e, e], "entity"), vBool)
   // setNodeGraphVariable :: dict<str, list<faction>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], 'faction'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFaction, vFaction, vFaction], "faction"), vBool)
   // setNodeGraphVariable :: dict<str, list<float>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], 'float'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vFloat, vFloat, vFloat], "float"), vBool)
   // setNodeGraphVariable :: dict<str, list<guid>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], 'guid'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vGuid, vGuid, vGuid], "guid"), vBool)
   // setNodeGraphVariable :: dict<str, list<int>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   // setNodeGraphVariable :: dict<str, list<str>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], 'str'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vStr, vStr, vStr], "str"), vBool)
   // setNodeGraphVariable :: dict<str, list<vec3>>
-  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], 'vec3'), vBool)
+  f.setNodeGraphVariable(vStr, f.assemblyList([vVec3, vVec3, vVec3], "vec3"), vBool)
   // setNodeGraphVariable :: dict<str, prefabId>
   f.setNodeGraphVariable(vStr, new prefabId(1n), vBool)
   // setNodeGraphVariable :: dict<str, str>
@@ -1249,3 +1242,4 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   // getNodeGraphVariable :: dict<str, vec3>
   f.getNodeGraphVariable(vStr)
 })
+

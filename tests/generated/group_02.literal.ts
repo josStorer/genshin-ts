@@ -25,7 +25,7 @@ g.server({ id: 1073741831 }).on('whenEntityIsCreated', (_evt, f) => {
   // equal :: str
   f.equal("17", "18")
   // equal :: vec3
-  f.equal([19, 20, 21], [20, 21, 22])
+  f.equal(f.create3dVector(19, 20, 21), f.create3dVector(20, 21, 22))
   // assemblyList :: bool
   f.assemblyList(f.assemblyList([true, false, true], "bool"), "bool")
   // assemblyList :: configId
@@ -85,7 +85,7 @@ g.server({ id: 1073741831 }).on('whenEntityIsCreated', (_evt, f) => {
   // insertValueIntoList :: str
   f.insertValueIntoList(f.assemblyList(["26", "27", "28"], "str"), 27n, "28")
   // insertValueIntoList :: vec3
-  f.insertValueIntoList(f.assemblyList([[29, 30, 31], [30, 31, 32], [31, 32, 33]], "vec3"), 30n, [31, 32, 33])
+  f.insertValueIntoList(f.assemblyList([[29, 30, 31], [30, 31, 32], [31, 32, 33]], "vec3"), 30n, f.create3dVector(31, 32, 33))
   // modifyValueInList :: bool
   f.modifyValueInList(f.assemblyList([true, false, true], "bool"), 2n, true)
   // modifyValueInList :: configId
@@ -105,7 +105,7 @@ g.server({ id: 1073741831 }).on('whenEntityIsCreated', (_evt, f) => {
   // modifyValueInList :: str
   f.modifyValueInList(f.assemblyList(["26", "27", "28"], "str"), 27n, "28")
   // modifyValueInList :: vec3
-  f.modifyValueInList(f.assemblyList([[29, 30, 31], [30, 31, 32], [31, 32, 33]], "vec3"), 30n, [31, 32, 33])
+  f.modifyValueInList(f.assemblyList([[29, 30, 31], [30, 31, 32], [31, 32, 33]], "vec3"), 30n, f.create3dVector(31, 32, 33))
   // removeValueFromList :: bool
   f.removeValueFromList(f.assemblyList([true, false, true], "bool"), 2n)
   // removeValueFromList :: configId
@@ -185,7 +185,7 @@ g.server({ id: 1073741831 }).on('whenEntityIsCreated', (_evt, f) => {
   // searchListAndReturnValueId :: str
   f.searchListAndReturnValueId(f.assemblyList(["18", "19", "20"], "str"), "19")
   // searchListAndReturnValueId :: vec3
-  f.searchListAndReturnValueId(f.assemblyList([[20, 21, 22], [21, 22, 23], [22, 23, 24]], "vec3"), [21, 22, 23])
+  f.searchListAndReturnValueId(f.assemblyList([[20, 21, 22], [21, 22, 23], [22, 23, 24]], "vec3"), f.create3dVector(21, 22, 23))
   // getCorrespondingValueFromList :: bool
   f.getCorrespondingValueFromList(f.assemblyList([true, false, true], "bool"), 2n)
   // getCorrespondingValueFromList :: configId
@@ -245,6 +245,6 @@ g.server({ id: 1073741831 }).on('whenEntityIsCreated', (_evt, f) => {
   // listIncludesThisValue :: str
   f.listIncludesThisValue(f.assemblyList(["18", "19", "20"], "str"), "19")
   // listIncludesThisValue :: vec3
-  f.listIncludesThisValue(f.assemblyList([[20, 21, 22], [21, 22, 23], [22, 23, 24]], "vec3"), [21, 22, 23])
+  f.listIncludesThisValue(f.assemblyList([[20, 21, 22], [21, 22, 23], [22, 23, 24]], "vec3"), f.create3dVector(21, 22, 23))
 })
 

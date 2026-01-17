@@ -1,11 +1,8 @@
 {
-  "totalMethods": 368,
-  "includedMethods": 366,
-  "skippedMethods": 2,
+  "totalMethods": 388,
+  "includedMethods": 383,
+  "skippedMethods": 5,
   "included": {
-    "return": {
-      "cases": 1
-    },
     "dataTypeConversion": {
       "cases": 11
     },
@@ -35,6 +32,24 @@
     },
     "setNodeGraphVariable": {
       "cases": 153
+    },
+    "get": {
+      "cases": 1
+    },
+    "set": {
+      "cases": 1
+    },
+    "__gstsEnsureVariable": {
+      "cases": 1
+    },
+    "__gstsAttachTimerHandle": {
+      "cases": 1
+    },
+    "__gstsClearTimerCaptures": {
+      "cases": 1
+    },
+    "__gstsRegisterTimerHandler": {
+      "cases": 1
     },
     "getNodeGraphVariable": {
       "cases": 153
@@ -106,6 +121,9 @@
       "cases": 10
     },
     "setPresetStatus": {
+      "cases": 1
+    },
+    "setThePresetStatusValueOfTheComplexCreation": {
       "cases": 1
     },
     "createEntity": {
@@ -181,6 +199,12 @@
       "cases": 1
     },
     "activateDisableCollisionTrigger": {
+      "cases": 1
+    },
+    "activateDisablePathfindingObstacle": {
+      "cases": 1
+    },
+    "activateDisablePathfindingObstacleFeature": {
       "cases": 1
     },
     "initiateAttack": {
@@ -327,6 +351,12 @@
     "modifySkillResourceAmount": {
       "cases": 1
     },
+    "setCharacterSElementalEnergy": {
+      "cases": 1
+    },
+    "increasesCharacterSElementalEnergy": {
+      "cases": 1
+    },
     "modifyCharacterSkillCd": {
       "cases": 1
     },
@@ -469,6 +499,9 @@
       "cases": 1
     },
     "addAffixToEquipmentAtSpecifiedId": {
+      "cases": 1
+    },
+    "replaceEquipmentToTheSpecifiedSlot": {
       "cases": 1
     },
     "setInventoryItemDropContents": {
@@ -789,6 +822,9 @@
     "getPresetStatus": {
       "cases": 1
     },
+    "getThePresetStatusValueOfTheComplexCreation": {
+      "cases": 1
+    },
     "queryCharacterSCurrentMovementSpd": {
       "cases": 1
     },
@@ -829,6 +865,9 @@
       "cases": 1
     },
     "getEntityElementalAttribute": {
+      "cases": 1
+    },
+    "checkEntitySElementalEffectStatus": {
       "cases": 1
     },
     "getObjectAttribute": {
@@ -900,6 +939,12 @@
     "getAllCharacterEntitiesOfSpecifiedPlayer": {
       "cases": 1
     },
+    "checkClassicModeCharacterId": {
+      "cases": 1
+    },
+    "getActiveCharacterOfSpecifiedPlayer": {
+      "cases": 1
+    },
     "getFollowMotionDeviceTarget": {
       "cases": 1
     },
@@ -969,6 +1014,9 @@
     "getTheAggroTargetOfTheSpecifiedEntity": {
       "cases": 1
     },
+    "getTheNumberOfWaypointsInTheGlobalPath": {
+      "cases": 1
+    },
     "getSpecifiedWaypointInfo": {
       "cases": 1
     },
@@ -1015,6 +1063,9 @@
       "cases": 1
     },
     "queryCustomShopItemSalesInfo": {
+      "cases": 1
+    },
+    "getTheEquipmentIndexOfTheSpecifiedEquipmentSlot": {
       "cases": 1
     },
     "queryEquipmentTagList": {
@@ -1103,6 +1154,18 @@
     }
   },
   "skipped": [
+    {
+      "name": "return",
+      "why": "need to design a separate testing process"
+    },
+    {
+      "name": "continue",
+      "why": "need to design a separate testing process"
+    },
+    {
+      "name": "__gstsRegisterTimerCaptureDict",
+      "why": "need to design a separate testing process"
+    },
     {
       "name": "queryCustomVariableSnapshot",
       "nodeType": "query_custom_variable_snapshot",

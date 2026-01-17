@@ -7,7 +7,9 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741855 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
-  f.setPlayerSettlementSuccessStatus(e, E.SettlementStatus.Undefined)
-  f.setPlayerSettlementSuccessStatus(e, E.SettlementStatus.Victory)
-  f.setPlayerSettlementSuccessStatus(e, E.SettlementStatus.Defeat)
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
+  f.setPlayerSettlementSuccessStatus(pe, E.SettlementStatus.Undefined)
+  f.setPlayerSettlementSuccessStatus(pe, E.SettlementStatus.Victory)
+  f.setPlayerSettlementSuccessStatus(pe, E.SettlementStatus.Defeat)
 })

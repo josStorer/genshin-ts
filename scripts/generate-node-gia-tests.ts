@@ -74,6 +74,15 @@ function main() {
       continue
     }
 
+    if (['__gstsRegisterTimerCaptureDict', 'continue', 'return'].includes(m.name)) {
+      skipped.push({
+        name: m.name,
+        nodeType: m.nodeType,
+        why: 'need to design a separate testing process'
+      })
+      continue
+    }
+
     const ginfo = genericsMap.get(m.name)
     const groupId = functionToGroup.get(m.name)
     const bucket = groupId ? groupCalls[groupId]! : other
@@ -140,8 +149,7 @@ function main() {
     // 有 generics 数据：对每个 availableType 生成（确保每个类型都覆盖）
     if (ginfo) {
       for (const tcase of ginfo.availableTypes) {
-        const skipLiteral =
-          m.name === 'dataTypeConversion' && /^dict<\s*faction\s*,/i.test(tcase)
+        const skipLiteral = m.name === 'dataTypeConversion' && /^dict<\s*faction\s*,/i.test(tcase)
         // 泛型类型由 typeCase + nodes.ts 方法签名推断，不再直接覆盖参数文本
         if (!skipLiteral) {
           bucket.literal.push(buildOne('literal', tcase))

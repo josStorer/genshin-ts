@@ -7,7 +7,9 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741855 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
-  f.invokeDeckSelector(e, 1n, 1.25, [1n, 2n, 3n], [1n, 2n, 3n], 1n, 1n, E.DecisionRefreshMode.CannotRefresh, 1n, 1n, [1n, 2n, 3n])
-  f.invokeDeckSelector(e, 1n, 1.25, [1n, 2n, 3n], [1n, 2n, 3n], 1n, 1n, E.DecisionRefreshMode.PartialRefresh, 1n, 1n, [1n, 2n, 3n])
-  f.invokeDeckSelector(e, 1n, 1.25, [1n, 2n, 3n], [1n, 2n, 3n], 1n, 1n, E.DecisionRefreshMode.RefreshAll, 1n, 1n, [1n, 2n, 3n])
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
+  f.invokeDeckSelector(pe, 1n, 1.25, [1n, 2n, 3n], [1n, 2n, 3n], 1n, 1n, E.DecisionRefreshMode.CannotRefresh, 1n, 1n, [1n, 2n, 3n])
+  f.invokeDeckSelector(pe, 1n, 1.25, [1n, 2n, 3n], [1n, 2n, 3n], 1n, 1n, E.DecisionRefreshMode.PartialRefresh, 1n, 1n, [1n, 2n, 3n])
+  f.invokeDeckSelector(pe, 1n, 1.25, [1n, 2n, 3n], [1n, 2n, 3n], 1n, 1n, E.DecisionRefreshMode.RefreshAll, 1n, 1n, [1n, 2n, 3n])
 })

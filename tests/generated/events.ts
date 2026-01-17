@@ -39,6 +39,10 @@ g.server({ id: 1073741843 }).on("whenCharacterRevives", (_evt, f) => {
   f.printString("event_whenCharacterRevives")
 })
 
+g.server({ id: 1073741843 }).on("whenComplexCreationPresetStatusChanges", (_evt, f) => {
+  f.printString("event_whenComplexCreationPresetStatusChanges")
+})
+
 g.server({ id: 1073741843 }).on("whenCreationEntersCombat", (_evt, f) => {
   f.printString("event_whenCreationEntersCombat")
 })
@@ -201,6 +205,10 @@ g.server({ id: 1073741843 }).on("whenTabIsSelected", (_evt, f) => {
 
 g.server({ id: 1073741843 }).on("whenTextBubbleIsCompleted", (_evt, f) => {
   f.printString("event_whenTextBubbleIsCompleted")
+})
+
+g.server({ id: 1073741843 }).on("whenTheActiveCharacterChanges", (_evt, f) => {
+  f.printString("event_whenTheActiveCharacterChanges")
 })
 
 g.server({ id: 1073741843 }).on("whenTheCharacterIsDown", (_evt, f) => {

@@ -201,6 +201,8 @@ function pickMethodForEnum(methods: MethodSig[], enumType: string): MethodSig | 
 function litOfParam(t: string): string {
   const type = t.trim()
   if (type === 'EntityValue') return 'e'
+  if (type === 'PlayerEntity') return 'pe'
+  if (type === 'CharacterEntity') return 'ce'
   if (type === 'IntValue') return '1n'
   if (type === 'FloatValue') return '1.25'
   if (type === 'BoolValue' || type === 'boolean') return 'true'
@@ -262,7 +264,7 @@ function renderEnumFile(
         const otherType = p.typeText.trim()
         const list = enums.get(otherType)
         const first = list?.[0]
-        args.push(first ? `E.${otherType}.${first}` : '1 as any')
+        args.push(first ? `E.${otherType}.${first}` : 'e')
         return
       }
       args.push(litOfParam(p.typeText))
@@ -280,6 +282,8 @@ function renderEnumFile(
     ``,
     `g.server({ id: ${graphId} }).on('whenEntityIsCreated', (_evt, f) => {`,
     `  const e = f.getSelfEntity()`,
+    `  const pe = f.getListOfPlayerEntitiesOnTheField()[0]`,
+    `  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]`,
     ...members.map(buildCall),
     `})`,
     ``

@@ -25,6 +25,6 @@ g.server({ id: 1073741840 }).on('whenEntityIsCreated', (_evt, f) => {
   // sortDictionaryByKey :: dict<int, str>
   f.sortDictionaryByKey(f.assemblyDictionary([{ k: 42n, v: "43" }, { k: 44n, v: "45" }]), E.SortBy.Ascending)
   // sortDictionaryByKey :: dict<int, vec3>
-  f.sortDictionaryByKey(f.assemblyDictionary([{ k: 47n, v: [48, 49, 50] }, { k: 49n, v: [50, 51, 52] }]), E.SortBy.Ascending)
+  f.sortDictionaryByKey(f.assemblyDictionary([{ k: 47n, v: f.create3dVector(48, 49, 50) }, { k: 49n, v: f.create3dVector(50, 51, 52) }]), E.SortBy.Ascending)
 })
 

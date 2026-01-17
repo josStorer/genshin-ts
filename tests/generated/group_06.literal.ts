@@ -25,7 +25,7 @@ g.server({ id: 1073741835 }).on('whenEntityIsCreated', (_evt, f) => {
   // setLocalVariable :: str
   f.setLocalVariable(f.getLocalVariable(1n).localVariable, "9")
   // setLocalVariable :: vec3
-  f.setLocalVariable(f.getLocalVariable(1n).localVariable, [10, 11, 12])
+  f.setLocalVariable(f.getLocalVariable(1n).localVariable, f.create3dVector(10, 11, 12))
   // setLocalVariable :: list<bool>
   f.setLocalVariable(f.getLocalVariable(1n).localVariable, f.assemblyList([true, false, true], "bool"))
   // setLocalVariable :: list<configId>
@@ -65,7 +65,7 @@ g.server({ id: 1073741835 }).on('whenEntityIsCreated', (_evt, f) => {
   // getLocalVariable :: str
   f.getLocalVariable("9")
   // getLocalVariable :: vec3
-  f.getLocalVariable([10, 11, 12])
+  f.getLocalVariable(f.create3dVector(10, 11, 12))
   // getLocalVariable :: list<bool>
   f.getLocalVariable(f.assemblyList([true, false, true], "bool"))
   // getLocalVariable :: list<configId>

@@ -7,6 +7,8 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741854 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
   f.addSoundEffectPlayer(e, 1n, 1n, 1.25, true, 1.25, true, 1.25, E.SoundAttenuationMode.LinearAttenuation, "s", [1,2,3])
   f.addSoundEffectPlayer(e, 1n, 1n, 1.25, true, 1.25, true, 1.25, E.SoundAttenuationMode.FastThenSlow, "s", [1,2,3])
   f.addSoundEffectPlayer(e, 1n, 1n, 1.25, true, 1.25, true, 1.25, E.SoundAttenuationMode.SlowThenFast, "s", [1,2,3])

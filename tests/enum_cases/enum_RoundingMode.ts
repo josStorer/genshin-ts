@@ -7,6 +7,8 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741857 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
   f.roundToIntegerOperation(1.25, E.RoundingMode.RoundToNearest)
   f.roundToIntegerOperation(1.25, E.RoundingMode.RoundUp)
   f.roundToIntegerOperation(1.25, E.RoundingMode.RoundDown)

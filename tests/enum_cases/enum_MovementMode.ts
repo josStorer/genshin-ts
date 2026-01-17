@@ -7,6 +7,8 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741851 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
   f.activateFixedPointMotionDevice(e, "s", E.MovementMode.InstantMovement, 1.25, [1,2,3], [1,2,3], true, E.FixedMotionParameterType.FixedSpeed, 1.25)
   f.activateFixedPointMotionDevice(e, "s", E.MovementMode.UniformLinearMotion, 1.25, [1,2,3], [1,2,3], true, E.FixedMotionParameterType.FixedSpeed, 1.25)
 })

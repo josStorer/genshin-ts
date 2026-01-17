@@ -7,6 +7,8 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741850 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
+  const pe = f.getListOfPlayerEntitiesOnTheField()[0]
+  const ce = f.getAllCharacterEntitiesOfSpecifiedPlayer(pe)[0]
   f.sortDictionaryByKey(f.assemblyDictionary([{ k: 1, v: 1 }]) as any, E.SortBy.Ascending)
   f.sortDictionaryByKey(f.assemblyDictionary([{ k: 1, v: 1 }]) as any, E.SortBy.Descending)
 })

@@ -1,50 +1,30 @@
-import * as E from 'genshin-ts/definitions/enum'
 import { g } from 'genshin-ts/runtime/core'
 import { configId, faction, guid, prefabId } from 'genshin-ts/runtime/value'
+import * as E from 'genshin-ts/definitions/enum'
 
 // AUTO-GENERATED: other (literal)
 // Run: npx tsx scripts/generate-node-gia-tests.ts
 
 g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
-  f.return()
-  f.emptyList('int')
-  f.emptyLocalVariableList('int')
-  f.initLocalVariable('float', 2)
-  // f.breakLoop(1n, 2n, 3n)
-  f.finiteLoop(1n, 2n, () => {
-    f.printString('literal_cb_finiteLoop_2')
-  })
-  f.doubleBranch(
-    true,
-    () => {
-      f.printString('literal_cb_doubleBranch_1')
-    },
-    () => {
-      f.printString('literal_cb_doubleBranch_2')
-    }
-  )
-  f.printString('1')
+  f.emptyList("int")
+  f.emptyLocalVariableList("int")
+  f.get("1")
+  f.set("1", 2, true)
+  f.__gstsEnsureVariable("1", "int", { dict: { k: "int", v: "int" }, value: 2, length: 3.25 })
+  f.__gstsAttachTimerHandle("1", [{ name: "2", valueType: "int" }, { name: "2", valueType: "int" }])
+  f.__gstsClearTimerCaptures("1", [{ name: "2", valueType: "int" }, { name: "2", valueType: "int" }])
+  f.__gstsRegisterTimerHandler(() => { f.printString("literal_cb___gstsRegisterTimerHandler_0") })
+  f.initLocalVariable("int", 1)
+  f.breakLoop(1n, 2n, 3n)
+  f.finiteLoop(1n, 2n, () => { f.printString("literal_cb_finiteLoop_2") })
+  f.doubleBranch(true, () => { f.printString("literal_cb_doubleBranch_1") }, () => { f.printString("literal_cb_doubleBranch_2") })
+  f.printString("1")
   f.forwardingEvent(f.getSelfEntity())
   f.setPresetStatus(f.getSelfEntity(), 2n, 3n)
-  f.createEntity(new guid(1n), f.assemblyList([2n, 3n, 4n], 'int'))
-  f.createPrefab(
-    new prefabId(1n),
-    [2, 3, 4],
-    [3, 4, 5],
-    f.getSelfEntity(),
-    true,
-    6n,
-    f.assemblyList([7n, 8n, 9n], 'int')
-  )
-  f.createPrefabGroup(
-    1n,
-    [2, 3, 4],
-    [3, 4, 5],
-    f.getSelfEntity(),
-    5n,
-    f.assemblyList([6n, 7n, 8n], 'int'),
-    true
-  )
+  f.setThePresetStatusValueOfTheComplexCreation(f.getSelfEntity(), 2n, 3n)
+  f.createEntity(new guid(1n), f.assemblyList([2n, 3n, 4n], "int"))
+  f.createPrefab(new prefabId(1n), f.create3dVector(2, 3, 4), f.create3dVector(3, 4, 5), f.getSelfEntity(), true, 6n, f.assemblyList([7n, 8n, 9n], "int"))
+  f.createPrefabGroup(1n, f.create3dVector(2, 3, 4), f.create3dVector(3, 4, 5), f.getSelfEntity(), 5n, f.assemblyList([6n, 7n, 8n], "int"), true)
   f.activateDisableModelDisplay(f.getSelfEntity(), false)
   f.destroyEntity(f.getSelfEntity())
   f.removeEntity(f.getSelfEntity())
@@ -52,191 +32,84 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.setCurrentEnvironmentTime(1.25)
   f.setEnvironmentTimePassageSpeed(1.25)
   f.modifyEntityFaction(f.getSelfEntity(), new faction(2n))
-  f.teleportPlayer(f.getSelfEntity(), [2, 3, 4], [3, 4, 5])
-  f.reviveCharacter(f.getSelfEntity())
-  f.reviveAllPlayerSCharacters(f.getSelfEntity(), false)
-  f.defeatAllPlayerSCharacters(f.getSelfEntity())
-  f.activateRevivePoint(f.getSelfEntity(), 2n)
-  f.setPlayerReviveTime(f.getSelfEntity(), 2n)
-  f.setPlayerRemainingRevives(f.getSelfEntity(), 2n)
-  f.modifyEnvironmentSettings(
-    1n,
-    f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], 'entity'),
-    false,
-    5n
-  )
-  f.allowForbidPlayerToRevive(f.getSelfEntity(), false)
-  f.deactivateRevivePoint(f.getSelfEntity(), 2n)
+  f.teleportPlayer(f.getListOfPlayerEntitiesOnTheField()[0], f.create3dVector(2, 3, 4), f.create3dVector(3, 4, 5))
+  f.reviveCharacter(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0])
+  f.reviveAllPlayerSCharacters(f.getListOfPlayerEntitiesOnTheField()[0], false)
+  f.defeatAllPlayerSCharacters(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.activateRevivePoint(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.setPlayerReviveTime(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.setPlayerRemainingRevives(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.modifyEnvironmentSettings(1n, f.getListOfPlayerEntitiesOnTheField(), true, 4n)
+  f.allowForbidPlayerToRevive(f.getListOfPlayerEntitiesOnTheField()[0], false)
+  f.deactivateRevivePoint(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
   f.activateDisableExtraCollision(f.getSelfEntity(), 2n, true)
   f.activateDisableExtraCollisionClimbability(f.getSelfEntity(), 2n, true)
   f.activateDisableNativeCollision(f.getSelfEntity(), false)
   f.activateDisableNativeCollisionClimbability(f.getSelfEntity(), false)
   f.activateDisableCollisionTrigger(f.getSelfEntity(), 2n, true)
-  f.initiateAttack(
-    f.getSelfEntity(),
-    2.25,
-    3.25,
-    [4, 5, 6],
-    [5, 6, 7],
-    '6',
-    true,
-    f.getSelfEntity()
-  )
-  f.recoverHp(f.getSelfEntity(), 2.25, '3', false, f.getSelfEntity())
+  f.activateDisablePathfindingObstacle(f.getSelfEntity(), 2n, true)
+  f.activateDisablePathfindingObstacleFeature(f.getSelfEntity(), false)
+  f.initiateAttack(f.getSelfEntity(), 2.25, 3.25, f.create3dVector(4, 5, 6), f.create3dVector(5, 6, 7), "6", true, f.getSelfEntity())
+  f.recoverHp(f.getSelfEntity(), 2.25, "3", false, f.getSelfEntity())
   f.hpLoss(f.getSelfEntity(), 2.25, true, false, true, E.DamagePopUpType.NoPopUp)
-  f.recoverHpDirectly(
-    f.getSelfEntity(),
-    f.getSelfEntity(),
-    3.25,
-    false,
-    5.25,
-    6.25,
-    f.assemblyList(['7', '8', '9'], 'str')
-  )
-  f.recoverBasicMotionDevice(f.getSelfEntity(), '2')
-  f.activateFixedPointMotionDevice(
-    f.getSelfEntity(),
-    '2',
-    E.MovementMode.InstantMovement,
-    3.25,
-    [4, 5, 6],
-    [5, 6, 7],
-    false,
-    E.FixedMotionParameterType.FixedSpeed,
-    7.25
-  )
-  f.activateBasicMotionDevice(f.getSelfEntity(), '2')
-  f.addTargetOrientedRotationBasedMotionDevice(f.getSelfEntity(), '2', 3.25, [4, 5, 6])
-  f.addUniformBasicLinearMotionDevice(f.getSelfEntity(), '2', 3.25, [4, 5, 6])
-  f.addUniformBasicRotationBasedMotionDevice(f.getSelfEntity(), '2', 3.25, 4.25, [5, 6, 7])
-  f.stopAndDeleteBasicMotionDevice(f.getSelfEntity(), '2', true)
-  f.pauseBasicMotionDevice(f.getSelfEntity(), '2')
+  f.recoverHpDirectly(f.getSelfEntity(), f.getSelfEntity(), 3.25, false, 5.25, 6.25, f.assemblyList(["7", "8", "9"], "str"))
+  f.recoverBasicMotionDevice(f.getSelfEntity(), "2")
+  f.activateFixedPointMotionDevice(f.getSelfEntity(), "2", E.MovementMode.InstantMovement, 3.25, f.create3dVector(4, 5, 6), f.create3dVector(5, 6, 7), false, E.FixedMotionParameterType.FixedSpeed, 7.25)
+  f.activateBasicMotionDevice(f.getSelfEntity(), "2")
+  f.addTargetOrientedRotationBasedMotionDevice(f.getSelfEntity(), "2", 3.25, f.create3dVector(4, 5, 6))
+  f.addUniformBasicLinearMotionDevice(f.getSelfEntity(), "2", 3.25, f.create3dVector(4, 5, 6))
+  f.addUniformBasicRotationBasedMotionDevice(f.getSelfEntity(), "2", 3.25, 4.25, f.create3dVector(5, 6, 7))
+  f.stopAndDeleteBasicMotionDevice(f.getSelfEntity(), "2", true)
+  f.pauseBasicMotionDevice(f.getSelfEntity(), "2")
   f.activateDisableFollowMotionDevice(f.getSelfEntity(), false)
-  f.switchFollowMotionDeviceTargetByGuid(
-    f.getSelfEntity(),
-    new guid(2n),
-    '3',
-    [4, 5, 6],
-    [5, 6, 7],
-    E.FollowCoordinateSystem.RelativeCoordinateSystem,
-    E.FollowLocationType.CompletelyFollow
-  )
-  f.switchFollowMotionDeviceTargetByEntity(
-    f.getSelfEntity(),
-    f.getSelfEntity(),
-    '3',
-    [4, 5, 6],
-    [5, 6, 7],
-    E.FollowCoordinateSystem.RelativeCoordinateSystem,
-    E.FollowLocationType.CompletelyFollow
-  )
-  f.createProjectile(
-    new prefabId(1n),
-    [2, 3, 4],
-    [3, 4, 5],
-    f.getSelfEntity(),
-    f.getSelfEntity(),
-    false,
-    7n,
-    f.assemblyList([8n, 9n, 10n], 'int')
-  )
-  f.playTimedEffects(
-    new configId(1n),
-    f.getSelfEntity(),
-    '3',
-    false,
-    true,
-    [6, 7, 8],
-    [7, 8, 9],
-    8.25,
-    true
-  )
+  f.switchFollowMotionDeviceTargetByGuid(f.getSelfEntity(), new guid(2n), "3", f.create3dVector(4, 5, 6), f.create3dVector(5, 6, 7), E.FollowCoordinateSystem.RelativeCoordinateSystem, E.FollowLocationType.CompletelyFollow)
+  f.switchFollowMotionDeviceTargetByEntity(f.getSelfEntity(), f.getSelfEntity(), "3", f.create3dVector(4, 5, 6), f.create3dVector(5, 6, 7), E.FollowCoordinateSystem.RelativeCoordinateSystem, E.FollowLocationType.CompletelyFollow)
+  f.createProjectile(new prefabId(1n), f.create3dVector(2, 3, 4), f.create3dVector(3, 4, 5), f.getSelfEntity(), f.getSelfEntity(), false, 7n, f.assemblyList([8n, 9n, 10n], "int"))
+  f.playTimedEffects(new configId(1n), f.getSelfEntity(), "3", false, true, f.create3dVector(6, 7, 8), f.create3dVector(7, 8, 9), 8.25, true)
   f.clearSpecialEffectsBasedOnSpecialEffectAssets(f.getSelfEntity(), new configId(2n))
-  f.mountLoopingSpecialEffect(
-    new configId(1n),
-    f.getSelfEntity(),
-    '3',
-    false,
-    true,
-    [6, 7, 8],
-    [7, 8, 9],
-    8.25,
-    true
-  )
+  f.mountLoopingSpecialEffect(new configId(1n), f.getSelfEntity(), "3", false, true, f.create3dVector(6, 7, 8), f.create3dVector(7, 8, 9), 8.25, true)
   f.clearLoopingSpecialEffect(1n, f.getSelfEntity())
-  f.resumeTimer(f.getSelfEntity(), '2')
-  f.startTimer(f.getSelfEntity(), '2', true, f.assemblyList([4.25, 5.25, 6.25], 'float'))
-  f.pauseTimer(f.getSelfEntity(), '2')
-  f.stopTimer(f.getSelfEntity(), '2')
-  f.recoverGlobalTimer(f.getSelfEntity(), '2')
-  f.startGlobalTimer(f.getSelfEntity(), '2')
-  f.modifyGlobalTimer(f.getSelfEntity(), '2', 3.25)
-  f.pauseGlobalTimer(f.getSelfEntity(), '2')
-  f.stopGlobalTimer(f.getSelfEntity(), '2')
-  f.switchMainCameraTemplate(
-    f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], 'entity'),
-    '3'
-  )
+  f.resumeTimer(f.getSelfEntity(), "2")
+  f.startTimer(f.getSelfEntity(), "2", true, f.assemblyList([4.25, 5.25, 6.25], "float"))
+  f.pauseTimer(f.getSelfEntity(), "2")
+  f.stopTimer(f.getSelfEntity(), "2")
+  f.recoverGlobalTimer(f.getSelfEntity(), "2")
+  f.startGlobalTimer(f.getSelfEntity(), "2")
+  f.modifyGlobalTimer(f.getSelfEntity(), "2", 3.25)
+  f.pauseGlobalTimer(f.getSelfEntity(), "2")
+  f.stopGlobalTimer(f.getSelfEntity(), "2")
+  f.switchMainCameraTemplate(f.getListOfPlayerEntitiesOnTheField(), "2")
   f.modifyingCharacterDisruptorDevice(f.getSelfEntity(), 2n)
-  f.addUnitStatus(
-    f.getSelfEntity(),
-    f.getSelfEntity(),
-    new configId(3n),
-    4n,
-    f.assemblyDictionary([
-      { k: '6', v: 7.25 },
-      { k: '8', v: 9.25 }
-    ])
-  )
-  f.removeUnitStatus(
-    f.getSelfEntity(),
-    new configId(2n),
-    E.RemovalMethod.AllCoexistingStatusesWithTheSameName,
-    f.getSelfEntity()
-  )
+  f.addUnitStatus(f.getSelfEntity(), f.getSelfEntity(), new configId(3n), 4n, f.assemblyDictionary([{ k: "6", v: 7.25 }, { k: "8", v: 9.25 }]))
+  f.removeUnitStatus(f.getSelfEntity(), new configId(2n), E.RemovalMethod.AllCoexistingStatusesWithTheSameName, f.getSelfEntity())
   f.activateDisableTab(f.getSelfEntity(), 2n, true)
   f.activateDisableCollisionTriggerSource(f.getSelfEntity(), false)
-  f.changePlayerSCurrentClassLevel(f.getSelfEntity(), 2n)
-  f.changePlayerClass(f.getSelfEntity(), new configId(2n))
-  f.increasePlayerSCurrentClassExp(f.getSelfEntity(), 2n)
-  f.activateUiControlGroupInControlGroupLibrary(f.getSelfEntity(), 2n)
-  f.switchCurrentInterfaceLayout(f.getSelfEntity(), 2n)
-  f.modifyUiControlStatusWithinTheInterfaceLayout(f.getSelfEntity(), 2n, E.UIControlGroupStatus.Off)
-  f.removeInterfaceControlGroupFromControlGroupLibrary(f.getSelfEntity(), 2n)
-  f.modifySkillCdPercentageBasedOnMaxCd(
-    f.getSelfEntity(),
-    E.CharacterSkillSlot.NormalAttack,
-    2.25,
-    true
-  )
-  f.initializeCharacterSkill(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack)
-  f.setSkillResourceAmount(f.getSelfEntity(), new configId(2n), 3.25)
-  f.setCharacterSkillCd(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack, 2.25, true)
-  f.addCharacterSkill(f.getSelfEntity(), new configId(2n), E.CharacterSkillSlot.NormalAttack)
-  f.modifySkillResourceAmount(f.getSelfEntity(), new configId(2n), 3.25)
-  f.modifyCharacterSkillCd(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack, 2.25, true)
-  f.deleteCharacterSkillBySlot(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack)
-  f.deleteCharacterSkillById(f.getSelfEntity(), new configId(2n))
-  f.adjustPlayerBackgroundMusicVolume(f.getSelfEntity(), 2n)
+  f.changePlayerSCurrentClassLevel(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.changePlayerClass(f.getListOfPlayerEntitiesOnTheField()[0], new configId(2n))
+  f.increasePlayerSCurrentClassExp(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.activateUiControlGroupInControlGroupLibrary(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.switchCurrentInterfaceLayout(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.modifyUiControlStatusWithinTheInterfaceLayout(f.getListOfPlayerEntitiesOnTheField()[0], 2n, E.UIControlGroupStatus.Off)
+  f.removeInterfaceControlGroupFromControlGroupLibrary(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.modifySkillCdPercentageBasedOnMaxCd(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], E.CharacterSkillSlot.NormalAttack, 2.25, true)
+  f.initializeCharacterSkill(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], E.CharacterSkillSlot.NormalAttack)
+  f.setSkillResourceAmount(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], new configId(2n), 3.25)
+  f.setCharacterSkillCd(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], E.CharacterSkillSlot.NormalAttack, 2.25, true)
+  f.addCharacterSkill(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], new configId(2n), E.CharacterSkillSlot.NormalAttack)
+  f.modifySkillResourceAmount(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], new configId(2n), 3.25)
+  f.setCharacterSElementalEnergy(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], 2.25)
+  f.increasesCharacterSElementalEnergy(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], 2.25)
+  f.modifyCharacterSkillCd(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], E.CharacterSkillSlot.NormalAttack, 2.25, true)
+  f.deleteCharacterSkillBySlot(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], E.CharacterSkillSlot.NormalAttack)
+  f.deleteCharacterSkillById(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], new configId(2n))
+  f.adjustPlayerBackgroundMusicVolume(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
   f.adjustSpecifiedSoundEffectPlayer(f.getSelfEntity(), 2n, 3n, 4.25)
   f.closeSpecifiedSoundEffectPlayer(f.getSelfEntity(), 2n)
-  f.startPausePlayerBackgroundMusic(f.getSelfEntity(), false)
+  f.startPausePlayerBackgroundMusic(f.getListOfPlayerEntitiesOnTheField()[0], false)
   f.startPauseSpecifiedSoundEffectPlayer(f.getSelfEntity(), 2n, true)
-  f.addSoundEffectPlayer(
-    f.getSelfEntity(),
-    2n,
-    3n,
-    4.25,
-    true,
-    6.25,
-    true,
-    8.25,
-    E.SoundAttenuationMode.LinearAttenuation,
-    '9',
-    [10, 11, 12]
-  )
-  f.playerPlaysOneShot2dSoundEffect(f.getSelfEntity(), 2n, 3n, 4.25)
-  f.modifyPlayerBackgroundMusic(f.getSelfEntity(), 2n, 3.25, 4.25, 5n, false, 7.25, 8.25, true)
+  f.addSoundEffectPlayer(f.getSelfEntity(), 2n, 3n, 4.25, true, 6.25, true, 8.25, E.SoundAttenuationMode.LinearAttenuation, "9", f.create3dVector(10, 11, 12))
+  f.playerPlaysOneShot2dSoundEffect(f.getListOfPlayerEntitiesOnTheField()[0], 2n, 3n, 4.25)
+  f.modifyPlayerBackgroundMusic(f.getListOfPlayerEntitiesOnTheField()[0], 2n, 3.25, 4.25, 5n, false, 7.25, 8.25, true)
   f.clearUnitTagsFromEntity(f.getSelfEntity())
   f.addUnitTagToEntity(f.getSelfEntity(), 2n)
   f.removeUnitTagFromEntity(f.getSelfEntity(), 2n)
@@ -244,183 +117,75 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.removeTargetEntityFromAggroList(f.getSelfEntity(), f.getSelfEntity())
   f.clearSpecifiedTargetSAggroList(f.getSelfEntity())
   f.setTheAggroValueOfSpecifiedEntity(f.getSelfEntity(), f.getSelfEntity(), 3n)
-  f.sendSignal('literal_signal')
-  f.setEntityActiveNameplate(f.getSelfEntity(), f.assemblyList([2n, 3n, 4n], 'config_id'))
+  f.sendSignal("literal_signal")
+  f.setEntityActiveNameplate(f.getSelfEntity(), f.assemblyList([2n, 3n, 4n], "config_id"))
   f.switchActiveTextBubble(f.getSelfEntity(), new configId(2n))
-  f.closeDeckSelector(f.getSelfEntity(), 2n)
-  f.invokeDeckSelector(
-    f.getSelfEntity(),
-    2n,
-    3.25,
-    f.assemblyList([4n, 5n, 6n], 'int'),
-    f.assemblyList([5n, 6n, 7n], 'int'),
-    6n,
-    7n,
-    E.DecisionRefreshMode.CannotRefresh,
-    8n,
-    9n,
-    f.assemblyList([10n, 11n, 12n], 'int')
-  )
-  f.randomDeckSelectorSelectionList(f.assemblyList([1n, 2n, 3n], 'int'))
-  f.setPlayerSettlementSuccessStatus(f.getSelfEntity(), E.SettlementStatus.Undefined)
-  f.setPlayerSettlementRankingValue(f.getSelfEntity(), 2n)
+  f.closeDeckSelector(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.invokeDeckSelector(f.getListOfPlayerEntitiesOnTheField()[0], 2n, 3.25, f.assemblyList([4n, 5n, 6n], "int"), f.assemblyList([5n, 6n, 7n], "int"), 6n, 7n, E.DecisionRefreshMode.CannotRefresh, 8n, 9n, f.assemblyList([10n, 11n, 12n], "int"))
+  f.randomDeckSelectorSelectionList(f.assemblyList([1n, 2n, 3n], "int"))
+  f.setPlayerSettlementSuccessStatus(f.getListOfPlayerEntitiesOnTheField()[0], E.SettlementStatus.Undefined)
+  f.setPlayerSettlementRankingValue(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
   f.setFactionSettlementSuccessStatus(new faction(1n), E.SettlementStatus.Undefined)
   f.setFactionSettlementRankingValue(new faction(1n), 2n)
   f.toggleEntityLightSource(f.getSelfEntity(), 2n, true)
   f.removeItemFromInventoryShopSalesList(f.getSelfEntity(), 2n, new configId(3n))
   f.removeItemFromPurchaseList(f.getSelfEntity(), 2n, new configId(3n))
   f.removeItemFromCustomShopSalesList(f.getSelfEntity(), 2n, 3n)
-  f.openShop(f.getSelfEntity(), f.getSelfEntity(), 3n)
-  f.closeShop(f.getSelfEntity())
-  f.addNewItemToInventoryShopSalesList(
-    f.getSelfEntity(),
-    2n,
-    new configId(3n),
-    f.assemblyDictionary([
-      { k: new configId(5n), v: 6n },
-      { k: new configId(7n), v: 8n }
-    ]),
-    9n,
-    10n,
-    true
-  )
-  f.addItemsToThePurchaseList(
-    f.getSelfEntity(),
-    2n,
-    new configId(3n),
-    f.assemblyDictionary([
-      { k: new configId(5n), v: 6n },
-      { k: new configId(7n), v: 8n }
-    ]),
-    true
-  )
-  f.addNewItemToCustomShopSalesList(
-    f.getSelfEntity(),
-    2n,
-    new configId(3n),
-    f.assemblyDictionary([
-      { k: new configId(5n), v: 6n },
-      { k: new configId(7n), v: 8n }
-    ]),
-    9n,
-    false,
-    11n,
-    12n,
-    true
-  )
-  f.modifyInventoryShopItemSalesInfo(
-    f.getSelfEntity(),
-    2n,
-    new configId(3n),
-    f.assemblyDictionary([
-      { k: new configId(5n), v: 6n },
-      { k: new configId(7n), v: 8n }
-    ]),
-    9n,
-    10n,
-    true
-  )
-  f.modifyItemPurchaseInfoInThePurchaseList(
-    f.getSelfEntity(),
-    2n,
-    new configId(3n),
-    f.assemblyDictionary([
-      { k: new configId(5n), v: 6n },
-      { k: new configId(7n), v: 8n }
-    ]),
-    true
-  )
-  f.modifyCustomShopItemSalesInfo(
-    f.getSelfEntity(),
-    2n,
-    3n,
-    new configId(4n),
-    f.assemblyDictionary([
-      { k: new configId(6n), v: 7n },
-      { k: new configId(8n), v: 9n }
-    ]),
-    10n,
-    true,
-    12n,
-    13n,
-    false
-  )
+  f.openShop(f.getListOfPlayerEntitiesOnTheField()[0], f.getSelfEntity(), 3n)
+  f.closeShop(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.addNewItemToInventoryShopSalesList(f.getSelfEntity(), 2n, new configId(3n), f.assemblyDictionary([{ k: new configId(5n), v: 6n }, { k: new configId(7n), v: 8n }]), 9n, 10n, true)
+  f.addItemsToThePurchaseList(f.getSelfEntity(), 2n, new configId(3n), f.assemblyDictionary([{ k: new configId(5n), v: 6n }, { k: new configId(7n), v: 8n }]), true)
+  f.addNewItemToCustomShopSalesList(f.getSelfEntity(), 2n, new configId(3n), f.assemblyDictionary([{ k: new configId(5n), v: 6n }, { k: new configId(7n), v: 8n }]), 9n, false, 11n, 12n, true)
+  f.modifyInventoryShopItemSalesInfo(f.getSelfEntity(), 2n, new configId(3n), f.assemblyDictionary([{ k: new configId(5n), v: 6n }, { k: new configId(7n), v: 8n }]), 9n, 10n, true)
+  f.modifyItemPurchaseInfoInThePurchaseList(f.getSelfEntity(), 2n, new configId(3n), f.assemblyDictionary([{ k: new configId(5n), v: 6n }, { k: new configId(7n), v: 8n }]), true)
+  f.modifyCustomShopItemSalesInfo(f.getSelfEntity(), 2n, 3n, new configId(4n), f.assemblyDictionary([{ k: new configId(6n), v: 7n }, { k: new configId(8n), v: 9n }]), 10n, true, 12n, 13n, false)
   f.modifyEquipmentAffixValue(1n, 2n, 3.25)
   f.removeEquipmentAffix(1n, 2n)
   f.addAffixToEquipment(1n, new configId(2n), true, 4.25)
   f.addAffixToEquipmentAtSpecifiedId(1n, new configId(2n), 3n, false, 5.25)
-  f.setInventoryItemDropContents(
-    f.getSelfEntity(),
-    f.assemblyDictionary([
-      { k: new configId(3n), v: 4n },
-      { k: new configId(5n), v: 6n }
-    ]),
-    E.ItemLootType.SharedReward
-  )
-  f.setInventoryDropItemsCurrencyAmount(
-    f.getSelfEntity(),
-    new configId(2n),
-    3n,
-    E.ItemLootType.SharedReward
-  )
+  f.replaceEquipmentToTheSpecifiedSlot(f.getSelfEntity(), 2n, 3n, 4n)
+  f.setInventoryItemDropContents(f.getSelfEntity(), f.assemblyDictionary([{ k: new configId(3n), v: 4n }, { k: new configId(5n), v: 6n }]), E.ItemLootType.SharedReward)
+  f.setInventoryDropItemsCurrencyAmount(f.getSelfEntity(), new configId(2n), 3n, E.ItemLootType.SharedReward)
   f.triggerLootDrop(f.getSelfEntity(), E.ItemLootType.SharedReward)
-  f.setLootDropContent(
-    f.getSelfEntity(),
-    f.assemblyDictionary([
-      { k: new configId(3n), v: 4n },
-      { k: new configId(5n), v: 6n }
-    ])
-  )
+  f.setLootDropContent(f.getSelfEntity(), f.assemblyDictionary([{ k: new configId(3n), v: 4n }, { k: new configId(5n), v: 6n }]))
   f.modifyInventoryItemQuantity(f.getSelfEntity(), new configId(2n), 3n)
   f.modifyInventoryCurrencyQuantity(f.getSelfEntity(), new configId(2n), 3n)
   f.modifyLootItemComponentQuantity(f.getSelfEntity(), new configId(2n), 3n)
   f.modifyLootComponentCurrencyAmount(f.getSelfEntity(), new configId(2n), 3n)
   f.increaseMaximumInventoryCapacity(f.getSelfEntity(), 2n)
-  f.modifyPlayerListForVisibleMiniMapMarkers(
-    f.getSelfEntity(),
-    2n,
-    f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], 'entity')
-  )
-  f.modifyPlayerMarkersOnTheMiniMap(f.getSelfEntity(), 2n, f.getSelfEntity())
-  f.modifyMiniMapMarkerActivationStatus(
-    f.getSelfEntity(),
-    f.assemblyList([2n, 3n, 4n], 'int'),
-    true
-  )
-  f.modifyMiniMapZoom(f.getSelfEntity(), 2.25)
-  f.modifyPlayerListForTrackingMiniMapMarkers(
-    f.getSelfEntity(),
-    2n,
-    f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], 'entity')
-  )
+  f.modifyPlayerListForVisibleMiniMapMarkers(f.getSelfEntity(), 2n, f.getListOfPlayerEntitiesOnTheField())
+  f.modifyPlayerMarkersOnTheMiniMap(f.getSelfEntity(), 2n, f.getListOfPlayerEntitiesOnTheField()[0])
+  f.modifyMiniMapMarkerActivationStatus(f.getSelfEntity(), f.assemblyList([2n, 3n, 4n], "int"), true)
+  f.modifyMiniMapZoom(f.getListOfPlayerEntitiesOnTheField()[0], 2.25)
+  f.modifyPlayerListForTrackingMiniMapMarkers(f.getSelfEntity(), 2n, f.getListOfPlayerEntitiesOnTheField())
   f.switchCreationPatrolTemplate(f.getSelfEntity(), 2n)
-  f.setPlayerLeaderboardScoreAsAFloat(f.assemblyList([1n, 2n, 3n], 'int'), 2.25, 3n)
-  f.setPlayerLeaderboardScoreAsAnInteger(f.assemblyList([1n, 2n, 3n], 'int'), 2n, 3n)
+  f.setPlayerLeaderboardScoreAsAFloat(f.assemblyList([1n, 2n, 3n], "int"), 2.25, 3n)
+  f.setPlayerLeaderboardScoreAsAnInteger(f.assemblyList([1n, 2n, 3n], "int"), 2n, 3n)
   f.changeAchievementProgressTally(f.getSelfEntity(), 2n, 3n)
   f.setAchievementProgressTally(f.getSelfEntity(), 2n, 3n)
   f.setScanTagRules(f.getSelfEntity(), E.ScanRuleType.PrioritizeView)
   f.setScanComponentSActiveScanTagId(f.getSelfEntity(), 2n)
-  f.switchTheScoringGroupThatAffectsPlayerSCompetitiveRank(f.getSelfEntity(), 2n)
-  f.setPlayerRankScoreChange(f.getSelfEntity(), E.SettlementStatus.Undefined, 2n)
-  f.setPlayerEscapeValidity(f.getSelfEntity(), false)
+  f.switchTheScoringGroupThatAffectsPlayerSCompetitiveRank(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.setPlayerRankScoreChange(f.getListOfPlayerEntitiesOnTheField()[0], E.SettlementStatus.Undefined, 2n)
+  f.setPlayerEscapeValidity(f.getListOfPlayerEntitiesOnTheField()[0], false)
   f.activateDisableEntityDeploymentGroup(1n, false)
   f.setChatChannelSwitch(1n, false)
-  f.setPlayerSCurrentChannel(new guid(1n), f.assemblyList([2n, 3n, 4n], 'int'))
+  f.setPlayerSCurrentChannel(new guid(1n), f.assemblyList([2n, 3n, 4n], "int"))
   f.modifyPlayerChannelPermission(new guid(1n), 2n, true)
-  f.consumeGiftBox(f.getSelfEntity(), 2n, 3n)
-  f.split3dVector([1, 2, 3])
+  f.consumeGiftBox(f.getListOfPlayerEntitiesOnTheField()[0], 2n, 3n)
+  f.split3dVector(f.create3dVector(1, 2, 3))
   f.create3dVector(1.25, 2.25, 3.25)
   f.logarithmOperation(1.25, 2.25)
   f.arccosineFunction(1.25)
   f.arctangentFunction(1.25)
   f.arcsineFunction(1.25)
-  f.directionVectorToRotation([1, 2, 3], [2, 3, 4])
+  f.directionVectorToRotation(f.create3dVector(1, 2, 3), f.create3dVector(2, 3, 4))
   f.calculateTimestampFromFormattedTime(1n, 2n, 3n, 4n, 5n, 6n)
   f.calculateFormattedTimeFromTimestamp(1n)
   f.calculateDayOfTheWeekFromTimestamp(1n)
   f.radiansToDegrees(1.25)
   f.degreesToRadians(1.25)
-  f.distanceBetweenTwoCoordinatePoints([1, 2, 3], [2, 3, 4])
+  f.distanceBetweenTwoCoordinatePoints(f.create3dVector(1, 2, 3), f.create3dVector(2, 3, 4))
   f.logicalNotOperation(true)
   f.logicalOrOperation(true, false)
   f.logicalXorOperation(true, false)
@@ -428,15 +193,15 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.moduloOperation(1n, 2n)
   f.arithmeticSquareRootOperation(1.25)
   f.roundToIntegerOperation(1.25, E.RoundingMode.RoundToNearest)
-  f._3dVectorNormalization([1, 2, 3])
-  f._3dVectorAddition([1, 2, 3], [2, 3, 4])
-  f._3dVectorAngle([1, 2, 3], [2, 3, 4])
-  f._3dVectorSubtraction([1, 2, 3], [2, 3, 4])
-  f._3dVectorModuloOperation([1, 2, 3])
-  f._3dVectorDotProduct([1, 2, 3], [2, 3, 4])
-  f._3dVectorZoom([1, 2, 3], 2.25)
-  f._3dVectorCrossProduct([1, 2, 3], [2, 3, 4])
-  f._3dVectorRotation([1, 2, 3], [2, 3, 4])
+  f._3dVectorNormalization(f.create3dVector(1, 2, 3))
+  f._3dVectorAddition(f.create3dVector(1, 2, 3), f.create3dVector(2, 3, 4))
+  f._3dVectorAngle(f.create3dVector(1, 2, 3), f.create3dVector(2, 3, 4))
+  f._3dVectorSubtraction(f.create3dVector(1, 2, 3), f.create3dVector(2, 3, 4))
+  f._3dVectorModuloOperation(f.create3dVector(1, 2, 3))
+  f._3dVectorDotProduct(f.create3dVector(1, 2, 3), f.create3dVector(2, 3, 4))
+  f._3dVectorZoom(f.create3dVector(1, 2, 3), 2.25)
+  f._3dVectorCrossProduct(f.create3dVector(1, 2, 3), f.create3dVector(2, 3, 4))
+  f._3dVectorRotation(f.create3dVector(1, 2, 3), f.create3dVector(2, 3, 4))
   f.cosineFunction(1.25)
   f.tangentFunction(1.25)
   f.sineFunction(1.25)
@@ -455,7 +220,7 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.queryTimestampUtc0()
   f.getRandomFloatingPointNumber(1.25, 2.25)
   f.getRandomInteger(1n, 2n)
-  f.weightedRandom(f.assemblyList([1n, 2n, 3n], 'int'))
+  f.weightedRandom(f.assemblyList([1n, 2n, 3n], "int"))
   f._3dVectorBackward()
   f._3dVectorZeroVector()
   f._3dVectorForward()
@@ -465,12 +230,13 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f._3dVectorLeft()
   f.pi()
   f.getPresetStatus(f.getSelfEntity(), 2n)
-  f.queryCharacterSCurrentMovementSpd(f.getSelfEntity())
+  f.getThePresetStatusValueOfTheComplexCreation(f.getSelfEntity(), 2n)
+  f.queryCharacterSCurrentMovementSpd(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0])
   f.queryIfEntityIsOnTheField(f.getSelfEntity())
   f.getAllEntitiesOnTheField()
   f.getSpecifiedTypeOfEntitiesOnTheField(E.EntityType.Stage)
   f.getEntitiesWithSpecifiedPrefabOnTheField(new prefabId(1n))
-  f.getCharacterAttribute(f.getSelfEntity())
+  f.getCharacterAttribute(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0])
   f.getEntityAdvancedAttribute(f.getSelfEntity())
   f.getEntityType(f.getSelfEntity())
   f.getEntityLocationAndRotation(f.getSelfEntity())
@@ -479,25 +245,13 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.getEntityRightVector(f.getSelfEntity())
   f.getListOfEntitiesOwnedByTheEntity(f.getSelfEntity())
   f.getEntityElementalAttribute(f.getSelfEntity())
+  f.checkEntitySElementalEffectStatus(f.getSelfEntity())
   f.getObjectAttribute(f.getSelfEntity())
   f.getOwnerEntity(f.getSelfEntity())
-  f.getEntityListBySpecifiedRange(
-    f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], 'entity'),
-    [3, 4, 5],
-    4.25
-  )
-  f.getEntityListBySpecifiedType(
-    f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], 'entity'),
-    E.EntityType.Stage
-  )
-  f.getEntityListBySpecifiedPrefabId(
-    f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], 'entity'),
-    new prefabId(3n)
-  )
-  f.getEntityListBySpecifiedFaction(
-    f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], 'entity'),
-    new faction(3n)
-  )
+  f.getEntityListBySpecifiedRange(f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], "entity"), f.create3dVector(3, 4, 5), 4.25)
+  f.getEntityListBySpecifiedType(f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], "entity"), E.EntityType.Stage)
+  f.getEntityListBySpecifiedPrefabId(f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], "entity"), new prefabId(3n))
+  f.getEntityListBySpecifiedFaction(f.assemblyList([f.getSelfEntity(), f.getSelfEntity(), f.getSelfEntity()], "entity"), new faction(3n))
   f.getSelfEntity()
   f.queryGuidByEntity(f.getSelfEntity())
   f.queryEntityByGuid(new guid(1n))
@@ -505,25 +259,27 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.queryGameTimeElapsed()
   f.queryEntityFaction(f.getSelfEntity())
   f.queryIfFactionIsHostile(new faction(1n), new faction(2n))
-  f.queryIfAllPlayerCharactersAreDown(f.getSelfEntity())
+  f.queryIfAllPlayerCharactersAreDown(f.getListOfPlayerEntitiesOnTheField()[0])
   f.getPlayerGuidByPlayerId(1n)
   f.getPlayerIdByPlayerGuid(new guid(1n))
-  f.getPlayerClientInputDeviceType(f.getSelfEntity())
-  f.getPlayerEntityToWhichTheCharacterBelongs(f.getSelfEntity())
-  f.getPlayerReviveTime(f.getSelfEntity())
-  f.getPlayerNickname(f.getSelfEntity())
-  f.getPlayerRemainingRevives(f.getSelfEntity())
+  f.getPlayerClientInputDeviceType(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.getPlayerEntityToWhichTheCharacterBelongs(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0])
+  f.getPlayerReviveTime(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.getPlayerNickname(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.getPlayerRemainingRevives(f.getListOfPlayerEntitiesOnTheField()[0])
   f.getListOfPlayerEntitiesOnTheField()
-  f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getSelfEntity())
+  f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.checkClassicModeCharacterId(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0])
+  f.getActiveCharacterOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])
   f.getFollowMotionDeviceTarget(f.getSelfEntity())
-  f.getCurrentGlobalTimerTime(f.getSelfEntity(), '2')
-  f.getPlayerSCurrentUiLayout(f.getSelfEntity())
+  f.getCurrentGlobalTimerTime(f.getSelfEntity(), "2")
+  f.getPlayerSCurrentUiLayout(f.getListOfPlayerEntitiesOnTheField()[0])
   f.getCreationSCurrentTarget(f.getSelfEntity())
   f.getAggroListOfCreationInDefaultMode(f.getSelfEntity())
   f.getCreationAttribute(f.getSelfEntity())
-  f.queryPlayerClassLevel(f.getSelfEntity(), new configId(2n))
-  f.queryPlayerClass(f.getSelfEntity())
-  f.queryCharacterSkill(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack)
+  f.queryPlayerClassLevel(f.getListOfPlayerEntitiesOnTheField()[0], new configId(2n))
+  f.queryPlayerClass(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.queryCharacterSkill(f.getAllCharacterEntitiesOfSpecifiedPlayer(f.getListOfPlayerEntitiesOnTheField()[0])[0], E.CharacterSkillSlot.NormalAttack)
   f.listOfSlotIdsQueryingUnitStatus(f.getSelfEntity(), new configId(2n))
   f.queryIfEntityHasUnitStatus(f.getSelfEntity(), new configId(2n))
   f.queryUnitStatusStacksBySlotId(f.getSelfEntity(), new configId(2n), 3n)
@@ -538,25 +294,22 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.getListOfOwnersThatHaveTheTargetAsTheirAggroTarget(f.getSelfEntity())
   f.getTheAggroListOfTheSpecifiedEntity(f.getSelfEntity())
   f.getTheAggroTargetOfTheSpecifiedEntity(f.getSelfEntity())
+  f.getTheNumberOfWaypointsInTheGlobalPath(1n)
   f.getSpecifiedWaypointInfo(1n, 2n)
   f.getPresetPointListByUnitTag(1n)
   f.queryPresetPointPositionRotation(1n)
-  f.getPlayerSettlementSuccessStatus(f.getSelfEntity())
-  f.getPlayerSettlementRankingValue(f.getSelfEntity())
+  f.getPlayerSettlementSuccessStatus(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.getPlayerSettlementRankingValue(f.getListOfPlayerEntitiesOnTheField()[0])
   f.getFactionSettlementSuccessStatus(new faction(1n))
   f.getFactionSettlementRankingValue(new faction(1n))
-  f.queryDictionarySLength(
-    f.assemblyDictionary([
-      { k: 2, v: 3 },
-      { k: 4, v: 5 }
-    ])
-  )
+  f.queryDictionarySLength(f.assemblyDictionary([{ k: 2, v: 3 }, { k: 4, v: 5 }]))
   f.queryInventoryShopItemSalesInfo(f.getSelfEntity(), 2n, new configId(3n))
   f.queryInventoryShopItemSalesList(f.getSelfEntity(), 2n)
   f.queryShopPurchaseItemList(f.getSelfEntity(), 2n)
   f.queryShopItemPurchaseInfo(f.getSelfEntity(), 2n, new configId(3n))
   f.queryCustomShopItemSalesList(f.getSelfEntity(), 2n)
   f.queryCustomShopItemSalesInfo(f.getSelfEntity(), 2n, 3n)
+  f.getTheEquipmentIndexOfTheSpecifiedEquipmentSlot(f.getSelfEntity(), 2n, 3n)
   f.queryEquipmentTagList(1n)
   f.queryEquipmentConfigIdByEquipmentId(1n)
   f.getEquipmentAffixList(1n)
@@ -579,10 +332,11 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.getCurrentCreationSPatrolTemplate(f.getSelfEntity())
   f.queryIfAchievementIsCompleted(f.getSelfEntity(), 2n)
   f.getTheCurrentlyActiveScanTagConfigId(f.getSelfEntity())
-  f.getPlayerRankScoreChange(f.getSelfEntity(), E.SettlementStatus.Undefined)
-  f.getPlayerRankingInfo(f.getSelfEntity())
-  f.getPlayerEscapeValidity(f.getSelfEntity())
+  f.getPlayerRankScoreChange(f.getListOfPlayerEntitiesOnTheField()[0], E.SettlementStatus.Undefined)
+  f.getPlayerRankingInfo(f.getListOfPlayerEntitiesOnTheField()[0])
+  f.getPlayerEscapeValidity(f.getListOfPlayerEntitiesOnTheField()[0])
   f.getCurrentlyActiveEntityDeploymentGroups()
-  f.queryCorrespondingGiftBoxQuantity(f.getSelfEntity(), 2n)
-  f.queryCorrespondingGiftBoxConsumption(f.getSelfEntity(), 2n)
+  f.queryCorrespondingGiftBoxQuantity(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
+  f.queryCorrespondingGiftBoxConsumption(f.getListOfPlayerEntitiesOnTheField()[0], 2n)
 })
+

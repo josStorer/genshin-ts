@@ -7,10 +7,10 @@ import * as E from 'genshin-ts/definitions/enum'
 
 g.server({ id: 1073741839 }).on('whenEntityIsCreated', (_evt, f) => {
   // setPlayerSettlementScoreboardDataDisplay :: float
-  f.setPlayerSettlementScoreboardDataDisplay(f.getSelfEntity(), 2n, "3", 4.25)
+  f.setPlayerSettlementScoreboardDataDisplay(f.getListOfPlayerEntitiesOnTheField()[0], 2n, "3", 4.25)
   // setPlayerSettlementScoreboardDataDisplay :: int
-  f.setPlayerSettlementScoreboardDataDisplay(f.getSelfEntity(), 6n, "7", 8n)
+  f.setPlayerSettlementScoreboardDataDisplay(f.getListOfPlayerEntitiesOnTheField()[0], 6n, "7", 8n)
   // setPlayerSettlementScoreboardDataDisplay :: str
-  f.setPlayerSettlementScoreboardDataDisplay(f.getSelfEntity(), 10n, "11", "12")
+  f.setPlayerSettlementScoreboardDataDisplay(f.getListOfPlayerEntitiesOnTheField()[0], 10n, "11", "12")
 })
 

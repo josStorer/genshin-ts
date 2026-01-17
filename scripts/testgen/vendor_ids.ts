@@ -35,22 +35,15 @@ export function canResolveNodeType(nodeType: string, vendorKeysLower: LowerKeySe
   if (lower === 'send_signal') return true
 
   // SPECIAL_NODE_MAPPINGS mirror（与 ir_to_gia_transform/mappings.ts 保持一致，避免误跳过）
-  const mapped =
-    lower === 'player_plays_one_shot2d_sound_effect'
-      ? 'player_plays_one_shot_2d_sound_effect'
-      : lower === 'query_timestamp_utc0'
-        ? 'query_timestamp_utc_0'
-        : lower === 'split3d_vector'
-          ? 'split_3d_vector'
-          : lower === 'create3d_vector'
-            ? 'create_3d_vector'
-            : lower === 'get_entity_list_by_specified_prefab_id'
-              ? 'get_entity_list_by_specified_prefab'
-              : lower === 'get_all_items_from_loot_component'
-                ? 'get_all_trophy_items'
-                : lower === 'get_all_currency_from_loot_component'
-                  ? 'get_all_trophy_currency'
-                  : undefined
+  const mapped = {
+    player_plays_one_shot2d_sound_effect: 'player_plays_one_shot_2d_sound_effect',
+    query_timestamp_utc0: 'query_timestamp_utc_0',
+    split3d_vector: 'split_3d_vector',
+    create3d_vector: 'create_3d_vector',
+    get_entity_list_by_specified_prefab_id: 'get_entity_list_by_specified_prefab',
+    get_all_items_from_loot_component: 'get_all_trophy_items',
+    get_all_currency_from_loot_component: 'get_all_trophy_currency'
+  }[lower]
   if (mapped) return canResolveNodeType(mapped, vendorKeysLower)
   return false
 }

@@ -44,6 +44,12 @@ export function extractNodeTypeFromMethodBody(body: ts.Block): string | undefine
   return found
 }
 
+function isPublicMethod(m: ts.MethodDeclaration): boolean {
+  return !m.modifiers?.some((mod) =>
+    [ts.SyntaxKind.PrivateKeyword, ts.SyntaxKind.ProtectedKeyword].includes(mod.kind)
+  )
+}
+
 export function extractServerFMethods(nodesTsPath: string): MethodInfo[] {
   const text = readText(nodesTsPath)
   const sf = createSourceFile(nodesTsPath, text)
@@ -54,8 +60,8 @@ export function extractServerFMethods(nodesTsPath: string): MethodInfo[] {
     if (ts.isClassDeclaration(node) && node.name?.text === 'ServerExecutionFlowFunctions') {
       node.members.forEach((m) => {
         if (!ts.isMethodDeclaration(m)) return
-        // 只取实现（有 body）
-        if (!m.body) return
+        // 只取实现（有 body）且公开的方法
+        if (!m.body || !isPublicMethod(m)) return
         if (!m.name || !ts.isIdentifier(m.name)) return
         const name = m.name.text
         const params = m.parameters.map((p) => {
