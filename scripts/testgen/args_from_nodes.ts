@@ -107,8 +107,8 @@ function typeSpecFromNodesValueType(t: string): TypeSpec | null {
       return { kind: 'primitive', name: 'bool' }
     case 'IntValue':
     case 'bigint':
-    case 'number':
       return { kind: 'primitive', name: 'int' }
+    case 'number':
     case 'FloatValue':
       return { kind: 'primitive', name: 'float' }
     case 'StrValue':
