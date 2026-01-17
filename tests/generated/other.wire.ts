@@ -1,12 +1,14 @@
-import * as E from 'genshin-ts/definitions/enum'
 import { g } from 'genshin-ts/runtime/core'
 import { configId, faction, guid, prefabId } from 'genshin-ts/runtime/value'
+import * as E from 'genshin-ts/definitions/enum'
 
 // AUTO-GENERATED: other (wire)
 // Run: npx tsx scripts/generate-node-gia-tests.ts
 
 g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   const e = f.getSelfEntity()
+  const pes = f.getListOfPlayerEntitiesOnTheField()
+  const ces = f.getAllCharacterEntitiesOfSpecifiedPlayer(pes[0])
   const vInt = f.addition(1n, 2n)
   const vFloat = f.pi()
   const vBool = f.equal(1n, 1n)
@@ -15,37 +17,25 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   const vVec3 = f.create3dVector(1, 2, 3)
   const vStr = f.dataTypeConversion(1n, 'str')
   const vConfig = f.queryPlayerClass(e)
-  f.return()
-  f.emptyList('int')
-  f.emptyLocalVariableList('int')
-  f.initLocalVariable('float', 2)
-  // f.breakLoop(vInt, vInt, vInt)
-  f.finiteLoop(vInt, vInt, () => {
-    f.printString('wire_cb_finiteLoop_2')
-  })
-  f.doubleBranch(
-    vBool,
-    () => {
-      f.printString('wire_cb_doubleBranch_1')
-    },
-    () => {
-      f.printString('wire_cb_doubleBranch_2')
-    }
-  )
+  f.emptyList("int")
+  f.emptyLocalVariableList("int")
+  f.get(vStr)
+  f.set(vStr, 1, vBool)
+  f.__gstsEnsureVariable(vStr, "int", { dict: { k: "int", v: "int" }, value: vInt, length: vFloat })
+  f.__gstsAttachTimerHandle(vStr, [{ name: vStr, valueType: "int" }, { name: vStr, valueType: "int" }])
+  f.__gstsClearTimerCaptures(vStr, [{ name: vStr, valueType: "int" }, { name: vStr, valueType: "int" }])
+  f.__gstsRegisterTimerHandler(() => { f.printString("wire_cb___gstsRegisterTimerHandler_0") })
+  f.initLocalVariable("int", 1)
+  f.breakLoop(vInt, vInt, vInt)
+  f.finiteLoop(vInt, vInt, () => { f.printString("wire_cb_finiteLoop_2") })
+  f.doubleBranch(vBool, () => { f.printString("wire_cb_doubleBranch_1") }, () => { f.printString("wire_cb_doubleBranch_2") })
   f.printString(vStr)
   f.forwardingEvent(e)
   f.setPresetStatus(e, vInt, vInt)
-  f.createEntity(vGuid, f.assemblyList([vInt, vInt, vInt], 'int'))
-  f.createPrefab(
-    new prefabId(1n),
-    vVec3,
-    vVec3,
-    e,
-    vBool,
-    vInt,
-    f.assemblyList([vInt, vInt, vInt], 'int')
-  )
-  f.createPrefabGroup(vInt, vVec3, vVec3, e, vInt, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
+  f.setThePresetStatusValueOfTheComplexCreation(e, vInt, vInt)
+  f.createEntity(vGuid, f.assemblyList([vInt, vInt, vInt], "int"))
+  f.createPrefab(new prefabId(1n), vVec3, vVec3, e, vBool, vInt, f.assemblyList([vInt, vInt, vInt], "int"))
+  f.createPrefabGroup(vInt, vVec3, vVec3, e, vInt, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
   f.activateDisableModelDisplay(e, vBool)
   f.destroyEntity(e)
   f.removeEntity(e)
@@ -53,45 +43,29 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.setCurrentEnvironmentTime(vFloat)
   f.setEnvironmentTimePassageSpeed(vFloat)
   f.modifyEntityFaction(e, vFaction)
-  f.teleportPlayer(e, vVec3, vVec3)
-  f.reviveCharacter(e)
-  f.reviveAllPlayerSCharacters(e, vBool)
-  f.defeatAllPlayerSCharacters(e)
-  f.activateRevivePoint(e, vInt)
-  f.setPlayerReviveTime(e, vInt)
-  f.setPlayerRemainingRevives(e, vInt)
-  f.modifyEnvironmentSettings(vInt, f.assemblyList([e, e, e], 'entity'), vBool, vInt)
-  f.allowForbidPlayerToRevive(e, vBool)
-  f.deactivateRevivePoint(e, vInt)
+  f.teleportPlayer(pes[0], vVec3, vVec3)
+  f.reviveCharacter(ces[0])
+  f.reviveAllPlayerSCharacters(pes[0], vBool)
+  f.defeatAllPlayerSCharacters(pes[0])
+  f.activateRevivePoint(pes[0], vInt)
+  f.setPlayerReviveTime(pes[0], vInt)
+  f.setPlayerRemainingRevives(pes[0], vInt)
+  f.modifyEnvironmentSettings(vInt, pes, vBool, vInt)
+  f.allowForbidPlayerToRevive(pes[0], vBool)
+  f.deactivateRevivePoint(pes[0], vInt)
   f.activateDisableExtraCollision(e, vInt, vBool)
   f.activateDisableExtraCollisionClimbability(e, vInt, vBool)
   f.activateDisableNativeCollision(e, vBool)
   f.activateDisableNativeCollisionClimbability(e, vBool)
   f.activateDisableCollisionTrigger(e, vInt, vBool)
+  f.activateDisablePathfindingObstacle(e, vInt, vBool)
+  f.activateDisablePathfindingObstacleFeature(e, vBool)
   f.initiateAttack(e, vFloat, vFloat, vVec3, vVec3, vStr, vBool, e)
   f.recoverHp(e, vFloat, vStr, vBool, e)
   f.hpLoss(e, vFloat, vBool, vBool, vBool, E.DamagePopUpType.NoPopUp)
-  f.recoverHpDirectly(
-    e,
-    e,
-    vFloat,
-    vBool,
-    vFloat,
-    vFloat,
-    f.assemblyList([vStr, vStr, vStr], 'str')
-  )
+  f.recoverHpDirectly(e, e, vFloat, vBool, vFloat, vFloat, f.assemblyList([vStr, vStr, vStr], "str"))
   f.recoverBasicMotionDevice(e, vStr)
-  f.activateFixedPointMotionDevice(
-    e,
-    vStr,
-    E.MovementMode.InstantMovement,
-    vFloat,
-    vVec3,
-    vVec3,
-    vBool,
-    E.FixedMotionParameterType.FixedSpeed,
-    vFloat
-  )
+  f.activateFixedPointMotionDevice(e, vStr, E.MovementMode.InstantMovement, vFloat, vVec3, vVec3, vBool, E.FixedMotionParameterType.FixedSpeed, vFloat)
   f.activateBasicMotionDevice(e, vStr)
   f.addTargetOrientedRotationBasedMotionDevice(e, vStr, vFloat, vVec3)
   f.addUniformBasicLinearMotionDevice(e, vStr, vFloat, vVec3)
@@ -99,40 +73,15 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.stopAndDeleteBasicMotionDevice(e, vStr, vBool)
   f.pauseBasicMotionDevice(e, vStr)
   f.activateDisableFollowMotionDevice(e, vBool)
-  f.switchFollowMotionDeviceTargetByGuid(
-    e,
-    vGuid,
-    vStr,
-    vVec3,
-    vVec3,
-    E.FollowCoordinateSystem.RelativeCoordinateSystem,
-    E.FollowLocationType.CompletelyFollow
-  )
-  f.switchFollowMotionDeviceTargetByEntity(
-    e,
-    e,
-    vStr,
-    vVec3,
-    vVec3,
-    E.FollowCoordinateSystem.RelativeCoordinateSystem,
-    E.FollowLocationType.CompletelyFollow
-  )
-  f.createProjectile(
-    new prefabId(1n),
-    vVec3,
-    vVec3,
-    e,
-    e,
-    vBool,
-    vInt,
-    f.assemblyList([vInt, vInt, vInt], 'int')
-  )
+  f.switchFollowMotionDeviceTargetByGuid(e, vGuid, vStr, vVec3, vVec3, E.FollowCoordinateSystem.RelativeCoordinateSystem, E.FollowLocationType.CompletelyFollow)
+  f.switchFollowMotionDeviceTargetByEntity(e, e, vStr, vVec3, vVec3, E.FollowCoordinateSystem.RelativeCoordinateSystem, E.FollowLocationType.CompletelyFollow)
+  f.createProjectile(new prefabId(1n), vVec3, vVec3, e, e, vBool, vInt, f.assemblyList([vInt, vInt, vInt], "int"))
   f.playTimedEffects(vConfig, e, vStr, vBool, vBool, vVec3, vVec3, vFloat, vBool)
   f.clearSpecialEffectsBasedOnSpecialEffectAssets(e, vConfig)
   f.mountLoopingSpecialEffect(vConfig, e, vStr, vBool, vBool, vVec3, vVec3, vFloat, vBool)
   f.clearLoopingSpecialEffect(vInt, e)
   f.resumeTimer(e, vStr)
-  f.startTimer(e, vStr, vBool, f.assemblyList([vFloat, vFloat, vFloat], 'float'))
+  f.startTimer(e, vStr, vBool, f.assemblyList([vFloat, vFloat, vFloat], "float"))
   f.pauseTimer(e, vStr)
   f.stopTimer(e, vStr)
   f.recoverGlobalTimer(e, vStr)
@@ -140,57 +89,38 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.modifyGlobalTimer(e, vStr, vFloat)
   f.pauseGlobalTimer(e, vStr)
   f.stopGlobalTimer(e, vStr)
-  f.switchMainCameraTemplate(f.assemblyList([e, e, e], 'entity'), vStr)
+  f.switchMainCameraTemplate(pes, vStr)
   f.modifyingCharacterDisruptorDevice(e, vInt)
-  f.addUnitStatus(
-    e,
-    e,
-    vConfig,
-    vInt,
-    f.assemblyDictionary([
-      { k: vStr, v: vFloat },
-      { k: vStr, v: vFloat }
-    ])
-  )
+  f.addUnitStatus(e, e, vConfig, vInt, f.assemblyDictionary([{ k: vStr, v: vFloat }, { k: vStr, v: vFloat }]))
   f.removeUnitStatus(e, vConfig, E.RemovalMethod.AllCoexistingStatusesWithTheSameName, e)
   f.activateDisableTab(e, vInt, vBool)
   f.activateDisableCollisionTriggerSource(e, vBool)
-  f.changePlayerSCurrentClassLevel(e, vInt)
-  f.changePlayerClass(e, vConfig)
-  f.increasePlayerSCurrentClassExp(e, vInt)
-  f.activateUiControlGroupInControlGroupLibrary(e, vInt)
-  f.switchCurrentInterfaceLayout(e, vInt)
-  f.modifyUiControlStatusWithinTheInterfaceLayout(e, vInt, E.UIControlGroupStatus.Off)
-  f.removeInterfaceControlGroupFromControlGroupLibrary(e, vInt)
-  f.modifySkillCdPercentageBasedOnMaxCd(e, E.CharacterSkillSlot.NormalAttack, vFloat, vBool)
-  f.initializeCharacterSkill(e, E.CharacterSkillSlot.NormalAttack)
-  f.setSkillResourceAmount(e, vConfig, vFloat)
-  f.setCharacterSkillCd(e, E.CharacterSkillSlot.NormalAttack, vFloat, vBool)
-  f.addCharacterSkill(e, vConfig, E.CharacterSkillSlot.NormalAttack)
-  f.modifySkillResourceAmount(e, vConfig, vFloat)
-  f.modifyCharacterSkillCd(e, E.CharacterSkillSlot.NormalAttack, vFloat, vBool)
-  f.deleteCharacterSkillBySlot(e, E.CharacterSkillSlot.NormalAttack)
-  f.deleteCharacterSkillById(e, vConfig)
-  f.adjustPlayerBackgroundMusicVolume(e, vInt)
+  f.changePlayerSCurrentClassLevel(pes[0], vInt)
+  f.changePlayerClass(pes[0], vConfig)
+  f.increasePlayerSCurrentClassExp(pes[0], vInt)
+  f.activateUiControlGroupInControlGroupLibrary(pes[0], vInt)
+  f.switchCurrentInterfaceLayout(pes[0], vInt)
+  f.modifyUiControlStatusWithinTheInterfaceLayout(pes[0], vInt, E.UIControlGroupStatus.Off)
+  f.removeInterfaceControlGroupFromControlGroupLibrary(pes[0], vInt)
+  f.modifySkillCdPercentageBasedOnMaxCd(ces[0], E.CharacterSkillSlot.NormalAttack, vFloat, vBool)
+  f.initializeCharacterSkill(ces[0], E.CharacterSkillSlot.NormalAttack)
+  f.setSkillResourceAmount(ces[0], vConfig, vFloat)
+  f.setCharacterSkillCd(ces[0], E.CharacterSkillSlot.NormalAttack, vFloat, vBool)
+  f.addCharacterSkill(ces[0], vConfig, E.CharacterSkillSlot.NormalAttack)
+  f.modifySkillResourceAmount(ces[0], vConfig, vFloat)
+  f.setCharacterSElementalEnergy(ces[0], vFloat)
+  f.increasesCharacterSElementalEnergy(ces[0], vFloat)
+  f.modifyCharacterSkillCd(ces[0], E.CharacterSkillSlot.NormalAttack, vFloat, vBool)
+  f.deleteCharacterSkillBySlot(ces[0], E.CharacterSkillSlot.NormalAttack)
+  f.deleteCharacterSkillById(ces[0], vConfig)
+  f.adjustPlayerBackgroundMusicVolume(pes[0], vInt)
   f.adjustSpecifiedSoundEffectPlayer(e, vInt, vInt, vFloat)
   f.closeSpecifiedSoundEffectPlayer(e, vInt)
-  f.startPausePlayerBackgroundMusic(e, vBool)
+  f.startPausePlayerBackgroundMusic(pes[0], vBool)
   f.startPauseSpecifiedSoundEffectPlayer(e, vInt, vBool)
-  f.addSoundEffectPlayer(
-    e,
-    vInt,
-    vInt,
-    vFloat,
-    vBool,
-    vFloat,
-    vBool,
-    vFloat,
-    E.SoundAttenuationMode.LinearAttenuation,
-    vStr,
-    vVec3
-  )
-  f.playerPlaysOneShot2dSoundEffect(e, vInt, vInt, vFloat)
-  f.modifyPlayerBackgroundMusic(e, vInt, vFloat, vFloat, vInt, vBool, vFloat, vFloat, vBool)
+  f.addSoundEffectPlayer(e, vInt, vInt, vFloat, vBool, vFloat, vBool, vFloat, E.SoundAttenuationMode.LinearAttenuation, vStr, vVec3)
+  f.playerPlaysOneShot2dSoundEffect(pes[0], vInt, vInt, vFloat)
+  f.modifyPlayerBackgroundMusic(pes[0], vInt, vFloat, vFloat, vInt, vBool, vFloat, vFloat, vBool)
   f.clearUnitTagsFromEntity(e)
   f.addUnitTagToEntity(e, vInt)
   f.removeUnitTagFromEntity(e, vInt)
@@ -198,154 +128,62 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.removeTargetEntityFromAggroList(e, e)
   f.clearSpecifiedTargetSAggroList(e)
   f.setTheAggroValueOfSpecifiedEntity(e, e, vInt)
-  f.sendSignal('wire_signal')
-  f.sendSignal('wire_signal22')
-  f.setEntityActiveNameplate(e, f.assemblyList([vConfig, vConfig, vConfig], 'config_id'))
+  f.sendSignal("wire_signal")
+  f.setEntityActiveNameplate(e, f.assemblyList([vConfig, vConfig, vConfig], "config_id"))
   f.switchActiveTextBubble(e, vConfig)
-  f.closeDeckSelector(e, vInt)
-  f.invokeDeckSelector(
-    e,
-    vInt,
-    vFloat,
-    f.assemblyList([vInt, vInt, vInt], 'int'),
-    f.assemblyList([vInt, vInt, vInt], 'int'),
-    vInt,
-    vInt,
-    E.DecisionRefreshMode.CannotRefresh,
-    vInt,
-    vInt,
-    f.assemblyList([vInt, vInt, vInt], 'int')
-  )
-  f.randomDeckSelectorSelectionList(f.assemblyList([vInt, vInt, vInt], 'int'))
-  f.setPlayerSettlementSuccessStatus(e, E.SettlementStatus.Undefined)
-  f.setPlayerSettlementRankingValue(e, vInt)
+  f.closeDeckSelector(pes[0], vInt)
+  f.invokeDeckSelector(pes[0], vInt, vFloat, f.assemblyList([vInt, vInt, vInt], "int"), f.assemblyList([vInt, vInt, vInt], "int"), vInt, vInt, E.DecisionRefreshMode.CannotRefresh, vInt, vInt, f.assemblyList([vInt, vInt, vInt], "int"))
+  f.randomDeckSelectorSelectionList(f.assemblyList([vInt, vInt, vInt], "int"))
+  f.setPlayerSettlementSuccessStatus(pes[0], E.SettlementStatus.Undefined)
+  f.setPlayerSettlementRankingValue(pes[0], vInt)
   f.setFactionSettlementSuccessStatus(vFaction, E.SettlementStatus.Undefined)
   f.setFactionSettlementRankingValue(vFaction, vInt)
   f.toggleEntityLightSource(e, vInt, vBool)
   f.removeItemFromInventoryShopSalesList(e, vInt, vConfig)
   f.removeItemFromPurchaseList(e, vInt, vConfig)
   f.removeItemFromCustomShopSalesList(e, vInt, vInt)
-  f.openShop(e, e, vInt)
-  f.closeShop(e)
-  f.addNewItemToInventoryShopSalesList(
-    e,
-    vInt,
-    vConfig,
-    f.assemblyDictionary([
-      { k: vConfig, v: vInt },
-      { k: vConfig, v: vInt }
-    ]),
-    vInt,
-    vInt,
-    vBool
-  )
-  f.addItemsToThePurchaseList(
-    e,
-    vInt,
-    vConfig,
-    f.assemblyDictionary([
-      { k: vConfig, v: vInt },
-      { k: vConfig, v: vInt }
-    ]),
-    vBool
-  )
-  f.addNewItemToCustomShopSalesList(
-    e,
-    vInt,
-    vConfig,
-    f.assemblyDictionary([
-      { k: vConfig, v: vInt },
-      { k: vConfig, v: vInt }
-    ]),
-    vInt,
-    vBool,
-    vInt,
-    vInt,
-    vBool
-  )
-  f.modifyInventoryShopItemSalesInfo(
-    e,
-    vInt,
-    vConfig,
-    f.assemblyDictionary([
-      { k: vConfig, v: vInt },
-      { k: vConfig, v: vInt }
-    ]),
-    vInt,
-    vInt,
-    vBool
-  )
-  f.modifyItemPurchaseInfoInThePurchaseList(
-    e,
-    vInt,
-    vConfig,
-    f.assemblyDictionary([
-      { k: vConfig, v: vInt },
-      { k: vConfig, v: vInt }
-    ]),
-    vBool
-  )
-  f.modifyCustomShopItemSalesInfo(
-    e,
-    vInt,
-    vInt,
-    vConfig,
-    f.assemblyDictionary([
-      { k: vConfig, v: vInt },
-      { k: vConfig, v: vInt }
-    ]),
-    vInt,
-    vBool,
-    vInt,
-    vInt,
-    vBool
-  )
+  f.openShop(pes[0], e, vInt)
+  f.closeShop(pes[0])
+  f.addNewItemToInventoryShopSalesList(e, vInt, vConfig, f.assemblyDictionary([{ k: vConfig, v: vInt }, { k: vConfig, v: vInt }]), vInt, vInt, vBool)
+  f.addItemsToThePurchaseList(e, vInt, vConfig, f.assemblyDictionary([{ k: vConfig, v: vInt }, { k: vConfig, v: vInt }]), vBool)
+  f.addNewItemToCustomShopSalesList(e, vInt, vConfig, f.assemblyDictionary([{ k: vConfig, v: vInt }, { k: vConfig, v: vInt }]), vInt, vBool, vInt, vInt, vBool)
+  f.modifyInventoryShopItemSalesInfo(e, vInt, vConfig, f.assemblyDictionary([{ k: vConfig, v: vInt }, { k: vConfig, v: vInt }]), vInt, vInt, vBool)
+  f.modifyItemPurchaseInfoInThePurchaseList(e, vInt, vConfig, f.assemblyDictionary([{ k: vConfig, v: vInt }, { k: vConfig, v: vInt }]), vBool)
+  f.modifyCustomShopItemSalesInfo(e, vInt, vInt, vConfig, f.assemblyDictionary([{ k: vConfig, v: vInt }, { k: vConfig, v: vInt }]), vInt, vBool, vInt, vInt, vBool)
   f.modifyEquipmentAffixValue(vInt, vInt, vFloat)
   f.removeEquipmentAffix(vInt, vInt)
   f.addAffixToEquipment(vInt, vConfig, vBool, vFloat)
   f.addAffixToEquipmentAtSpecifiedId(vInt, vConfig, vInt, vBool, vFloat)
-  f.setInventoryItemDropContents(
-    e,
-    f.assemblyDictionary([
-      { k: vConfig, v: vInt },
-      { k: vConfig, v: vInt }
-    ]),
-    E.ItemLootType.SharedReward
-  )
+  f.replaceEquipmentToTheSpecifiedSlot(e, vInt, vInt, vInt)
+  f.setInventoryItemDropContents(e, f.assemblyDictionary([{ k: vConfig, v: vInt }, { k: vConfig, v: vInt }]), E.ItemLootType.SharedReward)
   f.setInventoryDropItemsCurrencyAmount(e, vConfig, vInt, E.ItemLootType.SharedReward)
   f.triggerLootDrop(e, E.ItemLootType.SharedReward)
-  f.setLootDropContent(
-    e,
-    f.assemblyDictionary([
-      { k: vConfig, v: vInt },
-      { k: vConfig, v: vInt }
-    ])
-  )
+  f.setLootDropContent(e, f.assemblyDictionary([{ k: vConfig, v: vInt }, { k: vConfig, v: vInt }]))
   f.modifyInventoryItemQuantity(e, vConfig, vInt)
   f.modifyInventoryCurrencyQuantity(e, vConfig, vInt)
   f.modifyLootItemComponentQuantity(e, vConfig, vInt)
   f.modifyLootComponentCurrencyAmount(e, vConfig, vInt)
   f.increaseMaximumInventoryCapacity(e, vInt)
-  f.modifyPlayerListForVisibleMiniMapMarkers(e, vInt, f.assemblyList([e, e, e], 'entity'))
-  f.modifyPlayerMarkersOnTheMiniMap(e, vInt, e)
-  f.modifyMiniMapMarkerActivationStatus(e, f.assemblyList([vInt, vInt, vInt], 'int'), vBool)
-  f.modifyMiniMapZoom(e, vFloat)
-  f.modifyPlayerListForTrackingMiniMapMarkers(e, vInt, f.assemblyList([e, e, e], 'entity'))
+  f.modifyPlayerListForVisibleMiniMapMarkers(e, vInt, pes)
+  f.modifyPlayerMarkersOnTheMiniMap(e, vInt, pes[0])
+  f.modifyMiniMapMarkerActivationStatus(e, f.assemblyList([vInt, vInt, vInt], "int"), vBool)
+  f.modifyMiniMapZoom(pes[0], vFloat)
+  f.modifyPlayerListForTrackingMiniMapMarkers(e, vInt, pes)
   f.switchCreationPatrolTemplate(e, vInt)
-  f.setPlayerLeaderboardScoreAsAFloat(f.assemblyList([vInt, vInt, vInt], 'int'), vFloat, vInt)
-  f.setPlayerLeaderboardScoreAsAnInteger(f.assemblyList([vInt, vInt, vInt], 'int'), vInt, vInt)
+  f.setPlayerLeaderboardScoreAsAFloat(f.assemblyList([vInt, vInt, vInt], "int"), vFloat, vInt)
+  f.setPlayerLeaderboardScoreAsAnInteger(f.assemblyList([vInt, vInt, vInt], "int"), vInt, vInt)
   f.changeAchievementProgressTally(e, vInt, vInt)
   f.setAchievementProgressTally(e, vInt, vInt)
   f.setScanTagRules(e, E.ScanRuleType.PrioritizeView)
   f.setScanComponentSActiveScanTagId(e, vInt)
-  f.switchTheScoringGroupThatAffectsPlayerSCompetitiveRank(e, vInt)
-  f.setPlayerRankScoreChange(e, E.SettlementStatus.Undefined, vInt)
-  f.setPlayerEscapeValidity(e, vBool)
+  f.switchTheScoringGroupThatAffectsPlayerSCompetitiveRank(pes[0], vInt)
+  f.setPlayerRankScoreChange(pes[0], E.SettlementStatus.Undefined, vInt)
+  f.setPlayerEscapeValidity(pes[0], vBool)
   f.activateDisableEntityDeploymentGroup(vInt, vBool)
   f.setChatChannelSwitch(vInt, vBool)
-  f.setPlayerSCurrentChannel(vGuid, f.assemblyList([vInt, vInt, vInt], 'int'))
+  f.setPlayerSCurrentChannel(vGuid, f.assemblyList([vInt, vInt, vInt], "int"))
   f.modifyPlayerChannelPermission(vGuid, vInt, vBool)
-  f.consumeGiftBox(e, vInt, vInt)
+  f.consumeGiftBox(pes[0], vInt, vInt)
   f.split3dVector(vVec3)
   f.create3dVector(vFloat, vFloat, vFloat)
   f.logarithmOperation(vFloat, vFloat)
@@ -393,7 +231,7 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.queryTimestampUtc0()
   f.getRandomFloatingPointNumber(vFloat, vFloat)
   f.getRandomInteger(vInt, vInt)
-  f.weightedRandom(f.assemblyList([vInt, vInt, vInt], 'int'))
+  f.weightedRandom(f.assemblyList([vInt, vInt, vInt], "int"))
   f._3dVectorBackward()
   f._3dVectorZeroVector()
   f._3dVectorForward()
@@ -403,12 +241,13 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f._3dVectorLeft()
   f.pi()
   f.getPresetStatus(e, vInt)
-  f.queryCharacterSCurrentMovementSpd(e)
+  f.getThePresetStatusValueOfTheComplexCreation(e, vInt)
+  f.queryCharacterSCurrentMovementSpd(ces[0])
   f.queryIfEntityIsOnTheField(e)
   f.getAllEntitiesOnTheField()
   f.getSpecifiedTypeOfEntitiesOnTheField(E.EntityType.Stage)
   f.getEntitiesWithSpecifiedPrefabOnTheField(new prefabId(1n))
-  f.getCharacterAttribute(e)
+  f.getCharacterAttribute(ces[0])
   f.getEntityAdvancedAttribute(e)
   f.getEntityType(e)
   f.getEntityLocationAndRotation(e)
@@ -417,12 +256,13 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.getEntityRightVector(e)
   f.getListOfEntitiesOwnedByTheEntity(e)
   f.getEntityElementalAttribute(e)
+  f.checkEntitySElementalEffectStatus(e)
   f.getObjectAttribute(e)
   f.getOwnerEntity(e)
-  f.getEntityListBySpecifiedRange(f.assemblyList([e, e, e], 'entity'), vVec3, vFloat)
-  f.getEntityListBySpecifiedType(f.assemblyList([e, e, e], 'entity'), E.EntityType.Stage)
-  f.getEntityListBySpecifiedPrefabId(f.assemblyList([e, e, e], 'entity'), new prefabId(1n))
-  f.getEntityListBySpecifiedFaction(f.assemblyList([e, e, e], 'entity'), vFaction)
+  f.getEntityListBySpecifiedRange(f.assemblyList([e, e, e], "entity"), vVec3, vFloat)
+  f.getEntityListBySpecifiedType(f.assemblyList([e, e, e], "entity"), E.EntityType.Stage)
+  f.getEntityListBySpecifiedPrefabId(f.assemblyList([e, e, e], "entity"), new prefabId(1n))
+  f.getEntityListBySpecifiedFaction(f.assemblyList([e, e, e], "entity"), vFaction)
   f.getSelfEntity()
   f.queryGuidByEntity(e)
   f.queryEntityByGuid(vGuid)
@@ -430,25 +270,27 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.queryGameTimeElapsed()
   f.queryEntityFaction(e)
   f.queryIfFactionIsHostile(vFaction, vFaction)
-  f.queryIfAllPlayerCharactersAreDown(e)
+  f.queryIfAllPlayerCharactersAreDown(pes[0])
   f.getPlayerGuidByPlayerId(vInt)
   f.getPlayerIdByPlayerGuid(vGuid)
-  f.getPlayerClientInputDeviceType(e)
-  f.getPlayerEntityToWhichTheCharacterBelongs(e)
-  f.getPlayerReviveTime(e)
-  f.getPlayerNickname(e)
-  f.getPlayerRemainingRevives(e)
+  f.getPlayerClientInputDeviceType(pes[0])
+  f.getPlayerEntityToWhichTheCharacterBelongs(ces[0])
+  f.getPlayerReviveTime(pes[0])
+  f.getPlayerNickname(pes[0])
+  f.getPlayerRemainingRevives(pes[0])
   f.getListOfPlayerEntitiesOnTheField()
-  f.getAllCharacterEntitiesOfSpecifiedPlayer(e)
+  f.getAllCharacterEntitiesOfSpecifiedPlayer(pes[0])
+  f.checkClassicModeCharacterId(ces[0])
+  f.getActiveCharacterOfSpecifiedPlayer(pes[0])
   f.getFollowMotionDeviceTarget(e)
   f.getCurrentGlobalTimerTime(e, vStr)
-  f.getPlayerSCurrentUiLayout(e)
+  f.getPlayerSCurrentUiLayout(pes[0])
   f.getCreationSCurrentTarget(e)
   f.getAggroListOfCreationInDefaultMode(e)
   f.getCreationAttribute(e)
-  f.queryPlayerClassLevel(e, vConfig)
-  f.queryPlayerClass(e)
-  f.queryCharacterSkill(e, E.CharacterSkillSlot.NormalAttack)
+  f.queryPlayerClassLevel(pes[0], vConfig)
+  f.queryPlayerClass(pes[0])
+  f.queryCharacterSkill(ces[0], E.CharacterSkillSlot.NormalAttack)
   f.listOfSlotIdsQueryingUnitStatus(e, vConfig)
   f.queryIfEntityHasUnitStatus(e, vConfig)
   f.queryUnitStatusStacksBySlotId(e, vConfig, vInt)
@@ -463,25 +305,22 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.getListOfOwnersThatHaveTheTargetAsTheirAggroTarget(e)
   f.getTheAggroListOfTheSpecifiedEntity(e)
   f.getTheAggroTargetOfTheSpecifiedEntity(e)
+  f.getTheNumberOfWaypointsInTheGlobalPath(vInt)
   f.getSpecifiedWaypointInfo(vInt, vInt)
   f.getPresetPointListByUnitTag(vInt)
   f.queryPresetPointPositionRotation(vInt)
-  f.getPlayerSettlementSuccessStatus(e)
-  f.getPlayerSettlementRankingValue(e)
+  f.getPlayerSettlementSuccessStatus(pes[0])
+  f.getPlayerSettlementRankingValue(pes[0])
   f.getFactionSettlementSuccessStatus(vFaction)
   f.getFactionSettlementRankingValue(vFaction)
-  f.queryDictionarySLength(
-    f.assemblyDictionary([
-      { k: 1, v: 2 },
-      { k: 1, v: 2 }
-    ])
-  )
+  f.queryDictionarySLength(f.assemblyDictionary([{ k: 1, v: 2 }, { k: 1, v: 2 }]))
   f.queryInventoryShopItemSalesInfo(e, vInt, vConfig)
   f.queryInventoryShopItemSalesList(e, vInt)
   f.queryShopPurchaseItemList(e, vInt)
   f.queryShopItemPurchaseInfo(e, vInt, vConfig)
   f.queryCustomShopItemSalesList(e, vInt)
   f.queryCustomShopItemSalesInfo(e, vInt, vInt)
+  f.getTheEquipmentIndexOfTheSpecifiedEquipmentSlot(e, vInt, vInt)
   f.queryEquipmentTagList(vInt)
   f.queryEquipmentConfigIdByEquipmentId(vInt)
   f.getEquipmentAffixList(vInt)
@@ -504,10 +343,11 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.getCurrentCreationSPatrolTemplate(e)
   f.queryIfAchievementIsCompleted(e, vInt)
   f.getTheCurrentlyActiveScanTagConfigId(e)
-  f.getPlayerRankScoreChange(e, E.SettlementStatus.Undefined)
-  f.getPlayerRankingInfo(e)
-  f.getPlayerEscapeValidity(e)
+  f.getPlayerRankScoreChange(pes[0], E.SettlementStatus.Undefined)
+  f.getPlayerRankingInfo(pes[0])
+  f.getPlayerEscapeValidity(pes[0])
   f.getCurrentlyActiveEntityDeploymentGroups()
-  f.queryCorrespondingGiftBoxQuantity(e, vInt)
-  f.queryCorrespondingGiftBoxConsumption(e, vInt)
+  f.queryCorrespondingGiftBoxQuantity(pes[0], vInt)
+  f.queryCorrespondingGiftBoxConsumption(pes[0], vInt)
 })
+
