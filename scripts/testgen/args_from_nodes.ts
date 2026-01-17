@@ -491,6 +491,11 @@ export function emitArgFromNodesTypeText(
     return mode === 'literal' ? emitValueLiteral(listSpec, ctx) : emitValueWire(listSpec, ctx)
   }
 
+  if (/^EntityOf<[^>]+>$/.test(t)) {
+    const spec: TypeSpec = { kind: 'primitive', name: 'entity' }
+    return mode === 'literal' ? emitValueLiteral(spec, ctx) : emitValueWire(spec, ctx)
+  }
+
   // dict / dict<K,V> / DictValue
   if (t === 'DictValue' || t === 'dict' || t.startsWith('dict<')) {
     // 解析 dict<k,v> 仅用于更好的字面量生成；没有就用 int->int
