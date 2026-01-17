@@ -278,8 +278,8 @@ export function emitArgFromNodesTypeText(
     return mode === 'literal' ? emitValueLiteral(dictSpec, ctx) : emitValueWire(dictSpec, ctx)
   }
 
-  // DictKeyType / DictValueType (string params)
-  if (t === 'DictKeyType' || t === 'DictValueType') return JSON.stringify('int')
+  // string params
+  if (['DictKeyType', 'DictValueType', 'LiteralValueType'].includes(t)) return JSON.stringify('int')
 
   // EnumerationTypeMap[...] / EnumerationType / enumeration
   if (/^EnumerationTypeMap\s*\[/.test(t) || t === 'EnumerationType' || t === 'enumeration') {
