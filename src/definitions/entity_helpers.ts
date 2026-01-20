@@ -218,6 +218,7 @@ const ENTITY_HELPER_METHODS = [
   'removeUnitTagFromEntity',
   'replaceEquipmentToTheSpecifiedSlot',
   'resumeTimer',
+  'reviveActiveCharacter',
   'reviveAllPlayerSCharacters',
   'reviveCharacter',
   'setAchievementProgressTally',
@@ -635,6 +636,7 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   replaceEquipmentToTheSpecifiedSlot: ['player', 'character', 'stage', 'object', 'creation'],
   resumeTimer: ['player', 'character', 'stage', 'object', 'creation'],
   revive: ['character'],
+  reviveActiveCharacter: ['player'],
   reviveAllCharacters: ['player'],
   reviveAllPlayerSCharacters: ['player'],
   reviveCharacter: ['character'],
@@ -3748,6 +3750,17 @@ interface EntityHelperFromFirstParam {
    * 是否扣除复苏次数: 为否时，不会扣除复苏次数
    */
   reviveAllPlayerSCharacters: (deductRevives: BoolValue) => void
+
+  /**
+   * Revive the active character of the specified player
+   *
+   * Available only in Classic Mode.
+   *
+   * 复苏当前场上角色: 复苏指定玩家当前场上角色
+   *
+   * 仅经典模式可用
+   */
+  reviveActiveCharacter: () => void
 
   /**
    * Revive the specified Character Entity

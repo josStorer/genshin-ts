@@ -4333,10 +4333,22 @@ export const NODE_PIN_RECORDS = [
     outputs: ['Ety', 'Gid', 'Int', 'Int', 'Int']
   },
   {
+    name: 'Revive Active Character',
+    id: 803,
+    inputs: ['Ety'],
+    outputs: []
+  },
+  {
     name: 'Get Active Character of Specified Player',
     id: 804,
     inputs: ['Ety'],
     outputs: ['Ety']
+  },
+  {
+    name: 'Teleport Player',
+    id: 805,
+    inputs: ['Ety', 'Vec', 'Vec'],
+    outputs: []
   },
   {
     name: 'When Character Movement SPD Meets Condition',

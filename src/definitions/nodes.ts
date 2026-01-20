@@ -4049,6 +4049,29 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
+   * Revive the active character of the specified player
+   *
+   * Available only in Classic Mode.
+   *
+   * 复苏当前场上角色: 复苏指定玩家当前场上角色
+   *
+   * 仅经典模式可用
+   *
+   * @param playerEntity The Player Entity that owns the active character
+   *
+   * 玩家实体: 当前场上角色归属的玩家实体
+   */
+  reviveActiveCharacter(playerEntity: PlayerEntity): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'revive_active_character',
+      args: [playerEntityObj]
+    })
+  }
+
+  /**
    * Knock down all characters of the specified player, causing the player to enter When All Player's Characters Are Down state.
    *
    * 击倒玩家所有角色: 击倒指定玩家的所有角色，会导致该玩家进入玩家所有角色倒下状态

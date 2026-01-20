@@ -2,6 +2,7 @@ import type {
   Argument,
   ConnectionArgument,
   IRDocument,
+  ServerGraphMode,
   ValueType,
   Variable
 } from '../../runtime/IR.js'
@@ -23,6 +24,10 @@ export type ConnTypeInfo =
 const ENUM_ID_TO_LOWER_KEY = new Map<number, string>(
   [...getEnumIdLowerMap().entries()].map(([k, id]) => [id, k])
 )
+
+const MODE_SPECIFIC_NODE_IDS: Record<string, Partial<Record<ServerGraphMode, number>>> = {
+  teleport_player: { classic: 805, beyond: 288 }
+}
 
 // node_id -> pin_index -> ConnTypeInfo
 export type ConnTypeIndex = Map<number, Map<number, ConnTypeInfo>>
@@ -362,7 +367,8 @@ function inferChangeEventNodeId(
 export function resolveGiaNodeId(
   node: IRNode,
   connIndex: ConnTypeIndex,
-  varsByName: Map<string, Variable>
+  varsByName: Map<string, Variable>,
+  runtimeMode?: ServerGraphMode
 ): number {
   const nodeType = node.type
   const specialId = SPECIAL_NODE_IDS[nodeType]
@@ -439,6 +445,11 @@ export function resolveGiaNodeId(
   }
 
   const key = SPECIAL_NODE_MAPPINGS[nodeType] ?? nodeType
+  const modeSpecificEntry = MODE_SPECIFIC_NODE_IDS[key]
+  if (modeSpecificEntry && runtimeMode) {
+    const modeSpecificId = modeSpecificEntry[runtimeMode]
+    if (modeSpecificId !== undefined) return modeSpecificId
+  }
   const lower = key.toLowerCase()
   const nodeIdLower = getNodeIdLowerMap()
 

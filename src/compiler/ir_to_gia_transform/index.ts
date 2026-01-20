@@ -421,7 +421,7 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
   const assemblyDictMeta = new Map<NodeId, { keyConn: boolean[] }>()
   ir.nodes!.forEach((irNode) => {
     const nodeType = irNode.type
-    const nodeId = resolveGiaNodeId(irNode, connIndex, varsByName)
+    const nodeId = resolveGiaNodeId(irNode, connIndex, varsByName, resolvedRuntimeMode)
 
     irNodeTypeById.set(irNode.id, nodeType)
     if (nodeType === 'assembly_dictionary') {
