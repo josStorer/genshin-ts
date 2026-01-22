@@ -37,15 +37,27 @@ function isFuncType(typeText: string): boolean {
 }
 
 function isRecordBranches(typeText: string): boolean {
-  return /Record<\s*(number|string)\s*,\s*\(\)\s*=>\s*void\s*>/.test(typeText)
+  // 处理多行和复杂类型定义
+  const normalized = typeText.replace(/\s+/g, '') // 移除所有空白字符以简化匹配
+  return (
+    normalized.includes('Record<number,(()=>void)|number>&{default?:(()=>void)|number}') ||
+    normalized.includes('Record<string,(()=>void)|string>&{default?:(()=>void)|string}')
+  )
 }
 
 function pickFromStringUnion(t: string): string | null {
-  // only treat as union when the entire type is a string-literal union
-  // e.g. `'int' | 'str'`
+  // 处理字符串字面量类型，包括联合类型（如 `'int' | 'str'`）和单个字面量（如 `'hello'`）
+  // 同时处理泛型约束类型（如 `T extends 'bool' | 'int' | ...`）
   const s = t.trim().replace(/^\|+/, '').trim()
-  if (!s.includes('|')) return null
-  if (!/^'[^']+'/.test(s)) return null
+
+  // 检查是否包含联合类型分隔符 '|'
+  if (s.includes('|')) {
+    if (!/^'[^']+'.*('|.*)*'[^']+'/.test(s)) return null
+  } else {
+    // 单个字符串字面量类型，例如 'hello'
+    if (!/^'[^']+'$/.test(s)) return null
+  }
+
   const hits = Array.from(s.matchAll(/'([^']+)'/g))
     .map((m) => m[1])
     .filter(Boolean)
@@ -53,6 +65,26 @@ function pickFromStringUnion(t: string): string | null {
   if (hits.includes('int')) return 'int'
   if (hits.includes('str')) return 'str'
   return hits[0] ?? null
+}
+
+// 添加辅助函数来处理泛型约束中的字符串字面量类型
+function tryExtractStringLiteralFromConstraint(t: string): string | null {
+  const trimmed = t.trim()
+
+  // 检查是否是泛型约束类型，如 "T extends 'bool' | 'int' | ..."
+  const constraintMatch = /^T\s+extends\s+(.+)$/.exec(trimmed)
+  if (constraintMatch) {
+    const constraintType = constraintMatch[1]
+    const result = pickFromStringUnion(constraintType)
+    if (result) return result
+  }
+
+  // 检查是否是其他泛型约束形式，如 "keyof SomeTypeMap" 或类似的类型表达式
+  if (trimmed.includes("'") && (trimmed.includes('|') || trimmed.startsWith("'"))) {
+    const result = pickFromStringUnion(trimmed)
+    if (result) return result
+  }
+  return null
 }
 
 function isEnumClassType(typeText: string, enumPick: EnumPickMap): boolean {
@@ -66,14 +98,17 @@ function emitEnum(enumTypeName: string, enumPick: EnumPickMap): string {
 }
 
 function typeSpecFromNodesValueType(t: string): TypeSpec | null {
-  switch (t) {
+  // 使用trim移除可能的前后空格
+  const trimmedType = t.trim()
+
+  switch (trimmedType) {
     case 'BoolValue':
     case 'boolean':
       return { kind: 'primitive', name: 'bool' }
     case 'IntValue':
     case 'bigint':
-    case 'number':
       return { kind: 'primitive', name: 'int' }
+    case 'number':
     case 'FloatValue':
       return { kind: 'primitive', name: 'float' }
     case 'StrValue':
@@ -84,11 +119,19 @@ function typeSpecFromNodesValueType(t: string): TypeSpec | null {
     case 'GuidValue':
       return { kind: 'primitive', name: 'guid' }
     case 'EntityValue':
+    case 'ObjectEntity':
+    case 'CreationEntity':
       return { kind: 'primitive', name: 'entity' }
+    case 'PlayerEntity':
+      return { kind: 'primitive', name: 'PlayerEntity' }
+    case 'CharacterEntity':
+      return { kind: 'primitive', name: 'CharacterEntity' }
     case 'ConfigIdValue':
       return { kind: 'primitive', name: 'configId' }
     case 'PrefabIdValue':
       return { kind: 'primitive', name: 'prefabId' }
+    case 'Vector3Value':
+      return { kind: 'primitive', name: 'vec3' }
     case 'FactionValue':
       return { kind: 'primitive', name: 'faction' }
     default:
@@ -114,6 +157,73 @@ function tryParseKvObjectArray(typeText: string): { kType: string; vType: string
   const vType = vm?.[1]?.trim()
   if (!kType || !vType) return null
   return { kType, vType }
+}
+
+/** 获取字段名（去除可能的 ? 修饰符） */
+function getBaseFieldName(fieldPart: string): string | undefined {
+  const fieldNameMatch = /^(\w+)(\?)?$/.exec(fieldPart)
+  return fieldNameMatch?.[1]
+}
+
+// 新增函数处理通用对象数组类型
+function tryParseObjectArrayType(typeText: string): { fields: Record<string, string> } | null {
+  const base = typeText.endsWith('[]') ? typeText.slice(0, -2) : typeText // remove []
+
+  // 检查是否为对象类型
+  if (!base.startsWith('{') || !base.endsWith('}')) return null
+
+  // 提取对象内容
+  const content = base.substring(1, base.length - 1).trim()
+  const fields: Record<string, string> = {}
+
+  // 使用正则表达式解析字段，支持 "name: type" 和 "name?: type" 格式
+  // 重要：需要考虑分隔符（; 或 ,）并正确分割各个字段
+  let braceDepth = 0
+  let fieldStart = 0
+  let colonPos = -1
+  let fieldEnd = -1
+
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i]
+
+    if (char === '{') {
+      braceDepth++
+    } else if (char === '}') {
+      braceDepth--
+    } else if (char === ':' && braceDepth === 0 && colonPos === -1) {
+      colonPos = i
+    } else if ((char === ';' || char === ',') && braceDepth === 0) {
+      fieldEnd = i
+    }
+
+    // 当找到一个完整的字段定义时
+    if (colonPos !== -1 && fieldEnd !== -1) {
+      const fieldPart = content.substring(fieldStart, colonPos).trim()
+      const typePart = content.substring(colonPos + 1, fieldEnd).trim()
+
+      // 提取字段名（去除可能的 ? 修饰符）
+
+      const fieldName = getBaseFieldName(fieldPart)
+      if (fieldName) fields[fieldName] = typePart
+
+      // 重置状态以处理下一个字段
+      fieldStart = fieldEnd + 1
+      colonPos = -1
+      fieldEnd = -1
+    }
+  }
+
+  // 处理最后一个字段（如果没有以分号或逗号结尾）
+  if (colonPos !== -1 && fieldStart < content.length) {
+    const fieldPart = content.substring(fieldStart, colonPos).trim()
+    const typePart = content.substring(colonPos + 1).trim()
+
+    const fieldName = getBaseFieldName(fieldPart)
+    if (fieldName) fields[fieldName] = typePart
+  }
+
+  if (Object.keys(fields).length === 0) return null
+  return { fields }
 }
 
 export function assignTypeParamsFromCase(m: MethodInfo, typeCase: string): TypeParamAssignment {
@@ -176,13 +286,42 @@ export function emitArgFromNodesTypeText(
   const t = trim(typeText)
 
   // pairs array: must be a plain JS array for nodes.ts implementation (uses pairs.map)
-  const kv = tryParseKvObjectArray(typeText)
+  const kv = tryParseKvObjectArray(t)
   if (kv) {
-    const k1 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.kType, ctx, enumPick, assign)
-    const v1 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.vType, ctx, enumPick, assign)
-    const k2 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.kType, ctx, enumPick, assign)
-    const v2 = emitArgFromNodesTypeText(mode, m, paramIndex, kv.vType, ctx, enumPick, assign)
+    const [k1, v1, k2, v2] = [kv.kType, kv.vType, kv.kType, kv.vType].map((type) =>
+      emitArgFromNodesTypeText(mode, m, paramIndex, type, ctx, enumPick, assign)
+    )
     return `[{ k: ${k1}, v: ${v1} }, { k: ${k2}, v: ${v2} }]`
+  }
+
+  // 处理对象类型: { name: string; valueType: DictValueType } 或 { name: string; valueType: DictValueType }[]
+  const obj = tryParseObjectArrayType(t)
+  if (obj) {
+    const fieldEntries: string[] = []
+    for (const [fieldName, fieldType] of Object.entries(obj.fields)) {
+      // 为每个字段生成对应的值，使用正确的类型
+      const fieldValue = emitArgFromNodesTypeText(
+        mode,
+        m,
+        paramIndex,
+        fieldType,
+        ctx,
+        enumPick,
+        assign
+      )
+      fieldEntries.push(`${fieldName}: ${fieldValue}`)
+    }
+
+    // 如果原始类型是数组形式，则返回数组，否则返回单个对象
+    if (typeText.trim().endsWith('[]')) {
+      // 创建两个示例对象
+      const obj1 = `{ ${fieldEntries.join(', ')} }`
+      const obj2 = `{ ${fieldEntries.join(', ')} }`
+
+      return `[${obj1}, ${obj2}]`
+    }
+    // 返回单个对象
+    return `{ ${fieldEntries.join(', ')} }`
   }
 
   if (isFuncType(t)) {
@@ -202,6 +341,20 @@ export function emitArgFromNodesTypeText(
   const pickUnion = pickFromStringUnion(t)
   if (pickUnion) return JSON.stringify(pickUnion)
 
+  // try to extract string literal from generic constraints (e.g. T extends 'bool' | 'int' | ...)
+  const extractedFromConstraint = tryExtractStringLiteralFromConstraint(t)
+  if (extractedFromConstraint) return JSON.stringify(extractedFromConstraint)
+
+  // Check if this parameter is a generic type parameter by examining its context
+  // In initLocalVariable<T extends 'bool' | 'int' | ...>, the first parameter has type 'T'
+  // We can detect this by checking if the parameter corresponds to a method type parameter
+  if (t.length > 0 && t === m.typeParams?.[paramIndex]?.name) {
+    // This parameter corresponds to a method type parameter
+    // Attempt to extract the constraint from the type parameter definition
+    // If we can't extract the specific constraint, default to a common type string
+    return JSON.stringify('int')
+  }
+
   // plain generic param that represents runtime type string (e.g. U in dataTypeConversion)
   if (assign.has(t)) {
     const spec = assign.get(t)
@@ -214,26 +367,37 @@ export function emitArgFromNodesTypeText(
   }
 
   // RuntimeParameterValueTypeMap[T] / ...[]
-  const rpm = /^RuntimeParameterValueTypeMap\s*\[\s*([^\]]+)\s*\]$/.exec(t)
   const rpmArr = /^RuntimeParameterValueTypeMap\s*\[\s*([^\]]+)\s*\]\s*\[\]$/.exec(t)
   if (rpmArr) {
     const inner = rpmArr[1] ?? ''
     const spec = resolveRuntimeParameterValueTypeMap(inner, assign) ?? { kind: 'unknown', raw: t }
     const listSpec: TypeSpec = { kind: 'list', elem: spec }
-    return mode === 'literal' ? emitValueLiteral(listSpec, ctx) : emitValueWire(listSpec, ctx)
+    return emitValueByMode(mode, listSpec, ctx)
   }
+  const rpm = /^RuntimeParameterValueTypeMap\s*\[\s*([^\]]+)\s*\]$/.exec(t)
   if (rpm) {
     const inner = rpm[1] ?? ''
     const spec = resolveRuntimeParameterValueTypeMap(inner, assign) ?? { kind: 'unknown', raw: t }
-    return mode === 'literal' ? emitValueLiteral(spec, ctx) : emitValueWire(spec, ctx)
+    return emitValueByMode(mode, spec, ctx)
   }
 
   // XxxValue[]
   if (t.endsWith('[]')) {
     const base = t.slice(0, -2).trim()
     const baseSpec = typeSpecFromNodesValueType(base) ?? { kind: 'unknown', raw: base }
-    const listSpec: TypeSpec = { kind: 'list', elem: baseSpec }
-    return mode === 'literal' ? emitValueLiteral(listSpec, ctx) : emitValueWire(listSpec, ctx)
+    // 特殊处理使生成的代码更简洁
+    const listSpec: TypeSpec = (
+      {
+        PlayerEntity: { kind: 'primitive', name: 'PlayerEntityList' },
+        CharacterEntity: { kind: 'primitive', name: 'CharacterEntityList' }
+      } satisfies Record<string, TypeSpec>
+    )[base] ?? { kind: 'list', elem: baseSpec }
+    return emitValueByMode(mode, listSpec, ctx)
+  }
+
+  if (/^EntityOf<[^>]+>$/.test(t)) {
+    const spec: TypeSpec = { kind: 'primitive', name: 'entity' }
+    return emitValueByMode(mode, spec, ctx)
   }
 
   // dict / dict<K,V> / DictValue
@@ -244,23 +408,19 @@ export function emitArgFromNodesTypeText(
     const dm = /^dict<([\s\S]+)>$/.exec(t)
     if (dm) {
       const parts = splitTopLevelComma(dm[1] ?? '')
-      const k = parts[0]
-      const v = parts[1]
-      if (k) {
-        const kk = k.trim().replace(/'([^']+)'/g, '$1')
-        keySpec = assign.get(kk) ?? parseTypeSpec(kk)
-      }
-      if (v) {
-        const vv = v.trim().replace(/'([^']+)'/g, '$1')
-        valSpec = assign.get(vv) ?? parseTypeSpec(vv)
-      }
+      const specTuple = parts.map((s) => {
+        const ss = s.trim().replace(/'([^']+)'/g, '$1')
+        return assign.get(ss) ?? parseTypeSpec(ss)
+      })
+      keySpec = specTuple[0]
+      valSpec = specTuple[1]
     }
     const dictSpec: TypeSpec = { kind: 'dict', key: keySpec, value: valSpec }
-    return mode === 'literal' ? emitValueLiteral(dictSpec, ctx) : emitValueWire(dictSpec, ctx)
+    return emitValueByMode(mode, dictSpec, ctx)
   }
 
-  // DictKeyType / DictValueType (string params)
-  if (t === 'DictKeyType' || t === 'DictValueType') return JSON.stringify('int')
+  // string params
+  if (['DictKeyType', 'DictValueType', 'LiteralValueType'].includes(t)) return JSON.stringify('int')
 
   // EnumerationTypeMap[...] / EnumerationType / enumeration
   if (/^EnumerationTypeMap\s*\[/.test(t) || t === 'EnumerationType' || t === 'enumeration') {
@@ -269,8 +429,12 @@ export function emitArgFromNodesTypeText(
 
   // primitives / wrappers
   const prim = typeSpecFromNodesValueType(t)
-  if (prim) return mode === 'literal' ? emitValueLiteral(prim, ctx) : emitValueWire(prim, ctx)
+  if (prim) return emitValueByMode(mode, prim, ctx)
 
   // fallback: unknown（避免把 as any 注入到数组参数里）
   return emitValueUnknown(mode, ctx)
+}
+
+function emitValueByMode(mode: Mode, spec: TypeSpec, ctx: Ctx) {
+  return mode === 'literal' ? emitValueLiteral(spec, ctx) : emitValueWire(spec, ctx)
 }
