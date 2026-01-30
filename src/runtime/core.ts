@@ -6,7 +6,7 @@ import {
   ServerEventMetadataType,
   ServerEventName
 } from '../definitions/events.js'
-import type { NODE_TYPE_BY_METHOD } from '../definitions/node_modes.js'
+import { NODE_TYPE_BY_METHOD } from '../definitions/node_modes.js'
 import {
   ServerExecutionFlowFunctions,
   type ServerExecutionFlowFunctionsByMode
@@ -355,6 +355,13 @@ function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
 }
 
+const NODE_MODE_BY_NODE_TYPE = new Map<string, ServerGraphMode>(
+  Object.entries(NODE_TYPE_BY_METHOD).map(([methodName, mode]) => [
+    camelToSnake(methodName),
+    mode
+  ])
+)
+
 function processDictParam(param: ServerEventMetadataType[ServerEventName][number]): value {
   switch (param.name) {
     case 'purchaseItemDictionary':
@@ -666,6 +673,13 @@ export class MetaCallRegistry {
     const current = this.currentFlow
     if (!record.id) {
       record.id = this.currentRecordId
+    }
+
+    const nodeMode = NODE_MODE_BY_NODE_TYPE.get(record.nodeType)
+    if (nodeMode && nodeMode !== this.graphMode) {
+      throw new Error(
+        `[error] node "${record.nodeType}" is ${nodeMode} mode only (current: ${this.graphMode})`
+      )
     }
 
     if (record.type === 'exec') {
