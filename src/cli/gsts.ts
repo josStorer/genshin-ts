@@ -23,6 +23,7 @@ import { injectGilFile } from '../injector/index.js'
 import { maybeCheckRemoteMarkdown } from './checks.js'
 import { ensureDataDirs } from './data.js'
 import { resolveGilFolder, resolveGilTarget } from './gil_paths.js'
+import { DEFAULT_RESOURCES_PATH, extractCustomResourcesFromGil } from './gil_resources.js'
 import { getMapKey, loadState, saveState } from './state.js'
 import { createUi } from './ui.js'
 import { openAndSelect, openDir } from './windows_open.js'
@@ -1268,6 +1269,51 @@ function maybeBackupGil(playerId: number, mapId: number, gilPath: string) {
   saveState(next)
 }
 
+function resolveResourcesPath(cfgDir: string, injectCfg: GstsInjectConfig): string {
+  const raw = injectCfg.resourcesPath ?? DEFAULT_RESOURCES_PATH
+  return path.isAbsolute(raw) ? raw : path.resolve(cfgDir, raw)
+}
+
+function maybeExtractResources(params: {
+  cfgDir: string
+  injectCfg: GstsInjectConfig | undefined
+  opts: GlobalOptions
+  lang: string | undefined
+  gilPath?: string
+  reason?: 'map-change'
+}) {
+  const { injectCfg, opts, lang } = params
+  if (!injectCfg || opts.noinject || injectCfg.extractResources === false) return
+  const { t } = initCliI18n(detectLang(lang ?? opts.lang))
+
+  let gilPath = params.gilPath
+  if (!gilPath) {
+    try {
+      gilPath = resolveGilTarget(injectCfg).gilPath
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      ui.warn(t('extractResourcesFail', { error: msg.replace('[error]', '').trim() }))
+      return
+    }
+  }
+
+  if (params.reason === 'map-change') {
+    ui.info(t('devResourcesReextract'))
+  }
+
+  const outPath = resolveResourcesPath(params.cfgDir, injectCfg)
+  const result = extractCustomResourcesFromGil({ gilPath, outPath, lang })
+  if (result.status === 'ok') {
+    ui.ok(t('extractResourcesOk', { path: result.outPath, count: result.count }))
+    return
+  }
+  if (result.status === 'skipped-existing') {
+    ui.warn(t('extractResourcesSkipExisting', { path: result.outPath }))
+    return
+  }
+  ui.warn(t('extractResourcesFail', { error: result.error }))
+}
+
 function maybeInjectGia(
   giaPath: string,
   opts: GlobalOptions,
@@ -1399,7 +1445,15 @@ async function main() {
     .action(async (file: string | undefined) => {
       const opts = program.opts<GlobalOptions>()
       if (file) await runSingle(file, opts)
-      else await runBatch(opts)
+      else {
+        const res = await runBatch(opts)
+        maybeExtractResources({
+          cfgDir: res.cfgDir,
+          injectCfg: res.cfg.inject,
+          opts,
+          lang: res.lang
+        })
+      }
     })
 
   program
