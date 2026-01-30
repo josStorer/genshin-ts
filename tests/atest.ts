@@ -38,4 +38,12 @@ g.server({
   id: 1073741826
 }).on('whenEntityIsCreated', (evt, f) => {
   gsts.f._3dVectorAddition([1, 2, 3], [4, 5, 6])
+  const list1 = [evt.eventSourceEntity]
+  const list2 = [...list1, evt.eventSourceEntity]
+  f.getListLength(list2)
+  const b = [evt.eventSourceEntity, entity(1)]
+  setTimeout(() => {
+    b[0].destroy()
+    list2[2].destroy()
+  }, 1000)
 })
