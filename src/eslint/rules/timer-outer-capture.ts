@@ -329,9 +329,9 @@ const rule: Rule.RuleModule = {
 
     if (scopeManager) {
       const visitorKeys = getVisitorKeys(sourceCode)
-      const stack = [sourceCode.ast]
+      const stack: any[] = [sourceCode.ast as any]
       while (stack.length) {
-        const node = stack.pop()
+        const node = stack.pop() as any
         if (!node || typeof node.type !== 'string') continue
         if (node.type === 'CallExpression' && isTimerCall(node, methods)) {
           registerTimerCallback(node)
