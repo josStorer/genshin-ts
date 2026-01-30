@@ -37,6 +37,12 @@ const ui = createUi()
 
 type MergeResult = { graphId: number; outJsonPath: string; sourceJsonPaths: string[] }
 
+type RunBatchHooks = {
+  onGiaPaths?: (paths: string[]) => void
+  onBeforeInject?: () => void
+  onAfterInject?: () => void
+}
+
 type CachedConfig = { mtimeMs: number; cfg: GstsConfig }
 const configCache = new Map<string, CachedConfig>()
 
@@ -473,7 +479,7 @@ function buildDevWatchGlobs(
   return { cwd: compileRoot, watch, ignored }
 }
 
-async function runBatch(opts: GlobalOptions) {
+async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
   const loaded = await loadConfigOrNull(opts)
   if (!loaded) {
     throw new Error(
@@ -496,6 +502,8 @@ async function runBatch(opts: GlobalOptions) {
 
   let outDirAbs: string | undefined
   let lastMergeResults: MergeResult[] | undefined
+
+  const giaAll: string[] = []
 
   if (entryOutFiles.length) {
     console.log('')
@@ -527,7 +535,6 @@ async function runBatch(opts: GlobalOptions) {
       outJsonToGraphIds.set(m.outJsonPath, s)
     }
 
-    const giaAll: string[] = []
     const tasks = uniqueJsonPaths
       .map((p) => planGiaTaskFromOutJson(p, outJsonToGraphIds.get(p) ?? new Set<number>()))
       .filter(
@@ -550,6 +557,7 @@ async function runBatch(opts: GlobalOptions) {
 
     // 批量模式：忽略 config.inject.nodeGraphId，使用 GIA 内的 graph id 推断
     if (!opts.noinject && cfg.inject) {
+      hooks?.onBeforeInject?.()
       const stat = injectMany({
         giaPaths: giaAll,
         opts,
@@ -558,6 +566,7 @@ async function runBatch(opts: GlobalOptions) {
         lang,
         t
       })
+      hooks?.onAfterInject?.()
       ui.info(t('injectAllDone', { ok: stat.ok, fail: stat.fail, count: stat.count }))
     }
   }
@@ -566,12 +575,15 @@ async function runBatch(opts: GlobalOptions) {
     ui.warn(t('warnNoInject'))
   }
 
+  hooks?.onGiaPaths?.(giaAll)
+
   return {
     cfgDir,
     cfg,
     lang,
     outDirAbs,
-    mergeResults: lastMergeResults
+    mergeResults: lastMergeResults,
+    giaPaths: giaAll
   }
 }
 
@@ -589,6 +601,33 @@ async function runDev(opts: GlobalOptions) {
   const { t } = initCliI18n(lang)
   applyIrToGiaOptimizeEnv(cfg)
 
+  const lastInjectedGiaPaths = new Set<string>()
+  const normalizeGiaPath = (p: string) => path.resolve(p)
+  const trackGiaPaths = (paths: string[], mode: 'add' | 'replace' = 'add') => {
+    if (mode === 'replace') lastInjectedGiaPaths.clear()
+    for (const p of paths) lastInjectedGiaPaths.add(normalizeGiaPath(p))
+  }
+
+  // 注入完成后的短暂冷却：用于屏蔽“迟到”的文件变更事件（杀软/IO 抖动等）
+  let gilIgnoreUntil = 0
+  const markGilIgnoreCooldown = () => {
+    gilIgnoreUntil = Date.now() + 800
+  }
+  let injecting = false
+
+  const injectCfg = cfg.inject
+  const reinjectOnMapChange =
+    !!injectCfg && !opts.noinject && injectCfg.reinjectOnMapChange !== false
+  let gilPath: string | undefined
+  if (reinjectOnMapChange) {
+    try {
+      gilPath = resolveGilTarget(injectCfg).gilPath
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      ui.warn(t('devMapWatchSkip', { error: msg.replace('[error]', '').trim() }))
+    }
+  }
+
   ui.ok(`watching ${compileRoot}`)
 
   const graphIdToSources = new Map<number, string[]>()
@@ -604,25 +643,39 @@ async function runDev(opts: GlobalOptions) {
 
   const safeRunBatch = async () => {
     try {
-      const res = await runBatch(opts)
+      const res = await runBatch(opts, {
+        onGiaPaths: (paths) => trackGiaPaths(paths, 'replace'),
+        onBeforeInject: () => {
+          injecting = true
+        },
+        onAfterInject: () => {
+          injecting = false
+          markGilIgnoreCooldown()
+        }
+      })
       updateMergeCache(res?.mergeResults)
+      return res
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       ui.error(msg.replace('[error]', '').trim())
+      injecting = false
+      return undefined
     }
   }
 
   let running = false
-  let pending = false
-  let timer: ReturnType<typeof setTimeout> | undefined
+  let pendingCodeCompile = false
+  let pendingReinject = false
+  let codeChangeTimer: ReturnType<typeof setTimeout> | undefined
+  let gilChangeTimer: ReturnType<typeof setTimeout> | undefined
 
-  const trigger = () => {
-    if (timer) clearTimeout(timer)
-    timer = setTimeout(() => {
+  const triggerCodeChange = () => {
+    if (codeChangeTimer) clearTimeout(codeChangeTimer)
+    codeChangeTimer = setTimeout(() => {
       void (async () => {
         try {
           if (running) {
-            pending = true
+            pendingCodeCompile = true
             return
           }
           running = true
@@ -633,16 +686,61 @@ async function runDev(opts: GlobalOptions) {
           ui.error(msg.replace('[error]', '').trim())
         } finally {
           running = false
-          if (pending) {
-            pending = false
-            trigger()
+          const hadPendingCodeCompile = pendingCodeCompile
+          if (pendingCodeCompile) {
+            pendingCodeCompile = false
+            triggerCodeChange()
+          }
+          if (!hadPendingCodeCompile && pendingReinject) {
+            pendingReinject = false
+            triggerReinject()
           }
         }
       })()
     }, 150)
   }
 
-  await safeRunBatch()
+  const triggerReinject = () => {
+    if (!reinjectOnMapChange || !gilPath) return
+    if (gilChangeTimer) clearTimeout(gilChangeTimer)
+    gilChangeTimer = setTimeout(() => {
+      void (async () => {
+        try {
+          if (running) {
+            pendingReinject = true
+            return
+          }
+          running = true
+          await runReinject()
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          ui.error(msg.replace('[error]', '').trim())
+        } finally {
+          running = false
+          const hadPendingCodeCompile = pendingCodeCompile
+          if (pendingCodeCompile) {
+            pendingCodeCompile = false
+            triggerCodeChange()
+          }
+          if (!hadPendingCodeCompile && pendingReinject) {
+            pendingReinject = false
+            triggerReinject()
+          }
+        }
+      })()
+    }, 200)
+  }
+
+  const initial = await safeRunBatch()
+  if (initial) {
+    maybeExtractResources({
+      cfgDir,
+      injectCfg: initial.cfg.inject,
+      opts,
+      lang: initial.lang,
+      gilPath
+    })
+  }
 
   const compilerOptions = loadTsCompilerOptions(cfgDir)
   const depGraph: DepGraph = {
@@ -684,7 +782,12 @@ async function runDev(opts: GlobalOptions) {
 
   const deleteIfExists = (p: string) => {
     try {
-      if (fs.existsSync(p)) fs.unlinkSync(p)
+      if (fs.existsSync(p)) {
+        fs.unlinkSync(p)
+        if (p.toLowerCase().endsWith('.gia')) {
+          lastInjectedGiaPaths.delete(normalizeGiaPath(p))
+        }
+      }
     } catch {
       // ignore
     }
@@ -913,6 +1016,9 @@ async function runDev(opts: GlobalOptions) {
         all = []
       }
     }
+    if (all.length) {
+      trackGiaPaths(all.map((x) => x.giaPath))
+    }
 
     const byIr = new Map<string, { giaPath: string; graphId: number }[]>()
     for (const r of all) {
@@ -931,17 +1037,87 @@ async function runDev(opts: GlobalOptions) {
 
       if (!detailed.length) continue
       if (!opts.noinject && cfg.inject) {
-        const stat = injectMany({
-          giaPaths: detailed.map((x) => x.giaPath),
-          opts,
-          gilCfg: cfg.inject,
-          useConfiguredTargetId: false,
-          lang,
-          t
-        })
-        ui.info(t('injectAllDone', { ok: stat.ok, fail: stat.fail, count: stat.count }))
+        injecting = true
+        try {
+          const stat = injectMany({
+            giaPaths: detailed.map((x) => x.giaPath),
+            opts,
+            gilCfg: cfg.inject,
+            useConfiguredTargetId: false,
+            lang,
+            t
+          })
+          ui.info(t('injectAllDone', { ok: stat.ok, fail: stat.fail, count: stat.count }))
+        } finally {
+          injecting = false
+          markGilIgnoreCooldown()
+        }
       }
     }
+  }
+
+  async function runReinject() {
+    if (!reinjectOnMapChange || !gilPath || !cfg.inject) return
+
+    const tracked = [...lastInjectedGiaPaths]
+    if (!tracked.length) {
+      ui.warn(t('devReinjectNoGia'))
+      return
+    }
+
+    const missing = tracked.filter((p) => !fs.existsSync(p))
+    if (missing.length) {
+      ui.warn(t('devReinjectMissingGia', { count: missing.length }))
+      const res = await safeRunBatch()
+      if (res) {
+        maybeExtractResources({
+          cfgDir,
+          injectCfg: res.cfg.inject,
+          opts,
+          lang: res.lang,
+          gilPath,
+          reason: 'map-change'
+        })
+      }
+      return
+    }
+
+    if (!fs.existsSync(gilPath)) {
+      ui.warn(t('devMapMissing', { path: gilPath }))
+      return
+    }
+
+    ui.info(t('devMapChanged'))
+    injecting = true
+    try {
+      const stat = injectMany({
+        giaPaths: tracked,
+        opts,
+        gilCfg: cfg.inject,
+        useConfiguredTargetId: false,
+        lang,
+        t
+      })
+      ui.info(t('injectAllDone', { ok: stat.ok, fail: stat.fail, count: stat.count }))
+    } finally {
+      injecting = false
+      markGilIgnoreCooldown()
+    }
+    maybeExtractResources({
+      cfgDir,
+      injectCfg: cfg.inject,
+      opts,
+      lang,
+      gilPath,
+      reason: 'map-change'
+    })
+  }
+
+  const onGilChange = () => {
+    if (!reinjectOnMapChange || !gilPath) return
+    if (injecting) return
+    if (Date.now() < gilIgnoreUntil) return
+    triggerReinject()
   }
 
   // eslint-disable-next-line
@@ -955,22 +1131,42 @@ async function runDev(opts: GlobalOptions) {
     // eslint-disable-next-line
     .on('add', (p: string) => {
       changed.add(p)
-      trigger()
+      triggerCodeChange()
     })
     // eslint-disable-next-line
     .on('change', (p: string) => {
       changed.add(p)
-      trigger()
+      triggerCodeChange()
     })
     // eslint-disable-next-line
     .on('unlink', (p: string) => {
       removed.add(p)
-      trigger()
+      triggerCodeChange()
     })
     // eslint-disable-next-line
     .on('error', (err: unknown) => {
       ui.error(`watch error: ${err instanceof Error ? err.message : String(err)}`)
     })
+
+  if (reinjectOnMapChange && gilPath) {
+    // eslint-disable-next-line
+    chokidar
+      // eslint-disable-next-line
+      .watch(gilPath, {
+        ignoreInitial: true,
+        awaitWriteFinish: { stabilityThreshold: 200, pollInterval: 100 }
+      })
+      // eslint-disable-next-line
+      .on('add', onGilChange)
+      // eslint-disable-next-line
+      .on('change', onGilChange)
+      // eslint-disable-next-line
+      .on('unlink', onGilChange)
+      // eslint-disable-next-line
+      .on('error', (err: unknown) => {
+        ui.error(`map watch error: ${err instanceof Error ? err.message : String(err)}`)
+      })
+  }
 
   // keep alive
   await new Promise<void>(() => {})
@@ -1108,10 +1304,11 @@ async function runSingle(file: string, opts: GlobalOptions) {
   const { t } = initCliI18n(lang)
   await runCliChecks(lang)
   applyIrToGiaOptimizeEnv(loadedForChecks?.cfg)
+  const injectCfg = loadedForChecks?.cfg.inject
 
   if (isGiaPath(abs)) {
     // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    maybeInjectGia(abs, opts, loadedForChecks?.cfg.inject, true, lang)
+    maybeInjectGia(abs, opts, injectCfg, true, lang)
     return
   }
 
@@ -1119,7 +1316,7 @@ async function runSingle(file: string, opts: GlobalOptions) {
     ui.info(t('startGia'))
     const out = writeGiaFromOutJson(abs, undefined, (x) => ui.ok(`${x.giaPath} (id=${x.graphId})`))
     // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    out.forEach((x) => maybeInjectGia(x.giaPath, opts, loadedForChecks?.cfg.inject, true, lang))
+    out.forEach((x) => maybeInjectGia(x.giaPath, opts, injectCfg, true, lang))
     return
   }
 
@@ -1129,7 +1326,7 @@ async function runSingle(file: string, opts: GlobalOptions) {
     ui.info(t('startGia'))
     const out = writeGiaFromOutJson(abs, undefined, (x) => ui.ok(`${x.giaPath} (id=${x.graphId})`))
     // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    out.forEach((x) => maybeInjectGia(x.giaPath, opts, loadedForChecks?.cfg.inject, true, lang))
+    out.forEach((x) => maybeInjectGia(x.giaPath, opts, injectCfg, true, lang))
     return
   } catch {
     // not json
@@ -1182,7 +1379,7 @@ async function runSingle(file: string, opts: GlobalOptions) {
     ui.ok(`${x.giaPath} (id=${x.graphId})`)
   )
   // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-  giaOut.forEach((x) => maybeInjectGia(x.giaPath, opts, loaded?.cfg.inject, true, lang))
+  giaOut.forEach((x) => maybeInjectGia(x.giaPath, opts, injectCfg, true, lang))
 }
 
 async function main() {

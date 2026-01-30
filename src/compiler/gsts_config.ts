@@ -144,6 +144,36 @@ export type GstsInjectConfig = {
    * [EN] Skip safety checks during injection (allow replacing non-empty graph, allow name not starting with `_GSTS*`).
    */
   skipSafeCheck?: boolean
+  /**
+   * [ZH] dev 模式下检测地图文件被外部保存时，自动重新注入已生成的 GIA。
+   *
+   * - 默认启用
+   *
+   * [EN] In dev mode, re-inject generated GIA when the map file is saved externally.
+   *
+   * - Enabled by default
+   */
+  reinjectOnMapChange?: boolean
+  /**
+   * [ZH] 自动提取自定义资源（Custom Prefab）到文件。
+   *
+   * - 默认启用
+   *
+   * [EN] Auto extract custom resources (Custom Prefab) to file.
+   *
+   * - Enabled by default
+   */
+  extractResources?: boolean
+  /**
+   * [ZH] 自定义资源提取路径（相对 config 所在目录）。
+   *
+   * - 默认：`src/resources/prefabs.ts`
+   *
+   * [EN] Custom resources output path (relative to the config file).
+   *
+   * - Default: `src/resources/prefabs.ts`
+   */
+  resourcesPath?: string
 }
 
 export type GstsConfig = {
