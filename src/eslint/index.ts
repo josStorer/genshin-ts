@@ -113,7 +113,7 @@ export const configs = {
       'gsts/list-method-type-constraints': 'error',
       'gsts/timer-callback-signature': 'error',
       'gsts/timer-interval-frequency': 'warn',
-      'gsts/timer-outer-capture': 'warn',
+      'gsts/timer-outer-capture': ['warn', { allowOuterEventParam: false }],
       'gsts/builtin-math-support': 'error',
       'gsts/builtin-console-log-arity': 'error',
       'gsts/builtin-wrapper-arity': 'error'

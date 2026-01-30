@@ -9,6 +9,7 @@ type Options = {
   timerMethods?: string[]
   allowTopLevel?: boolean
   allowIdentifiers?: string[]
+  allowOuterEventParam?: boolean
   lang?: 'zh' | 'en' | 'both'
   scope?: 'server' | 'all'
   includeNestedFunctions?: boolean
@@ -18,6 +19,7 @@ const DEFAULTS: Required<Options> = {
   timerMethods: ['setTimeout', 'setInterval'],
   allowTopLevel: true,
   allowIdentifiers: [],
+  allowOuterEventParam: false,
   lang: 'both',
   scope: 'server',
   includeNestedFunctions: true
@@ -111,6 +113,25 @@ function resolveDefaultTimerNames(
   return { defaultEvt, defaultF }
 }
 
+function resolveServerEventParam(
+  callNode: any,
+  scopeIndex: ReturnType<typeof buildServerScopeIndex>,
+  sourceCode: any
+): { name: string; variable: any } | null {
+  const serverFn = findNearestServerScopeFunction(callNode, scopeIndex)
+  const param = serverFn?.params?.[0]
+  const name = getParamName(param)
+  if (!serverFn || !name) return null
+  const serverScope = sourceCode.getScope(serverFn)
+  const variable = serverScope?.set?.get(name)
+  if (!variable) return null
+  return { name, variable }
+}
+
+function getVisitorKeys(sourceCode: any): Record<string, string[]> {
+  return sourceCode?.visitorKeys ?? {}
+}
+
 function resolveImplicitTimerNames(
   callback: any,
   callNode: any,
@@ -148,6 +169,7 @@ const rule: Rule.RuleModule = {
           timerMethods: { type: 'array', items: { type: 'string' } },
           allowTopLevel: { type: 'boolean' },
           allowIdentifiers: { type: 'array', items: { type: 'string' } },
+          allowOuterEventParam: { type: 'boolean' },
           lang: { enum: ['zh', 'en', 'both'] },
           scope: { enum: ['server', 'all'] },
           includeNestedFunctions: { type: 'boolean' }
@@ -168,6 +190,30 @@ const rule: Rule.RuleModule = {
       '定时器回调不能跨层级捕获外层局部变量, 仅限一层捕获, 如需要获取跨层变量, 请使用let赋值转存到本层',
       'Timer callbacks must not capture outer locals across multiple levels; only one-level capture is allowed. Use `let` to reassign and store values in the current level if needed.'
     )
+    const outerEventMessage = formatMessage(
+      options.lang,
+      '定时器回调不应直接使用外层事件参数, 请先转存到局部变量, 或显式声明定时器回调参数',
+      'Timer callbacks should not use the outer event parameter directly; store it in a local variable or declare timer callback parameters.'
+    )
+    const outerTimerEventMessage = formatMessage(
+      options.lang,
+      '定时器回调不应直接使用外层定时器事件参数, 请先转存到局部变量, 或显式声明定时器回调参数',
+      'Timer callbacks should not use outer timer event parameters directly; store them in a local variable or declare timer callback parameters.'
+    )
+
+    const timerCallbackEvents = new Map<any, { name: string; variable: any }>()
+
+    const registerTimerCallback = (callNode: any) => {
+      const callback = resolveCallbackNode(callNode.arguments?.[0], sourceCode.getScope(callNode))
+      if (!callback) return
+      const params = callback?.params ?? []
+      const name = getParamName(params[0])
+      if (!name) return
+      const cbScope = sourceCode.getScope(callback)
+      const variable = cbScope?.set?.get(name)
+      if (!variable) return
+      timerCallbackEvents.set(callback, { name, variable })
+    }
 
     const isTopLevelScope = (scope: any): boolean => {
       if (!scope) return false
@@ -231,6 +277,80 @@ const rule: Rule.RuleModule = {
       }
     }
 
+    const reportOuterEventParamUsage = (fnNode: any, callNode: any) => {
+      if (options.allowOuterEventParam) return
+      if (!scopeManager) return
+      const info = resolveServerEventParam(callNode, scopeIndex, sourceCode)
+      if (!info) return
+      const fnScope = sourceCode.getScope(fnNode)
+      if (!fnScope) return
+      const reported = new Set<string>()
+      for (const scope of collectScopes(fnScope)) {
+        for (const ref of scope.through ?? []) {
+          const id = ref.identifier
+          if (!id || id.name !== info.name) continue
+          if (ref.resolved !== info.variable) continue
+          const key = `${id.range?.[0] ?? id.start}-${id.range?.[1] ?? id.end}`
+          if (reported.has(key)) continue
+          reported.add(key)
+          context.report({ node: id, message: outerEventMessage })
+        }
+      }
+    }
+
+    const reportOuterTimerEventParamUsage = (fnNode: any) => {
+      if (options.allowOuterEventParam) return
+      if (!scopeManager) return
+      const fnScope = sourceCode.getScope(fnNode)
+      if (!fnScope) return
+      const outerInfos: { name: string; variable: any }[] = []
+      let cur = findParentFunction(fnNode)
+      while (cur) {
+        const info = timerCallbackEvents.get(cur)
+        if (info) outerInfos.push(info)
+        cur = findParentFunction(cur)
+      }
+      if (outerInfos.length === 0) return
+      const reported = new Set<string>()
+      for (const scope of collectScopes(fnScope)) {
+        for (const ref of scope.through ?? []) {
+          const id = ref.identifier
+          if (!id) continue
+          for (const info of outerInfos) {
+            if (ref.resolved !== info.variable) continue
+            const key = `${id.range?.[0] ?? id.start}-${id.range?.[1] ?? id.end}`
+            if (reported.has(key)) continue
+            reported.add(key)
+            context.report({ node: id, message: outerTimerEventMessage })
+          }
+        }
+      }
+    }
+
+    if (scopeManager) {
+      const visitorKeys = getVisitorKeys(sourceCode)
+      const stack = [sourceCode.ast]
+      while (stack.length) {
+        const node = stack.pop()
+        if (!node || typeof node.type !== 'string') continue
+        if (node.type === 'CallExpression' && isTimerCall(node, methods)) {
+          registerTimerCallback(node)
+        }
+        const keys = visitorKeys[node.type] ?? []
+        for (const key of keys) {
+          const value = (node as any)[key]
+          if (!value) continue
+          if (Array.isArray(value)) {
+            for (const child of value) {
+              if (child && typeof child.type === 'string') stack.push(child)
+            }
+          } else if (value && typeof value.type === 'string') {
+            stack.push(value)
+          }
+        }
+      }
+    }
+
     return {
       CallExpression(node) {
         if (!scopeIndex.isInServerScope(node, options)) return
@@ -239,6 +359,8 @@ const rule: Rule.RuleModule = {
         if (!callback) return
         const implicitNames = resolveImplicitTimerNames(callback, node, scopeIndex)
         reportOuterCaptures(callback, implicitNames)
+        reportOuterEventParamUsage(callback, node)
+        reportOuterTimerEventParamUsage(callback)
       }
     }
   }
