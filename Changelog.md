@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.4
+
+- Fixed cases where eslint and timer-closure capture showed incorrect entity types after the entity type system became more complex in the previous release; the compiler now uses smarter entity type inference to avoid errors with complex type systems.
+- In dev mode, external map saves now trigger auto re-injection, so accidental overwrites no longer require manual re-injection; this can be adjusted in config.
+- Added support for extracting custom prefab names and ids from maps into code for easier lookup and interaction; the switch and output path are configurable.
+- Added stricter validation for Beyond Mode and Classic Mode nodes to avoid accidentally using unavailable nodes via shortcuts; such cases now surface errors directly.
+- Added an eslint warning for accessing outer event parameters inside timer callbacks, guiding users to fix it.
+
 ## v0.1.3
 
 - The type system now automatically constrains node availability between Beyond Mode and Classic Mode
