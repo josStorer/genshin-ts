@@ -2,6 +2,8 @@ import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
 import type { DictValueType } from '../../runtime/value.js'
+import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
+import { isEntityLikeType } from '../../shared/ts_type_utils.js'
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
 import { fail, warn } from './errors.js'
 import { tryTransformListMethodCall } from './list_methods.js'
@@ -82,8 +84,11 @@ function inferLocalVarTypeFromType(env: Env, t: ts.Type): LocalVarType | null {
   if ((t.flags & ts.TypeFlags.BooleanLike) !== 0) return 'bool'
   if ((t.flags & ts.TypeFlags.StringLike) !== 0) return 'str'
 
-  const s = env.checker.typeToString(t)
-  return inferLocalVarTypeFromTypeString(s)
+  const listType = inferListTypeFromType(env.checker, t, env.file)
+  if (listType) return `${listType}_list`
+  const base = inferConcreteTypeFromType(env.checker, t, env.file)
+  if (base) return base
+  return null
 }
 
 function inferLocalVarTypeFromExpression(env: Env, expr: ts.Expression): LocalVarType | null {
@@ -445,8 +450,7 @@ function inferSpreadArrayListType(env: Env, node: ts.ArrayLiteralExpression): Li
   for (const el of node.elements) {
     if (!ts.isSpreadElement(el)) continue
     const t = env.checker.getTypeAtLocation(el.expression)
-    const s = env.checker.typeToString(t)
-    const inferred = inferListTypeFromTypeString(s)
+    const inferred = inferListTypeFromType(env.checker, t, env.file)
     if (inferred) return inferred
   }
 
@@ -471,8 +475,7 @@ function inferSpreadArrayListType(env: Env, node: ts.ArrayLiteralExpression): Li
     if ((t.flags & ts.TypeFlags.BooleanLike) !== 0) return 'bool'
     if ((t.flags & ts.TypeFlags.StringLike) !== 0) return 'str'
 
-    const s = env.checker.typeToString(t)
-    const inferred = inferConcreteTypeFromString(s)
+    const inferred = inferConcreteTypeFromType(env.checker, t, env.file)
     if (inferred) return inferred
   }
 
@@ -675,6 +678,7 @@ function resolveTimerPoolSize(env: Env, node: ts.Node, kind: TimerKind): number 
 function inferDictValueTypeFromType(env: Env, t: ts.Type): DictValueType | null {
   if (t.flags & ts.TypeFlags.Any) return null
   if (t.flags & ts.TypeFlags.Unknown) return null
+  if (isEntityLikeType(env.checker, t, env.file)) return 'entity'
 
   if (t.flags & ts.TypeFlags.Union) {
     const u = t as ts.UnionType
@@ -707,9 +711,10 @@ function inferDictValueTypeFromType(env: Env, t: ts.Type): DictValueType | null 
   const s = env.checker.typeToString(t)
   if (s === 'Timeout' || s === 'NodeJS.Timeout') return 'str'
   if (/\b(dict|ReadonlyDict|generic)\b/.test(s)) return null
-  const listType = inferListTypeFromTypeString(s)
+  const listType = inferListTypeFromType(env.checker, t, env.file) ?? inferListTypeFromTypeString(s)
   if (listType) return `${listType}_list`
-  const scalar = inferConcreteTypeFromString(s)
+  const scalar =
+    inferConcreteTypeFromType(env.checker, t, env.file) ?? inferConcreteTypeFromString(s)
   if (scalar) return scalar
   return null
 }

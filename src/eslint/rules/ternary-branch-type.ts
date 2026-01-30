@@ -1,7 +1,7 @@
 import type { Rule } from 'eslint'
 import ts from 'typescript'
 
-import { inferConcreteTypeFromString, inferListTypeFromTypeString } from '../utils/list.js'
+import { inferConcreteTypeFromType, inferListTypeFromType } from '../utils/list.js'
 import { formatMessage } from '../utils/messages.js'
 import { readBaseOptions } from '../utils/options.js'
 import { getParserServices } from '../utils/parser.js'
@@ -23,12 +23,16 @@ const DEFAULTS: Required<Options> = {
 
 type LocalVarType = string
 
-function inferLocalVarType(checker: ts.TypeChecker, type: ts.Type): LocalVarType | null {
+function inferLocalVarType(
+  checker: ts.TypeChecker,
+  type: ts.Type,
+  location?: ts.Node
+): LocalVarType | null {
   if (type.flags & ts.TypeFlags.Union) {
     const u = type as ts.UnionType
     let base: LocalVarType | null = null
     for (const t of u.types) {
-      const next = inferLocalVarType(checker, t)
+      const next = inferLocalVarType(checker, t, location)
       if (!next) return null
       if (!base) base = next
       else if (base !== next) return null
@@ -39,7 +43,7 @@ function inferLocalVarType(checker: ts.TypeChecker, type: ts.Type): LocalVarType
     const i = type as ts.IntersectionType
     let base: LocalVarType | null = null
     for (const t of i.types) {
-      const next = inferLocalVarType(checker, t)
+      const next = inferLocalVarType(checker, t, location)
       if (!next) return null
       if (!base) base = next
       else if (base !== next) return null
@@ -52,10 +56,9 @@ function inferLocalVarType(checker: ts.TypeChecker, type: ts.Type): LocalVarType
   if ((type.flags & ts.TypeFlags.BooleanLike) !== 0) return 'bool'
   if ((type.flags & ts.TypeFlags.StringLike) !== 0) return 'str'
 
-  const s = checker.typeToString(type)
-  const listType = inferListTypeFromTypeString(s)
+  const listType = inferListTypeFromType(checker, type, location)
   if (listType) return `${listType}_list`
-  const scalar = inferConcreteTypeFromString(s)
+  const scalar = inferConcreteTypeFromType(checker, type, location)
   if (scalar) return scalar
   return null
 }
@@ -90,8 +93,8 @@ const rule: Rule.RuleModule = {
         const tsTrue = services.esTreeNodeToTSNodeMap.get(node.consequent)
         const tsFalse = services.esTreeNodeToTSNodeMap.get(node.alternate)
         if (!tsTrue || !tsFalse) return
-        const tTrue = inferLocalVarType(checker, checker.getTypeAtLocation(tsTrue))
-        const tFalse = inferLocalVarType(checker, checker.getTypeAtLocation(tsFalse))
+        const tTrue = inferLocalVarType(checker, checker.getTypeAtLocation(tsTrue), tsTrue)
+        const tFalse = inferLocalVarType(checker, checker.getTypeAtLocation(tsFalse), tsFalse)
         if (!tTrue || !tFalse) {
           if (!options.allowUnknown) {
             context.report({

@@ -1,6 +1,11 @@
 import type { Rule } from 'eslint'
+import ts from 'typescript'
 
-import { inferListTypeFromExpression, isArrayLikeType } from '../utils/list.js'
+import {
+  inferListTypeFromArrayLiteral,
+  inferListTypeFromExpression,
+  isArrayLikeType
+} from '../utils/list.js'
 import { formatMessage } from '../utils/messages.js'
 import { readBaseOptions } from '../utils/options.js'
 import { getParserServices } from '../utils/parser.js'
@@ -51,6 +56,11 @@ const rule: Rule.RuleModule = {
         if (!isArrayLikeType(checker, type)) return
         const listType = inferListTypeFromExpression(checker, tsNode)
         if (listType) return
+        const tsParent = services.esTreeNodeToTSNodeMap.get(node.parent)
+        if (tsParent && ts.isArrayLiteralExpression(tsParent)) {
+          const inferred = inferListTypeFromArrayLiteral(checker, tsParent)
+          if (inferred) return
+        }
         context.report({
           node,
           message: formatMessage(

@@ -1,5 +1,6 @@
 import ts from 'typescript'
 
+import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { fail } from './errors.js'
 import {
   extractTimerHandleMeta,
@@ -9,12 +10,7 @@ import {
   transformExpression
 } from './expr.js'
 import { isArrayLikeExpression } from './list_utils.js'
-import {
-  inferConcreteTypeFromString,
-  inferListTypeFromTypeNode,
-  inferListTypeFromTypeString,
-  type ListType
-} from './lists.js'
+import { inferListTypeFromTypeNode, inferListTypeFromTypeString, type ListType } from './lists.js'
 import {
   transformDoStatement,
   transformForOfStatement,
@@ -29,7 +25,10 @@ function inferListConcreteType(env: Env, t: ts.Type, declTypeNode?: ts.TypeNode)
   const byNode = inferListTypeFromTypeNode(declTypeNode)
   if (byNode) return byNode
 
-  return inferListTypeFromTypeString(env.checker.typeToString(t))
+  return (
+    inferListTypeFromType(env.checker, t, env.file) ??
+    inferListTypeFromTypeString(env.checker.typeToString(t))
+  )
 }
 
 function isCollectionType(env: Env, t: ts.Type): boolean {
@@ -73,8 +72,7 @@ function inferBasicType(env: Env, t: ts.Type): ListType | null {
     }
     return base
   }
-  const s = env.checker.typeToString(t)
-  return inferConcreteTypeFromString(s)
+  return inferConcreteTypeFromType(env.checker, t, env.file)
 }
 
 function makeLocalVarTypeString(
@@ -90,7 +88,6 @@ function makeLocalVarTypeString(
     }
   }
   const t = env.checker.getTypeAtLocation(decl.name)
-  const s = env.checker.typeToString(t)
 
   if (plan.isCollection) {
     const ct = inferListConcreteType(env, t, decl.type)
@@ -100,7 +97,7 @@ function makeLocalVarTypeString(
     return `${ct}_list`
   }
 
-  const base = inferConcreteTypeFromString(s)
+  const base = inferConcreteTypeFromType(env.checker, t, env.file)
   if (base) return base
   fail(env, decl, `cannot infer type, please add type annotation`)
 }
@@ -614,7 +611,7 @@ function inferSwitchControlKind(env: Env, expr: ts.Expression): SwitchControlKin
     const s = env.checker.typeToString(t)
     if (s === 'IntValue') return 'int'
     if (s === 'StrValue') return 'str'
-    const base = inferConcreteTypeFromString(s)
+    const base = inferConcreteTypeFromType(env.checker, t, env.file)
     if (base === 'int' || base === 'str') return base
     return null
   }

@@ -1,7 +1,14 @@
 import ts from 'typescript'
 
+import {
+  inferListElementTypeFromExpression as inferListElementTypeFromExpressionShared,
+  inferListElementTypeFromType as inferListElementTypeFromTypeShared,
+  inferListTypeFromExpression as inferListTypeFromExpressionShared,
+  inferListTypeFromType as inferListTypeFromTypeShared,
+  isArrayLikeType as isArrayLikeTypeShared
+} from '../../shared/ts_list_utils.js'
 import { fail } from './errors.js'
-import { inferConcreteTypeFromString, inferListTypeFromTypeString, type ListType } from './lists.js'
+import { type ListType } from './lists.js'
 import type { Env } from './types.js'
 import { makeFCall } from './utils.js'
 
@@ -38,84 +45,23 @@ export const SUPPORTED_LIST_METHODS = new Set<string>([
 ])
 
 export function inferListElementTypeFromType(env: Env, t: ts.Type): ListType | null {
-  if (t.flags & ts.TypeFlags.Union) {
-    const u = t as ts.UnionType
-    let base: ListType | null = null
-    for (const tt of u.types) {
-      const next = inferListElementTypeFromType(env, tt)
-      if (!next) return null
-      if (!base) base = next
-      else if (base !== next) return null
-    }
-    return base
-  }
-  if (t.flags & ts.TypeFlags.Intersection) {
-    const it = t as ts.IntersectionType
-    let base: ListType | null = null
-    for (const tt of it.types) {
-      const next = inferListElementTypeFromType(env, tt)
-      if (!next) return null
-      if (!base) base = next
-      else if (base !== next) return null
-    }
-    return base
-  }
-
-  if ((t.flags & ts.TypeFlags.BigIntLike) !== 0) return 'int'
-  if ((t.flags & ts.TypeFlags.NumberLike) !== 0) return 'float'
-  if ((t.flags & ts.TypeFlags.BooleanLike) !== 0) return 'bool'
-  if ((t.flags & ts.TypeFlags.StringLike) !== 0) return 'str'
-
-  const s = env.checker.typeToString(t)
-  return inferConcreteTypeFromString(s)
+  return inferListElementTypeFromTypeShared(env.checker, t, env.file)
 }
 
 export function inferListElementTypeFromExpression(env: Env, expr: ts.Expression): ListType | null {
-  const t = env.checker.getTypeAtLocation(expr)
-  return inferListElementTypeFromType(env, t)
+  return inferListElementTypeFromExpressionShared(env.checker, expr)
 }
 
 export function inferListTypeFromType(env: Env, t: ts.Type): ListType | null {
-  if (t.flags & ts.TypeFlags.Union) {
-    const u = t as ts.UnionType
-    let base: ListType | null = null
-    for (const tt of u.types) {
-      const next = inferListTypeFromType(env, tt)
-      if (!next) return null
-      if (!base) base = next
-      else if (base !== next) return null
-    }
-    return base
-  }
-  if (t.flags & ts.TypeFlags.Intersection) {
-    const it = t as ts.IntersectionType
-    let base: ListType | null = null
-    for (const tt of it.types) {
-      const next = inferListTypeFromType(env, tt)
-      if (!next) return null
-      if (!base) base = next
-      else if (base !== next) return null
-    }
-    return base
-  }
-
-  const s = env.checker.typeToString(t)
-  return inferListTypeFromTypeString(s)
+  return inferListTypeFromTypeShared(env.checker, t, env.file)
 }
 
 export function inferListTypeFromExpression(env: Env, expr: ts.Expression): ListType | null {
-  const t = env.checker.getTypeAtLocation(expr)
-  return inferListTypeFromType(env, t)
+  return inferListTypeFromExpressionShared(env.checker, expr)
 }
 
 export function isArrayLikeType(env: Env, t: ts.Type): boolean {
-  if (env.checker.isArrayType(t) || env.checker.isTupleType(t)) return true
-  const s = env.checker.typeToString(t)
-  if (/\[\]\s*$/.test(s)) return true
-  if (/^Array<.+>$/.test(s)) return true
-  if (/^ReadonlyArray<.+>$/.test(s)) return true
-  if (/^readonly\s+.+\[\]\s*$/i.test(s)) return true
-  return false
+  return isArrayLikeTypeShared(env.checker, t)
 }
 
 export function isArrayLikeExpression(env: Env, expr: ts.Expression): boolean {
