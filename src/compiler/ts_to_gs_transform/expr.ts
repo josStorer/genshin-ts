@@ -22,7 +22,7 @@ import {
   isUnsupportedBinaryOperator
 } from './ops.js'
 import { transformHandler } from './stmt.js'
-import type { Env, TimerHandleMeta } from './types.js'
+import type { Env, TimerCaptureInfo, TimerHandleMeta } from './types.js'
 import { makeFCall, withSameRange } from './utils.js'
 
 type NumericKind = 'float' | 'int' | 'mixed' | 'unknown'
@@ -827,6 +827,7 @@ function collectTimerCaptures(
       const sym = env.checker.getSymbolAtLocation(node)
       if (!sym) return
       if (seen.has(sym)) return
+      if (env.timerHandleSymbol && sym === env.timerHandleSymbol) return
       if (isSymbolDeclaredInFunction(sym, fn)) return
       if (isSymbolDeclaredAtTopLevel(sym, env.file)) return
       if (isSymbolFromDeclarationFile(sym)) return
@@ -970,11 +971,29 @@ function buildTimerHandler(
   fName: string,
   poolNames: string[],
   captures: TimerCaptureSpec[],
-  kind: TimerKind
+  kind: TimerKind,
+  timerNameIdent: string | null
 ): ts.ArrowFunction {
   const evtId = ts.factory.createIdentifier(evtName)
   const fId = ts.factory.createIdentifier(fName)
-  const captureStmts = captures.map((cap) => {
+  const timerNameDecl =
+    timerNameIdent !== null
+      ? ts.factory.createVariableStatement(
+          undefined,
+          ts.factory.createVariableDeclarationList(
+            [
+              ts.factory.createVariableDeclaration(
+                timerNameIdent,
+                undefined,
+                undefined,
+                ts.factory.createPropertyAccessExpression(evtId, 'timerName')
+              )
+            ],
+            ts.NodeFlags.Const
+          )
+        )
+      : null
+  const captureStmts = captures.flatMap((cap) => {
     const dictExpr = ts.factory.createCallExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createCallExpression(
@@ -1064,7 +1083,12 @@ function buildTimerHandler(
         )
       : null
 
-  const mainStmts = [...captureStmts, ...originalStmts, ...(cleanupStmt ? [cleanupStmt] : [])]
+  const mainStmts = [
+    ...(timerNameDecl ? [timerNameDecl] : []),
+    ...captureStmts,
+    ...originalStmts,
+    ...(cleanupStmt ? [cleanupStmt] : [])
+  ]
 
   let body: ts.Block
   if (poolNames.length <= 1) {
@@ -1157,9 +1181,33 @@ function transformTimerCall(
   const timerId = env.timerCounterRef.value++
   const poolNames = Array.from({ length: poolSize }, (_, i) => `__gsts_${kind}_${timerId}_${i}`)
   const indexVarName = `__gsts_${kind}_${timerId}_index`
+  const timerNameIdent = `__gsts_${kind}_${timerId}_timerName`
+
+  const handleSymbol = (() => {
+    const parent = expr.parent
+    if (ts.isVariableDeclaration(parent) && parent.initializer === expr) {
+      if (ts.isIdentifier(parent.name)) {
+        return env.checker.getSymbolAtLocation(parent.name) ?? null
+      }
+    }
+    if (
+      ts.isBinaryExpression(parent) &&
+      parent.right === expr &&
+      ts.isIdentifier(parent.left) &&
+      isAssignmentLikeOperator(parent.operatorToken.kind)
+    ) {
+      return env.checker.getSymbolAtLocation(parent.left) ?? null
+    }
+    return null
+  })()
 
   const excludedNames = new Set<string>([evtName, fName, 'gsts', env.gstsIdent, 'globalThis'])
-  const captureInfos = collectTimerCaptures(env, handlerArg, excludedNames)
+  if (handleSymbol) excludedNames.add(handleSymbol.getName())
+  const captureInfos = collectTimerCaptures(
+    { ...env, timerHandleSymbol: handleSymbol ?? undefined },
+    handlerArg,
+    excludedNames
+  )
   const captures: TimerCaptureSpec[] = captureInfos.map((info) => ({
     name: info.name,
     valueType: info.valueType,
@@ -1168,9 +1216,42 @@ function transformTimerCall(
     timerDicts: info.timerDicts
   }))
 
-  const handler = buildTimerHandler(env, handlerArg, evtName, fName, poolNames, captures, kind)
+  const handler = buildTimerHandler(
+    env,
+    handlerArg,
+    evtName,
+    fName,
+    poolNames,
+    captures,
+    kind,
+    timerNameIdent
+  )
+  const timerHandleDicts = captures.map((cap) => ({
+    name: cap.dictVarName,
+    valueType: cap.valueType
+  }))
+  const timerCaptureMap = new Map<ts.Symbol, TimerCaptureInfo>()
+  for (let i = 0; i < captureInfos.length; i += 1) {
+    const info = captureInfos[i]
+    const sym = env.checker.getSymbolAtLocation(info.id)
+    if (!sym) continue
+    const cap = captures[i]
+    if (!cap) continue
+    timerCaptureMap.set(sym, { dictVarName: cap.dictVarName, valueType: cap.valueType })
+  }
   const shadowedNames = new Set(captures.map((cap) => cap.name))
-  const transformedHandler = transformHandler({ ...env, shadowedNames }, context, handler)
+  const transformedHandler = transformHandler(
+    {
+      ...env,
+      shadowedNames,
+      timerCaptureMap,
+      timerNameIdent,
+      timerHandleSymbol: handleSymbol ?? undefined,
+      timerHandleDicts
+    },
+    context,
+    handler
+  )
 
   const delayArg = expr.arguments[1]
   if (kind === 'interval' && delayArg) {
@@ -1370,6 +1451,31 @@ export function transformExpression(
 
   if (ts.isIdentifier(expr)) {
     const name = expr.text
+    const sym = env.checker.getSymbolAtLocation(expr)
+    // 仅在定时器回调上下文生效(因为这些env参数仅在回调情况下才存在)：
+    // 1) handle 标识符 -> 当前 timerName(并附带捕获字典元数据以便清理), 该转换用于避免直接clearInterval(t)产生的报错, 因为.gs.ts的setInterval是伪异步
+    // 2) 捕获变量标识符 -> LocalVariable 的 .value 读取
+    if (sym && env.timerHandleSymbol && sym === env.timerHandleSymbol && env.timerNameIdent) {
+      const timerName = ts.factory.createIdentifier(env.timerNameIdent)
+      if (env.timerHandleDicts) {
+        const call = ts.factory.createCallExpression(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createPropertyAccessExpression(
+              ts.factory.createIdentifier(env.gstsIdent),
+              'f'
+            ),
+            '__gstsAttachTimerHandle'
+          ),
+          undefined,
+          [timerName, buildTimerHandleDictsLiteral(env.timerHandleDicts)]
+        )
+        return withSameRange(call, expr)
+      }
+      return withSameRange(timerName, expr)
+    }
+    if (sym && env.timerCaptureMap?.has(sym)) {
+      return withSameRange(ts.factory.createPropertyAccessExpression(expr, 'value'), expr)
+    }
     const shadowedNames = env.shadowedNames
     if (shadowedNames && shadowedNames.has(name)) {
       if (shouldWrapLoopIndexByContext(env, expr)) {
@@ -1377,7 +1483,6 @@ export function transformExpression(
       }
       return expr
     }
-    const sym = env.checker.getSymbolAtLocation(expr)
     const localSymbols = env.localSymbols
     if (sym && localSymbols && localSymbols.has(sym)) {
       const localVarSymbols = env.localVarSymbols

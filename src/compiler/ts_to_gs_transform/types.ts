@@ -13,6 +13,11 @@ export type TimerHandleMeta = {
   dicts: { name: string; valueType: DictValueType }[]
 }
 
+export type TimerCaptureInfo = {
+  dictVarName: string
+  valueType: DictValueType
+}
+
 export type VarPlanEntry = {
   /**
    * 变量需要“局部变量语义”（Get/Set Local Variable）以模拟可变状态
@@ -72,6 +77,26 @@ export type Env = {
   varPlan?: VarPlan
   eventName?: string
   timerHandleMeta?: Map<ts.Symbol, TimerHandleMeta>
+  /**
+   * 当前定时器回调内的捕获变量映射：
+   * symbol -> 捕获字典名/值类型（用于读取改写与写回字典）
+   */
+  timerCaptureMap?: Map<ts.Symbol, TimerCaptureInfo>
+  /**
+   * 当前定时器回调绑定的稳定 timerName 局部标识符名
+   * （避免在同一回调里多次直接访问 evt.timerName）
+   */
+  timerNameIdent?: string
+  /**
+   * 当前 setTimeout/setInterval 返回句柄对应的符号
+   * （用于捕获分析时排除，并在回调内识别 handle 引用）
+   */
+  timerHandleSymbol?: ts.Symbol
+  /**
+   * 当前 timer handle 需要携带的捕获字典元数据列表
+   * （用于 __gstsAttachTimerHandle 绑定清理/恢复所需信息）
+   */
+  timerHandleDicts?: { name: string; valueType: DictValueType }[]
   enumImport?: EnumImportInfo
   needsEnumImportRef?: { value: boolean }
   localNames?: Set<string>
