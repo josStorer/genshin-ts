@@ -16,6 +16,12 @@ export type TimerHandleMeta = {
 export type TimerCaptureInfo = {
   dictVarName: string
   valueType: DictValueType
+  timerDicts?: { name: string; valueType: DictValueType }[]
+  /**
+   * 是否使用 LocalVariable 语义读取/写入该捕获变量。
+   * false 时按普通变量读取（主要用于只读 timer handle 和 其他常规类型const 捕获优化）。
+   */
+  useLocalVar?: boolean
 }
 
 export type VarPlanEntry = {

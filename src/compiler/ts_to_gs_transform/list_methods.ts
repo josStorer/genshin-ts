@@ -60,8 +60,30 @@ export function tryTransformListMethodCall(
     fail(env, callee.name, `Unsupported list method "${method}"`)
   }
 
+  const captureTargetId = ts.isIdentifier(target)
+    ? target
+    : ts.isPropertyAccessExpression(target) &&
+        target.name.text === 'value' &&
+        ts.isIdentifier(target.expression)
+      ? target.expression
+      : null
   const args = expr.arguments.slice()
-  const listExpr = transformExpression(env, context, target)
+  const timerCaptureInfo = (() => {
+    if (!env.timerCaptureMap || !captureTargetId) return undefined
+    const sym = env.checker.getSymbolAtLocation(captureTargetId)
+    if (!sym) return undefined
+    return env.timerCaptureMap.get(sym)
+  })()
+  let listExpr: ts.Expression
+  if (timerCaptureInfo) {
+    if (timerCaptureInfo.useLocalVar && ts.isIdentifier(target)) {
+      listExpr = ts.factory.createPropertyAccessExpression(target, 'value')
+    } else {
+      listExpr = transformExpression(env, context, target)
+    }
+  } else {
+    listExpr = transformExpression(env, context, target)
+  }
   const tempId = env.tempCounter++
 
   const listVarName = `__gsts_list_${tempId}`
@@ -69,6 +91,41 @@ export function tryTransformListMethodCall(
   const listValue = listVarId
 
   const listInit = makeConst(listVarName, listExpr)
+  const makeTimerCaptureKeyExpr = () =>
+    env.timerNameIdent
+      ? ts.factory.createIdentifier(env.timerNameIdent)
+      : ts.factory.createPropertyAccessExpression(
+          ts.factory.createIdentifier(env.evtIdent ?? 'evt'),
+          'timerName'
+        )
+  const makeTimerCaptureDictExpr = () => {
+    if (!timerCaptureInfo) return null
+    return ts.factory.createCallExpression(
+      ts.factory.createPropertyAccessExpression(
+        makeFCall(env, 'getNodeGraphVariable', [
+          ts.factory.createStringLiteral(timerCaptureInfo.dictVarName)
+        ]),
+        'asDict'
+      ),
+      undefined,
+      [
+        ts.factory.createStringLiteral('str'),
+        ts.factory.createStringLiteral(timerCaptureInfo.valueType)
+      ]
+    )
+  }
+  const makeTimerCaptureListWritebackStmt = (): ts.ExpressionStatement | null => {
+    if (!timerCaptureInfo?.useLocalVar) return null
+    const dictExpr = makeTimerCaptureDictExpr()
+    if (!dictExpr) return null
+    return ts.factory.createExpressionStatement(
+      makeFCall(env, 'setOrAddKeyValuePairsToDictionary', [
+        dictExpr,
+        makeTimerCaptureKeyExpr(),
+        listValue
+      ])
+    )
+  }
   const coerceIndexArg = (arg: ts.Expression, label: string): ts.Expression => {
     const argType = inferListElementTypeFromExpression(env, arg)
     if (argType === 'int') return transformExpression(env, context, arg)
@@ -725,11 +782,13 @@ export function tryTransformListMethodCall(
       ts.factory.createPropertyAccessExpression(lenId, 'localVariable'),
       makeFCall(env, 'addition', [lenVal, ts.factory.createBigIntLiteral('1n')])
     ])
+    const writebackStmt = makeTimerCaptureListWritebackStmt()
     const stmts = [
       listInit,
       lenDecl,
       ts.factory.createExpressionStatement(setLen),
       ts.factory.createExpressionStatement(insertCall),
+      ...(writebackStmt ? [writebackStmt] : []),
       ts.factory.createExpressionStatement(setNextLen)
     ]
     return withSameRange(makeIife(stmts, lenVal), expr)
@@ -784,6 +843,10 @@ export function tryTransformListMethodCall(
       )
     ])
     const stmts = [listInit, lenDecl, outDecl, ts.factory.createExpressionStatement(branch)]
+    const writebackStmt = makeTimerCaptureListWritebackStmt()
+    if (writebackStmt) {
+      stmts.push(writebackStmt)
+    }
     return withSameRange(
       makeIife(stmts, ts.factory.createPropertyAccessExpression(outId, 'value')),
       expr
@@ -898,6 +961,10 @@ export function tryTransformListMethodCall(
       removedDecl,
       ts.factory.createExpressionStatement(loopBranch)
     ]
+    const writebackStmt = makeTimerCaptureListWritebackStmt()
+    if (writebackStmt) {
+      stmts.push(writebackStmt)
+    }
     return withSameRange(
       makeIife(stmts, ts.factory.createPropertyAccessExpression(removedId, 'value')),
       expr

@@ -22,7 +22,7 @@ import {
   isUnsupportedBinaryOperator
 } from './ops.js'
 import { transformHandler } from './stmt.js'
-import type { Env, TimerCaptureInfo, TimerHandleMeta } from './types.js'
+import type { Env, TimerCaptureInfo, TimerHandleMeta, VarPlanEntry } from './types.js'
 import { makeFCall, withSameRange } from './utils.js'
 
 type NumericKind = 'float' | 'int' | 'mixed' | 'unknown'
@@ -38,6 +38,7 @@ type TimerCaptureSpec = {
   valueType: DictValueType
   dictVarName: string
   valueExpr: ts.Expression
+  useLocalVar: boolean
   timerDicts?: TimerCaptureDictMeta[]
 }
 
@@ -784,6 +785,34 @@ function isSymbolFromDeclarationFile(sym: ts.Symbol): boolean {
   return decls.every((d) => d.getSourceFile().isDeclarationFile)
 }
 
+function isConstVariableSymbol(sym: ts.Symbol): boolean {
+  const decls = sym.declarations ?? []
+  for (const d of decls) {
+    let cur: ts.Node | undefined = d
+    while (cur) {
+      if (ts.isVariableDeclarationList(cur)) {
+        return (cur.flags & ts.NodeFlags.Const) !== 0
+      }
+      if (ts.isParameter(cur)) return false
+      cur = cur.parent
+    }
+  }
+  return false
+}
+
+function resolveVarPlanEntry(env: Env, sym: ts.Symbol): VarPlanEntry | undefined {
+  let plan = env.varPlan?.get(sym)
+  if (!plan && env.varPlan && sym.valueDeclaration) {
+    for (const [entrySym, entryPlan] of env.varPlan.entries()) {
+      if (entrySym.valueDeclaration === sym.valueDeclaration) {
+        plan = entryPlan
+        break
+      }
+    }
+  }
+  return plan
+}
+
 function isCallableType(env: Env, t: ts.Type): boolean {
   if (t.flags & ts.TypeFlags.TypeParameter) {
     const constraint = env.checker.getBaseConstraintOfType(t)
@@ -809,15 +838,33 @@ function collectTimerCaptures(
   name: string
   valueType: DictValueType
   id: ts.Identifier
+  written: boolean
   timerDicts?: TimerCaptureDictMeta[]
 }[] {
   const out: {
     name: string
     valueType: DictValueType
     id: ts.Identifier
+    written: boolean
     timerDicts?: TimerCaptureDictMeta[]
   }[] = []
-  const seen = new Set<ts.Symbol>()
+  const seen = new Map<ts.Symbol, number>()
+
+  const isWriteAccess = (id: ts.Identifier): boolean => {
+    const parent = id.parent
+    if (!parent) return false
+    if (ts.isBinaryExpression(parent) && parent.left === id) {
+      return isAssignmentLikeOperator(parent.operatorToken.kind)
+    }
+    if (ts.isPrefixUnaryExpression(parent) || ts.isPostfixUnaryExpression(parent)) {
+      if (parent.operand !== id) return false
+      return (
+        parent.operator === ts.SyntaxKind.PlusPlusToken ||
+        parent.operator === ts.SyntaxKind.MinusMinusToken
+      )
+    }
+    return false
+  }
 
   const visit = (node: ts.Node) => {
     if (ts.isIdentifier(node)) {
@@ -826,7 +873,12 @@ function collectTimerCaptures(
       if (excludedNames.has(name)) return
       const sym = env.checker.getSymbolAtLocation(node)
       if (!sym) return
-      if (seen.has(sym)) return
+      const writeAccess = isWriteAccess(node)
+      const existing = seen.get(sym)
+      if (existing !== undefined) {
+        if (writeAccess) out[existing].written = true
+        return
+      }
       if (env.timerHandleSymbol && sym === env.timerHandleSymbol) return
       if (isSymbolDeclaredInFunction(sym, fn)) return
       if (isSymbolDeclaredAtTopLevel(sym, env.file)) return
@@ -839,8 +891,9 @@ function collectTimerCaptures(
         fail(env, node, `unsupported timer capture type for "${name}": ${raw}`)
       }
       const timerDicts = env.timerHandleMeta?.get(sym)?.dicts
-      seen.add(sym)
-      out.push({ name, valueType, id: node, timerDicts })
+      const idx = out.length
+      seen.set(sym, idx)
+      out.push({ name, valueType, id: node, written: writeAccess, timerDicts })
       return
     }
     ts.forEachChild(node, visit)
@@ -935,20 +988,125 @@ export function propagateTimerHandleMeta(
 
 function buildCaptureValueExpr(env: Env, id: ts.Identifier): ts.Expression {
   const sym = env.checker.getSymbolAtLocation(id)
-  let plan = sym ? env.varPlan?.get(sym) : undefined
-  if (!plan && sym && env.varPlan && sym.valueDeclaration) {
-    for (const [entrySym, entryPlan] of env.varPlan.entries()) {
-      if (entrySym.valueDeclaration === sym.valueDeclaration) {
-        plan = entryPlan
-        break
-      }
-    }
-  }
+  const plan = sym ? resolveVarPlanEntry(env, sym) : undefined
   const base = ts.factory.createIdentifier(id.text)
   if (plan?.needsLocalVar) {
     return ts.factory.createPropertyAccessExpression(base, 'value')
   }
   return base
+}
+
+function buildTimerCaptureDictExpr(env: Env, info: TimerCaptureInfo): ts.Expression {
+  const fExpr = ts.factory.createPropertyAccessExpression(
+    ts.factory.createIdentifier(env.gstsIdent),
+    'f'
+  )
+  return ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createCallExpression(
+        ts.factory.createPropertyAccessExpression(fExpr, 'getNodeGraphVariable'),
+        undefined,
+        [ts.factory.createStringLiteral(info.dictVarName)]
+      ),
+      'asDict'
+    ),
+    undefined,
+    [ts.factory.createStringLiteral('str'), ts.factory.createStringLiteral(info.valueType)]
+  )
+}
+
+function buildTimerCaptureWritebackExpr(
+  env: Env,
+  info: TimerCaptureInfo,
+  valueExpr: ts.Expression
+): ts.Expression {
+  const timerNameExpr = env.timerNameIdent
+    ? ts.factory.createIdentifier(env.timerNameIdent)
+    : ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier(env.evtIdent ?? 'evt'),
+        'timerName'
+      )
+  return makeFCall(env, 'setOrAddKeyValuePairsToDictionary', [
+    buildTimerCaptureDictExpr(env, info),
+    timerNameExpr,
+    valueExpr
+  ])
+}
+
+function buildTimerCaptureLocalAssignExpr(
+  env: Env,
+  leftId: ts.Identifier,
+  valueExpr: ts.Expression,
+  info: TimerCaptureInfo
+): ts.Expression {
+  const tmpName = `__gsts_timer_cap_${env.tempCounter++}`
+  const tmpId = ts.factory.createIdentifier(tmpName)
+  const initTmp = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          tmpId,
+          undefined,
+          undefined,
+          makeFCall(env, 'initLocalVariable', [ts.factory.createStringLiteral(info.valueType)])
+        )
+      ],
+      ts.NodeFlags.Const
+    )
+  )
+  const setTmp = ts.factory.createExpressionStatement(
+    makeFCall(env, 'setLocalVariable', [
+      ts.factory.createPropertyAccessExpression(tmpId, 'localVariable'),
+      valueExpr
+    ])
+  )
+  const setLocal = ts.factory.createExpressionStatement(
+    makeFCall(env, 'setLocalVariable', [
+      ts.factory.createPropertyAccessExpression(leftId, 'localVariable'),
+      ts.factory.createPropertyAccessExpression(tmpId, 'value')
+    ])
+  )
+  const writeback = ts.factory.createExpressionStatement(
+    buildTimerCaptureWritebackExpr(
+      env,
+      info,
+      ts.factory.createPropertyAccessExpression(tmpId, 'value')
+    )
+  )
+  const body = ts.factory.createBlock([initTmp, setTmp, setLocal, writeback], true)
+  return ts.factory.createCallExpression(
+    ts.factory.createParenthesizedExpression(
+      ts.factory.createArrowFunction(
+        undefined,
+        undefined,
+        [],
+        undefined,
+        ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+        body
+      )
+    ),
+    undefined,
+    []
+  )
+}
+
+function buildTimerHandleDictsLiteral(dicts: TimerCaptureDictMeta[]): ts.ArrayLiteralExpression {
+  return ts.factory.createArrayLiteralExpression(
+    dicts.map((dict) =>
+      ts.factory.createObjectLiteralExpression(
+        [
+          ts.factory.createPropertyAssignment('name', ts.factory.createStringLiteral(dict.name)),
+          ts.factory.createPropertyAssignment(
+            'valueType',
+            ts.factory.createStringLiteral(dict.valueType)
+          )
+        ],
+        true
+      )
+    ),
+    true
+  )
 }
 
 function readNumericLiteral(expr: ts.Expression): number | null {
@@ -1039,13 +1197,49 @@ function buildTimerHandler(
             ]
           )
         : rawValueExpr
-    return ts.factory.createVariableStatement(
+    if (!cap.useLocalVar) {
+      const directDecl = ts.factory.createVariableStatement(
+        undefined,
+        ts.factory.createVariableDeclarationList(
+          [ts.factory.createVariableDeclaration(cap.name, undefined, undefined, valueExpr)],
+          ts.NodeFlags.Let
+        )
+      )
+      return [directDecl]
+    }
+
+    const initLocal = ts.factory.createVariableStatement(
       undefined,
       ts.factory.createVariableDeclarationList(
-        [ts.factory.createVariableDeclaration(cap.name, undefined, undefined, valueExpr)],
+        [
+          ts.factory.createVariableDeclaration(
+            cap.name,
+            undefined,
+            undefined,
+            ts.factory.createCallExpression(
+              ts.factory.createPropertyAccessExpression(fId, 'initLocalVariable'),
+              undefined,
+              [ts.factory.createStringLiteral(cap.valueType)]
+            )
+          )
+        ],
         ts.NodeFlags.Const
       )
     )
+    const setLocal = ts.factory.createExpressionStatement(
+      ts.factory.createCallExpression(
+        ts.factory.createPropertyAccessExpression(fId, 'setLocalVariable'),
+        undefined,
+        [
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createIdentifier(cap.name),
+            'localVariable'
+          ),
+          valueExpr
+        ]
+      )
+    )
+    return [initLocal, setLocal]
   })
 
   const originalStmts = ts.isBlock(fn.body)
@@ -1209,11 +1403,20 @@ function transformTimerCall(
     excludedNames
   )
   const captures: TimerCaptureSpec[] = captureInfos.map((info) => ({
-    name: info.name,
-    valueType: info.valueType,
-    dictVarName: `__gsts_${kind}_${timerId}_cap_${info.name}`,
-    valueExpr: buildCaptureValueExpr(env, info.id),
-    timerDicts: info.timerDicts
+    ...(() => {
+      const sym = env.checker.getSymbolAtLocation(info.id)
+      const plan = sym ? resolveVarPlanEntry(env, sym) : undefined
+      const isReadOnlyConstScalar =
+        !!sym && isConstVariableSymbol(sym) && !info.written && !plan?.isCollection
+      return {
+        name: info.name,
+        valueType: info.valueType,
+        dictVarName: `__gsts_${kind}_${timerId}_cap_${info.name}`,
+        valueExpr: buildCaptureValueExpr(env, info.id),
+        useLocalVar: !((info.timerDicts !== undefined && !info.written) || isReadOnlyConstScalar),
+        timerDicts: info.timerDicts
+      }
+    })()
   }))
 
   const handler = buildTimerHandler(
@@ -1237,7 +1440,12 @@ function transformTimerCall(
     if (!sym) continue
     const cap = captures[i]
     if (!cap) continue
-    timerCaptureMap.set(sym, { dictVarName: cap.dictVarName, valueType: cap.valueType })
+    timerCaptureMap.set(sym, {
+      dictVarName: cap.dictVarName,
+      valueType: cap.valueType,
+      timerDicts: cap.timerDicts,
+      useLocalVar: cap.useLocalVar
+    })
   }
   const shadowedNames = new Set(captures.map((cap) => cap.name))
   const transformedHandler = transformHandler(
@@ -1474,7 +1682,26 @@ export function transformExpression(
       return withSameRange(timerName, expr)
     }
     if (sym && env.timerCaptureMap?.has(sym)) {
-      return withSameRange(ts.factory.createPropertyAccessExpression(expr, 'value'), expr)
+      const captureInfo = env.timerCaptureMap.get(sym)
+      if (!captureInfo?.useLocalVar) {
+        return expr
+      }
+      const valueExpr = ts.factory.createPropertyAccessExpression(expr, 'value')
+      if (captureInfo?.timerDicts !== undefined) {
+        const attachCall = ts.factory.createCallExpression(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createPropertyAccessExpression(
+              ts.factory.createIdentifier(env.gstsIdent),
+              'f'
+            ),
+            '__gstsAttachTimerHandle'
+          ),
+          undefined,
+          [valueExpr, buildTimerHandleDictsLiteral(captureInfo.timerDicts)]
+        )
+        return withSameRange(attachCall, expr)
+      }
+      return withSameRange(valueExpr, expr)
     }
     const shadowedNames = env.shadowedNames
     if (shadowedNames && shadowedNames.has(name)) {
@@ -1684,6 +1911,50 @@ export function transformExpression(
         fail(env, left, 'index is required')
       }
       const valExpr = transformExpression(env, context, expr.right)
+      const targetSym = ts.isIdentifier(left.expression)
+        ? env.checker.getSymbolAtLocation(left.expression)
+        : undefined
+      const captureInfo = targetSym ? env.timerCaptureMap?.get(targetSym) : undefined
+      if (captureInfo?.useLocalVar) {
+        const listTmpName = `__gsts_timer_cap_list_${env.tempCounter++}`
+        const listTmpId = ts.factory.createIdentifier(listTmpName)
+        const listTmpDecl = ts.factory.createVariableStatement(
+          undefined,
+          ts.factory.createVariableDeclarationList(
+            [ts.factory.createVariableDeclaration(listTmpId, undefined, undefined, listExpr)],
+            ts.NodeFlags.Const
+          )
+        )
+        const modifyStmt = ts.factory.createExpressionStatement(
+          makeFCall(env, 'modifyValueInList', [listTmpId, idExpr, valExpr])
+        )
+        const writebackStmt = ts.factory.createExpressionStatement(
+          buildTimerCaptureWritebackExpr(env, captureInfo, listTmpId)
+        )
+        const iife = ts.factory.createCallExpression(
+          ts.factory.createParenthesizedExpression(
+            ts.factory.createArrowFunction(
+              undefined,
+              undefined,
+              [],
+              undefined,
+              ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+              ts.factory.createBlock(
+                [
+                  listTmpDecl,
+                  modifyStmt,
+                  writebackStmt,
+                  ts.factory.createReturnStatement(ts.factory.createVoidZero())
+                ],
+                true
+              )
+            )
+          ),
+          undefined,
+          []
+        )
+        return withSameRange(iife, expr)
+      }
       return makeFCall(env, 'modifyValueInList', [listExpr, idExpr, valExpr])
     }
 
@@ -1720,6 +1991,28 @@ export function transformExpression(
 
       const sym = env.checker.getSymbolAtLocation(leftId)
       const p = sym ? env.varPlan?.get(sym) : undefined
+      const captureInfo = sym ? env.timerCaptureMap?.get(sym) : undefined
+      if (captureInfo?.useLocalVar) {
+        if (!isSupportedSimpleAssignmentOperator(op)) {
+          fail(env, expr, 'Unsupported assignment operator for local variables')
+        }
+        if (op === ts.SyntaxKind.EqualsToken) {
+          const localAssign = buildTimerCaptureLocalAssignExpr(env, leftId, rhs, captureInfo)
+          return withSameRange(localAssign, expr)
+        }
+        if (p?.isCollection) {
+          fail(env, expr, 'Unsupported compound assignment operator for collection local variables')
+        }
+        const opMethod = getCompoundAssignmentMethod(op)
+        if (!opMethod) fail(env, expr, 'Unsupported compound assignment operator')
+        const computed = makeFCall(env, opMethod, [
+          ts.factory.createPropertyAccessExpression(leftId, 'value'),
+          rhs
+        ])
+        const localAssign = buildTimerCaptureLocalAssignExpr(env, leftId, computed, captureInfo)
+        return withSameRange(localAssign, expr)
+      }
+
       if (p?.needsLocalVar) {
         if (!isSupportedSimpleAssignmentOperator(op)) {
           fail(env, expr, 'Unsupported assignment operator for local variables')
@@ -1840,6 +2133,39 @@ export function transformExpression(
     // 明确拦截目前未实现但会产生错误语义的运算符，避免静默输出看似能跑的 .gs.ts
     if (isUnsupportedBinaryOperator(op)) {
       fail(env, expr, `Binary operator ${expr.operatorToken.getText(env.file)} is not supported`)
+    }
+  }
+
+  if (ts.isPrefixUnaryExpression(expr) || ts.isPostfixUnaryExpression(expr)) {
+    if (
+      expr.operator === ts.SyntaxKind.PlusPlusToken ||
+      expr.operator === ts.SyntaxKind.MinusMinusToken
+    ) {
+      const operand = expr.operand
+      if (!ts.isIdentifier(operand)) {
+        fail(env, operand, 'Only ++/-- on identifiers is supported')
+      }
+      if (!ts.isExpressionStatement(expr.parent)) {
+        fail(
+          env,
+          expr,
+          'Assignment is only supported as a standalone statement (assignment used as an expression is not supported)'
+        )
+      }
+      const sym = env.checker.getSymbolAtLocation(operand)
+      const captureInfo = sym ? env.timerCaptureMap?.get(sym) : undefined
+      if (captureInfo?.useLocalVar) {
+        const kind = getNumericKind(env, env.checker.getTypeAtLocation(operand))
+        const one =
+          kind === 'int' ? ts.factory.createBigIntLiteral('1n') : ts.factory.createNumericLiteral(1)
+        const opMethod = expr.operator === ts.SyntaxKind.PlusPlusToken ? 'addition' : 'subtraction'
+        const computed = makeFCall(env, opMethod, [
+          ts.factory.createPropertyAccessExpression(operand, 'value'),
+          one
+        ])
+        const localAssign = buildTimerCaptureLocalAssignExpr(env, operand, computed, captureInfo)
+        return withSameRange(localAssign, expr)
+      }
     }
   }
 
