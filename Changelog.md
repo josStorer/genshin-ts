@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.1.5
+
+- Allowed common JS-style self-cleaning `setInterval` callbacks, for example:
+    ```ts
+    const h = setInterval(() => {
+        f.printString('hello')
+        if (condition) {
+            clearInterval(h)
+        }
+    }, 1000)
+    ```
+- Allowed modifying outer `let` variables inside timer callbacks (including array mutations like `push`) so behavior matches normal JS expectations for common patterns. Code like below now compiles correctly:
+    ```ts
+    let acc = 5n
+    const h = setInterval(() => {
+        acc += 2n
+        f.printString(str(acc))
+        if (acc >= 9n) {
+            clearInterval(h)
+        }
+    }, 1000)
+    ```
+- Fixed missing captures in nested callbacks inside timer callbacks. For example:
+    ```ts
+    setTimeout(() => {
+        nums.forEach((v) => {
+            f.printString(label)
+            f.printString(str(v + base))
+        })
+    }, 200)
+    ```
+  Previously only `nums` was captured, while `label` and `base` were not captured correctly.
+- Fixed a compile error where function symbols called inside timer callbacks were incorrectly treated as captured variables.
+- `Array.forEach` callback parameters are no longer required and may be omitted.
+
 ## v0.1.4
 
 - Fixed cases where eslint and timer-closure capture showed incorrect entity types after the entity type system became more complex in the previous release; the compiler now uses smarter entity type inference to avoid errors with complex type systems.

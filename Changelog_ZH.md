@@ -1,5 +1,40 @@
 # 更新日志
 
+## v0.1.5
+
+- 允许编写js常见风格的setInterval自清理回调, 例如
+    ```ts
+    const h = setInterval(() => {
+        f.printString('hello')
+        if (condition) {
+            clearInterval(h)
+        }
+    }, 1000)
+    ```
+- 允许在定时器回调内修改外部let声明的变量, 包括数组push等修改, 使其效果符合js语法直觉, 以方便许多常见用例, 先前版本会编译出错. 现在像这样的代码是可以正常编译的
+    ```ts
+    let acc = 5n
+    const h = setInterval(() => {
+        acc += 2n
+        f.printString(str(acc))
+        if (acc >= 9n) {
+            clearInterval(h)
+        }
+    }, 1000)
+    ```
+- 修复先前版本中, 在定时器回调内, 使用嵌套回调导致变量没有正确捕获的问题, 例如
+    ```ts
+    setTimeout(() => {
+        nums.forEach((v) => {
+            f.printString(label)
+            f.printString(str(v + base))
+        })
+    }, 200)
+    ```
+  情况下, 仅nums被捕获, 而label, base没有被正确捕获的问题
+- 修复在定时器回调中, 调用函数时, 函数被错误地当作变量捕获, 引发的编译错误
+- 数组foreach的回调函数参数, 不再强制要求, 允许为空
+
 ## v0.1.4
 
 - 修复上个版本因为实体类型变得更加复杂, 导致的一些情况下eslint和定时器闭包捕获, 对实体类型显示错误的情况; 现在编译器的实体类型推断使用更智能的方式避免因为复杂的类型系统出错
