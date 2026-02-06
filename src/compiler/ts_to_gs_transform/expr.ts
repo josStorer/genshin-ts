@@ -820,7 +820,6 @@ function collectTimerCaptures(
   const seen = new Set<ts.Symbol>()
 
   const visit = (node: ts.Node) => {
-    if (node !== fn && ts.isFunctionLike(node)) return
     if (ts.isIdentifier(node)) {
       if (!shouldCaptureIdentifier(node)) return
       const name = node.text
