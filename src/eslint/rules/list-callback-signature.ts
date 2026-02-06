@@ -96,7 +96,8 @@ const rule: Rule.RuleModule = {
         if (
           options.enforceParamCount &&
           expectedCount !== undefined &&
-          cb.params.length !== expectedCount
+          cb.params.length !== expectedCount &&
+          !(method === 'forEach' && cb.params.length === 0)
         ) {
           report(cb)
           return

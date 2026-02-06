@@ -129,10 +129,12 @@ export function readInlineCallbackBlock(
   env: Env,
   method: string,
   arg: ts.Expression,
-  paramCount: number
+  paramCount: number,
+  opts?: { allowZero?: boolean }
 ): InlineCallbackBlock {
   const fn = requireInlineCallback(env, method, arg)
-  if (fn.parameters.length !== paramCount) {
+  const allowZero = opts?.allowZero === true
+  if (fn.parameters.length !== paramCount && !(allowZero && fn.parameters.length === 0)) {
     fail(env, fn, `${method} callback must have exactly ${paramCount} parameter(s)`)
   }
   const params = fn.parameters.map((p, idx) => readCallbackParamName(env, method, p, idx))

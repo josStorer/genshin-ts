@@ -84,7 +84,7 @@ export function tryTransformListMethodCall(
     if (args.length !== 1) {
       fail(env, expr, 'forEach() does not support thisArg or extra arguments')
     }
-    const cb = readInlineCallbackBlock(env, method, args[0], 1)
+    const cb = readInlineCallbackBlock(env, method, args[0], 1, { allowZero: true })
     if (hasReturnStatement(cb.body)) {
       fail(env, cb.body, 'forEach() callback must not use return')
     }
