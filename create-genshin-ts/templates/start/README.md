@@ -48,7 +48,7 @@ Notes:
 ```ts
 import { g } from 'genshin-ts/runtime/core'
 
-g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073741825 }).on('whenEntityIsCreated', (evt, f) => {
   const p = player(1)
   f.printString(str(p.guid))
 })
@@ -66,9 +66,26 @@ Common options:
 - `id`: target NodeGraph ID (injection must match this ID).
 - `name`: graph display name; defaults to entry filename.
 - `prefix`: auto add `_GSTS_` prefix (default true).
+- `mode`: graph mode, `'beyond' | 'classic'` (default `'beyond'`).
 - `type`: graph type (default server/entity).
 - `variables`: declare graph variables and enable `f.get` / `f.set`.
 - `lang`: set `'zh'` to enable Chinese event names and function aliases.
+
+Mode notes:
+- Default is Beyond mode (`mode: 'beyond'`) with fuller node capability.
+- Use `mode: 'classic'` when you need classic behavior.
+- In classic mode, `type: 'class'` is not allowed and available node capability is narrower than Beyond mode.
+
+Classic mode example:
+
+```ts
+g.server({
+  id: 1073741825,
+  mode: 'classic'
+}).on('whenEntityIsCreated', (evt, f) => {
+  f.printString('classic mode')
+})
+```
 
 Injection safety rules:
 - The target `id` must exist in the map.
@@ -152,7 +169,7 @@ g.server({
   id: 1073741825,
   variables: { counter: 0n },
   lang: 'zh'
-}).on('whenEntityIsCreated', (_evt, f) => {
+}).on('whenEntityIsCreated', (evt, f) => {
   const v = f.get('counter')
   f.set('counter', v + 1n)
 })
@@ -185,7 +202,7 @@ function gstsServerSum(a: bigint, b: bigint) {
   return total
 }
 
-g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073741825 }).on('whenEntityIsCreated', (evt, f) => {
   const v = gstsServerSum(1n, 2n)
   f.printString(str(v))
 })

@@ -49,7 +49,7 @@ export default config
 ```ts
 import { g } from 'genshin-ts/runtime/core'
 
-g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073741825 }).on('whenEntityIsCreated', (evt, f) => {
   const p = player(1)
   f.printString(str(p.guid))
 })
@@ -69,9 +69,27 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
 - `id`：目标节点图 ID（注入必须匹配该 ID）。
 - `name`：节点图显示名称；未指定时默认使用入口文件名。
 - `prefix`：是否自动添加 `_GSTS_` 前缀（默认 true）。
+- `mode`：图模式，`'beyond' | 'classic'`，默认 `'beyond'`。
 - `type`：节点图类型（默认 server/entity）。
 - `variables`：声明节点图变量并启用 `f.get` / `f.set`。
 - `lang`：`'zh'` 时启用中文事件名与中文函数别名。
+
+模式说明：
+
+- 默认是超限模式（`mode: 'beyond'`），可用节点能力更完整。
+- 若需要经典模式，显式写 `mode: 'classic'`。
+- 经典模式下不允许 `type: 'class'`，且可用节点能力会少于超限模式。
+
+经典模式示例：
+
+```ts
+g.server({
+  id: 1073741825,
+  mode: 'classic'
+}).on('whenEntityIsCreated', (evt, f) => {
+  f.printString('classic mode')
+})
+```
 
 注入安全检查要点：
 
@@ -163,7 +181,7 @@ g.server({
   id: 1073741825,
   variables: { counter: 0n },
   lang: 'zh'
-}).on('whenEntityIsCreated', (_evt, f) => {
+}).on('whenEntityIsCreated', (evt, f) => {
   const v = f.get('counter')
   f.set('counter', v + 1n)
 })
@@ -197,7 +215,7 @@ function gstsServerSum(a: bigint, b: bigint) {
   return total
 }
 
-g.server({ id: 1073741825 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073741825 }).on('whenEntityIsCreated', (evt, f) => {
   const v = gstsServerSum(1n, 2n)
   f.printString(str(v))
 })
