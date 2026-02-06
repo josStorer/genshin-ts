@@ -784,6 +784,23 @@ function isSymbolFromDeclarationFile(sym: ts.Symbol): boolean {
   return decls.every((d) => d.getSourceFile().isDeclarationFile)
 }
 
+function isCallableType(env: Env, t: ts.Type): boolean {
+  if (t.flags & ts.TypeFlags.TypeParameter) {
+    const constraint = env.checker.getBaseConstraintOfType(t)
+    if (constraint) return isCallableType(env, constraint)
+  }
+  if (t.getCallSignatures().length > 0 || t.getConstructSignatures().length > 0) return true
+  if (t.flags & ts.TypeFlags.Union) {
+    const u = t as ts.UnionType
+    return u.types.some((tt) => isCallableType(env, tt))
+  }
+  if (t.flags & ts.TypeFlags.Intersection) {
+    const it = t as ts.IntersectionType
+    return it.types.some((tt) => isCallableType(env, tt))
+  }
+  return false
+}
+
 function collectTimerCaptures(
   env: Env,
   fn: ts.ArrowFunction | ts.FunctionExpression,
@@ -814,11 +831,11 @@ function collectTimerCaptures(
       if (isSymbolDeclaredInFunction(sym, fn)) return
       if (isSymbolDeclaredAtTopLevel(sym, env.file)) return
       if (isSymbolFromDeclarationFile(sym)) return
-      const valueType = env.loopIndexSymbols?.has(sym)
-        ? 'int'
-        : inferDictValueTypeFromType(env, env.checker.getTypeAtLocation(node))
+      const t = env.checker.getTypeAtLocation(node)
+      if (isCallableType(env, t)) return
+      const valueType = env.loopIndexSymbols?.has(sym) ? 'int' : inferDictValueTypeFromType(env, t)
       if (!valueType) {
-        const raw = env.checker.typeToString(env.checker.getTypeAtLocation(node))
+        const raw = env.checker.typeToString(t)
         fail(env, node, `unsupported timer capture type for "${name}": ${raw}`)
       }
       const timerDicts = env.timerHandleMeta?.get(sym)?.dicts
