@@ -22,6 +22,8 @@
 
 Genshin-TS（gsts）是一套使用Typescript进行千星奇域项目开发的工具链。强调“代码级开发体验”和“节点图语义可控”，支持编译、注入、调试、优化、并行和增量构建。
 
+https://github.com/user-attachments/assets/91b1f5f6-9415-4128-be3a-a0748680bc02
+
 ## 快速开始
 
 ```bash

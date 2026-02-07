@@ -22,6 +22,8 @@ English · [简体中文](README_ZH.md)
 
 Genshin-TS (gsts) is a toolchain for building Miliastra Wonderland projects in TypeScript. It focuses on a code-first experience with controllable node-graph semantics, supporting compilation, injection, debugging, optimization, parallel builds, and incremental builds.
 
+https://github.com/user-attachments/assets/0f2ec8af-c753-4c54-940c-8147ec856635
+
 ## Quick Start
 
 ```bash
