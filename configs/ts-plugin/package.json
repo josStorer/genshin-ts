@@ -1,0 +1,6 @@
+{
+  "name": "genshin-ts-ts-plugin",
+  "private": true,
+  "type": "commonjs",
+  "main": "./index.cjs"
+}

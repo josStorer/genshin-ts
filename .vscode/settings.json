@@ -18,6 +18,8 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always"
   },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
   "[markdown]": {
     "editor.formatOnSave": false,
     "editor.formatOnType": false

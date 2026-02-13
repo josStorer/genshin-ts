@@ -47,6 +47,8 @@
       "types": "./dist/src/definitions/*.d.ts",
       "default": "./dist/src/definitions/*.js"
     },
+    "./configs/ts-plugin": "./configs/ts-plugin/index.cjs",
+    "./configs/ts-plugin/index.cjs": "./configs/ts-plugin/index.cjs",
     "./configs/*": "./configs/*",
     "./tsconfig/*": "./configs/tsconfig/*",
     "./package.json": "./package.json"
