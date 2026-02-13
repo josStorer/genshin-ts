@@ -15,6 +15,9 @@
   "[javascriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
   "[markdown]": {
     "editor.formatOnSave": false,
     "editor.formatOnType": false
