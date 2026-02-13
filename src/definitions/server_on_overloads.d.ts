@@ -6,6 +6,7 @@ import type { VariablesDefinition } from '../runtime/variables.js'
 import type { ServerEventPayloadsByMode } from './events-payload-mode.js'
 import type { ServerEventPayloads } from './events-payload.js'
 import { NODE_TYPE_BY_METHOD } from './node_modes.js'
+import { SERVER_EVENT_EN_TO_ZH, SERVER_EVENT_ZH_TO_EN } from './zh_aliases.js'
 
 type EventNameByMode<Mode extends ServerGraphMode> = {
   [K in keyof ServerEventPayloads]: K extends keyof typeof NODE_TYPE_BY_METHOD
@@ -20,13 +21,39 @@ type ModeEventName<Mode extends ServerGraphMode, Name extends keyof ServerEventP
   Name
 >
 
+type EventNameZhByMode<
+  Mode extends ServerGraphMode,
+  Name extends keyof ServerEventPayloads
+> = Name extends keyof typeof SERVER_EVENT_EN_TO_ZH
+  ? Name extends keyof typeof NODE_TYPE_BY_METHOD
+    ? (typeof NODE_TYPE_BY_METHOD)[Name] extends Mode
+      ? (typeof SERVER_EVENT_EN_TO_ZH)[Name]
+      : never
+    : (typeof SERVER_EVENT_EN_TO_ZH)[Name]
+  : never
+
+type EventNameByLang<
+  Mode extends ServerGraphMode,
+  Name extends keyof ServerEventPayloads,
+  AllowZh extends boolean
+> = AllowZh extends true
+  ? ModeEventName<Mode, Name> | EventNameZhByMode<Mode, Name>
+  : ModeEventName<Mode, Name>
+
+type EventNameToEn<E> = E extends keyof ServerEventPayloads
+  ? E
+  : E extends keyof typeof SERVER_EVENT_ZH_TO_EN
+    ? (typeof SERVER_EVENT_ZH_TO_EN)[E]
+    : never
+
 export interface ServerOnOverloads<
   Vars extends VariablesDefinition,
   Mode extends ServerGraphMode = ServerGraphMode,
   F extends ServerExecutionFlowFunctionsWithVars<Vars, Mode> = ServerExecutionFlowFunctionsWithVars<
     Vars,
     Mode
-  >
+  >,
+  AllowZh extends boolean = false
 > {
   /**
    * This event is triggered when a Node Graph Variable in the current Node Graph changes; The previous and current values are Generic. Determine the Generic type to correctly receive events for Node Graph Variables of the corresponding type; Vessel-type Node Graph Variables do not provide before-value and after-value Output Parameters
@@ -34,7 +61,7 @@ export interface ServerOnOverloads<
    * 节点图变量变化时: 当前节点图的节点图变量发生变化时，触发该事件; 注意变化前值和变化后值为泛型，需确定其泛型类型后，才能正确接收到对应类型节点图变量的事件; 容器类型的节点图变量没有变化前值和变化后值出参
    */
   on(
-    eventName: ModeEventName<Mode, 'whenNodeGraphVariableChanges'>,
+    eventName: EventNameByLang<Mode, 'whenNodeGraphVariableChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenNodeGraphVariableChanges'], f: F) => void
   ): this
 
@@ -44,7 +71,7 @@ export interface ServerOnOverloads<
    * 自定义变量变化时: 当前节点图所关联实体的自定义变量发生变化时，触发该事件; 注意变化前值和变化后值为泛型，需确定其泛型类型后，才能正确接收到对应类型自定义变量的事件; 容器类型的自定义变量没有变化前值和变化后值出参
    */
   on(
-    eventName: ModeEventName<Mode, 'whenCustomVariableChanges'>,
+    eventName: EventNameByLang<Mode, 'whenCustomVariableChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenCustomVariableChanges'], f: F) => void
   ): this
 
@@ -54,7 +81,7 @@ export interface ServerOnOverloads<
    * 预设状态变化时: 节点图所关联的实体的预设状态发生变化时，触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenPresetStatusChanges'>,
+    eventName: EventNameByLang<Mode, 'whenPresetStatusChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenPresetStatusChanges'], f: F) => void
   ): this
 
@@ -66,7 +93,7 @@ export interface ServerOnOverloads<
    * 复杂造物预设状态变化时: 使用“设置复杂造物预设状态值”节点更改复杂造物预设状态时触发（修改前后值需不同才触发）；该事件仅复杂造物节点图可接收
    */
   on(
-    eventName: ModeEventName<Mode, 'whenComplexCreationPresetStatusChanges'>,
+    eventName: EventNameByLang<Mode, 'whenComplexCreationPresetStatusChanges', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenComplexCreationPresetStatusChanges'],
       f: F
@@ -79,7 +106,7 @@ export interface ServerOnOverloads<
    * 角色移动速度达到条件时: 为角色实体添加单位状态效果【监听移动速率】，达成条件会触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenCharacterMovementSpdMeetsCondition'>,
+    eventName: EventNameByLang<Mode, 'whenCharacterMovementSpdMeetsCondition', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenCharacterMovementSpdMeetsCondition'],
       f: F
@@ -92,7 +119,7 @@ export interface ServerOnOverloads<
    * 实体创建时: 实体被创建时，触发该事件; 所有类型的实体均可以触发该事件。关卡实体、角色实体和玩家实体会在进入关卡时触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEntityIsCreated'>,
+    eventName: EventNameByLang<Mode, 'whenEntityIsCreated', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEntityIsCreated'], f: F) => void
   ): this
 
@@ -102,7 +129,7 @@ export interface ServerOnOverloads<
    * 实体销毁时: 关卡内物件和造物被销毁时触发该事件，该事件仅在关卡实体上可以触发
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEntityIsDestroyed'>,
+    eventName: EventNameByLang<Mode, 'whenEntityIsDestroyed', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEntityIsDestroyed'], f: F) => void
   ): this
 
@@ -112,7 +139,7 @@ export interface ServerOnOverloads<
    * 实体移除/销毁时: 关卡内任意实体被移除或销毁时触发该事件，该事件仅在关卡实体上可以触发; 实体被销毁或被移除均会触发该事件。因此实体被销毁时，会依次触发【实体销毁时】以及【实体移除/销毁时】事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEntityIsRemovedDestroyed'>,
+    eventName: EventNameByLang<Mode, 'whenEntityIsRemovedDestroyed', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEntityIsRemovedDestroyed'], f: F) => void
   ): this
 
@@ -122,7 +149,7 @@ export interface ServerOnOverloads<
    * 实体阵营变化时: 实体的阵营变化时，触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEntityFactionChanges'>,
+    eventName: EventNameByLang<Mode, 'whenEntityFactionChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEntityFactionChanges'], f: F) => void
   ): this
 
@@ -132,7 +159,7 @@ export interface ServerOnOverloads<
    * 角色倒下时: 角色倒下时，角色实体上的节点图可以触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenTheCharacterIsDown'>,
+    eventName: EventNameByLang<Mode, 'whenTheCharacterIsDown', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenTheCharacterIsDown'], f: F) => void
   ): this
 
@@ -142,7 +169,7 @@ export interface ServerOnOverloads<
    * 角色复苏时: 角色复苏时，角色实体上的的节点图可以触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenCharacterRevives'>,
+    eventName: EventNameByLang<Mode, 'whenCharacterRevives', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenCharacterRevives'], f: F) => void
   ): this
 
@@ -152,7 +179,7 @@ export interface ServerOnOverloads<
    * 玩家传送完成时: 玩家传送完成时，在玩家实体的节点图上可以触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenPlayerTeleportCompletes'>,
+    eventName: EventNameByLang<Mode, 'whenPlayerTeleportCompletes', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenPlayerTeleportCompletes'], f: F) => void
   ): this
 
@@ -162,7 +189,7 @@ export interface ServerOnOverloads<
    * 玩家所有角色倒下时: 玩家的所有角色实体均倒下时，玩家实体的节点图上触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenAllPlayerSCharactersAreDown'>,
+    eventName: EventNameByLang<Mode, 'whenAllPlayerSCharactersAreDown', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenAllPlayerSCharactersAreDown'], f: F) => void
   ): this
 
@@ -172,7 +199,7 @@ export interface ServerOnOverloads<
    * 玩家所有角色复苏时: 玩家的所有角色均复苏时，玩家实体的节点图触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenAllPlayerSCharactersAreRevived'>,
+    eventName: EventNameByLang<Mode, 'whenAllPlayerSCharactersAreRevived', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenAllPlayerSCharactersAreRevived'],
       f: F
@@ -185,7 +212,7 @@ export interface ServerOnOverloads<
    * 玩家异常倒下并复苏时: 角色因溺水、坠入深渊等原因倒下并复苏时，玩家实体上触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenPlayerIsAbnormallyDownedAndRevives'>,
+    eventName: EventNameByLang<Mode, 'whenPlayerIsAbnormallyDownedAndRevives', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenPlayerIsAbnormallyDownedAndRevives'],
       f: F
@@ -198,7 +225,7 @@ export interface ServerOnOverloads<
    * 前台角色变化时: 仅经典模式可用，前台角色变化时在玩家实体上触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenTheActiveCharacterChanges'>,
+    eventName: EventNameByLang<Mode, 'whenTheActiveCharacterChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenTheActiveCharacterChanges'], f: F) => void
   ): this
 
@@ -208,7 +235,7 @@ export interface ServerOnOverloads<
    * 进入碰撞触发器时: 运行中实体A的”碰撞触发源“范围，进入其他运行中实体B的“碰撞触发器”范围。; 会发送节点图事件给配置“碰撞触发器”的实体B
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEnteringCollisionTrigger'>,
+    eventName: EventNameByLang<Mode, 'whenEnteringCollisionTrigger', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEnteringCollisionTrigger'], f: F) => void
   ): this
 
@@ -218,7 +245,7 @@ export interface ServerOnOverloads<
    * 离开碰撞触发器时: 运行中实体A的“碰撞触发源”范围，离开其他运行中实体B的“碰撞触发器”范围; 会发送节点图事件给配置“碰撞触发器”的实体B
    */
   on(
-    eventName: ModeEventName<Mode, 'whenExitingCollisionTrigger'>,
+    eventName: EventNameByLang<Mode, 'whenExitingCollisionTrigger', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenExitingCollisionTrigger'], f: F) => void
   ): this
 
@@ -228,7 +255,7 @@ export interface ServerOnOverloads<
    * 被恢复生命值时: 实体被恢复生命值时，触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenHpIsRecovered'>,
+    eventName: EventNameByLang<Mode, 'whenHpIsRecovered', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenHpIsRecovered'], f: F) => void
   ): this
 
@@ -238,7 +265,7 @@ export interface ServerOnOverloads<
    * 发起恢复生命值时: 实体向其他实体恢复生命值时，发起者实体上触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenInitiatingHpRecovery'>,
+    eventName: EventNameByLang<Mode, 'whenInitiatingHpRecovery', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenInitiatingHpRecovery'], f: F) => void
   ): this
 
@@ -248,7 +275,7 @@ export interface ServerOnOverloads<
    * 攻击命中时: 实体的攻击命中其他实体时，触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenAttackHits'>,
+    eventName: EventNameByLang<Mode, 'whenAttackHits', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenAttackHits'], f: F) => void
   ): this
 
@@ -258,7 +285,7 @@ export interface ServerOnOverloads<
    * 受到攻击时: 实体受到攻击时触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenAttacked'>,
+    eventName: EventNameByLang<Mode, 'whenAttacked', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenAttacked'], f: F) => void
   ): this
 
@@ -268,7 +295,7 @@ export interface ServerOnOverloads<
    * 进入易受打断状态时: 实体被攻击进入易受打断状态时触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEnteringAnInterruptibleState'>,
+    eventName: EventNameByLang<Mode, 'whenEnteringAnInterruptibleState', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenEnteringAnInterruptibleState'],
       f: F
@@ -281,7 +308,7 @@ export interface ServerOnOverloads<
    * 基础运动器停止时: 基础运动器组件上的某个基础运动器完成运动时或被关闭时向组件持有者发送该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenBasicMotionDeviceStops'>,
+    eventName: EventNameByLang<Mode, 'whenBasicMotionDeviceStops', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenBasicMotionDeviceStops'], f: F) => void
   ): this
 
@@ -291,7 +318,7 @@ export interface ServerOnOverloads<
    * 路径到达路点时: 路径运动器到达路点时发送给基础运动器组件的持有者，需要在路点配置中配置“到达路点发送事件”才会触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenPathReachesWaypoint'>,
+    eventName: EventNameByLang<Mode, 'whenPathReachesWaypoint', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenPathReachesWaypoint'], f: F) => void
   ): this
 
@@ -301,7 +328,7 @@ export interface ServerOnOverloads<
    * 命中检测触发时: 命中检测组件命中其他实体或场景时组件的持有者触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenOnHitDetectionIsTriggered'>,
+    eventName: EventNameByLang<Mode, 'whenOnHitDetectionIsTriggered', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenOnHitDetectionIsTriggered'], f: F) => void
   ): this
 
@@ -311,7 +338,7 @@ export interface ServerOnOverloads<
    * 定时器触发时: 定时器运行到指定时间节点时，触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenTimerIsTriggered'>,
+    eventName: EventNameByLang<Mode, 'whenTimerIsTriggered', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenTimerIsTriggered'], f: F) => void
   ): this
 
@@ -321,7 +348,7 @@ export interface ServerOnOverloads<
    * 全局计时器触发时: 当倒计时的全局计时器计时结束时，会触发该事件; 正计时的全局计时器不会触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenGlobalTimerIsTriggered'>,
+    eventName: EventNameByLang<Mode, 'whenGlobalTimerIsTriggered', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenGlobalTimerIsTriggered'], f: F) => void
   ): this
 
@@ -331,7 +358,7 @@ export interface ServerOnOverloads<
    * 界面控件组触发时: 只有交互按钮和道具展示类型的界面控件，才会触发本事件; 在关卡运行中，通过交互按钮或道具展示界面控件制作的界面控件组，被执行交互操作会发送节点图事件”界面控件组触发时“，此事件只有触发交互的玩家节点图可以获取
    */
   on(
-    eventName: ModeEventName<Mode, 'whenUiControlGroupIsTriggered'>,
+    eventName: EventNameByLang<Mode, 'whenUiControlGroupIsTriggered', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenUiControlGroupIsTriggered'], f: F) => void
   ): this
 
@@ -341,7 +368,7 @@ export interface ServerOnOverloads<
    * 单位状态变更时: 单位状态的层数发生变化时，触发该事件; 单位状态的施加以及移除都会触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenUnitStatusChanges'>,
+    eventName: EventNameByLang<Mode, 'whenUnitStatusChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenUnitStatusChanges'], f: F) => void
   ): this
 
@@ -351,7 +378,7 @@ export interface ServerOnOverloads<
    * 单位状态结束时: 单位状态因为各种原因被移除或因时长结束时触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenUnitStatusEnds'>,
+    eventName: EventNameByLang<Mode, 'whenUnitStatusEnds', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenUnitStatusEnds'], f: F) => void
   ): this
 
@@ -361,7 +388,7 @@ export interface ServerOnOverloads<
    * 发生元素反应事件时: 为实体添加单位状态效果【监听元素反应】，达成条件会触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenElementalReactionEventOccurs'>,
+    eventName: EventNameByLang<Mode, 'whenElementalReactionEventOccurs', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenElementalReactionEventOccurs'],
       f: F
@@ -374,7 +401,7 @@ export interface ServerOnOverloads<
    * 护盾受到攻击时: 为实体添加单位状态效果【添加护盾】，受到攻击时触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenShieldIsAttacked'>,
+    eventName: EventNameByLang<Mode, 'whenShieldIsAttacked', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenShieldIsAttacked'], f: F) => void
   ): this
 
@@ -384,7 +411,7 @@ export interface ServerOnOverloads<
    * 选项卡选中时: 生效的选项卡被选中后，会向节点图发送事件; 配置选项卡组件的实体节点图，会接收该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenTabIsSelected'>,
+    eventName: EventNameByLang<Mode, 'whenTabIsSelected', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenTabIsSelected'], f: F) => void
   ): this
 
@@ -394,7 +421,7 @@ export interface ServerOnOverloads<
    * 造物入战时: 仅在经典仇恨模式生效; 造物入战时触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenCreationEntersCombat'>,
+    eventName: EventNameByLang<Mode, 'whenCreationEntersCombat', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenCreationEntersCombat'], f: F) => void
   ): this
 
@@ -404,7 +431,7 @@ export interface ServerOnOverloads<
    * 造物脱战时: 仅在经典仇恨模式生效; 造物脱战时触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenCreationLeavesCombat'>,
+    eventName: EventNameByLang<Mode, 'whenCreationLeavesCombat', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenCreationLeavesCombat'], f: F) => void
   ): this
 
@@ -414,7 +441,7 @@ export interface ServerOnOverloads<
    * 玩家职业等级变化时: 玩家职业等级变化时触发该事件发送给对应玩家，可以在该职业的职业节点图里收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenPlayerClassLevelChanges'>,
+    eventName: EventNameByLang<Mode, 'whenPlayerClassLevelChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenPlayerClassLevelChanges'], f: F) => void
   ): this
 
@@ -424,7 +451,7 @@ export interface ServerOnOverloads<
    * 玩家职业更改时: 玩家职业更改时触发该事件发送给对应玩家，可以在更改后职业的职业节点图里收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenPlayerClassChanges'>,
+    eventName: EventNameByLang<Mode, 'whenPlayerClassChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenPlayerClassChanges'], f: F) => void
   ): this
 
@@ -434,7 +461,7 @@ export interface ServerOnOverloads<
    * 玩家职业解除时: 玩家职业解除时触发该事件发送给对应玩家，可以在更改前职业的职业节点图里收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenPlayerClassIsRemoved'>,
+    eventName: EventNameByLang<Mode, 'whenPlayerClassIsRemoved', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenPlayerClassIsRemoved'], f: F) => void
   ): this
 
@@ -444,7 +471,7 @@ export interface ServerOnOverloads<
    * 技能节点调用时: 通过技能节点图的【通知服务器节点图】节点触发，可以传入三个字符串类型的值
    */
   on(
-    eventName: ModeEventName<Mode, 'whenSkillNodeIsCalled'>,
+    eventName: EventNameByLang<Mode, 'whenSkillNodeIsCalled', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenSkillNodeIsCalled'], f: F) => void
   ): this
 
@@ -454,7 +481,7 @@ export interface ServerOnOverloads<
    * 仇恨目标变化时: 仅自定义仇恨模式可用; 仇恨目标发生变化时，触发该事件; 入战和脱战也可以触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenAggroTargetChanges'>,
+    eventName: EventNameByLang<Mode, 'whenAggroTargetChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenAggroTargetChanges'], f: F) => void
   ): this
 
@@ -464,7 +491,7 @@ export interface ServerOnOverloads<
    * 自身入战时: 仅自定义仇恨模式可用; 实体自身入战时，触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenSelfEntersCombat'>,
+    eventName: EventNameByLang<Mode, 'whenSelfEntersCombat', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenSelfEntersCombat'], f: F) => void
   ): this
 
@@ -474,7 +501,7 @@ export interface ServerOnOverloads<
    * 自身脱战时: 仅自定义仇恨模式可用; 实体自身脱战时，触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenSelfLeavesCombat'>,
+    eventName: EventNameByLang<Mode, 'whenSelfLeavesCombat', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenSelfLeavesCombat'], f: F) => void
   ): this
 
@@ -484,7 +511,7 @@ export interface ServerOnOverloads<
    * 监听信号: 监听已在信号管理器中定义的信号触发事件; 需先选择需要监听的信号名
    */
   on(
-    eventName: ModeEventName<Mode, 'monitorSignal'>,
+    eventName: EventNameByLang<Mode, 'monitorSignal', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['monitorSignal'], f: F) => void
   ): this
 
@@ -494,7 +521,7 @@ export interface ServerOnOverloads<
    * 卡牌选择器完成时: 玩家操作完成卡牌选择器/或者因为时间原因强制关闭等，都会给玩家节点图触发本事件; 出参可以通知本次卡牌选择器的结果，和对应原因
    */
   on(
-    eventName: ModeEventName<Mode, 'whenDeckSelectorIsComplete'>,
+    eventName: EventNameByLang<Mode, 'whenDeckSelectorIsComplete', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenDeckSelectorIsComplete'], f: F) => void
   ): this
 
@@ -504,7 +531,7 @@ export interface ServerOnOverloads<
    * 文本气泡完成时: 该事件仅能被挂载文本气泡组件，且完成对话的实体节点图接收; 完成的含义是最后一句对话播放完成
    */
   on(
-    eventName: ModeEventName<Mode, 'whenTextBubbleIsCompleted'>,
+    eventName: EventNameByLang<Mode, 'whenTextBubbleIsCompleted', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenTextBubbleIsCompleted'], f: F) => void
   ): this
 
@@ -514,7 +541,7 @@ export interface ServerOnOverloads<
    * 商店出售背包物品时: 商店出售背包物品时触发，商店组件的持有者可收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenSellingInventoryItemsInTheShop'>,
+    eventName: EventNameByLang<Mode, 'whenSellingInventoryItemsInTheShop', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenSellingInventoryItemsInTheShop'],
       f: F
@@ -527,7 +554,7 @@ export interface ServerOnOverloads<
    * 商店出售自定义商品时: 商店出售自定义物品时触发，商店组件的持有者可收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenCustomShopItemIsSold'>,
+    eventName: EventNameByLang<Mode, 'whenCustomShopItemIsSold', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenCustomShopItemIsSold'], f: F) => void
   ): this
 
@@ -537,7 +564,7 @@ export interface ServerOnOverloads<
    * 商店收购道具时: 商店收购道具时触发，商店组件的持有者可收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenSellingItemsToTheShop'>,
+    eventName: EventNameByLang<Mode, 'whenSellingItemsToTheShop', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenSellingItemsToTheShop'], f: F) => void
   ): this
 
@@ -547,7 +574,7 @@ export interface ServerOnOverloads<
    * 装备被穿戴时: 装备被穿戴时触发该事件，装备的持有者可以收到，需要配置在道具节点图里
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEquipmentIsEquipped'>,
+    eventName: EventNameByLang<Mode, 'whenEquipmentIsEquipped', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEquipmentIsEquipped'], f: F) => void
   ): this
 
@@ -557,7 +584,7 @@ export interface ServerOnOverloads<
    * 装备被卸下时: 装备被卸下时触发该事件，装备的持有者可以收到，需要配置在道具节点图里
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEquipmentIsUnequipped'>,
+    eventName: EventNameByLang<Mode, 'whenEquipmentIsUnequipped', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEquipmentIsUnequipped'], f: F) => void
   ): this
 
@@ -567,7 +594,7 @@ export interface ServerOnOverloads<
    * 装备初始化时: 当装备首次被获取进入背包时，会进行初始化，此时事件出参会返回装备实例的唯一索引，通过此索引即可对装备进行动态修改。装备的持有者可以收到该事件，需要配置在道具节点图里
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEquipmentIsInitialized'>,
+    eventName: EventNameByLang<Mode, 'whenEquipmentIsInitialized', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEquipmentIsInitialized'], f: F) => void
   ): this
 
@@ -577,7 +604,7 @@ export interface ServerOnOverloads<
    * 装备的词条数值改变时: 装备词条数值改变时触发该事件，装备的持有者可以收到，需要配置在道具节点图里
    */
   on(
-    eventName: ModeEventName<Mode, 'whenEquipmentAffixValueChanges'>,
+    eventName: EventNameByLang<Mode, 'whenEquipmentAffixValueChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEquipmentAffixValueChanges'], f: F) => void
   ): this
 
@@ -587,7 +614,7 @@ export interface ServerOnOverloads<
    * 背包道具失去时: 背包内该道具失去，即背包内该道具数量为0时触发该事件，背包组件的持有者可以收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenItemIsLostFromInventory'>,
+    eventName: EventNameByLang<Mode, 'whenItemIsLostFromInventory', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenItemIsLostFromInventory'], f: F) => void
   ): this
 
@@ -597,7 +624,7 @@ export interface ServerOnOverloads<
    * 背包道具数量变化时: 背包道具数量发生变化时触发该事件，背包组件的持有者可以收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenTheQuantityOfInventoryItemChanges'>,
+    eventName: EventNameByLang<Mode, 'whenTheQuantityOfInventoryItemChanges', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenTheQuantityOfInventoryItemChanges'],
       f: F
@@ -610,7 +637,7 @@ export interface ServerOnOverloads<
    * 背包道具新增时: 背包内新增该道具时触发事件，背包组件的持有者可以收到。如果没有新增道具仅有数量变化则不会触发该事件
    */
   on(
-    eventName: ModeEventName<Mode, 'whenItemIsAddedToInventory'>,
+    eventName: EventNameByLang<Mode, 'whenItemIsAddedToInventory', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenItemIsAddedToInventory'], f: F) => void
   ): this
 
@@ -620,7 +647,7 @@ export interface ServerOnOverloads<
    * 背包货币数量变化时: 背包货币数量变化时触发该事件，背包组件的持有者可以收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenTheQuantityOfInventoryCurrencyChanges'>,
+    eventName: EventNameByLang<Mode, 'whenTheQuantityOfInventoryCurrencyChanges', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenTheQuantityOfInventoryCurrencyChanges'],
       f: F
@@ -633,7 +660,7 @@ export interface ServerOnOverloads<
    * 背包内道具被使用时: 背包内道具被使用时触发该事件，背包组件的持有者可以收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenItemsInTheInventoryAreUsed'>,
+    eventName: EventNameByLang<Mode, 'whenItemsInTheInventoryAreUsed', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenItemsInTheInventoryAreUsed'], f: F) => void
   ): this
 
@@ -643,15 +670,15 @@ export interface ServerOnOverloads<
    * 造物抵达巡逻路点时: 若在巡逻模板编辑中，勾选了指定路点的到达发送节点图事件选项，则会在满足条件时，收到该节点图事件; 该节点图事件只能造物的节点图收到
    */
   on(
-    eventName: ModeEventName<Mode, 'whenCreationReachesPatrolWaypoint'>,
+    eventName: EventNameByLang<Mode, 'whenCreationReachesPatrolWaypoint', AllowZh>,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['whenCreationReachesPatrolWaypoint'],
       f: F
     ) => void
   ): this
 
-  on<E extends ModeEventName<Mode, keyof ServerEventPayloads>>(
+  on<E extends EventNameByLang<Mode, keyof ServerEventPayloads, AllowZh>>(
     eventName: E,
-    handler: (evt: ServerEventPayloadsByMode<Mode>[E], f: F) => void
+    handler: (evt: ServerEventPayloadsByMode<Mode>[EventNameToEn<E>], f: F) => void
   ): this
 }

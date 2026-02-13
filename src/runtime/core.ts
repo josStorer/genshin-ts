@@ -155,27 +155,6 @@ type ServerExecutionFlowFunctionsForLang<
   ? ServerExecutionFlowFunctionsWithVarsZh<Vars, Mode>
   : ServerExecutionFlowFunctionsWithVars<Vars, Mode>
 
-type ModeEventName<
-  Mode extends ServerGraphMode,
-  Name extends string
-> = Name extends keyof typeof NODE_TYPE_BY_METHOD
-  ? (typeof NODE_TYPE_BY_METHOD)[Name] extends Mode
-    ? Name
-    : never
-  : Name
-
-type ServerEventNameByMode<M extends ServerGraphMode> = ModeEventName<M, ServerEventName>
-
-type ServerEventNameZhByMode<M extends ServerGraphMode> = {
-  [K in keyof typeof SERVER_EVENT_ZH_TO_EN]: (typeof SERVER_EVENT_ZH_TO_EN)[K] extends ServerEventNameByMode<M>
-    ? K
-    : never
-}[keyof typeof SERVER_EVENT_ZH_TO_EN]
-
-type ServerEventNameAnyByMode<M extends ServerGraphMode> =
-  | ServerEventNameByMode<M>
-  | ServerEventNameZhByMode<M>
-
 type ServerEventNameAny = ServerEventName | ServerEventNameZh
 
 type ServerEventNameToEn<E> = E extends ServerEventName
@@ -184,20 +163,12 @@ type ServerEventNameToEn<E> = E extends ServerEventName
     ? (typeof SERVER_EVENT_ZH_TO_EN)[E]
     : never
 
-interface ServerOnOverloadsZh<Vars extends VariablesDefinition, Mode extends ServerGraphMode, F> {
-  on<E extends ServerEventNameAnyByMode<Mode>>(
-    eventName: E,
-    handler: (evt: ServerEventPayloadsByMode<Mode>[ServerEventNameToEn<E>], f: F) => void
-  ): this
-}
-
 export type ServerGraphApi<
   Vars extends VariablesDefinition,
   Lang extends ServerLang = 'en',
   Mode extends ServerGraphMode = 'beyond'
 > = (Lang extends 'zh'
-  ? ServerOnOverloads<Vars, Mode, ServerExecutionFlowFunctionsForLang<Vars, 'zh', Mode>> &
-      ServerOnOverloadsZh<Vars, Mode, ServerExecutionFlowFunctionsForLang<Vars, 'zh', Mode>>
+  ? ServerOnOverloads<Vars, Mode, ServerExecutionFlowFunctionsForLang<Vars, 'zh', Mode>, true>
   : ServerOnOverloads<Vars, Mode, ServerExecutionFlowFunctionsForLang<Vars, 'en', Mode>>) & {
   /**
    * Monitors Signal trigger events defined in the Signal Manager; The Signal name to monitor must be selected first
@@ -356,10 +327,7 @@ function camelToSnake(str: string): string {
 }
 
 const NODE_MODE_BY_NODE_TYPE = new Map<string, ServerGraphMode>(
-  Object.entries(NODE_TYPE_BY_METHOD).map(([methodName, mode]) => [
-    camelToSnake(methodName),
-    mode
-  ])
+  Object.entries(NODE_TYPE_BY_METHOD).map(([methodName, mode]) => [camelToSnake(methodName), mode])
 )
 
 function processDictParam(param: ServerEventMetadataType[ServerEventName][number]): value {
