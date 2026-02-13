@@ -1,5 +1,11 @@
 # 更新日志
 
+## v0.1.6
+
+- 针对数组索引取值的情况, 由于本项目使用了bigint表示整型, 而typescript默认不允许bigint索引取值, 针对这一问题, 该版本引入了eslint和typescript插件两种自动修复手段, 你可以直接通过eslint得到详情介绍
+- npm create genshin-ts@latest的项目模板有不小幅度的更新
+- 修复先前版本类型系统改动, 导致的中文事件悬停提示的注释失效
+
 ## v0.1.5
 
 - 允许编写js常见风格的setInterval自清理回调, 例如
