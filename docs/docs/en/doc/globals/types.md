@@ -16,6 +16,9 @@ Use type helpers to make types explicit.
 - `raw(expr)` keeps JS semantics; compiler skips node-graph translation.
 - `bool/int/float/str` convert values for pins that require specific types.
 - `int(123)` can declare an integer literal, though `123n` is still preferred.
+- `idx(...)` helps `bigint` / `IntValue` index expressions pass TypeScript type-checking (type-check only; node-graph int semantics stay unchanged); you can apply this directly with ESLint auto-fix.
+- If this is shown as a warning (not an error), the project TypeScript plugin is usually active and already treats `bigint` as a valid index value; you may disable `gsts/bigint-index-in-server` if preferred.
+- If `TS2538` still appears as an error in VSCode/Cursor, set `"typescript.tsdk": "node_modules/typescript/lib"` and `"typescript.enablePromptUseWorkspaceTsdk": true` (the genshin-ts project template already includes these settings), then switch to the workspace TypeScript version.
 - `str(...)` converts to string and is mainly used for logs.
 - `vec3([x, y, z])` builds a vec3 literal; usually `[x, y, z]` is inferred automatically, but `vec3(...)` helps disambiguate list contexts.
 

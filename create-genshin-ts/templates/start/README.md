@@ -123,6 +123,9 @@ Disable an option temporarily if you need to debug or compare graphs.
 
 - `number` is **float**; `bigint` is **int**.
 - Use `bigint` for modulo/bitwise operations.
+- When list indexing uses `bigint` / `IntValue`, wrap with `idx(...)`, e.g. `arr[idx(i)]` (you can apply this via ESLint auto-fix).
+- If this is shown as a warning (not an error), the TypeScript plugin is usually active and already treats `bigint` as a valid index value; you may disable `gsts/bigint-index-in-server`.
+- If `TS2538` still appears as an error in VSCode/Cursor, configure `"typescript.tsdk": "node_modules/typescript/lib"` and `"typescript.enablePromptUseWorkspaceTsdk": true` (the genshin-ts project template already includes these settings), then switch to the workspace TypeScript version.
 - Lists/dicts must be homogeneous; mixed types will fail.
 - Empty arrays may not infer a type; add a typed placeholder or use `list(...)`.
 - Prefer explicit helpers: `int`, `float`, `vec3`, `configId`, `prefabId`, `entity`, etc.
@@ -138,6 +141,7 @@ Logging and debug:
 
 Type helpers:
 - `bool(...)` / `int(...)` / `float(...)` / `str(...)`
+- `idx(...)`: helps `bigint` / `IntValue` index expressions pass TypeScript type-checking (type-check only; node-graph int semantics stay unchanged).
 - `vec3(...)` / `guid(...)` / `prefabId(...)` / `configId(...)` / `faction(...)` / `entity(...)`
 - `list('int', items)`: explicit list typing (critical for empty arrays).
 - `dict(...)`: read-only dict.

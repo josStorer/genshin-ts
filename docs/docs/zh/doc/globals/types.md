@@ -16,6 +16,9 @@
 - `raw(expr)` 保留 JS 语义，编译器不做节点图转换。
 - `bool/int/float/str` 用于类型转换，满足目标 pin 的类型要求。
 - `int(123)` 可用于显式声明整数字面量，但仍推荐使用 `123n`。
+- `idx(...)` 用于让 `bigint` / `IntValue` 索引通过 TypeScript 类型检查（仅用于通过类型检查，不改变节点图整数语义）；可直接使用 ESLint 自动修复应用该包装。
+- 若此提示显示为“警告”而非“错误”，通常表示项目的 TypeScript 插件已生效（已将 `bigint` 视作可索引），可按需禁用 `gsts/bigint-index-in-server` 规则。
+- 若在 VSCode/Cursor 中仍见到 `TS2538` 错误，请配置 `"typescript.tsdk": "node_modules/typescript/lib"` 与 `"typescript.enablePromptUseWorkspaceTsdk": true`（genshin-ts 的项目模板已经自带这些设置），并切换到“使用工作区 TypeScript 版本”。
 - `str(...)` 用于字符串转换，主要用于日志。
 - `vec3([x, y, z])` 构造 vec3 字面量；多数情况下直接 `[x, y, z]` 可自动推断，`vec3(...)` 主要用于列表场景消除歧义。
 

@@ -30,6 +30,9 @@ https://github.com/user-attachments/assets/91b1f5f6-9415-4128-be3a-a0748680bc02
 npm create genshin-ts@latest
 ```
 
+genshin-ts 内置 TypeScript 插件以获得更高级的TypeScript支持增强；即使不启用也不影响功能和开发体验，但推荐启用。相关说明查看文档站：
+[https://gsts.moe/zh/doc/quick-start/install.html#typescript-plugin](https://gsts.moe/zh/doc/quick-start/install.html#typescript-plugin)
+
 进入模板后：
 
 ```bash
@@ -73,7 +76,7 @@ npm run dev
 
 ## 使用方式
 
-- **模板工程**：`npm create genshin-ts@latest`（推荐）
+- **模板工程**：`npm create genshin-ts@latest`（推荐，TypeScript 插件启用说明见：[https://gsts.moe/zh/doc/quick-start/install.html#typescript-plugin](https://gsts.moe/zh/doc/quick-start/install.html#typescript-plugin)）
 - **作为依赖**：`npm i genshin-ts`，在自有项目中调用编译器/注入器 API
 - **全局 CLI**：`npm install -g genshin-ts` 安装后使用 `gsts` 命令编译/注入
 

@@ -30,6 +30,9 @@ https://github.com/user-attachments/assets/0f2ec8af-c753-4c54-940c-8147ec856635
 npm create genshin-ts@latest
 ```
 
+genshin-ts includes a TypeScript plugin for more advanced TypeScript support enhancements. It is optional (disabling it does not affect functionality and developer experience), but recommended. See:
+[https://gsts.moe/doc/quick-start/install.html#typescript-plugin](https://gsts.moe/doc/quick-start/install.html#typescript-plugin)
+
 Then in the template:
 
 ```bash
@@ -73,7 +76,7 @@ Enabled by default (can be disabled in `gsts.config.ts`):
 
 ## How to Use
 
-- **Template**: `npm create genshin-ts@latest` (recommended)
+- **Template**: `npm create genshin-ts@latest` (recommended; TypeScript plugin guidance: [https://gsts.moe/doc/quick-start/install.html#typescript-plugin](https://gsts.moe/doc/quick-start/install.html#typescript-plugin))
 - **As a dependency**: `npm i genshin-ts` and call compiler/injector APIs in your project
 - **Global CLI**: `npm install -g genshin-ts`, then use `gsts` for compile/inject
 
