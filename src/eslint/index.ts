@@ -1,4 +1,5 @@
 import assignmentRestrictions from './rules/assignment-restrictions.js'
+import bigintIndexInServer from './rules/bigint-index-in-server.js'
 import builtinConsoleLogArity from './rules/builtin-console-log-arity.js'
 import builtinMathSupport from './rules/builtin-math-support.js'
 import builtinWrapperArity from './rules/builtin-wrapper-arity.js'
@@ -38,6 +39,7 @@ import unsupportedBinaryOperator from './rules/unsupported-binary-operator.js'
 
 export const rules = {
   'assignment-restrictions': assignmentRestrictions,
+  'bigint-index-in-server': bigintIndexInServer,
   'builtin-console-log-arity': builtinConsoleLogArity,
   'builtin-math-support': builtinMathSupport,
   'builtin-wrapper-arity': builtinWrapperArity,
@@ -103,6 +105,7 @@ export const configs = {
       'gsts/for-structure': 'error',
       'gsts/no-nullish-coalesce': 'error',
       'gsts/assignment-restrictions': 'error',
+      'gsts/bigint-index-in-server': 'warn',
       'gsts/unsupported-binary-operator': 'error',
       'gsts/ternary-branch-type': 'error',
       'gsts/no-spread-array-without-type': 'error',

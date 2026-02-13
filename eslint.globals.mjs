@@ -11,6 +11,7 @@ export const gstsDslGlobals = {
 
   bool: 'readonly',
   int: 'readonly',
+  idx: 'readonly',
   float: 'readonly',
   str: 'readonly',
   vec3: 'readonly',

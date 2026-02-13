@@ -351,6 +351,7 @@ export type ServerGlobalFactories = {
   raw: <T>(v: T) => T
   bool: (v: BoolValue | IntValue) => boolean
   int: (v: IntValue | BoolValue | FloatValue) => bigint
+  idx: (v: IntValue) => number
   float: (v: FloatValue | IntValue) => number
   str: (
     v:
@@ -414,6 +415,7 @@ function makeFactories(): ServerGlobalFactories {
     raw: (v) => v,
     bool: makeConvertibleFactory('bool'),
     int: makeConvertibleFactory('int'),
+    idx: (v: IntValue) => v as unknown as number,
     float: makeConvertibleFactory('float'),
     str: makeConvertibleFactory('str'),
     vec3: makeBasicFactory('vec3'),
@@ -599,6 +601,7 @@ const BASE_NAMES: (keyof ServerGlobalFactories)[] = [
   'raw',
   'bool',
   'int',
+  'idx',
   'float',
   'str',
   'vec3',

@@ -96,6 +96,9 @@
 //   const unknownList: unknown[] = []
 //   const _unknownMapped = unknownList.map((value) => value)
 //   const _spread = [...unknownList]
+//   const j = gsts.f.getRandomInteger(0n, 2n)
+//   const _badIndex = ints[j]
+//   const _goodIndex = ints[idx(j)]
 
 //   const _plain = {}
 

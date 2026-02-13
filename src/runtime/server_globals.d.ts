@@ -50,6 +50,42 @@ declare global {
    */
   function int(value: IntValue | BoolValue | FloatValue): bigint
   /**
+   * genshin-ts uses `bigint` as runtime integer type, but TypeScript array indexing expects `number`.
+   * Wrap bigint/int-like indexes with `idx(...)` to pass TS type-checking:
+   * `arr[idx(i)]`.
+   *
+   * `idx(...)` has no runtime effect; it is only used to pass type-checking.
+   * You can apply this automatically via ESLint fix (`gsts/bigint-index-in-server`).
+   *
+   * If this appears as a warning (not an error), the TypeScript plugin is usually active and
+   * bigint is already treated as a valid index type in this scope. In that case, you may disable
+   * `gsts/bigint-index-in-server`.
+   *
+   * If VSCode/Cursor still shows TS2538 (bigint cannot be used as an index type), switch to
+   * workspace TypeScript:
+   * - `typescript.tsdk = "node_modules/typescript/lib"`
+   * - `typescript.enablePromptUseWorkspaceTsdk = true`
+   * - Select "Use Workspace Version"
+   * (genshin-ts project template already includes these settings.)
+   *
+   * genshin-ts 使用 `bigint` 表示运行时整数类型，但 TypeScript 数组下标要求 `number`。
+   * 对 bigint/int 风格下标请使用 `idx(...)` 包裹后再索引：
+   * `arr[idx(i)]`。
+   *
+   * `idx(...)` 不产生运行时作用，仅用于通过类型检查。
+   * 你可以通过 ESLint 规则（`gsts/bigint-index-in-server`）自动修复直接应用。
+   *
+   * 如果这里显示的是“警告”而不是“错误”，通常说明 TypeScript 插件已生效，
+   * 当前作用域已将 bigint 视作可索引类型；此时可按需禁用 `gsts/bigint-index-in-server`。
+   *
+   * 如果 VSCode/Cursor 仍显示 TS2538（bigint 不能作为索引类型），请切换到工作区 TypeScript：
+   * - `typescript.tsdk = "node_modules/typescript/lib"`
+   * - `typescript.enablePromptUseWorkspaceTsdk = true`
+   * - 选择“使用工作区 TypeScript 版本”
+   * （genshin-ts 项目模板已经自带这些设置。）
+   */
+  function idx(value: IntValue): number
+  /**
    * Convert to float (number) for float nodes.
    *
    * 转换为 float（number），用于需要浮点数的节点。
