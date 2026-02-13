@@ -1,6 +1,6 @@
 {
   "name": "create-genshin-ts",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Create a Genshin-TS project",
   "type": "module",
   "author": "josStorer <josstorer@outlook.com> (https://github.com/josStorer)",
