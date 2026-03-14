@@ -6806,14 +6806,25 @@ export class ServerExecutionFlowFunctions {
    * @param signalName Only literal string is supported
    *
    * 信号名（仅支持字面量字符串）
+   *
+   * @param params Signal parameters to pass, matching the signal's registered parameters in the editor
+   *
+   * 信号参数，需与编辑器信号管理器中注册的参数一一对应
    */
-  sendSignal(signalName: StrValue): void {
+  sendSignal(signalName: StrValue, ...params: any[]): void {
     const signalNameObj = ensureLiteralStr(signalName, 'signalName')
+    const paramObjs = params.map(p => {
+      const genericType = matchTypes([
+        'float', 'int', 'bool', 'config_id', 'entity', 'faction',
+        'guid', 'prefab_id', 'str', 'vec3', 'dict'
+      ], p)
+      return parseValue(p, genericType)
+    })
     this.registry.registerNode({
       id: 0,
       type: 'exec',
       nodeType: 'send_signal',
-      args: [signalNameObj]
+      args: [signalNameObj, ...paramObjs]
     })
   }
 
