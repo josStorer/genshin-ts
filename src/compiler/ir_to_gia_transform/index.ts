@@ -330,6 +330,26 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
       if (nameArg) {
         setClientExecLiteralArgValue(giaNode, 0, 0, nodeType, nameArg.type, nameArg.value)
       }
+      // Create input pins for signal parameters so graph.connect can find them
+      // Signal name is an exec literal (not a data pin), so data pins start at index 0
+      if (nodeType === 'send_signal') {
+        const args = irNode.args ?? []
+        for (let i = 1; i < args.length; i++) {
+          const arg = args[i]
+          if (!arg) continue
+          if (arg.type === 'conn') {
+            const connType = (arg as ConnectionArgument).value.type as ScalarType
+            const pinType = baseNodeType(connType)
+            if (pinType) {
+              const p = new Pin(giaNode.ConcreteId!, 3, i - 1)
+              p.setType(pinType)
+              giaNode.pins.push(p)
+            }
+          } else if (isValueArg(arg)) {
+            setArgValue(giaNode, i, i, nodeType, arg)
+          }
+        }
+      }
       return true
     }
 
@@ -403,6 +423,8 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
       case 'create_prefab':
       case 'create_prefab_group':
         return idx >= 4 ? idx + 1 : idx // hole at 4
+      case 'send_signal':
+        return idx > 0 ? idx - 1 : idx // signal name is exec literal, data pins shift by -1
       default:
         return idx
     }
