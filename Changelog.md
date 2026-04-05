@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.8
+
+- Add extra project template guidance on editor-vs-code responsibilities to better guide AI development.
+
 ## v0.1.7
 
 - Fixed missing support in GIA encoding for `prefabId` list used as dictionary value and passed as argument, which caused related node parameters in generated graphs to lose their connections.
