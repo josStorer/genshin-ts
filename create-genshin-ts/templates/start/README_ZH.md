@@ -16,6 +16,8 @@ npm run dev
 - `src/main.ts`：入口示例（`g.server(...).on(...)`）
 - `gsts.config.ts`：编译与输出配置
 - `dist/`：编译产物（`.gs.ts` / `.json` / `.gia`）
+- `docs/EDITOR_BOUNDARIES.md`：英文版代码与编辑器职责边界说明
+- `docs/EDITOR_BOUNDARIES_ZH.md`：中文版代码与编辑器职责边界说明与术语参考
 - `CLAUDE.md` / `AGENTS.md`：AI 协作指引（建议先读）
 
 ## 注入配置示例（可选）
@@ -43,6 +45,22 @@ export default config
 - `npm run maps` 可列出最近保存的地图，帮助确定 `mapId`。
 - 多账号/多服务器时填写 `gameRegion` / `playerId` 以定位地图目录。
 - 注入会自动做备份，便于回滚。
+
+## 编辑器边界
+
+这个模板默认采用“代码优先”的开发方式，但千星奇域 / Genshin UGC 中仍有不少能力必须先由编辑器手动配置。
+
+语言入口：
+- 以中文协作时，优先阅读本文件与 `docs/EDITOR_BOUNDARIES_ZH.md`。
+- 若以英文协作，则切换到 `README.md` 与 `docs/EDITOR_BOUNDARIES.md`。
+
+- 代码优先负责运行时规则：玩法流程、状态机、波次逻辑、经济结算、校验、刷怪、结算、信号编排。
+- 编辑器负责资源与配置：元件、组件、路径、界面布局/控件组、信号、全局计时器、商店、货币、能力单元、文本气泡、小地图标识、音频资源等。
+- 在设计或实现功能前，先查看 `docs/EDITOR_BOUNDARIES_ZH.md`，并明确区分：
+  - 代码改动
+  - 仍需手动完成的编辑器配置
+- 若工作区中存在本地编辑器参考文档，优先以其为准，不要只根据 API 名称猜测编辑器能力。
+- 若以中文进行开发沟通，优先沿用本文件与 `docs/EDITOR_BOUNDARIES_ZH.md` 中的术语，避免临时翻译导致表达不地道。
 
 ## 入口与事件写法
 

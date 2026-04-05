@@ -4,6 +4,9 @@ This template bootstraps a Genshin-TS project. Maintain it with user workflow an
 
 ## Read First
 - `README.md`: full usage flow, constraints, and global function cheat sheet.
+- `README_ZH.md`: Chinese template guide and terminology reference when working in Chinese.
+- `docs/EDITOR_BOUNDARIES.md`: English decision rules for code-vs-editor responsibilities.
+- `docs/EDITOR_BOUNDARIES_ZH.md`: Chinese boundary rules and preferred editor terminology.
 
 ## Layout
 - `src/main.ts`: default entry example
@@ -17,7 +20,11 @@ This template bootstraps a Genshin-TS project. Maintain it with user workflow an
 2. Add `inject` in `gsts.config.ts` when needed
 3. Run `npm run dev` for incremental compile
 
-## Coding and Maintenance Rules
+## Hard Rules
+- Prefer implementing gameplay logic in code, but do not assume editor-authored resources already exist.
+- Separate every substantial feature into `code changes` and `editor setup required`.
+- Call out blockers clearly when a requested feature needs editor work first.
+- When responding in Chinese, prefer the wording and domain terms from `README_ZH.md` and `docs/EDITOR_BOUNDARIES_ZH.md`.
 - Update `entries` when adding new entry files.
 - Entry events use `g.server({ id }).on(...)`; same ID entries merge automatically.
 - `gstsServer*` must be top-level and only allow a single trailing `return`.

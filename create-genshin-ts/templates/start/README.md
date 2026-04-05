@@ -16,6 +16,8 @@ Docs: `https://gsts.moe`
 - `src/main.ts`: entry example (`g.server(...).on(...)`)
 - `gsts.config.ts`: compile/output configuration
 - `dist/`: build outputs (`.gs.ts` / `.json` / `.gia`)
+- `docs/EDITOR_BOUNDARIES.md`: English code-vs-editor responsibility guide
+- `docs/EDITOR_BOUNDARIES_ZH.md`: Chinese code-vs-editor responsibility guide and terminology reference
 - `CLAUDE.md` / `AGENTS.md`: AI collaboration notes (read first)
 
 ## Injection Config Example (Optional)
@@ -42,6 +44,22 @@ Notes:
 - `npm run maps` lists recently saved maps to help locate `mapId`.
 - Fill `gameRegion` / `playerId` when you have multiple regions/accounts.
 - Injection automatically creates backups for rollback.
+
+## Editor Boundary
+
+This template is intentionally code-first, but many capabilities in Miliastra / Genshin UGC still require editor-authored setup.
+
+Language entry:
+- Use this file together with `docs/EDITOR_BOUNDARIES.md` when working in English.
+- When working in Chinese, switch to `README_ZH.md` and `docs/EDITOR_BOUNDARIES_ZH.md` so terminology stays consistent.
+
+- Use code for runtime rules: gameplay flow, state machines, wave logic, economy, validation, spawning, settlement, and signal orchestration.
+- Use the editor for authored resources and configuration: prefabs, components, paths, UI layouts/control groups, signals, global timers, shops, currencies, ability units, text bubbles, minimap markers, and audio assets.
+- Before proposing or implementing a feature, check `docs/EDITOR_BOUNDARIES.md` and explicitly separate:
+  - code changes
+  - editor setup still required
+- If local editor reference docs are available in the workspace, prefer them as the local source of truth for editor-side behavior.
+- When working in Chinese, prefer `README_ZH.md` and `docs/EDITOR_BOUNDARIES_ZH.md` so domain terms stay idiomatic.
 
 ## Entry and Event Style
 

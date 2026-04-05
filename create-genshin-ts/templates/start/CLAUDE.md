@@ -4,6 +4,9 @@ This file guides AI to write/modify code and docs in this template. Focus on a c
 
 ## Read First
 - `README.md`: complete usage flow, constraints, and global function cheat sheet.
+- `README_ZH.md`: Chinese template guide and terminology reference when working in Chinese.
+- `docs/EDITOR_BOUNDARIES.md`: English decision rules for code-vs-editor responsibilities.
+- `docs/EDITOR_BOUNDARIES_ZH.md`: Chinese decision rules and preferred editor terminology.
 
 ## Compilation Flow (Debugging)
 1. TS -> `.gs.ts` (node function call form)
@@ -16,6 +19,8 @@ If something is wrong, compare `.gs.ts` and `.json` first.
 - Focus on user-facing steps; explain why when needed.
 - Provide alternatives for edge semantics (e.g., explicit conversions).
 - Do not edit `dist/` outputs by hand.
+- Prefer code for runtime logic, but explicitly list editor-authored prerequisites whenever a feature depends on them.
+- Do not infer editor capabilities from API names alone when local editor references are available.
 
 ## Scope Rules (Critical)
 - Top-level scope: OK to use npm/local files for precompute; do not call `g.server` or `gsts` runtime APIs here.
@@ -56,6 +61,16 @@ If something is wrong, compare `.gs.ts` and `.json` first.
 - `g.server({ variables: { ... } })` declares graph variables with typed `f.get` / `f.set`.
 - `g.server({ lang: 'zh' })` enables Chinese event names and function aliases.
 
+## Hard Rules
+- For any non-trivial feature, state:
+  - what can be implemented in code now
+  - what still requires manual editor setup
+- Components are editor-authored unless verified otherwise.
+- Normal timers can be created in node graphs; global timers must be defined in the editor first.
+- Prefab creation uses existing authored prefab resources; it does not replace asset authoring.
+- Shop, currency, backpack, UI layout/control groups, signal definitions, text bubbles, minimap markers, and ability units usually require editor setup first.
+- When responding in Chinese, prefer the terminology used in `README_ZH.md` and `docs/EDITOR_BOUNDARIES_ZH.md`.
+
 ## Common Commands
 - `npm run dev`: incremental compile (auto inject if configured)
 - `npm run build`: full compile
@@ -64,3 +79,4 @@ If something is wrong, compare `.gs.ts` and `.json` first.
 ## Look Up Function/Event Notes
 - Search `node_modules/genshin-ts/dist/src/definitions/` with keywords.
 - Chinese and English alias keywords are supported.
+- If local editor reference docs are available in the workspace, use them as the preferred source for editor-side behavior.
