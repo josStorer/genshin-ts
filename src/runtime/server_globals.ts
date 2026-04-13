@@ -402,7 +402,7 @@ export type ServerGlobalFactories = {
     items?: RuntimeParameterValueTypeMap[T][] | null | 0
   ) => RuntimeReturnValueTypeMap[`${T}_list`]
   print: (string: StrValue) => void
-  send: (signalName: StrValue) => void
+  send: (signalName: StrValue, ...params: any[]) => void
   player: (playerId: IntValue) => PlayerEntity
   setTimeout: (handler: (evt: unknown, f: unknown) => void, delayMs?: FloatValue) => string
   setInterval: (handler: (evt: unknown, f: unknown) => void, delayMs?: FloatValue) => string
@@ -553,9 +553,9 @@ function makeFactories(): ServerGlobalFactories {
       ensureServerCtx('print')
       gsts.f.printString(string)
     },
-    send: (signalName: StrValue) => {
+    send: (signalName: StrValue, ...params: any[]) => {
       ensureServerCtx('send')
-      gsts.f.sendSignal(signalName)
+      gsts.f.sendSignal(signalName, ...params)
     },
     player: (playerId: IntValue) => {
       ensureServerCtx('player')

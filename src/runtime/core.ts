@@ -28,6 +28,7 @@ import {
   dict,
   ensureLiteralStr,
   enumeration,
+  generic,
   list,
   localVariable,
   value,
@@ -178,13 +179,18 @@ export type ServerGraphApi<
    * GSTS Note: You still need to register the signal in the signal manager in the editor; Using signal distribution can avoid some large loop triggering load limits, which can be used for performance optimization
    *
    * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; 使用信号分发能够避免一些大循环触发负载限制, 可用于性能优化
+   *
+   * @param signalParamCount Number of signal parameters to read from the monitor_signal event. Parameters are exposed as evt.signalParam0, evt.signalParam1, etc.
+   *
+   * 信号参数数量。参数通过 evt.signalParam0, evt.signalParam1 等属性访问，类型为 generic，需调用 .asType() 转换
    */
   onSignal(
     signalName: string,
     handler: (
       evt: ServerEventPayloadsByMode<Mode>['monitorSignal'],
       f: ServerExecutionFlowFunctionsForLang<Vars, Lang, Mode>
-    ) => void
+    ) => void,
+    signalParamCount?: number
   ): ServerGraphApi<Vars, Lang, Mode>
 }
 
@@ -851,10 +857,30 @@ function server<Vars extends VariablesDefinition = VariablesDefinition>(
       handler: (
         evt: ServerEventPayloadsByMode<ResolvedMode>['monitorSignal'],
         f: ServerExecutionFlowFunctionsForLang<Vars, ResolvedLang, ResolvedMode>
-      ) => void
+      ) => void,
+      signalParamCount?: number
     ) {
       const signalNameObj = ensureLiteralStr(signalName, 'signalName')
-      runHandler('monitorSignal', handler, [signalNameObj])
+      const wrappedHandler = signalParamCount
+        ? (
+            evt: ServerEventPayloadsByMode<ResolvedMode>['monitorSignal'],
+            f: ServerExecutionFlowFunctionsForLang<Vars, ResolvedLang, ResolvedMode>
+          ) => {
+            for (let i = 0; i < signalParamCount; i++) {
+              const paramRecord: MetaCallRecord = {
+                id: 0,
+                type: 'event',
+                nodeType: 'monitor_signal',
+                args: [signalNameObj]
+              }
+              const paramValue = new generic()
+              paramValue.markPin(paramRecord, `signalParam_${i}`, 3 + i)
+              ;(evt as any)[`signalParam${i}`] = paramValue
+            }
+            handler(evt, f)
+          }
+        : handler
+      runHandler('monitorSignal', wrappedHandler, [signalNameObj])
       return this
     }
   }
