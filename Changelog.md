@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.9
+
+- Updated a batch of newly added server nodes and events from the latest game version.
+- Updated older nodes as well, including ones that gained new parameters in newer versions.
+- Updated node function comments and descriptions to match the official documentation, including revised usage notes where the docs have changed.
+
 ## v0.1.8
 
 - Add extra project template guidance on editor-vs-code responsibilities to better guide AI development.
