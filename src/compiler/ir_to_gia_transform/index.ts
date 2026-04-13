@@ -313,12 +313,6 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
       if (applyArgsWithNullHole(nodeType, giaNode, irNode, 4, 3)) return true
     }
 
-    // vendor 实测：Set Chat Channel Switch 的 textSwitch 写在 pinIndex=2（pinIndex=1 为隐藏/空 pin）
-    // nodes.ts 侧只有 2 个参数，这里补一个 null 占位，避免 textSwitch 写入错误的 pin。
-    if (nodeType === 'set_chat_channel_switch') {
-      if (applyArgsWithNullHole(nodeType, giaNode, irNode, 2, 1)) return true
-    }
-
     if (nodeType === 'send_signal' || nodeType === 'monitor_signal') {
       const nameArg = irNode.args?.[0]
       if (nameArg && nameArg.type === 'conn') {
@@ -396,8 +390,6 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
         return idx >= 1 ? idx + 1 : idx // hole at 1
       case 'activate_disable_pathfinding_obstacle':
         return idx + 1 // hole at 0
-      case 'set_chat_channel_switch':
-        return idx >= 1 ? idx + 1 : idx // hole at 1
       case 'set_custom_variable':
       case 'remove_unit_status':
         return idx >= 3 ? idx + 1 : idx // hole at 3

@@ -2463,7 +2463,7 @@ export const NODE_PIN_RECORDS = [
   {
     name: 'Change Player Class',
     id: 389,
-    inputs: ['Ety', 'Cfg'],
+    inputs: ['Ety', 'Cfg', 'E<0>'],
     outputs: []
   },
   {
@@ -2499,8 +2499,8 @@ export const NODE_PIN_RECORDS = [
   {
     name: 'Add Character Skill',
     id: 395,
-    inputs: ['Ety', 'Cfg', 'R<T>'],
-    outputs: []
+    inputs: ['Ety', 'Cfg', 'R<T>', 'E<0>'],
+    outputs: ['Int']
   },
   {
     name: 'Delete Character Skill by ID',
@@ -4229,8 +4229,7 @@ export const NODE_PIN_RECORDS = [
   {
     name: 'Set Chat Channel Switch',
     id: 769,
-    // vendor .gia: inputs index 为 0/2（中间 index=1 为隐藏/空 pin）
-    inputs: ['Int', 'Unk', 'Bol'],
+    inputs: ['Int', 'Bol', 'Bol'],
     outputs: []
   },
   {

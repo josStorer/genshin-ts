@@ -57,7 +57,9 @@ export const ENUM_ID = {
    * and are primarily used for matching / wiring in the editor.
    */
   Scan_Rule_Type: 50,
-  Damage_Pop_Up_Type: 51
+  Damage_Pop_Up_Type: 51,
+  Original_Slot_Skill_Handling: 52,
+  Existing_Skill_Handling: 53
 } as const satisfies { [key: string]: number }
 export type EnumId = (typeof ENUM_ID)[keyof typeof ENUM_ID]
 
@@ -267,6 +269,11 @@ export const ENUM_VALUE = {
   SkillSlot_CustomSkillSlot13: 3133,
   SkillSlot_CustomSkillSlot14: 3134,
   SkillSlot_CustomSkillSlot15: 3135,
+  OriginalSlotSkillHandling_Destroy: 2810,
+  OriginalSlotSkillHandling_KeepSlotRelation: 2811,
+  OriginalSlotSkillHandling_DetachFromSlotRelation: 2812,
+  ExistingSkillHandling_ClearAll: 2820,
+  ExistingSkillHandling_KeepIrrelevantSkills: 2821,
   SoundAttenuationMode_LinearAttenuation: 3400,
   SoundAttenuationMode_FastThenSlow: 3401,
   SoundAttenuationMode_SlowThenFast: 3402,

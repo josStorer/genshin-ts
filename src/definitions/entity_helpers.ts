@@ -24,6 +24,7 @@ import type {
   DamagePopUpType,
   DecisionRefreshMode,
   EntityType,
+  ExistingSkillHandling,
   FixedMotionParameterType,
   FollowCoordinateSystem,
   FollowLocationType,
@@ -31,6 +32,7 @@ import type {
   InterruptStatus,
   ItemLootType,
   MovementMode,
+  OriginalSlotSkillHandling,
   RemovalMethod,
   ScanRuleType,
   SettlementStatus,
@@ -982,7 +984,7 @@ interface EntityHelperFromFirstParam {
   /**
    * Add a skill to the specified Target Character's Skill Slot
    *
-   * 添加角色技能: 为指定目标角色的某个技能槽位添加技能
+   * 添加角色技能: 为指定目标角色的某个技能槽位添加技能，并处理该槽位原有技能
    *
    * @param skillConfigId Skill Identifier
    *
@@ -990,8 +992,19 @@ interface EntityHelperFromFirstParam {
    * @param skillSlot The Skill Slot to be added: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
    *
    * 技能槽位: 要添加的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
+   * @param originalSlotSkillHandling Destroy: Remove the original skill. Preserve Slot Binding: Retain the current slot binding. When the newly bound skill instance is removed, it is automatically displayed in that slot. Remove Slot Binding: The skill must be reassigned to the specified slot in order to be displayed in that slot
+   *
+   * 原槽位技能处理方式: 销毁：销毁原技能。保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上。脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
+   *
+   * @returns Skill Instance ID of the switched-out skill
+   *
+   * 被切换技能实例ID: 被切换出去的技能实例ID
    */
-  addCharacterSkill: (skillConfigId: ConfigIdValue, skillSlot: CharacterSkillSlot) => void
+  addCharacterSkill: (
+    skillConfigId: ConfigIdValue,
+    skillSlot: CharacterSkillSlot,
+    originalSlotSkillHandling: OriginalSlotSkillHandling
+  ) => bigint
 
   /**
    * Add New Items to the Item Purchase List
@@ -1328,13 +1341,19 @@ interface EntityHelperFromFirstParam {
   /**
    * Set the Player's current Class to the Class referenced by the Config ID
    *
-   * 更改玩家职业: 修改玩家的当前职业为配置ID对应的职业
+   * 更改玩家职业: 修改玩家的当前职业为配置ID对应的职业，并处理玩家已有技能
    *
    * @param classConfigId Class Identifier
    *
    * 职业配置ID: 该职业的标识
+   * @param existingSkillHandling Clear All: Clear all existing skills. Preserve Unrelated Skills: Retain skills that are not defined in the default skill sets of either the previous or the new class
+   *
+   * 已有技能处理方式: 全部清理：将已有技能全部清理。保留无关技能：保留更换前后两个职业默认配置内均没有的技能
    */
-  changePlayerClass: (classConfigId: ConfigIdValue) => void
+  changePlayerClass: (
+    classConfigId: ConfigIdValue,
+    existingSkillHandling: ExistingSkillHandling
+  ) => void
 
   /**
    * Set the Player's current Class Level. If it exceeds the defined range, the change will not take effect
@@ -5357,8 +5376,19 @@ interface EntityHelperMethodAliases {
    * @param skillSlot The Skill Slot to be added: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
    *
    * 技能槽位: 要添加的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
+   * @param originalSlotSkillHandling Destroy: Remove the original skill. Preserve Slot Binding: Retain the current slot binding. When the newly bound skill instance is removed, it is automatically displayed in that slot. Remove Slot Binding: The skill must be reassigned to the specified slot in order to be displayed in that slot
+   *
+   * 原槽位技能处理方式: 销毁：销毁原技能。保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上。脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
+   *
+   * @returns Skill Instance ID of the switched-out skill
+   *
+   * 被切换技能实例ID: 被切换出去的技能实例ID
    */
-  addSkill: (skillConfigId: ConfigIdValue, skillSlot: CharacterSkillSlot) => void
+  addSkill: (
+    skillConfigId: ConfigIdValue,
+    skillSlot: CharacterSkillSlot,
+    originalSlotSkillHandling: OriginalSlotSkillHandling
+  ) => bigint
 
   /**
    * Iterate through and delete all skills with the specified Config ID across all of the Character's slots
@@ -5467,13 +5497,16 @@ interface EntityHelperMethodAliases {
   /**
    * Set the Player's current Class to the Class referenced by the Config ID
    *
-   * 更改玩家职业: 修改玩家的当前职业为配置ID对应的职业
+   * 更改玩家职业: 修改玩家的当前职业为配置ID对应的职业，并处理玩家已有技能
    *
    * @param classConfigId Class Identifier
    *
    * 职业配置ID: 该职业的标识
+   * @param existingSkillHandling Clear All: Clear all existing skills. Preserve Unrelated Skills: Retain skills that are not defined in the default skill sets of either the previous or the new class
+   *
+   * 已有技能处理方式: 全部清理：将已有技能全部清理。保留无关技能：保留更换前后两个职业默认配置内均没有的技能
    */
-  setClass: (classConfigId: ConfigIdValue) => void
+  setClass: (classConfigId: ConfigIdValue, existingSkillHandling: ExistingSkillHandling) => void
 
   /**
    * Set the Player's current Class Level. If it exceeds the defined range, the change will not take effect

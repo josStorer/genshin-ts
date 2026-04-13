@@ -16,6 +16,8 @@ export type EnumerationTypeMap = {
   DisruptorDeviceType: DisruptorDeviceType
   DisruptorDeviceOrientation: DisruptorDeviceOrientation
   CharacterSkillSlot: CharacterSkillSlot
+  OriginalSlotSkillHandling: OriginalSlotSkillHandling
+  ExistingSkillHandling: ExistingSkillHandling
   SoundAttenuationMode: SoundAttenuationMode
   LogicalOperator: LogicalOperator
   MathematicalOperator: MathematicalOperator
@@ -549,6 +551,71 @@ export class CharacterSkillSlot extends enumeration {
     'CharacterSkillSlot',
     'character_skill_slot_custom_skill_slot_15'
   ) as CharacterSkillSlot
+}
+
+/** 原槽位技能处理方式 */
+export class OriginalSlotSkillHandling extends enumeration {
+  declare private readonly __brandOriginalSlotSkillHandling: 'OriginalSlotSkillHandling'
+  private constructor() {
+    super('')
+    throw new Error('you should not create an enum instance')
+  }
+
+  /**
+   * Destroy: Remove the original skill
+   *
+   * 销毁：销毁原技能
+   */
+  static readonly Destroy = new enumeration(
+    'OriginalSlotSkillHandling',
+    'original_slot_skill_handling_destroy'
+  ) as OriginalSlotSkillHandling
+  /**
+   * Preserve Slot Binding: Retain the current slot binding. When the newly bound skill instance is removed, it is automatically displayed in that slot
+   *
+   * 保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上
+   */
+  static readonly KeepSlotRelation = new enumeration(
+    'OriginalSlotSkillHandling',
+    'original_slot_skill_handling_keep_slot_relation'
+  ) as OriginalSlotSkillHandling
+  /**
+   * Remove Slot Binding: The skill must be reassigned to the specified slot in order to be displayed in that slot
+   *
+   * 脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
+   */
+  static readonly DetachFromSlotRelation = new enumeration(
+    'OriginalSlotSkillHandling',
+    'original_slot_skill_handling_detach_from_slot_relation'
+  ) as OriginalSlotSkillHandling
+}
+
+/** 已有技能处理方式 */
+export class ExistingSkillHandling extends enumeration {
+  declare private readonly __brandExistingSkillHandling: 'ExistingSkillHandling'
+  private constructor() {
+    super('')
+    throw new Error('you should not create an enum instance')
+  }
+
+  /**
+   * Clear All: Clear all existing skills
+   *
+   * 全部清理：将已有技能全部清理
+   */
+  static readonly ClearAll = new enumeration(
+    'ExistingSkillHandling',
+    'existing_skill_handling_clear_all'
+  ) as ExistingSkillHandling
+  /**
+   * Preserve Unrelated Skills: Retain skills that are not defined in the default skill sets of either the previous or the new class
+   *
+   * 保留无关技能：保留更换前后两个职业默认配置内均没有的技能
+   */
+  static readonly KeepIrrelevantSkills = new enumeration(
+    'ExistingSkillHandling',
+    'existing_skill_handling_keep_irrelevant_skills'
+  ) as ExistingSkillHandling
 }
 
 /** 声音衰减方式 */

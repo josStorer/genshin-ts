@@ -192,6 +192,28 @@ export const ENUM_VALUE_MAPPINGS: Record<string, { enumId: number; enumValue: nu
     enumValue: ENUM_VALUE.MotionTypes_CyclicMovement
   },
 
+  original_slot_skill_handling_destroy: {
+    enumId: ENUM_ID.Generic,
+    enumValue: ENUM_VALUE.OriginalSlotSkillHandling_Destroy
+  },
+  original_slot_skill_handling_keep_slot_relation: {
+    enumId: ENUM_ID.Generic,
+    enumValue: ENUM_VALUE.OriginalSlotSkillHandling_KeepSlotRelation
+  },
+  original_slot_skill_handling_detach_from_slot_relation: {
+    enumId: ENUM_ID.Generic,
+    enumValue: ENUM_VALUE.OriginalSlotSkillHandling_DetachFromSlotRelation
+  },
+
+  existing_skill_handling_clear_all: {
+    enumId: ENUM_ID.Generic,
+    enumValue: ENUM_VALUE.ExistingSkillHandling_ClearAll
+  },
+  existing_skill_handling_keep_irrelevant_skills: {
+    enumId: ENUM_ID.Generic,
+    enumValue: ENUM_VALUE.ExistingSkillHandling_KeepIrrelevantSkills
+  },
+
   trigonometric_function_cos: {
     enumId: ENUM_ID.Trigonometric_Functions,
     enumValue: ENUM_VALUE.TrigonometricFunctions_cos

@@ -76,6 +76,7 @@ import {
   ElementalReactionType,
   ElementalType,
   EntityType,
+  ExistingSkillHandling,
   EnumerationType,
   EnumerationTypeMap,
   FixedMotionParameterType,
@@ -92,6 +93,7 @@ import {
   MotionPathPointType,
   MotionType,
   MovementMode,
+  OriginalSlotSkillHandling,
   ReasonForItemChange,
   RemovalMethod,
   RevivePointSelectionStrategy,
@@ -5819,9 +5821,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Set the Player's current Class to the Class referenced by the Config ID
+   * Set the Player's current Class to the Class referenced by the Config ID and process the Player's existing skills
    *
-   * 更改玩家职业: 修改玩家的当前职业为配置ID对应的职业
+   * 更改玩家职业: 修改玩家的当前职业为配置ID对应的职业，并处理玩家已有技能
    *
    * @param targetPlayer Active Player Entity
    *
@@ -5829,15 +5831,23 @@ export class ServerExecutionFlowFunctions {
    * @param classConfigId Class Identifier
    *
    * 职业配置ID: 该职业的标识
+   * @param existingSkillHandling Clear All: Clear all existing skills. Preserve Unrelated Skills: Retain skills that are not defined in the default skill sets of either the previous or the new class
+   *
+   * 已有技能处理方式: 全部清理：将已有技能全部清理。保留无关技能：保留更换前后两个职业默认配置内均没有的技能
    */
-  changePlayerClass(targetPlayer: PlayerEntity, classConfigId: ConfigIdValue): void {
+  changePlayerClass(
+    targetPlayer: PlayerEntity,
+    classConfigId: ConfigIdValue,
+    existingSkillHandling: ExistingSkillHandling
+  ): void {
     const targetPlayerObj = parseValue(targetPlayer, 'entity')
     const classConfigIdObj = parseValue(classConfigId, 'config_id')
+    const existingSkillHandlingObj = parseValue(existingSkillHandling, 'enumeration')
     this.registry.registerNode({
       id: 0,
       type: 'exec',
       nodeType: 'change_player_class',
-      args: [targetPlayerObj, classConfigIdObj]
+      args: [targetPlayerObj, classConfigIdObj, existingSkillHandlingObj]
     })
   }
 
@@ -6105,9 +6115,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Add a skill to the specified Target Character's Skill Slot
+   * Add a skill to the specified Target Character's Skill Slot and process the original skill on that slot
    *
-   * 添加角色技能: 为指定目标角色的某个技能槽位添加技能
+   * 添加角色技能: 为指定目标角色的某个技能槽位添加技能，并处理该槽位原有技能
    *
    * @param targetEntity Active Character Entity
    *
@@ -6118,21 +6128,33 @@ export class ServerExecutionFlowFunctions {
    * @param skillSlot The Skill Slot to be added: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
    *
    * 技能槽位: 要添加的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
+   * @param originalSlotSkillHandling Destroy: Remove the original skill. Preserve Slot Binding: Retain the current slot binding. When the newly bound skill instance is removed, it is automatically displayed in that slot. Remove Slot Binding: The skill must be reassigned to the specified slot in order to be displayed in that slot
+   *
+   * 原槽位技能处理方式: 销毁：销毁原技能。保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上。脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
+   *
+   * @returns Skill Instance ID of the switched-out skill
+   *
+   * 被切换技能实例ID: 被切换出去的技能实例ID
    */
   addCharacterSkill(
     targetEntity: CharacterEntity,
     skillConfigId: ConfigIdValue,
-    skillSlot: CharacterSkillSlot
-  ): void {
+    skillSlot: CharacterSkillSlot,
+    originalSlotSkillHandling: OriginalSlotSkillHandling
+  ): bigint {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const skillConfigIdObj = parseValue(skillConfigId, 'config_id')
     const skillSlotObj = parseValue(skillSlot, 'enumeration')
-    this.registry.registerNode({
+    const originalSlotSkillHandlingObj = parseValue(originalSlotSkillHandling, 'enumeration')
+    const ref = this.registry.registerNode({
       id: 0,
       type: 'exec',
       nodeType: 'add_character_skill',
-      args: [targetEntityObj, skillConfigIdObj, skillSlotObj]
+      args: [targetEntityObj, skillConfigIdObj, skillSlotObj, originalSlotSkillHandlingObj]
     })
+    const ret = new int()
+    ret.markPin(ref, 'switchedSkillInstanceId', 0)
+    return ret as unknown as bigint
   }
 
   /**
@@ -8656,25 +8678,33 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Set the Chat Channel switch
+   * Configure the voice and text toggles for the chat channel
    *
-   * 设置聊天频道开关: 设置聊天频道的开关
+   * 设置聊天频道开关: 配置聊天频道的语音和文字开关
    *
    * @param channelIndex
    *
    * 频道索引
+   * @param voiceOverSwitch
+   *
+   * 语音开关
    * @param textSwitch
    *
    * 文字开关
    */
-  setChatChannelSwitch(channelIndex: IntValue, textSwitch: BoolValue): void {
+  setChatChannelSwitch(
+    channelIndex: IntValue,
+    voiceOverSwitch: BoolValue,
+    textSwitch: BoolValue
+  ): void {
     const channelIndexObj = parseValue(channelIndex, 'int')
+    const voiceOverSwitchObj = parseValue(voiceOverSwitch, 'bool')
     const textSwitchObj = parseValue(textSwitch, 'bool')
     this.registry.registerNode({
       id: 0,
       type: 'exec',
       nodeType: 'set_chat_channel_switch',
-      args: [channelIndexObj, textSwitchObj]
+      args: [channelIndexObj, voiceOverSwitchObj, textSwitchObj]
     })
   }
 
