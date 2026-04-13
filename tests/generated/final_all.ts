@@ -366,7 +366,7 @@ g.server({ id: 1073741866, name: 'my_final_test' }).on('whenEntityIsCreated', (e
   f.activateDisableTab(f.getSelfEntity(), 330n, true)
   f.activateDisableCollisionTriggerSource(f.getSelfEntity(), true)
   f.changePlayerSCurrentClassLevel(f.getSelfEntity(), 335n)
-  f.changePlayerClass(f.getSelfEntity(), new configId(337n))
+  f.changePlayerClass(f.getSelfEntity(), new configId(337n), E.ExistingSkillHandling.ClearAll)
   f.increasePlayerSCurrentClassExp(f.getSelfEntity(), 339n)
   f.activateUiControlGroupInControlGroupLibrary(f.getSelfEntity(), 341n)
   f.switchCurrentInterfaceLayout(f.getSelfEntity(), 343n)
@@ -385,7 +385,12 @@ g.server({ id: 1073741866, name: 'my_final_test' }).on('whenEntityIsCreated', (e
   f.initializeCharacterSkill(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack)
   f.setSkillResourceAmount(f.getSelfEntity(), new configId(353n), 354.25)
   f.setCharacterSkillCd(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack, 356.25, true)
-  f.addCharacterSkill(f.getSelfEntity(), new configId(359n), E.CharacterSkillSlot.NormalAttack)
+  f.addCharacterSkill(
+    f.getSelfEntity(),
+    new configId(359n),
+    E.CharacterSkillSlot.NormalAttack,
+    E.OriginalSlotSkillHandling.Destroy
+  )
   f.modifySkillResourceAmount(f.getSelfEntity(), new configId(361n), 362.25)
   f.modifyCharacterSkillCd(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack, 364.25, true)
   f.deleteCharacterSkillBySlot(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack)
@@ -617,7 +622,7 @@ g.server({ id: 1073741866, name: 'my_final_test' }).on('whenEntityIsCreated', (e
   f.setPlayerRankScoreChange(f.getSelfEntity(), E.SettlementStatus.Undefined, 630n)
   f.setPlayerEscapeValidity(f.getSelfEntity(), false)
   f.activateDisableEntityDeploymentGroup(633n, false)
-  f.setChatChannelSwitch(635n, false)
+  f.setChatChannelSwitch(635n, false, false)
   f.setPlayerSCurrentChannel(new guid(637n), f.assemblyList([638n, 639n, 640n], 'int'))
   f.modifyPlayerChannelPermission(new guid(639n), 640n, true)
   f.consumeGiftBox(f.getSelfEntity(), 643n, 644n)

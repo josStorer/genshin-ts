@@ -197,7 +197,7 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.activateDisableTab(f.getSelfEntity(), 2n, true)
   f.activateDisableCollisionTriggerSource(f.getSelfEntity(), false)
   f.changePlayerSCurrentClassLevel(f.getSelfEntity(), 2n)
-  f.changePlayerClass(f.getSelfEntity(), new configId(2n))
+  f.changePlayerClass(f.getSelfEntity(), new configId(2n), E.ExistingSkillHandling.ClearAll)
   f.increasePlayerSCurrentClassExp(f.getSelfEntity(), 2n)
   f.activateUiControlGroupInControlGroupLibrary(f.getSelfEntity(), 2n)
   f.switchCurrentInterfaceLayout(f.getSelfEntity(), 2n)
@@ -212,7 +212,12 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.initializeCharacterSkill(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack)
   f.setSkillResourceAmount(f.getSelfEntity(), new configId(2n), 3.25)
   f.setCharacterSkillCd(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack, 2.25, true)
-  f.addCharacterSkill(f.getSelfEntity(), new configId(2n), E.CharacterSkillSlot.NormalAttack)
+  f.addCharacterSkill(
+    f.getSelfEntity(),
+    new configId(2n),
+    E.CharacterSkillSlot.NormalAttack,
+    E.OriginalSlotSkillHandling.Destroy
+  )
   f.modifySkillResourceAmount(f.getSelfEntity(), new configId(2n), 3.25)
   f.modifyCharacterSkillCd(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack, 2.25, true)
   f.deleteCharacterSkillBySlot(f.getSelfEntity(), E.CharacterSkillSlot.NormalAttack)
@@ -404,7 +409,7 @@ g.server({ id: 1073741842 }).on('whenEntityIsCreated', (_evt, f) => {
   f.setPlayerRankScoreChange(f.getSelfEntity(), E.SettlementStatus.Undefined, 2n)
   f.setPlayerEscapeValidity(f.getSelfEntity(), false)
   f.activateDisableEntityDeploymentGroup(1n, false)
-  f.setChatChannelSwitch(1n, false)
+  f.setChatChannelSwitch(1n, false, false)
   f.setPlayerSCurrentChannel(new guid(1n), f.assemblyList([2n, 3n, 4n], 'int'))
   f.modifyPlayerChannelPermission(new guid(1n), 2n, true)
   f.consumeGiftBox(f.getSelfEntity(), 2n, 3n)

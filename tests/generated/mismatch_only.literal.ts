@@ -118,7 +118,12 @@ g.server({ id: 1073741860 }).on('whenEntityIsCreated', (_evt, f) => {
   )
   f.modifyUiControlStatusWithinTheInterfaceLayout(f.getSelfEntity(), 2n, E.UIControlGroupStatus.On)
   f.initializeCharacterSkill(f.getSelfEntity(), E.CharacterSkillSlot.Skill1E)
-  f.addCharacterSkill(f.getSelfEntity(), new configId(2n), E.CharacterSkillSlot.Skill1E)
+  f.addCharacterSkill(
+    f.getSelfEntity(),
+    new configId(2n),
+    E.CharacterSkillSlot.Skill1E,
+    E.OriginalSlotSkillHandling.Destroy
+  )
   f.deleteCharacterSkillBySlot(f.getSelfEntity(), E.CharacterSkillSlot.Skill1E)
   f.setPlayerSettlementSuccessStatus(f.getSelfEntity(), E.SettlementStatus.Victory)
   f.setFactionSettlementSuccessStatus(new faction(1n), E.SettlementStatus.Victory)
@@ -136,7 +141,7 @@ g.server({ id: 1073741860 }).on('whenEntityIsCreated', (_evt, f) => {
     ])
   )
   f.setScanTagRules(f.getSelfEntity(), E.ScanRuleType.PrioritizeDistance)
-  f.setChatChannelSwitch(1n, false)
+  f.setChatChannelSwitch(1n, false, false)
   f.logicalNotOperation(true)
   f.roundToIntegerOperation(1.25, E.RoundingMode.RoundUp)
   f._3dVectorBackward()

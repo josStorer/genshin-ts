@@ -20,7 +20,12 @@ g.server({ id: 1073741862 }).on('whenEntityIsCreated', (_evt, f) => {
   f.modifySkillCdPercentageBasedOnMaxCd(f.getSelfEntity(), E.CharacterSkillSlot.Skill1E, 2.25, true)
   f.initializeCharacterSkill(f.getSelfEntity(), E.CharacterSkillSlot.Skill1E)
   f.setCharacterSkillCd(f.getSelfEntity(), E.CharacterSkillSlot.Skill1E, 2.25, true)
-  f.addCharacterSkill(f.getSelfEntity(), new configId(2n), E.CharacterSkillSlot.Skill1E)
+  f.addCharacterSkill(
+    f.getSelfEntity(),
+    new configId(2n),
+    E.CharacterSkillSlot.Skill1E,
+    E.OriginalSlotSkillHandling.Destroy
+  )
   f.modifyCharacterSkillCd(f.getSelfEntity(), E.CharacterSkillSlot.Skill1E, 2.25, true)
   f.deleteCharacterSkillBySlot(f.getSelfEntity(), E.CharacterSkillSlot.Skill1E)
   f.addSoundEffectPlayer(f.getSelfEntity(), 2n, 3n, 4.25, true, 6.25, true, 8.25, E.SoundAttenuationMode.FastThenSlow, "9", [10, 11, 12])
