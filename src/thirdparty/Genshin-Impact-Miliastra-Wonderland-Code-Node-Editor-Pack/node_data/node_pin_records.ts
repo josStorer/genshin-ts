@@ -4395,6 +4395,24 @@ export const NODE_PIN_RECORDS = [
     outputs: ['Ety', 'Gid', 'Int', 'Int', 'Int']
   },
   {
+    name: 'Set Voice Chat Scope',
+    id: 800,
+    inputs: ['Ety', 'L<Int>', 'Int', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'Set Text Chat Permissions',
+    id: 801,
+    inputs: ['Ety', 'L<Int>', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'Set Voice Chat Permissions',
+    id: 802,
+    inputs: ['Ety', 'L<Int>', 'Bol', 'Bol'],
+    outputs: []
+  },
+  {
     name: 'Revive Active Character',
     id: 803,
     inputs: ['Ety'],
@@ -4410,6 +4428,138 @@ export const NODE_PIN_RECORDS = [
     name: 'Teleport Player',
     id: 805,
     inputs: ['Ety', 'Vec', 'Vec'],
+    outputs: []
+  },
+  {
+    name: 'Bind Custom Skill Instance to Specified Slot',
+    id: 806,
+    inputs: ['Ety', 'Int', 'E<0>', 'E<0>'],
+    outputs: ['Int']
+  },
+  {
+    name: 'Unbind Skill Instance',
+    id: 807,
+    inputs: ['Ety', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Unbind all Skill Instances on the Slot',
+    id: 808,
+    inputs: ['Ety', 'E<0>'],
+    outputs: ['L<Int>']
+  },
+  {
+    name: 'Create Custom Skill Instance',
+    id: 809,
+    inputs: ['Ety', 'Cfg'],
+    outputs: ['Int']
+  },
+  {
+    name: 'Destroy Custom Skill Instance',
+    id: 810,
+    inputs: ['Ety', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Query Skill Config ID by Skill Instance ID',
+    id: 811,
+    inputs: ['Ety', 'Int'],
+    outputs: ['Cfg']
+  },
+  {
+    name: 'Query All Skill Instance IDs by Skill Config ID',
+    id: 812,
+    inputs: ['Ety', 'Cfg'],
+    outputs: ['L<Int>']
+  },
+  {
+    name: 'Query All Skill Instance IDs by Skill Slot',
+    id: 813,
+    inputs: ['Ety', 'E<0>'],
+    outputs: ['L<Int>']
+  },
+  {
+    name: 'Query Skill Instance ID by Skill Slot and Skill Config ID',
+    id: 814,
+    inputs: ['Ety', 'E<0>', 'Cfg'],
+    outputs: ['Int']
+  },
+  {
+    name: 'Query Skill Attribute Group Value',
+    id: 815,
+    inputs: ['Ety', 'Cfg'],
+    outputs: ['Flt']
+  },
+  {
+    name: 'Cast Skill From Specified Panel Slot',
+    id: 816,
+    inputs: ['Ety', 'E<0>', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'Cast Specified Skill Instance',
+    id: 817,
+    inputs: ['Ety', 'Int', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'Set Player Camera to Follow Entity',
+    id: 818,
+    inputs: ['Ety', 'Ety', 'Str'],
+    outputs: []
+  },
+  {
+    name: 'Reset Player Camera to Follow Entity',
+    id: 819,
+    inputs: ['Ety'],
+    outputs: []
+  },
+  {
+    name: 'When Equipment is purchased',
+    id: 820,
+    inputs: [],
+    outputs: ['Ety', 'Gid', 'L<Int>']
+  },
+  {
+    name: 'When Equipment is sold',
+    id: 821,
+    inputs: [],
+    outputs: ['Ety', 'Gid', 'L<Int>']
+  },
+  {
+    name: 'Remove Equipment from Specified Slot',
+    id: 822,
+    inputs: ['Ety', 'Int', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Close Floating Interaction Page',
+    id: 824,
+    inputs: ['Ety', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Update Floating Interaction Page List Data',
+    id: 825,
+    inputs: ['Ety', 'Int', 'L<Int>', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'When Floating Interaction Page is Triggered',
+    id: 826,
+    inputs: [],
+    outputs: ['Ety', 'Gid', 'Int', 'Int', 'L<Int>', 'L<Int>']
+  },
+  {
+    name: 'Play UI Animation on Control',
+    id: 827,
+    inputs: ['Ety', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Show Floating Interaction Page',
+    id: 828,
+    inputs: ['Ety', 'Int', 'D<Int,L<Int>>'],
     outputs: []
   },
   {

@@ -180,12 +180,19 @@ const ENTITY_HELPER_METHODS = [
   'modifyUiControlStatusWithinTheInterfaceLayout',
   'modifyingCharacterDisruptorDevice',
   'openShop',
+  'closeFloatingInteractionPage',
   'pauseBasicMotionDevice',
   'pauseGlobalTimer',
   'pauseTimer',
   'playerPlaysOneShot2dSoundEffect',
+  'playUiAnimationOnControl',
   'queryCharacterSCurrentMovementSpd',
   'queryCharacterSkill',
+  'querySkillConfigIdBySkillInstanceId',
+  'queryAllSkillInstanceIdsBySkillConfigId',
+  'queryAllSkillInstanceIdsBySkillSlot',
+  'querySkillInstanceIdBySkillSlotAndSkillConfigId',
+  'querySkillAttributeGroupValue',
   'queryCorrespondingGiftBoxConsumption',
   'queryCorrespondingGiftBoxQuantity',
   'queryCustomShopItemSalesInfo',
@@ -217,10 +224,12 @@ const ENTITY_HELPER_METHODS = [
   'removeItemFromCustomShopSalesList',
   'removeItemFromInventoryShopSalesList',
   'removeItemFromPurchaseList',
+  'removeEquipmentFromSpecifiedSlot',
   'removeTargetEntityFromAggroList',
   'removeUnitStatus',
   'removeUnitTagFromEntity',
   'replaceEquipmentToTheSpecifiedSlot',
+  'resetPlayerCameraToFollowEntity',
   'resumeTimer',
   'reviveActiveCharacter',
   'reviveAllPlayerSCharacters',
@@ -234,18 +243,22 @@ const ENTITY_HELPER_METHODS = [
   'setInventoryItemDropContents',
   'setLootDropContent',
   'setPlayerEscapeValidity',
+  'setPlayerCameraToFollowEntity',
   'setPlayerRankScoreChange',
   'setPlayerRemainingRevives',
   'setPlayerReviveTime',
   'setPlayerSettlementRankingValue',
   'setPlayerSettlementScoreboardDataDisplay',
   'setPlayerSettlementSuccessStatus',
+  'setTextChatPermissions',
   'setPresetStatus',
   'setScanComponentSActiveScanTagId',
   'setScanTagRules',
   'setSkillResourceAmount',
   'setTheAggroValueOfSpecifiedEntity',
   'setThePresetStatusValueOfTheComplexCreation',
+  'setVoiceChatPermissions',
+  'setVoiceChatScope',
   'startGlobalTimer',
   'startPausePlayerBackgroundMusic',
   'startPauseSpecifiedSoundEffectPlayer',
@@ -259,10 +272,19 @@ const ENTITY_HELPER_METHODS = [
   'switchFollowMotionDeviceTargetByEntity',
   'switchFollowMotionDeviceTargetByGuid',
   'switchTheScoringGroupThatAffectsPlayerSCompetitiveRank',
+  'showFloatingInteractionPage',
   'tauntTarget',
   'teleportPlayer',
   'toggleEntityLightSource',
-  'triggerLootDrop'
+  'triggerLootDrop',
+  'bindCustomSkillInstanceToSpecifiedSlot',
+  'unbindSkillInstance',
+  'unbindAllSkillInstancesOnTheSlot',
+  'createCustomSkillInstance',
+  'destroyCustomSkillInstance',
+  'castSkillFromSpecifiedPanelSlot',
+  'castSpecifiedSkillInstance',
+  'updateFloatingInteractionPageListData'
 ] as const
 
 const ENTITY_HELPER_OVERRIDE_INDEX = {
@@ -578,6 +600,7 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   movementInfo: ['character'],
   nickname: ['player'],
   objectAttr: ['object'],
+  closeFloatingInteractionPage: ['player'],
   openShop: ['player'],
   ownedEntities: ['player', 'character', 'stage', 'object', 'creation'],
   owner: ['player', 'character', 'stage', 'object', 'creation'],
@@ -586,11 +609,17 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   pauseGlobalTimer: ['player', 'character', 'stage', 'object', 'creation'],
   pauseTimer: ['player', 'character', 'stage', 'object', 'creation'],
   playTimedEffects: ['player', 'character', 'stage', 'object', 'creation'],
+  playUiAnimationOnControl: ['player'],
   player: ['character'],
   playerPlaysOneShot2dSoundEffect: ['player'],
   pos: ['character', 'object', 'creation'],
+  queryAllSkillInstanceIdsBySkillConfigId: ['character'],
+  queryAllSkillInstanceIdsBySkillSlot: ['character'],
   queryCharacterSCurrentMovementSpd: ['character'],
   queryCharacterSkill: ['character'],
+  querySkillAttributeGroupValue: ['character'],
+  querySkillConfigIdBySkillInstanceId: ['character'],
+  querySkillInstanceIdBySkillSlotAndSkillConfigId: ['character'],
   queryCorrespondingGiftBoxConsumption: ['player'],
   queryCorrespondingGiftBoxQuantity: ['player'],
   queryCustomShopItemSalesInfo: ['player', 'character', 'stage', 'object', 'creation'],
@@ -633,11 +662,13 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   removeItemFromCustomShopSalesList: ['player', 'character', 'stage', 'object', 'creation'],
   removeItemFromInventoryShopSalesList: ['player', 'character', 'stage', 'object', 'creation'],
   removeItemFromPurchaseList: ['player', 'character', 'stage', 'object', 'creation'],
+  removeEquipmentFromSpecifiedSlot: ['player', 'character', 'stage', 'object', 'creation'],
   removeTargetEntityFromAggroList: ['player', 'character', 'stage', 'object', 'creation'],
   removeUnitStatus: ['player', 'character', 'stage', 'object', 'creation'],
   removeUnitTagFromEntity: ['player', 'character', 'stage', 'object', 'creation'],
   removeTag: ['player', 'character', 'stage', 'object', 'creation'],
   replaceEquipmentToTheSpecifiedSlot: ['player', 'character', 'stage', 'object', 'creation'],
+  resetPlayerCameraToFollowEntity: ['player'],
   resumeTimer: ['player', 'character', 'stage', 'object', 'creation'],
   revive: ['character'],
   reviveActiveCharacter: ['player'],
@@ -658,6 +689,7 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   setInventoryDropItemsCurrencyAmount: ['player', 'character', 'stage', 'object', 'creation'],
   setInventoryItemDropContents: ['player', 'character', 'stage', 'object', 'creation'],
   setLootDropContent: ['player', 'character', 'stage', 'object', 'creation'],
+  setPlayerCameraToFollowEntity: ['player'],
   setPlayerEscapeValidity: ['player'],
   setPlayerRankScoreChange: ['player'],
   setPlayerRemainingRevives: ['player'],
@@ -672,10 +704,14 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   setScanComponentSActiveScanTagId: ['player', 'character', 'stage', 'object', 'creation'],
   setScanTagRules: ['player', 'character', 'stage', 'object', 'creation'],
   setSkillResourceAmount: ['character'],
+  setTextChatPermissions: ['player'],
   setTheAggroValueOfSpecifiedEntity: ['player', 'character', 'stage', 'object', 'creation'],
   setThePresetStatusValueOfTheComplexCreation: ['creation'],
+  setVoiceChatPermissions: ['player'],
+  setVoiceChatScope: ['player'],
   settlementRanking: ['player'],
   settlementStatus: ['player'],
+  showFloatingInteractionPage: ['player'],
   speed: ['character'],
   startGlobalTimer: ['player', 'character', 'stage', 'object', 'creation'],
   startPausePlayerBackgroundMusic: ['player'],
@@ -697,9 +733,17 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   triggerLootDrop: ['player', 'character', 'stage', 'object', 'creation'],
   type: ['player', 'character', 'stage', 'object', 'creation'],
   uiLayout: ['player'],
+  updateFloatingInteractionPageListData: ['player'],
   unitTags: ['player', 'character', 'stage', 'object', 'creation'],
   up: ['player', 'character', 'stage', 'object', 'creation'],
   velocity: ['character'],
+  bindCustomSkillInstanceToSpecifiedSlot: ['character'],
+  createCustomSkillInstance: ['character'],
+  destroyCustomSkillInstance: ['character'],
+  castSkillFromSpecifiedPanelSlot: ['character'],
+  castSpecifiedSkillInstance: ['character'],
+  unbindAllSkillInstancesOnTheSlot: ['character'],
+  unbindSkillInstance: ['character'],
   addClassExp: ['player'],
   addSkill: ['character'],
   addSkillCd: ['character'],
@@ -3115,6 +3159,146 @@ interface EntityHelperFromFirstParam {
   ) => void
 
   /**
+   * Close the floating interaction page at the specified index for the Player Entity
+   *
+   * 关闭悬浮交互页: 可以关闭该玩家实体对应索引的悬浮交互页
+   *
+   * @param floatingInteractionPageIndex Unique Identifier of the Floating Interaction Page
+   *
+   * 悬浮交互页索引: 悬浮交互页的唯一标识
+   */
+  closeFloatingInteractionPage: (floatingInteractionPageIndex: IntValue) => void
+
+  /**
+   * Replace the current displayed items of the tab or single-choice window at the specified list index with the visible list items corresponding to the input integer list
+   *
+   * 更新悬浮交互页列表数据: 以列表显示项入参的整数列表对应的列表项，覆盖列表索引对应的页签/单选项视窗的当前显示项
+   *
+   * @param listIndex Unique Identifier for a Tab or Single-Choice Window
+   *
+   * 列表索引: 页签/单选项视窗的唯一标识
+   * @param visibleListItem List of items for the tab or single-choice window. The input will update the visible list items of the specified tab or single-choice window
+   *
+   * 列表显示项: 页签/单选项视窗的列表项列表，入参将会更新指定页签/单选项视窗的显示列表项
+   * @param selectFirstItemByDefault Yes: Select the first item by default. No: Keeps the last selected item (if any)
+   *
+   * 是否默认选中首项: 若配置为是，则默认选中第一个项；若配置为否，则保持上一次的选中项（若存在）
+   */
+  updateFloatingInteractionPageListData: (
+    listIndex: IntValue,
+    visibleListItem: IntValue[],
+    selectFirstItemByDefault: BoolValue
+  ) => void
+
+  /**
+   * Open the floating interaction page at the specified index for the Player, with optional initialization of tab or single-choice window data
+   *
+   * 唤起悬浮交互页: 可以在该玩家界面唤起对应索引的悬浮交互页，并支持初始化页签/单选项视窗数据
+   *
+   * @param floatingInteractionPageIndex Unique Identifier of the Floating Interaction Page
+   *
+   * 悬浮交互页索引: 悬浮交互页的唯一标识
+   * @param initializeListData Key (int): Index corresponding to the tab or single-choice window. Value (List): Integer list corresponding to the tab items (for tabs) or item list (for single-choice windows)
+   *
+   * 初始化列表数据: 键：整数，对应页签/单选项视窗的索引。值：整数列表，对应页签的页签项列表/单选项视窗的列表项列表
+   */
+  showFloatingInteractionPage: (
+    floatingInteractionPageIndex: IntValue,
+    initializeListData: dict<'int', 'int_list'>
+  ) => void
+
+  /**
+   * Set the target player's permission to use text chat in the channel list
+   *
+   * 设置玩家聊天文字权限: 设置目标玩家在频道列表中聊天文字的权限
+   *
+   * @param channelList
+   *
+   * 频道列表
+   * @param limitPermissions When enabled, the corresponding functionality of the player in the designated channel list will be restricted
+   *
+   * 是否限制权限: 为是则限制该玩家在对应频道列表的功能
+   */
+  setTextChatPermissions: (channelList: IntValue[], limitPermissions: BoolValue) => void
+
+  /**
+   * Set the voice chat range of the target player within the channel list
+   *
+   * 设置玩家聊天语音范围: 设置目标玩家在频道列表中语音聊天的范围
+   *
+   * @param channelList
+   *
+   * 频道列表
+   * @param effectiveRange This determines the distance within which the target player can hear voice chat from other players in the same channel, and does not affect the range at which other players can hear the target player. Range: 1-100 m
+   *
+   * 生效范围: 目标玩家可以听到同频道其他玩家语音的范围，不影响其他玩家可以听到目标玩家语音的范围。范围：1-100m
+   * @param limitScope The range takes effect only when this option is enabled; When disabled, the configured range value is ignored
+   *
+   * 是否限制范围: 为是时生效范围才有效，为否时无视生效范围内的配置
+   */
+  setVoiceChatScope: (
+    channelList: IntValue[],
+    effectiveRange: IntValue,
+    limitScope: BoolValue
+  ) => void
+
+  /**
+   * Set the target player's permissions to use voice chat in the channel list
+   *
+   * 设置玩家聊天语音权限: 设置目标玩家在频道列表中语音聊天的权限
+   *
+   * @param channelList
+   *
+   * 频道列表
+   * @param restrictVoiceChatSpeak When enabled, other players cannot hear the target player's voice
+   *
+   * 是否限制发送语音: 为是则其他玩家无法听到目标玩家语音
+   * @param restrictVoiceChatListen When enabled, the target player cannot hear other players' voices
+   *
+   * 是否限制接收语音: 为是则目标玩家无法听到其他玩家语音
+   */
+  setVoiceChatPermissions: (
+    channelList: IntValue[],
+    restrictVoiceChatSpeak: BoolValue,
+    restrictVoiceChatListen: BoolValue
+  ) => void
+
+  /**
+   * Set the specified Player Entity's camera to follow the target entity
+   *
+   * 设置玩家镜头跟随实体: 使对应玩家实体的镜头跟随指定的实体
+   *
+   * @param followEntity Camera Target Entity
+   *
+   * 跟随实体: 镜头所要跟随的实体
+   * @param cameraTemplateName Camera Template Identifier
+   *
+   * 镜头模板名称: 镜头模板的标识
+   */
+  setPlayerCameraToFollowEntity: (
+    followEntity: EntityValue,
+    cameraTemplateName: StrValue
+  ) => void
+
+  /**
+   * Reset the player camera to follow the Player Entity
+   *
+   * 重置玩家镜头跟随实体: 重置玩家镜头使其跟随玩家实体
+   */
+  resetPlayerCameraToFollowEntity: () => void
+
+  /**
+   * Plays the VFX asset mounted to this UI animation control in the Player Entity's Interface Layout. To hide or disable the VFX, use the [Set UI Control (Group) Status] node. If this node is executed multiple times, the VFX can be played multiple times as well.
+   *
+   * 播放界面动效控件: 在玩家实体的界面布局中播放该界面动效控件挂载的特效资产，如果想隐藏或关闭特效可以用【设置界面控件(组)状态】节点。该节点多次执行时特效可以多次播放。
+   *
+   * @param specialEffectControlIndex Identifier for the UI Control/Fullscreen UI Control to Play the Animation on
+   *
+   * 动效控件索引: 界面动效控件/全屏界面动效控件的标识
+   */
+  playUiAnimationOnControl: (specialEffectControlIndex: IntValue) => void
+
+  /**
    * Can only be searched when the Character has the [Monitor Movement Speed] Unit Status effect
    *
    * 查询角色当前移动速度: 仅当角色拥有【监听移动速率】的单位状态效果时，才能查询
@@ -3150,6 +3334,206 @@ interface EntityHelperFromFirstParam {
    * 技能配置ID
    */
   queryCharacterSkill: (characterSkillSlot: CharacterSkillSlot) => configId
+
+  /**
+   * Retrieve the Skill Config ID that corresponds to the specified Character Entity and Skill Instance ID
+   *
+   * 以技能实例ID查询技能配置ID: 根据角色实体与指定技能实例ID查询对应的技能配置ID
+   *
+   * @param skillInstanceId
+   *
+   * 技能实例ID
+   *
+   * @returns
+   *
+   * 技能配置ID
+   */
+  querySkillConfigIdBySkillInstanceId: (skillInstanceId: IntValue) => configId
+
+  /**
+   * Retrieve the Skill Instance ID List that corresponds to the specified Character Entity and Skill Config ID
+   *
+   * 以技能配置ID查询所有技能实例ID: 根据角色实体与指定技能配置ID查询对应的技能实例ID列表
+   *
+   * @param skillConfigId
+   *
+   * 技能配置ID
+   *
+   * @returns
+   *
+   * 技能实例ID列表
+   */
+  queryAllSkillInstanceIdsBySkillConfigId: (skillConfigId: ConfigIdValue) => bigint[]
+
+  /**
+   * Retrieve all Skill Instance IDs present in a specified Skill Slot for the given Character Entity
+   *
+   * 以技能槽位查询所有技能实例ID: 查询角色实体对应技能槽位上的所有技能实例ID
+   *
+   * @param skillSlot
+   *
+   * 技能槽位
+   *
+   * @returns
+   *
+   * 技能实例ID列表
+   */
+  queryAllSkillInstanceIdsBySkillSlot: (skillSlot: CharacterSkillSlot) => bigint[]
+
+  /**
+   * Retrieve the Skill Instance ID in a specified Skill Slot that corresponds to a given Skill Config ID for the Character Entity
+   *
+   * 以技能槽位和技能配置ID查询技能实例ID: 根据技能配置ID查询角色实体对应技能槽位上的技能实例ID
+   *
+   * @param skillSlot
+   *
+   * 技能槽位
+   * @param skillConfigId
+   *
+   * 技能配置ID
+   *
+   * @returns
+   *
+   * 技能实例ID
+   */
+  querySkillInstanceIdBySkillSlotAndSkillConfigId: (
+    skillSlot: CharacterSkillSlot,
+    skillConfigId: ConfigIdValue
+  ) => bigint
+
+  /**
+   * Retrieve the value of a Skill Group for a Character Entity, based on the specified Skill Group Config ID
+   *
+   * 查询技能属性组值: 查询角色实体上指定技能组配置ID对应技能组的值
+   *
+   * @param skillGroupConfigId
+   *
+   * 技能组配置ID
+   *
+   * @returns
+   *
+   * 技能组值
+   */
+  querySkillAttributeGroupValue: (skillGroupConfigId: ConfigIdValue) => number
+
+  /**
+   * Bind the specified skill instance to the specified skill slot
+   *
+   * 绑定自定义技能实例到槽位: 将指定的技能实例绑定到指定的技能槽位上
+   *
+   * @param skillInstanceId Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   * @param skillSlot
+   *
+   * 技能槽位
+   * @param originalSlotSkillHandling Destroy: Remove the original skill. Preserve Slot Binding: Retain the current slot binding. When the newly bound skill instance is removed, it is automatically displayed in that slot. Remove Slot Binding: The skill must be reassigned to the specified slot in order to be displayed in that slot
+   *
+   * 原槽位技能处理: 销毁：销毁原技能。保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上。脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
+   *
+   * @returns Original Slot Skill Instance ID
+   *
+   * 原槽位技能实例ID
+   */
+  bindCustomSkillInstanceToSpecifiedSlot: (
+    skillInstanceId: IntValue,
+    skillSlot: CharacterSkillSlot,
+    originalSlotSkillHandling: OriginalSlotSkillHandling
+  ) => bigint
+
+  /**
+   * Unbind the specified skill instance from the Character Entity
+   *
+   * 解绑技能实例: 解绑角色实体上的指定技能实例
+   *
+   * @param skillInstanceId Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   */
+  unbindSkillInstance: (skillInstanceId: IntValue) => void
+
+  /**
+   * Unbind all skill instances on the specified slot of the Character Entity
+   *
+   * 解绑槽位上的所有技能实例: 解绑角色实体上指定槽位的所有技能实例
+   *
+   * @param specifiedSlot
+   *
+   * 指定槽位
+   *
+   * @returns List of skill instance IDs unbound from the slot
+   *
+   * 解绑的技能实例ID列表: 该槽位上所有被解绑的技能实例ID组成的列表
+   */
+  unbindAllSkillInstancesOnTheSlot: (specifiedSlot: CharacterSkillSlot) => bigint[]
+
+  /**
+   * Create a skill instance from the specified config ID for the Character Entity
+   *
+   * 创建自定义技能实例: 用角色实体上指定技能配置ID对应的技能创建其技能实例
+   *
+   * @param skillConfigId Skill Identifier
+   *
+   * 技能配置ID: 技能的标识
+   *
+   * @returns Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   */
+  createCustomSkillInstance: (skillConfigId: ConfigIdValue) => bigint
+
+  /**
+   * Destroy the specified skill instance on the Character Entity
+   *
+   * 销毁自定义技能实例: 销毁角色实体上的指定技能实例
+   *
+   * @param skillInstanceId Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   */
+  destroyCustomSkillInstance: (skillInstanceId: IntValue) => void
+
+  /**
+   * Cast the skill currently active in the specified skill slot on the Character Entity
+   *
+   * 施放指定槽位面板技能: 使角色实体施放其对应技能槽位当前处于前台的技能
+   *
+   * This input works only if the skill is bound to a button and is currently active
+   *
+   * 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
+   *
+   * @param skillSlot
+   *
+   * 技能槽位
+   * @param checkKeyAvailability Yes: Cast only when the key is available. No: Cast even if the key is not available
+   *
+   * 是否校验按键可用: 是：当前按键可用时该技能才会被施放。否：无论当前按键是否可用该技能都会被施放
+   */
+  castSkillFromSpecifiedPanelSlot: (
+    skillSlot: CharacterSkillSlot,
+    checkKeyAvailability: BoolValue
+  ) => void
+
+  /**
+   * Cast the skill corresponding to the specified skill instance ID on the Character Entity
+   *
+   * 施放指定技能实例: 使角色实体施放指定技能实例ID对应的技能
+   *
+   * This input works only if the skill is bound to a button and is currently active
+   *
+   * 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
+   *
+   * @param skillInstanceId Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   * @param checkKeyAvailability Yes: Cast only when the key is available. No: Cast even if the key is not available
+   *
+   * 是否校验按键可用: 是：当前按键可用时该技能才会被施放。否：无论当前按键是否可用该技能都会被施放
+   */
+  castSpecifiedSkillInstance: (
+    skillInstanceId: IntValue,
+    checkKeyAvailability: BoolValue
+  ) => void
 
   /**
    * Searches the consumed quantity of the specified Gift Box on the Player Entity
@@ -3748,6 +4132,23 @@ interface EntityHelperFromFirstParam {
     equipmentRow: IntValue,
     equipmentColumn: IntValue,
     equipmentIndex: IntValue
+  ) => void
+
+  /**
+   * Remove the equipment from the specified slot (by row and column)
+   *
+   * 卸下指定槽位装备: 卸下装备栏指定行列对应的槽位的装备
+   *
+   * @param equipmentSlotRowCount
+   *
+   * 对应装备栏行数
+   * @param equipmentSlotColumnCount
+   *
+   * 对应装备栏列数
+   */
+  removeEquipmentFromSpecifiedSlot: (
+    equipmentSlotRowCount: IntValue,
+    equipmentSlotColumnCount: IntValue
   ) => void
 
   /**

@@ -353,13 +353,26 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * Only UI Controls of the Interactive Button and Item Display types trigger this event; The Node Graph event "UI Control Group Triggered" is sent during Stage runtime when a UI Control Group created through an Interactive Button or an Item Display UI Control is interacted with. This event can only be received by the Node Graph of the Player who triggered the interaction
+   * Only UI Controls of the Interactive Button, Item Display, Custom Button, and Custom Switch types trigger this event; The Node Graph event "UI Control Group Triggered" is sent during Stage runtime when such a UI Control Group is interacted with. This event can only be received by the Node Graph of the Player who triggered the interaction
    *
-   * 界面控件组触发时: 只有交互按钮和道具展示类型的界面控件，才会触发本事件; 在关卡运行中，通过交互按钮或道具展示界面控件制作的界面控件组，被执行交互操作会发送节点图事件”界面控件组触发时“，此事件只有触发交互的玩家节点图可以获取
+   * 界面控件组触发时: 只有交互按钮、道具展示、自定义按钮和自定义开关类型的界面控件，才会触发本事件; 在关卡运行中，此类界面控件制作的界面控件组被执行交互操作时会发送节点图事件“界面控件组触发时”，此事件只有触发交互的玩家节点图可以获取
    */
   on(
     eventName: EventNameByLang<Mode, 'whenUiControlGroupIsTriggered', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenUiControlGroupIsTriggered'], f: F) => void
+  ): this
+
+  /**
+   * This event is triggered on the corresponding player entity's server node graph when a floating interaction page returns to server.
+   *
+   * 悬浮交互页操作触发时: 当悬浮交互页配置返回服务端事件时，在对应玩家实体的服务端节点图上触发
+   */
+  on(
+    eventName: EventNameByLang<Mode, 'whenFloatingInteractionPageIsTriggered', AllowZh>,
+    handler: (
+      evt: ServerEventPayloadsByMode<Mode>['whenFloatingInteractionPageIsTriggered'],
+      f: F
+    ) => void
   ): this
 
   /**
@@ -606,6 +619,26 @@ export interface ServerOnOverloads<
   on(
     eventName: EventNameByLang<Mode, 'whenEquipmentAffixValueChanges', AllowZh>,
     handler: (evt: ServerEventPayloadsByMode<Mode>['whenEquipmentAffixValueChanges'], f: F) => void
+  ): this
+
+  /**
+   * The inventory owner entity receives this event when it purchases equipment from the inventory shop.
+   *
+   * 装备买入时: 背包持有者实体在背包商店买入装备时接收该事件
+   */
+  on(
+    eventName: EventNameByLang<Mode, 'whenEquipmentIsPurchased', AllowZh>,
+    handler: (evt: ServerEventPayloadsByMode<Mode>['whenEquipmentIsPurchased'], f: F) => void
+  ): this
+
+  /**
+   * The inventory owner entity receives this event when it sells equipment from the inventory shop.
+   *
+   * 装备卖出时: 背包持有者实体在背包商店卖出装备时接收该事件
+   */
+  on(
+    eventName: EventNameByLang<Mode, 'whenEquipmentIsSold', AllowZh>,
+    handler: (evt: ServerEventPayloadsByMode<Mode>['whenEquipmentIsSold'], f: F) => void
   ): this
 
   /**

@@ -814,9 +814,9 @@ export type ServerEventPayloads = {
     timerName: string
   }
   /**
-   * Only UI Controls of the Interactive Button and Item Display types trigger this event; The Node Graph event "UI Control Group Triggered" is sent during Stage runtime when a UI Control Group created through an Interactive Button or an Item Display UI Control is interacted with. This event can only be received by the Node Graph of the Player who triggered the interaction
+   * Only UI Controls of the Interactive Button, Item Display, Custom Button, and Custom Switch types trigger this event; The Node Graph event "UI Control Group Triggered" is sent during Stage runtime when such a UI Control Group is interacted with. This event can only be received by the Node Graph of the Player who triggered the interaction
    *
-   * 界面控件组触发时: 只有交互按钮和道具展示类型的界面控件，才会触发本事件; 在关卡运行中，通过交互按钮或道具展示界面控件制作的界面控件组，被执行交互操作会发送节点图事件”界面控件组触发时“，此事件只有触发交互的玩家节点图可以获取
+   * 界面控件组触发时: 只有交互按钮、道具展示、自定义按钮和自定义开关类型的界面控件，才会触发本事件; 在关卡运行中，此类界面控件制作的界面控件组被执行交互操作时会发送节点图事件“界面控件组触发时”，此事件只有触发交互的玩家节点图可以获取
    */
   whenUiControlGroupIsTriggered: {
     /**
@@ -841,6 +841,49 @@ export type ServerEventPayloads = {
      * 界面控件组索引: 触发该事件的界面控件为单控件界面控件组，则此处为该界面控件组的索引。触发该事件的界面控件为多控件界面控件组，则此处为组合内对应该界面控件的索引
      */
     uiControlGroupIndex: bigint
+  }
+  /**
+   * Node Functions: When the [Return to Server Event] option is enabled for a tab or single-choice window, confirming the interaction will trigger this event on the corresponding Player Entity's Server Node Graph. If the interaction is with an Interaction Page Close Button, Interactive Button, Item Display, or Custom Button in the floating interaction page, confirming it will also trigger this event on the corresponding Player Entity's Server Node Graph.
+   *
+   * 悬浮交互页操作触发时: 页签/单选项视窗启用了【返回服务器事件】开关时，在确认交互后，对应玩家实体的服务器节点图会收到该事件。在悬浮交互页中配置的交互页关闭按钮、交互按钮、道具展示、自定义按钮，在确认交互后，对应玩家实体的玩家服务器节点图也会收到该事件。
+   */
+  whenFloatingInteractionPageIsTriggered: {
+    /**
+     * Active Player Entity
+     *
+     * 玩家实体: 生效的玩家实体
+     */
+    playerEntity: entity
+    /**
+     * GUID of the Active Player Entity
+     *
+     * 玩家GUID: 生效的玩家实体对应的GUID
+     */
+    playerGuid: guid
+    /**
+     * Unique Identifier for the Floating Interaction Page
+     *
+     * 悬浮交互页索引: 悬浮交互页的唯一标识
+     */
+    floatingInteractionPageIndex: bigint
+    /**
+     * Index of the control that triggered this event
+     *
+     * 交互项索引: 触发该事件的对应控件的索引
+     */
+    interactiveItemIndex: bigint
+    /**
+     * List of indices for the tabs or single-choice windows. Each List Index output parameter corresponds to a Selected List Item output parameter
+     *
+     * 列表索引: 页签/单选项视窗的索引组成的列表，本出参和【列表选中项】出参一一对应
+     */
+    listIndex: bigint[]
+    /**
+     * Each tab or single-choice window can have at most one selected item. Each Selected List Item output parameter corresponds to a List Index output parameter
+     *
+     * 列表选中项: 每个页签/单选项视窗，都至多选中一个项，本出参和【列表索引】出参一一对应
+     */
+    selectedListItem: bigint[]
   }
   /**
    * This event is triggered when the Stack Count of a Unit Status changes; This event is triggered when Unit Status effects are applied or removed
@@ -1059,7 +1102,7 @@ export type ServerEventPayloads = {
      */
     eventSourceGuid: guid
     /**
-     * The tab ID
+     * ID of the tab
      *
      * 选项卡序号: 选项卡的序号
      */
@@ -1574,6 +1617,52 @@ export type ServerEventPayloads = {
      * 改变后数值
      */
     postChangeValue: number
+  }
+  /**
+   * The Inventory Owner Entity receives this event when it purchases equipment. This node is triggered only by item exchanges in the Inventory Shop. Custom shops do not trigger it. The Item Node Graph bound to the purchased equipment also receives this event.
+   *
+   * 装备买入时: 当背包持有者实体买入装备时，会收到该事件。仅有背包商店中的物品交换会触发该节点，自定义商店不会触发。被购买的装备绑定的道具节点图也可以收到这个事件。
+   */
+  whenEquipmentIsPurchased: {
+    /**
+     *
+     * 买入背包持有者实体
+     */
+    purchasingInventoryOwnerEntity: entity
+    /**
+     *
+     * 买入背包持有者GUID
+     */
+    purchasingInventoryOwnerGuid: guid
+    /**
+     * List of Indices of the Purchased Equipment
+     *
+     * 装备索引列表: 被买入的装备的索引组成的列表
+     */
+    equipmentIndexList: bigint[]
+  }
+  /**
+   * The Inventory Owner Entity receives this event when it sells equipment. This node is triggered only by item exchanges in the Inventory Shop. Custom shops do not trigger it. The Item Node Graph bound to the purchased equipment also receives this event.
+   *
+   * 装备卖出时: 当背包持有者实体卖出装备时，会收到该事件。仅有背包商店中的物品交换会触发该节点，自定义商店不会触发。被卖出的装备绑定的道具节点图也可以收到这个事件。
+   */
+  whenEquipmentIsSold: {
+    /**
+     *
+     * 卖出背包持有者实体
+     */
+    purchasingInventoryOwnerEntity: entity
+    /**
+     *
+     * 卖出背包持有者GUID
+     */
+    purchasingInventoryOwnerGuid: guid
+    /**
+     * List of Indices of the Sold Equipment
+     *
+     * 装备索引列表: 被卖出的装备的索引组成的列表
+     */
+    equipmentIndexList: bigint[]
   }
   /**
    * This event is triggered when an Item is removed from the Inventory (its quantity becomes 0). The Owner of the Inventory Component will receive it

@@ -259,6 +259,10 @@ export const ENUM_VALUE_MAPPINGS: Record<string, { enumId: number; enumValue: nu
     enumId: ENUM_ID.Skill_Slot,
     enumValue: ENUM_VALUE.SkillSlot_NormalAttack
   },
+  character_skill_slot_dash_skill: {
+    enumId: ENUM_ID.Skill_Slot,
+    enumValue: ENUM_VALUE.SkillSlot_DashSkill
+  },
   character_skill_slot_skill_1_e: {
     enumId: ENUM_ID.Skill_Slot,
     enumValue: ENUM_VALUE.SkillSlot_1E

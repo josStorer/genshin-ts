@@ -381,6 +381,15 @@ export class CharacterSkillSlot extends enumeration {
     'character_skill_slot_normal_attack'
   ) as CharacterSkillSlot
   /**
+   * Dash Skill
+   *
+   * 冲刺技能
+   */
+  static readonly DashSkill = new enumeration(
+    'CharacterSkillSlot',
+    'character_skill_slot_dash_skill'
+  ) as CharacterSkillSlot
+  /**
    * Skill 1-E
    *
    * 技能1-E

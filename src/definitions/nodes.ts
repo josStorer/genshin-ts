@@ -2794,9 +2794,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Break out of a Finite Loop. The output pin must connect to the [Break Loop] input parameter of the [Finite Loop] Node
+   * Break out of a Finite Loop or List Iteration Loop. The output pin must connect to the [Break Loop] input parameter of the corresponding loop Node
    *
-   * 跳出循环: 从有限循环中跳出。出引脚需要与节点【有限循环】的【跳出循环】入参相连
+   * 跳出循环: 从有限循环或列表遍历循环中跳出。出引脚需要与对应循环节点的【跳出循环】入参相连
    */
   breakLoop(...loopNodeIds: IntValue[]): void {
     const loopNodeIdObjs = loopNodeIds.map((id) => parseValue(id, 'int'))
@@ -2815,12 +2815,12 @@ export class ServerExecutionFlowFunctions {
    *
    * 有限循环: 从【循环起始值】开始到【循环终止值】结束，会遍历其中的循环值，每次整数加一。每次循环会执行一次【循环体】后连接的节点逻辑。完成一次完整遍历后，会执行【循环完成】后连接的节点逻辑; 可以使用【跳出循环】来提前结束该循环值遍历，跳出循环后也会执行【循环完成】后连接的节点逻辑
    *
-   * @param loopStartValue Starting integer value for iteration
+   * @param loopStartValue Starting integer value for iteration. The loop includes this value
    *
-   * 循环起始值: 遍历开始的整数值
-   * @param loopEndValue Integer value at which the iteration ends
+   * 循环起始值: 遍历开始的整数值，循环包含该值
+   * @param loopEndValue Integer value at which the iteration ends. The loop includes this value
    *
-   * 循环终止值: 遍历结束的整数值
+   * 循环终止值: 遍历结束的整数值，循环包含该值
    *
    * @returns Integer value of the current execution logic
    *
@@ -3978,7 +3978,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Teleport the specified Player Entity. A loading interface may appear depending on teleport distance
    *
-   * 传送玩家: 传送指定玩家实体。会根据传送距离的远近决定是否有加载界面
+   * 传送玩家: 传送指定玩家实体。会根据传送距离的远近决定是否有加载界面；若传送落点位于物体上方，建议将 Y 值设置为略高于落点位置
    *
    * GSTS Note: There is an internal cd, and it cannot be used for frequent coordinate movement
    *
@@ -4011,9 +4011,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Revive the specified Character Entity
+   * Available only in Beyond Mode, revive the specified Character Entity
    *
-   * 复苏角色: 复苏指定的角色实体
+   * 复苏角色: 仅超限模式可用，复苏指定的角色实体
    *
    * @param characterEntity The Character Entity to be revived
    *
@@ -4255,9 +4255,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 激活/关闭额外碰撞: 修改实体额外碰撞组件内的数据，使额外碰撞开启/关闭
    *
-   * @param targetEntity Active Entity
+   * @param targetEntity Entity that a Follow Motion Device is attached to
    *
-   * 目标实体: 生效的实体
+   * 目标实体: 挂载跟随运动器的实体
    * @param extraCollisionId Identifier for this Extra Collision
    *
    * 额外碰撞序号: 该额外碰撞的标识
@@ -4286,9 +4286,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 激活/关闭额外碰撞可攀爬性: 修改实体额外碰撞组件的碰撞的可攀爬性
    *
-   * @param targetEntity Active Entity
+   * @param targetEntity Entity that a Follow Motion Device is attached to
    *
-   * 目标实体: 生效的实体
+   * 目标实体: 挂载跟随运动器的实体
    * @param extraCollisionId Identifier for this Extra Collision
    *
    * 额外碰撞序号: 该额外碰撞的标识
@@ -4317,9 +4317,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 激活/关闭原生碰撞: 修改实体自带的碰撞
    *
-   * @param targetEntity Active Entity
+   * @param targetEntity Entity that a Follow Motion Device is attached to
    *
-   * 目标实体: 生效的实体
+   * 目标实体: 挂载跟随运动器的实体
    * @param activate Set to True to activate
    *
    * 是否激活: “是”为激活
@@ -5617,9 +5617,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the Character Disruptor Device active on the Target Entity by ID; if the ID does not exist, the change has no effect
+   * Edit the Character Disruptor Device active on the Target Entity by ID; if the ID does not exist, the device will no longer function after the modification
    *
-   * 修改角色扰动装置: 通过序号修改目标实体上生效的角色扰动装置，若序号不存在则此次修改不生效
+   * 修改角色扰动装置: 通过序号修改目标实体上生效的角色扰动装置，若序号不存在则修改后该装置将不再生效
    *
    * @param targetEntity Active Entity
    *
@@ -5955,6 +5955,288 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
+   * Plays the VFX asset mounted to this UI animation control in the Player Entity's Interface Layout. To hide or disable the VFX, use the [Set UI Control (Group) Status] node. If this node is executed multiple times, the VFX can be played multiple times as well.
+   *
+   * 播放界面动效控件: 在玩家实体的界面布局中播放该界面动效控件挂载的特效资产，如果想隐藏或关闭特效可以用【设置界面控件(组)状态】节点。该节点多次执行时特效可以多次播放。
+   *
+   * @param playerEntity Active Player Entity
+   *
+   * 玩家实体: 生效的玩家实体
+   * @param specialEffectControlIndex Identifier for the UI Control/Fullscreen UI Control to Play the Animation on
+   *
+   * 动效控件索引: 界面动效控件/全屏界面动效控件的标识
+   */
+  playUiAnimationOnControl(
+    playerEntity: PlayerEntity,
+    specialEffectControlIndex: IntValue
+  ): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const specialEffectControlIndexObj = parseValue(specialEffectControlIndex, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'play_ui_animation_on_control',
+      args: [playerEntityObj, specialEffectControlIndexObj]
+    })
+  }
+
+  /**
+   * Set the specified Player Entity's camera to follow the target entity
+   *
+   * 设置玩家镜头跟随实体: 使对应玩家实体的镜头跟随指定的实体
+   *
+   * @param playerEntity Active Player Entity
+   *
+   * 玩家实体: 生效的玩家实体
+   * @param followEntity Camera Target Entity
+   *
+   * 跟随实体: 镜头所要跟随的实体
+   * @param cameraTemplateName Camera Template Identifier
+   *
+   * 镜头模板名称: 镜头模板的标识
+   */
+  setPlayerCameraToFollowEntity(
+    playerEntity: PlayerEntity,
+    followEntity: EntityValue,
+    cameraTemplateName: StrValue
+  ): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const followEntityObj = parseValue(followEntity, 'entity')
+    const cameraTemplateNameObj = parseValue(cameraTemplateName, 'str')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'set_player_camera_to_follow_entity',
+      args: [playerEntityObj, followEntityObj, cameraTemplateNameObj]
+    })
+  }
+
+  /**
+   * Reset the player camera to follow the Player Entity
+   *
+   * 重置玩家镜头跟随实体: 重置玩家镜头使其跟随玩家实体
+   *
+   * @param playerEntity Active Player Entity
+   *
+   * 玩家实体: 生效的玩家实体
+   */
+  resetPlayerCameraToFollowEntity(playerEntity: PlayerEntity): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'reset_player_camera_to_follow_entity',
+      args: [playerEntityObj]
+    })
+  }
+
+  /**
+   * Close the floating interaction page at the specified index for the Player Entity
+   *
+   * 关闭悬浮交互页: 可以关闭该玩家实体对应索引的悬浮交互页
+   *
+   * @param playerEntity Active Player Entity
+   *
+   * 玩家实体: 生效的玩家实体
+   * @param floatingInteractionPageIndex Unique Identifier of the Floating Interaction Page
+   *
+   * 悬浮交互页索引: 悬浮交互页的唯一标识
+   */
+  closeFloatingInteractionPage(
+    playerEntity: PlayerEntity,
+    floatingInteractionPageIndex: IntValue
+  ): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const floatingInteractionPageIndexObj = parseValue(floatingInteractionPageIndex, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'close_floating_interaction_page',
+      args: [playerEntityObj, floatingInteractionPageIndexObj]
+    })
+  }
+
+  /**
+   * Replace the current displayed items of the tab or single-choice window at the specified list index with the visible list items corresponding to the input integer list
+   *
+   * 更新悬浮交互页列表数据: 以列表显示项入参的整数列表对应的列表项，覆盖列表索引对应的页签/单选项视窗的当前显示项
+   *
+   * @param playerEntity Active Player Entity
+   *
+   * 玩家实体: 生效的玩家实体
+   * @param listIndex Unique Identifier for a Tab or Single-Choice Window
+   *
+   * 列表索引: 页签/单选项视窗的唯一标识
+   * @param visibleListItem List of items for the tab or single-choice window. The input will update the visible list items of the specified tab or single-choice window
+   *
+   * 列表显示项: 页签/单选项视窗的列表项列表，入参将会更新指定页签/单选项视窗的显示列表项
+   * @param selectFirstItemByDefault Yes: Select the first item by default. No: Keeps the last selected item (if any)
+   *
+   * 是否默认选中首项: 若配置为是，则默认选中第一个项；若配置为否，则保持上一次的选中项（若存在）
+   */
+  updateFloatingInteractionPageListData(
+    playerEntity: PlayerEntity,
+    listIndex: IntValue,
+    visibleListItem: IntValue[],
+    selectFirstItemByDefault: BoolValue
+  ): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const listIndexObj = parseValue(listIndex, 'int')
+    const visibleListItemObj = parseValue(visibleListItem, 'int_list')
+    const selectFirstItemByDefaultObj = parseValue(selectFirstItemByDefault, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'update_floating_interaction_page_list_data',
+      args: [
+        playerEntityObj,
+        listIndexObj,
+        visibleListItemObj,
+        selectFirstItemByDefaultObj
+      ]
+    })
+  }
+
+  /**
+   * Open the floating interaction page at the specified index for the Player, with optional initialization of tab or single-choice window data
+   *
+   * 唤起悬浮交互页: 可以在该玩家界面唤起对应索引的悬浮交互页，并支持初始化页签/单选项视窗数据
+   *
+   * @param playerEntity Active Player Entity
+   *
+   * 玩家实体: 生效的玩家实体
+   * @param floatingInteractionPageIndex Unique Identifier of the Floating Interaction Page
+   *
+   * 悬浮交互页索引: 悬浮交互页的唯一标识
+   * @param initializeListData Key (int): Index corresponding to the tab or single-choice window. Value (List): Integer list corresponding to the tab items (for tabs) or item list (for single-choice windows)
+   *
+   * 初始化列表数据: 键：整数，对应页签/单选项视窗的索引。值：整数列表，对应页签的页签项列表/单选项视窗的列表项列表
+   */
+  showFloatingInteractionPage(
+    playerEntity: PlayerEntity,
+    floatingInteractionPageIndex: IntValue,
+    initializeListData: dict<'int', 'int_list'>
+  ): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const floatingInteractionPageIndexObj = parseValue(floatingInteractionPageIndex, 'int')
+    const initializeListDataObj = parseValue(initializeListData, 'dict')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'show_floating_interaction_page',
+      args: [playerEntityObj, floatingInteractionPageIndexObj, initializeListDataObj]
+    })
+  }
+
+  /**
+   * Set the target player's permission to use text chat in the channel list
+   *
+   * 设置玩家聊天文字权限: 设置目标玩家在频道列表中聊天文字的权限
+   *
+   * @param targetPlayer
+   *
+   * 目标玩家
+   * @param channelList
+   *
+   * 频道列表
+   * @param limitPermissions When enabled, the corresponding functionality of the player in the designated channel list will be restricted
+   *
+   * 是否限制权限: 为是则限制该玩家在对应频道列表的功能
+   */
+  setTextChatPermissions(
+    targetPlayer: PlayerEntity,
+    channelList: IntValue[],
+    limitPermissions: BoolValue
+  ): void {
+    const targetPlayerObj = parseValue(targetPlayer, 'entity')
+    const channelListObj = parseValue(channelList, 'int_list')
+    const limitPermissionsObj = parseValue(limitPermissions, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'set_text_chat_permissions',
+      args: [targetPlayerObj, channelListObj, limitPermissionsObj]
+    })
+  }
+
+  /**
+   * Set the voice chat range of the target player within the channel list
+   *
+   * 设置玩家聊天语音范围: 设置目标玩家在频道列表中语音聊天的范围
+   *
+   * @param targetPlayer
+   *
+   * 目标玩家
+   * @param channelList
+   *
+   * 频道列表
+   * @param effectiveRange This determines the distance within which the target player can hear voice chat from other players in the same channel, and does not affect the range at which other players can hear the target player. Range: 1-100 m
+   *
+   * 生效范围: 目标玩家可以听到同频道其他玩家语音的范围，不影响其他玩家可以听到目标玩家语音的范围。范围：1-100m
+   * @param limitScope The range takes effect only when this option is enabled; When disabled, the configured range value is ignored
+   *
+   * 是否限制范围: 为是时生效范围才有效，为否时无视生效范围内的配置
+   */
+  setVoiceChatScope(
+    targetPlayer: PlayerEntity,
+    channelList: IntValue[],
+    effectiveRange: IntValue,
+    limitScope: BoolValue
+  ): void {
+    const targetPlayerObj = parseValue(targetPlayer, 'entity')
+    const channelListObj = parseValue(channelList, 'int_list')
+    const effectiveRangeObj = parseValue(effectiveRange, 'int')
+    const limitScopeObj = parseValue(limitScope, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'set_voice_chat_scope',
+      args: [targetPlayerObj, channelListObj, effectiveRangeObj, limitScopeObj]
+    })
+  }
+
+  /**
+   * Set the target player's permissions to use voice chat in the channel list
+   *
+   * 设置玩家聊天语音权限: 设置目标玩家在频道列表中语音聊天的权限
+   *
+   * @param targetPlayer
+   *
+   * 目标玩家
+   * @param channelList
+   *
+   * 频道列表
+   * @param restrictVoiceChatSpeak When enabled, other players cannot hear the target player's voice
+   *
+   * 是否限制发送语音: 为是则其他玩家无法听到目标玩家语音
+   * @param restrictVoiceChatListen When enabled, the target player cannot hear other players' voices
+   *
+   * 是否限制接收语音: 为是则目标玩家无法听到其他玩家语音
+   */
+  setVoiceChatPermissions(
+    targetPlayer: PlayerEntity,
+    channelList: IntValue[],
+    restrictVoiceChatSpeak: BoolValue,
+    restrictVoiceChatListen: BoolValue
+  ): void {
+    const targetPlayerObj = parseValue(targetPlayer, 'entity')
+    const channelListObj = parseValue(channelList, 'int_list')
+    const restrictVoiceChatSpeakObj = parseValue(restrictVoiceChatSpeak, 'bool')
+    const restrictVoiceChatListenObj = parseValue(restrictVoiceChatListen, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'set_voice_chat_permissions',
+      args: [
+        targetPlayerObj,
+        channelListObj,
+        restrictVoiceChatSpeakObj,
+        restrictVoiceChatListenObj
+      ]
+    })
+  }
+
+  /**
    * Remove the UI Control Groups activated via [Activate UI Control Group in Control Group Library] from the Target Player's Interface Layout
    *
    * 移除控件组库内界面控件组: 可以在目标玩家的界面布局上移除已通过节点【激活控件组库内界面控件组】激活的界面控件组
@@ -5988,7 +6270,7 @@ export class ServerExecutionFlowFunctions {
    * @param targetEntity Active Character Entity
    *
    * 目标实体: 生效的角色实体
-   * @param characterSkillSlot The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
+   * @param characterSkillSlot The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
    *
    * 角色技能槽位: 要修改的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
    * @param cooldownRatioModifier Actual Cooldown after Editing = Original Cooldown × Cooldown Ratio Edit Value
@@ -6319,6 +6601,236 @@ export class ServerExecutionFlowFunctions {
       type: 'exec',
       nodeType: 'delete_character_skill_by_id',
       args: [targetEntityObj, skillConfigIdObj]
+    })
+  }
+
+  /**
+   * Bind the specified skill instance to the specified skill slot
+   *
+   * 绑定自定义技能实例到槽位: 将指定的技能实例绑定到指定的技能槽位上
+   *
+   * @param targetEntity Active Character Entity
+   *
+   * 目标实体: 生效的角色实体
+   * @param skillInstanceId Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   * @param skillSlot
+   *
+   * 技能槽位
+   * @param originalSlotSkillHandling Destroy: Remove the original skill. Preserve Slot Binding: Retain the current slot binding. When the newly bound skill instance is removed, it is automatically displayed in that slot. Remove Slot Binding: The skill must be reassigned to the specified slot in order to be displayed in that slot
+   *
+   * 原槽位技能处理: 销毁：销毁原技能。保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上。脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
+   *
+   * @returns Original Slot Skill Instance ID
+   *
+   * 原槽位技能实例ID
+   */
+  bindCustomSkillInstanceToSpecifiedSlot(
+    targetEntity: CharacterEntity,
+    skillInstanceId: IntValue,
+    skillSlot: CharacterSkillSlot,
+    originalSlotSkillHandling: OriginalSlotSkillHandling
+  ): bigint {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const skillInstanceIdObj = parseValue(skillInstanceId, 'int')
+    const skillSlotObj = parseValue(skillSlot, 'enumeration')
+    const originalSlotSkillHandlingObj = parseValue(originalSlotSkillHandling, 'enumeration')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'bind_custom_skill_instance_to_specified_slot',
+      args: [
+        targetEntityObj,
+        skillInstanceIdObj,
+        skillSlotObj,
+        originalSlotSkillHandlingObj
+      ]
+    })
+    const ret = new int()
+    ret.markPin(ref, 'originalSlotSkillInstanceId', 0)
+    return ret as unknown as bigint
+  }
+
+  /**
+   * Unbind the specified skill instance from the Character Entity
+   *
+   * 解绑技能实例: 解绑角色实体上的指定技能实例
+   *
+   * @param characterEntity Active Character Entity
+   *
+   * 角色实体: 生效的角色实体
+   * @param skillInstanceId Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   */
+  unbindSkillInstance(characterEntity: CharacterEntity, skillInstanceId: IntValue): void {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillInstanceIdObj = parseValue(skillInstanceId, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'unbind_skill_instance',
+      args: [characterEntityObj, skillInstanceIdObj]
+    })
+  }
+
+  /**
+   * Unbind all skill instances on the specified slot of the Character Entity
+   *
+   * 解绑槽位上的所有技能实例: 解绑角色实体上指定槽位的所有技能实例
+   *
+   * @param characterEntity Active Character Entity
+   *
+   * 角色实体: 生效的角色实体
+   * @param specifiedSlot
+   *
+   * 指定槽位
+   *
+   * @returns List of skill instance IDs unbound from the slot
+   *
+   * 解绑的技能实例ID列表: 该槽位上所有被解绑的技能实例ID组成的列表
+   */
+  unbindAllSkillInstancesOnTheSlot(
+    characterEntity: CharacterEntity,
+    specifiedSlot: CharacterSkillSlot
+  ): bigint[] {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const specifiedSlotObj = parseValue(specifiedSlot, 'enumeration')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'unbind_all_skill_instances_on_the_slot',
+      args: [characterEntityObj, specifiedSlotObj]
+    })
+    const ret = new list('int')
+    ret.markPin(ref, 'unboundSkillInstanceIdList', 0)
+    return ret as unknown as bigint[]
+  }
+
+  /**
+   * Create a skill instance from the specified config ID for the Character Entity
+   *
+   * 创建自定义技能实例: 用角色实体上指定技能配置ID对应的技能创建其技能实例
+   *
+   * @param characterEntity Active Character Entity
+   *
+   * 角色实体: 生效的角色实体
+   * @param skillConfigId Skill Identifier
+   *
+   * 技能配置ID: 技能的标识
+   *
+   * @returns Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   */
+  createCustomSkillInstance(
+    characterEntity: CharacterEntity,
+    skillConfigId: ConfigIdValue
+  ): bigint {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillConfigIdObj = parseValue(skillConfigId, 'config_id')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'create_custom_skill_instance',
+      args: [characterEntityObj, skillConfigIdObj]
+    })
+    const ret = new int()
+    ret.markPin(ref, 'skillInstanceId', 0)
+    return ret as unknown as bigint
+  }
+
+  /**
+   * Destroy the specified skill instance on the Character Entity
+   *
+   * 销毁自定义技能实例: 销毁角色实体上的指定技能实例
+   *
+   * @param characterEntity Active Character Entity
+   *
+   * 角色实体: 生效的角色实体
+   * @param skillInstanceId Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   */
+  destroyCustomSkillInstance(characterEntity: CharacterEntity, skillInstanceId: IntValue): void {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillInstanceIdObj = parseValue(skillInstanceId, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'destroy_custom_skill_instance',
+      args: [characterEntityObj, skillInstanceIdObj]
+    })
+  }
+
+  /**
+   * Cast the skill currently active in the specified skill slot on the Character Entity
+   *
+   * 施放指定槽位面板技能: 使角色实体施放其对应技能槽位当前处于前台的技能
+   *
+   * This input works only if the skill is bound to a button and is currently active
+   *
+   * 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
+   *
+   * @param characterEntity Active Character Entity
+   *
+   * 角色实体: 生效的角色实体
+   * @param skillSlot
+   *
+   * 技能槽位
+   * @param checkKeyAvailability Yes: Cast only when the key is available. No: Cast even if the key is not available
+   *
+   * 是否校验按键可用: 是：当前按键可用时该技能才会被施放。否：无论当前按键是否可用该技能都会被施放
+   */
+  castSkillFromSpecifiedPanelSlot(
+    characterEntity: CharacterEntity,
+    skillSlot: CharacterSkillSlot,
+    checkKeyAvailability: BoolValue
+  ): void {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillSlotObj = parseValue(skillSlot, 'enumeration')
+    const checkKeyAvailabilityObj = parseValue(checkKeyAvailability, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'cast_skill_from_specified_panel_slot',
+      args: [characterEntityObj, skillSlotObj, checkKeyAvailabilityObj]
+    })
+  }
+
+  /**
+   * Cast the skill corresponding to the specified skill instance ID on the Character Entity
+   *
+   * 施放指定技能实例: 使角色实体施放指定技能实例ID对应的技能
+   *
+   * This input works only if the skill is bound to a button and is currently active
+   *
+   * 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
+   *
+   * @param characterEntity Active Character Entity
+   *
+   * 角色实体: 生效的角色实体
+   * @param skillInstanceId Identifier for the Skill Instance
+   *
+   * 技能实例ID: 技能实例的标识
+   * @param checkKeyAvailability Yes: Cast only when the key is available. No: Cast even if the key is not available
+   *
+   * 是否校验按键可用: 是：当前按键可用时该技能才会被施放。否：无论当前按键是否可用该技能都会被施放
+   */
+  castSpecifiedSkillInstance(
+    characterEntity: CharacterEntity,
+    skillInstanceId: IntValue,
+    checkKeyAvailability: BoolValue
+  ): void {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillInstanceIdObj = parseValue(skillInstanceId, 'int')
+    const checkKeyAvailabilityObj = parseValue(checkKeyAvailability, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'cast_specified_skill_instance',
+      args: [characterEntityObj, skillInstanceIdObj, checkKeyAvailabilityObj]
     })
   }
 
@@ -6925,9 +7437,9 @@ export class ServerExecutionFlowFunctions {
    * @param deckSelectorId Referenced UI Control Group ID
    *
    * 卡牌选择器索引: 引用的界面控件组索引
-   * @param selectDuration If empty, uses the Deck Selector's default configuration; otherwise, this time value is used as the effective durationUnit in seconds
+   * @param selectDuration If empty, uses the Deck Selector's default configuration; otherwise, this time value is used as the effective duration. Unit in seconds, up to 2000000
    *
-   * 选择时长: 若为空，则读取卡牌选择器默认配置；若不为空，以此处时间参数为实际生效时长单位为秒
+   * 选择时长: 若为空，则读取卡牌选择器默认配置；若不为空，以此处时间参数为实际生效时长，单位为秒，最大支持 2000000
    * @param selectResultCorrespondingList One-to-one with display items: the Deck Selector returns the result value corresponding to each display itemRecommended configuration: 1 to X
    *
    * 选择结果对应列表: 和显示项一一对应，卡牌选择器返回的实际结果是显示项对应的结果值推荐配置1至X
@@ -6940,9 +7452,9 @@ export class ServerExecutionFlowFunctions {
    * @param selectMaximumQuantity The maximum number of cards that can be selected for a valid interaction
    *
    * 选择数量上限: 选择卡牌数量上限，满足数量才可进行合法的选择交互
-   * @param refreshMode No Refresh
+   * @param refreshMode Refresh behavior: Cannot Refresh, Partial Refresh, or Refresh All
    *
-   * 刷新方式: 不可刷新
+   * 刷新方式: 刷新行为，可选“不能刷新”、“部分刷新”、“全部刷新”
    * @param refreshMinimumQuantity The minimum number of cards that must be selected for a valid refresh interaction.
    *
    * 刷新数量下限: 选择卡牌数量下限，满足数量才可进行合法的刷新交互
@@ -7804,9 +8316,9 @@ export class ServerExecutionFlowFunctions {
    * @param equipmentIndex Integer ID generated during Equipment Initialization to identify the equipment instance
    *
    * 装备索引: 【装备初始化】时生成的整数型索引来标识该装备实例
-   * @param affixId
+   * @param affixId Each ID corresponds to one single Affix
    *
-   * 词条序号
+   * 词条序号: 每个序号唯一对应一个词条
    * @param affixValue
    *
    * 词条数值
@@ -7962,6 +8474,41 @@ export class ServerExecutionFlowFunctions {
       type: 'exec',
       nodeType: 'replace_equipment_to_the_specified_slot',
       args: [targetEntityObj, equipmentRowObj, equipmentColumnObj, equipmentIndexObj]
+    })
+  }
+
+  /**
+   * Remove the equipment from the specified slot (by row and column)
+   *
+   * 卸下指定槽位装备: 卸下装备栏指定行列对应的槽位的装备
+   *
+   * @param equipmentSlotOwnerEntity
+   *
+   * 装备栏持有者实体
+   * @param equipmentSlotRowCount
+   *
+   * 对应装备栏行数
+   * @param equipmentSlotColumnCount
+   *
+   * 对应装备栏列数
+   */
+  removeEquipmentFromSpecifiedSlot(
+    equipmentSlotOwnerEntity: EntityValue,
+    equipmentSlotRowCount: IntValue,
+    equipmentSlotColumnCount: IntValue
+  ): void {
+    const equipmentSlotOwnerEntityObj = parseValue(equipmentSlotOwnerEntity, 'entity')
+    const equipmentSlotRowCountObj = parseValue(equipmentSlotRowCount, 'int')
+    const equipmentSlotColumnCountObj = parseValue(equipmentSlotColumnCount, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'remove_equipment_from_specified_slot',
+      args: [
+        equipmentSlotOwnerEntityObj,
+        equipmentSlotRowCountObj,
+        equipmentSlotColumnCountObj
+      ]
     })
   }
 
@@ -8742,9 +9289,9 @@ export class ServerExecutionFlowFunctions {
    * @param channelIndex
    *
    * 频道索引
-   * @param join If set to True, the channel is available to the specified Player
+   * @param join If set to True, the specified Player can join and use this channel
    *
-   * 是否加入: “是”则该频道指定玩家可用
+   * 是否加入: “是”则该频道对指定玩家开放并可使用
    */
   modifyPlayerChannelPermission(
     playerGuid: GuidValue,
@@ -13491,6 +14038,176 @@ export class ServerExecutionFlowFunctions {
     const ret = new configId()
     ret.markPin(ref, 'skillConfigId', 0)
     return ret as unknown as configId
+  }
+
+  /**
+   * Retrieve the Skill Config ID that corresponds to the specified Character Entity and Skill Instance ID
+   *
+   * 以技能实例ID查询技能配置ID: 根据角色实体与指定技能实例ID查询对应的技能配置ID
+   *
+   * @param characterEntity
+   *
+   * 角色实体
+   * @param skillInstanceId
+   *
+   * 技能实例ID
+   *
+   * @returns
+   *
+   * 技能配置ID
+   */
+  querySkillConfigIdBySkillInstanceId(
+    characterEntity: CharacterEntity,
+    skillInstanceId: IntValue
+  ): configId {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillInstanceIdObj = parseValue(skillInstanceId, 'int')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'query_skill_config_id_by_skill_instance_id',
+      args: [characterEntityObj, skillInstanceIdObj]
+    })
+    const ret = new configId()
+    ret.markPin(ref, 'skillConfigId', 0)
+    return ret as unknown as configId
+  }
+
+  /**
+   * Retrieve the Skill Instance ID List that corresponds to the specified Character Entity and Skill Config ID
+   *
+   * 以技能配置ID查询所有技能实例ID: 根据角色实体与指定技能配置ID查询对应的技能实例ID列表
+   *
+   * @param characterEntity
+   *
+   * 角色实体
+   * @param skillConfigId
+   *
+   * 技能配置ID
+   *
+   * @returns
+   *
+   * 技能实例ID列表
+   */
+  queryAllSkillInstanceIdsBySkillConfigId(
+    characterEntity: CharacterEntity,
+    skillConfigId: ConfigIdValue
+  ): bigint[] {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillConfigIdObj = parseValue(skillConfigId, 'config_id')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'query_all_skill_instance_ids_by_skill_config_id',
+      args: [characterEntityObj, skillConfigIdObj]
+    })
+    const ret = new list('int')
+    ret.markPin(ref, 'skillInstanceIdList', 0)
+    return ret as unknown as bigint[]
+  }
+
+  /**
+   * Retrieve all Skill Instance IDs present in a specified Skill Slot for the given Character Entity
+   *
+   * 以技能槽位查询所有技能实例ID: 查询角色实体对应技能槽位上的所有技能实例ID
+   *
+   * @param characterEntity
+   *
+   * 角色实体
+   * @param skillSlot
+   *
+   * 技能槽位
+   *
+   * @returns
+   *
+   * 技能实例ID列表
+   */
+  queryAllSkillInstanceIdsBySkillSlot(
+    characterEntity: CharacterEntity,
+    skillSlot: CharacterSkillSlot
+  ): bigint[] {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillSlotObj = parseValue(skillSlot, 'enumeration')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'query_all_skill_instance_ids_by_skill_slot',
+      args: [characterEntityObj, skillSlotObj]
+    })
+    const ret = new list('int')
+    ret.markPin(ref, 'skillInstanceIdList', 0)
+    return ret as unknown as bigint[]
+  }
+
+  /**
+   * Retrieve the Skill Instance ID in a specified Skill Slot that corresponds to a given Skill Config ID for the Character Entity
+   *
+   * 以技能槽位和技能配置ID查询技能实例ID: 根据技能配置ID查询角色实体对应技能槽位上的技能实例ID
+   *
+   * @param characterEntity
+   *
+   * 角色实体
+   * @param skillSlot
+   *
+   * 技能槽位
+   * @param skillConfigId
+   *
+   * 技能配置ID
+   *
+   * @returns
+   *
+   * 技能实例ID
+   */
+  querySkillInstanceIdBySkillSlotAndSkillConfigId(
+    characterEntity: CharacterEntity,
+    skillSlot: CharacterSkillSlot,
+    skillConfigId: ConfigIdValue
+  ): bigint {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillSlotObj = parseValue(skillSlot, 'enumeration')
+    const skillConfigIdObj = parseValue(skillConfigId, 'config_id')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'query_skill_instance_id_by_skill_slot_and_skill_config_id',
+      args: [characterEntityObj, skillSlotObj, skillConfigIdObj]
+    })
+    const ret = new int()
+    ret.markPin(ref, 'skillInstanceId', 0)
+    return ret as unknown as bigint
+  }
+
+  /**
+   * Retrieve the value of a Skill Group for a Character Entity, based on the specified Skill Group Config ID
+   *
+   * 查询技能属性组值: 查询角色实体上指定技能组配置ID对应技能组的值
+   *
+   * @param characterEntity
+   *
+   * 角色实体
+   * @param skillGroupConfigId
+   *
+   * 技能组配置ID
+   *
+   * @returns
+   *
+   * 技能组值
+   */
+  querySkillAttributeGroupValue(
+    characterEntity: CharacterEntity,
+    skillGroupConfigId: ConfigIdValue
+  ): number {
+    const characterEntityObj = parseValue(characterEntity, 'entity')
+    const skillGroupConfigIdObj = parseValue(skillGroupConfigId, 'config_id')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'query_skill_attribute_group_value',
+      args: [characterEntityObj, skillGroupConfigIdObj]
+    })
+    const ret = new float()
+    ret.markPin(ref, 'skillGroupValue', 0)
+    return ret as unknown as number
   }
 
   /**

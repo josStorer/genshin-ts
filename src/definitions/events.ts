@@ -206,6 +206,14 @@ export const ServerEventMetadata = {
     { name: 'uiControlGroupCompositeIndex', typeBase: int, typeName: 'int', isArray: false },
     { name: 'uiControlGroupIndex', typeBase: int, typeName: 'int', isArray: false }
   ],
+  whenFloatingInteractionPageIsTriggered: [
+    { name: 'playerEntity', typeBase: entity, typeName: 'entity', isArray: false },
+    { name: 'playerGuid', typeBase: guid, typeName: 'guid', isArray: false },
+    { name: 'floatingInteractionPageIndex', typeBase: int, typeName: 'int', isArray: false },
+    { name: 'interactiveItemIndex', typeBase: int, typeName: 'int', isArray: false },
+    { name: 'listIndex', typeBase: int, typeName: 'int', isArray: true },
+    { name: 'selectedListItem', typeBase: int, typeName: 'int', isArray: true }
+  ],
   whenUnitStatusChanges: [
     { name: 'eventSourceEntity', typeBase: entity, typeName: 'entity', isArray: false },
     { name: 'eventSourceGuid', typeBase: guid, typeName: 'guid', isArray: false },
@@ -397,6 +405,36 @@ export const ServerEventMetadata = {
     { name: 'affixId', typeBase: int, typeName: 'int', isArray: false },
     { name: 'preChangeValue', typeBase: float, typeName: 'float', isArray: false },
     { name: 'postChangeValue', typeBase: float, typeName: 'float', isArray: false }
+  ],
+  whenEquipmentIsPurchased: [
+    {
+      name: 'purchasingInventoryOwnerEntity',
+      typeBase: entity,
+      typeName: 'entity',
+      isArray: false
+    },
+    {
+      name: 'purchasingInventoryOwnerGuid',
+      typeBase: guid,
+      typeName: 'guid',
+      isArray: false
+    },
+    { name: 'equipmentIndexList', typeBase: int, typeName: 'int', isArray: true }
+  ],
+  whenEquipmentIsSold: [
+    {
+      name: 'purchasingInventoryOwnerEntity',
+      typeBase: entity,
+      typeName: 'entity',
+      isArray: false
+    },
+    {
+      name: 'purchasingInventoryOwnerGuid',
+      typeBase: guid,
+      typeName: 'guid',
+      isArray: false
+    },
+    { name: 'equipmentIndexList', typeBase: int, typeName: 'int', isArray: true }
   ],
   whenItemIsLostFromInventory: [
     { name: 'itemOwnerEntity', typeBase: entity, typeName: 'entity', isArray: false },

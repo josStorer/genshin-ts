@@ -250,6 +250,7 @@ export const ENUM_VALUE = {
   HitPerformanceLevel_SuperLaunch: 2409,
   HitPerformanceLevel_LongRangeThrow: 2410,
   SkillSlot_NormalAttack: 3100,
+  SkillSlot_DashSkill: 3102,
   SkillSlot_1E: 3111,
   SkillSlot_2Q: 3112,
   SkillSlot_3R: 3113,
