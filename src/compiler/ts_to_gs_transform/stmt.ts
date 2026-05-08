@@ -2,6 +2,7 @@ import ts from 'typescript'
 
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { isEntityLikeType as isSharedEntityLikeType } from '../../shared/ts_type_utils.js'
+import { isConstEvaluableExpression, tryEvaluateConstExpression } from './const_eval.js'
 import { fail } from './errors.js'
 import {
   extractTimerHandleMeta,
@@ -656,7 +657,9 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
         needsLocalVar = true
       } else {
         const initExpr = decl.decl.initializer
-        const isPureInit = initExpr ? isPureLiteralExpression(initExpr) : false
+        const isPureInit = initExpr
+          ? isPureLiteralExpression(initExpr) || isConstEvaluableExpression(env, initExpr)
+          : false
         const readsMultiple = u.readCount > 1 || (u.readInLoop && !decl.inLoop)
         const promoteConstReads = decl.isConst && readsMultiple && !isPureInit
         const promoteRandom = u.hasRandomWrite && readsMultiple
@@ -676,7 +679,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
 type SwitchControlKind = 'int' | 'str'
 
 function inferSwitchControlKind(env: Env, expr: ts.Expression): SwitchControlKind {
-  const unwrapped = unwrapCaseExpression(expr)
+  const unwrapped = unwrapCaseExpression(tryEvaluateConstExpression(env, expr) ?? expr)
   if (ts.isStringLiteral(unwrapped) || ts.isNoSubstitutionTemplateLiteral(unwrapped)) {
     return 'str'
   }
@@ -771,7 +774,7 @@ function caseKeyFromExpression(
   expr: ts.Expression,
   controlKind: SwitchControlKind
 ): string {
-  const n = unwrapCaseExpression(expr)
+  const n = unwrapCaseExpression(tryEvaluateConstExpression(env, expr) ?? expr)
 
   if (controlKind === 'str') {
     if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) return n.text
