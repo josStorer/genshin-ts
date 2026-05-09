@@ -33,6 +33,140 @@ function isIntLiteral(node: any): boolean {
   return false
 }
 
+function unwrapConstExpression(expr: ts.Expression): ts.Expression {
+  let cur = expr
+  while (true) {
+    if (ts.isParenthesizedExpression(cur)) {
+      cur = cur.expression
+      continue
+    }
+    if (ts.isAsExpression(cur)) {
+      cur = cur.expression
+      continue
+    }
+    if (ts.isTypeAssertionExpression(cur)) {
+      cur = cur.expression
+      continue
+    }
+    if (ts.isSatisfiesExpression(cur)) {
+      cur = cur.expression
+      continue
+    }
+    return cur
+  }
+}
+
+function isTsStringLiteral(expr: ts.Expression): boolean {
+  const unwrapped = unwrapConstExpression(expr)
+  return ts.isStringLiteral(unwrapped) || ts.isNoSubstitutionTemplateLiteral(unwrapped)
+}
+
+function isTsIntLiteral(expr: ts.Expression): boolean {
+  const unwrapped = unwrapConstExpression(expr)
+  if (ts.isBigIntLiteral(unwrapped)) return true
+  if (ts.isNumericLiteral(unwrapped)) {
+    const raw = unwrapped.text.replace(/_/g, '')
+    return !/[.eE]/.test(raw)
+  }
+  if (
+    ts.isPrefixUnaryExpression(unwrapped) &&
+    (unwrapped.operator === ts.SyntaxKind.PlusToken ||
+      unwrapped.operator === ts.SyntaxKind.MinusToken)
+  ) {
+    return isTsIntLiteral(unwrapped.operand)
+  }
+  return false
+}
+
+function isConstVariableDeclaration(decl: ts.VariableDeclaration): boolean {
+  const list = decl.parent
+  return ts.isVariableDeclarationList(list) && (list.flags & ts.NodeFlags.Const) !== 0
+}
+
+function isConstObjectInitializer(expr: ts.Expression): boolean {
+  const unwrapped = unwrapConstExpression(expr)
+  return ts.isObjectLiteralExpression(unwrapped) || ts.isArrayLiteralExpression(unwrapped)
+}
+
+function getEnclosingConstObjectDeclaration(node: ts.Node): ts.VariableDeclaration | null {
+  let cur: ts.Node | undefined = node
+  while (cur) {
+    if (ts.isVariableDeclaration(cur)) {
+      if (!cur.initializer || !isConstVariableDeclaration(cur)) return null
+      return isConstObjectInitializer(cur.initializer) ? cur : null
+    }
+    if (ts.isFunctionLike(cur) || ts.isSourceFile(cur)) return null
+    cur = cur.parent
+  }
+  return null
+}
+
+function resolveSymbol(sym: ts.Symbol, checker: ts.TypeChecker): ts.Symbol {
+  if ((sym.flags & ts.SymbolFlags.Alias) !== 0) {
+    return checker.getAliasedSymbol(sym)
+  }
+  return sym
+}
+
+function propertyInitializerFromSymbol(sym: ts.Symbol): ts.Expression | null {
+  for (const decl of sym.declarations ?? []) {
+    if (!ts.isPropertyAssignment(decl)) continue
+    if (!getEnclosingConstObjectDeclaration(decl)) continue
+    return decl.initializer
+  }
+  return null
+}
+
+function constInitializerFromSymbol(sym: ts.Symbol): ts.Expression | null {
+  for (const decl of sym.declarations ?? []) {
+    if (!ts.isVariableDeclaration(decl)) continue
+    if (!decl.initializer || !isConstVariableDeclaration(decl)) continue
+    return decl.initializer
+  }
+  return null
+}
+
+function tryEvaluateConstExpression(
+  checker: ts.TypeChecker,
+  expr: ts.Expression,
+  seen = new Set<ts.Symbol>()
+): ts.Expression | null {
+  const unwrapped = unwrapConstExpression(expr)
+  if (isTsStringLiteral(unwrapped) || isTsIntLiteral(unwrapped)) return unwrapped
+
+  if (ts.isIdentifier(unwrapped)) {
+    const sym = checker.getSymbolAtLocation(unwrapped)
+    if (!sym) return null
+    const resolved = resolveSymbol(sym, checker)
+    if (seen.has(resolved)) return null
+    seen.add(resolved)
+    const initializer = constInitializerFromSymbol(resolved)
+    return initializer ? tryEvaluateConstExpression(checker, initializer, seen) : null
+  }
+
+  if (ts.isPropertyAccessExpression(unwrapped)) {
+    const sym = checker.getSymbolAtLocation(unwrapped.name)
+    if (!sym) return null
+    const resolved = resolveSymbol(sym, checker)
+    if (seen.has(resolved)) return null
+    seen.add(resolved)
+    const initializer = propertyInitializerFromSymbol(resolved)
+    return initializer ? tryEvaluateConstExpression(checker, initializer, seen) : null
+  }
+
+  return null
+}
+
+function isConstStringLiteral(checker: ts.TypeChecker, expr: ts.Expression): boolean {
+  const evaluated = tryEvaluateConstExpression(checker, expr)
+  return !!evaluated && isTsStringLiteral(evaluated)
+}
+
+function isConstIntLiteral(checker: ts.TypeChecker, expr: ts.Expression): boolean {
+  const evaluated = tryEvaluateConstExpression(checker, expr)
+  return !!evaluated && isTsIntLiteral(evaluated)
+}
+
 function lastNonEmptyStatement(stmts: any[]): any | null {
   for (let i = stmts.length - 1; i >= 0; i -= 1) {
     const stmt = stmts[i]
@@ -104,7 +238,14 @@ const rule: Rule.RuleModule = {
             }
             continue
           }
-          if (isStr && !isStringLiteral(clause.test)) {
+          const testTsNode = services.esTreeNodeToTSNodeMap.get(clause.test)
+          const testExpression = testTsNode && ts.isExpression(testTsNode) ? testTsNode : null
+          const isConstString = testExpression
+            ? isConstStringLiteral(checker, testExpression)
+            : false
+          const isConstInt = testExpression ? isConstIntLiteral(checker, testExpression) : false
+
+          if (isStr && !isStringLiteral(clause.test) && !isConstString) {
             context.report({
               node: clause.test,
               message: formatMessage(
@@ -114,7 +255,7 @@ const rule: Rule.RuleModule = {
               )
             })
           }
-          if (kind === 'int' && !isIntLiteral(clause.test)) {
+          if (kind === 'int' && !isIntLiteral(clause.test) && !isConstInt) {
             context.report({
               node: clause.test,
               message: formatMessage(

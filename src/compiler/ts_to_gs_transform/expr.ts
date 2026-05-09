@@ -5,6 +5,7 @@ import type { DictValueType } from '../../runtime/value.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { isEntityLikeType } from '../../shared/ts_type_utils.js'
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
+import { tryEvaluateConstExpression } from './const_eval.js'
 import { fail, warn } from './errors.js'
 import { tryTransformListMethodCall } from './list_methods.js'
 import {
@@ -1599,6 +1600,8 @@ export function transformExpression(
   if (ts.isPropertyAccessExpression(expr)) {
     const builtinProp = tryTransformBuiltinPropertyAccess(env, context, expr, transformExpression)
     if (builtinProp) return builtinProp
+    const constExpr = tryEvaluateConstExpression(env, expr)
+    if (constExpr) return withSameRange(constExpr, expr)
   }
 
   if (ts.isCallExpression(expr)) {
@@ -1658,6 +1661,9 @@ export function transformExpression(
   }
 
   if (ts.isIdentifier(expr)) {
+    const constExpr = tryEvaluateConstExpression(env, expr)
+    if (constExpr) return withSameRange(constExpr, expr)
+
     const name = expr.text
     const sym = env.checker.getSymbolAtLocation(expr)
     // 仅在定时器回调上下文生效(因为这些env参数仅在回调情况下才存在)：
