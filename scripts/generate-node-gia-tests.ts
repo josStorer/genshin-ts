@@ -1,6 +1,7 @@
 import path from 'node:path'
 
 import { ServerEventMetadata } from '../src/definitions/events.js'
+import { NODE_TYPE_BY_METHOD } from '../src/definitions/node_modes.js'
 import { assignTypeParamsFromCase, emitArgFromNodesTypeText } from './testgen/args_from_nodes.js'
 import { cleanDir, emitFile, writeText, type GeneratedCall } from './testgen/emit.js'
 import {
@@ -11,12 +12,19 @@ import {
 } from './testgen/generics_data.js'
 import { extractServerFMethods } from './testgen/methods.js'
 import { loadEnumPicks } from './testgen/picks.js'
+import { emitCallWithOutputConsumers } from './testgen/return_consumers.js'
 import { emitProducers, type Ctx } from './testgen/values.js'
 import { canResolveNodeType, readVendorNodeIdKeysLower } from './testgen/vendor_ids.js'
 
 type SkipRow = { name: string; nodeType?: string; why: string }
 
 type Bucket = { literal: GeneratedCall[]; wire: GeneratedCall[] }
+
+const CLASSIC_ADDITIONAL_METHODS = new Set([
+  // Same TypeScript API, but ir_to_gia_transform/node_id.ts resolves a different vendor id in
+  // classic mode.
+  'teleportPlayer'
+])
 
 function main() {
   const repoRoot = process.cwd()
@@ -45,6 +53,7 @@ function main() {
   const groupCalls: Record<number, Bucket> = {}
   for (const g of summary) groupCalls[g.id] = { literal: [], wire: [] }
   const other: Bucket = { literal: [], wire: [] }
+  const classic: Bucket = { literal: [], wire: [] }
 
   const functionToGroup = new Map<string, number>()
   for (const g of summary) for (const fn of g.functions) functionToGroup.set(fn, g.id)
@@ -68,15 +77,10 @@ function main() {
       })
       continue
     }
-    // 过滤：暂不支持
-    if (m.name === 'modifyStructure') {
-      skipped.push({ name: m.name, nodeType: m.nodeType, why: 'modifyStructure not supported yet' })
-      continue
-    }
-
     const ginfo = genericsMap.get(m.name)
     const groupId = functionToGroup.get(m.name)
     const bucket = groupId ? groupCalls[groupId]! : other
+    const nodeMode = NODE_TYPE_BY_METHOD[m.name as keyof typeof NODE_TYPE_BY_METHOD]
 
     const ctxLit: Ctx = { n: 0 }
     const ctxWire: Ctx = { n: 0 }
@@ -134,14 +138,46 @@ function main() {
           )
         )
       }
-      return { fn: m.name, typeCase, code: `f.${m.name}(${args.join(', ')})` }
+      const callExpr = `f.${m.name}(${args.join(', ')})`
+      const code = emitCallWithOutputConsumers(
+        m,
+        callExpr,
+        assign,
+        enumPick,
+        mode === 'literal' ? ctxLit : ctxWire
+      )
+      return { fn: m.name, typeCase, code }
+    }
+
+    if (CLASSIC_ADDITIONAL_METHODS.has(m.name)) {
+      classic.literal.push(buildOne('literal', undefined))
+    }
+
+    if (nodeMode === 'classic') {
+      classic.literal.push(buildOne('literal', undefined))
+      included[m.name] = { cases: (included[m.name]?.cases ?? 0) + 1 }
+      continue
+    }
+
+    // 过滤：暂不支持
+    if (m.name === 'modifyStructure' || m.name === 'continue' || m.name.startsWith('__gsts')) {
+      skipped.push({
+        name: m.name,
+        nodeType: m.nodeType,
+        why:
+          m.name === 'continue'
+            ? 'continue requires loop context'
+            : m.name.startsWith('__gsts')
+              ? 'internal helper'
+              : 'modifyStructure not supported yet'
+      })
+      continue
     }
 
     // 有 generics 数据：对每个 availableType 生成（确保每个类型都覆盖）
     if (ginfo) {
       for (const tcase of ginfo.availableTypes) {
-        const skipLiteral =
-          m.name === 'dataTypeConversion' && /^dict<\s*faction\s*,/i.test(tcase)
+        const skipLiteral = m.name === 'dataTypeConversion' && /^dict<\s*faction\s*,/i.test(tcase)
         // 泛型类型由 typeCase + nodes.ts 方法签名推断，不再直接覆盖参数文本
         if (!skipLiteral) {
           bucket.literal.push(buildOne('literal', tcase))
@@ -182,32 +218,56 @@ function main() {
       emitFile('wire', 'other', allocGraphId(), emitProducers(), other.wire)
     )
   }
+  if (classic.literal.length) {
+    writeText(
+      path.join(outDir, `classic.literal.ts`),
+      emitFile('literal', 'classic', allocGraphId(), null, classic.literal, {
+        serverMode: 'classic'
+      })
+    )
+  }
 
   // 事件节点：覆盖 ServerEventMetadata 的所有事件（对应 when_* 节点）
   {
     const events = Object.keys(ServerEventMetadata).sort()
     const lines: string[] = []
+    const classicLines: string[] = []
     const graphId = allocGraphId()
+    const classicGraphId = allocGraphId()
     lines.push(`import { g } from 'genshin-ts/runtime/core'`)
     lines.push(``)
     lines.push(`// AUTO-GENERATED: server events`)
     lines.push(`// Run: npx tsx scripts/generate-node-gia-tests.ts`)
     lines.push(``)
+    classicLines.push(`import { g } from 'genshin-ts/runtime/core'`)
+    classicLines.push(``)
+    classicLines.push(`// AUTO-GENERATED: classic server events`)
+    classicLines.push(`// Run: npx tsx scripts/generate-node-gia-tests.ts`)
+    classicLines.push(``)
     for (const e of events) {
+      const eventMode = NODE_TYPE_BY_METHOD[e as keyof typeof NODE_TYPE_BY_METHOD]
+      const targetLines = eventMode === 'classic' ? classicLines : lines
+      const serverOptions =
+        eventMode === 'classic'
+          ? `{ id: ${classicGraphId}, mode: 'classic' }`
+          : `{ id: ${graphId} }`
       if (e === 'monitorSignal') {
         // monitorSignal 事件需要额外的 signalName 输入（否则 pin 结构不匹配）
         // 与 sendSignal("monitor_signal") 配套
-        lines.push(`g.server({ id: ${graphId} }).onSignal("monitor_signal", (_evt, f) => {`)
-        lines.push(`  f.printString(${JSON.stringify(`event_${e}`)})`)
-        lines.push(`})`)
+        targetLines.push(`g.server(${serverOptions}).onSignal("monitor_signal", (_evt, f) => {`)
+        targetLines.push(`  f.printString(${JSON.stringify(`event_${e}`)})`)
+        targetLines.push(`})`)
       } else {
-        lines.push(`g.server({ id: ${graphId} }).on(${JSON.stringify(e)}, (_evt, f) => {`)
-        lines.push(`  f.printString(${JSON.stringify(`event_${e}`)})`)
-        lines.push(`})`)
+        targetLines.push(`g.server(${serverOptions}).on(${JSON.stringify(e)}, (_evt, f) => {`)
+        targetLines.push(`  f.printString(${JSON.stringify(`event_${e}`)})`)
+        targetLines.push(`})`)
       }
-      lines.push(``)
+      targetLines.push(``)
     }
     writeText(path.join(outDir, `events.ts`), lines.join('\n'))
+    if (classicLines.length > 5) {
+      writeText(path.join(outDir, `classic.events.ts`), classicLines.join('\n'))
+    }
   }
 
   // 报告：所有没纳入生成的函数都写清原因
@@ -227,7 +287,8 @@ function main() {
         notes: {
           enumPickCount: enumPick.size,
           genericsFunctions: genericsMap.size,
-          summaryGroups: summary.length
+          summaryGroups: summary.length,
+          classicGeneratedMethods: classic.literal.length
         }
       },
       null,

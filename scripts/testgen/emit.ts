@@ -18,7 +18,8 @@ export function cleanDir(dir: string) {
   const keep = new Set([
     'mismatch_only.literal.ts',
     'mismatch_only.wire.ts',
-    'enum_nodes_second.ts'
+    'enum_nodes_second.ts',
+    'final_all.ts'
   ])
   if (fs.existsSync(dir)) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -29,7 +30,18 @@ export function cleanDir(dir: string) {
   fs.mkdirSync(dir, { recursive: true })
 }
 
-export function header(mode: Mode, title: string, graphId: number): string {
+type EmitOptions = {
+  serverMode?: 'beyond' | 'classic'
+}
+
+export function header(
+  mode: Mode,
+  title: string,
+  graphId: number,
+  options: EmitOptions = {}
+): string {
+  const serverOptions =
+    options.serverMode === 'classic' ? `{ id: ${graphId}, mode: 'classic' }` : `{ id: ${graphId} }`
   return [
     `import { g } from 'genshin-ts/runtime/core'`,
     `import { configId, faction, guid, prefabId } from 'genshin-ts/runtime/value'`,
@@ -38,12 +50,12 @@ export function header(mode: Mode, title: string, graphId: number): string {
     `// AUTO-GENERATED: ${title} (${mode})`,
     `// Run: npx tsx scripts/generate-node-gia-tests.ts`,
     ``,
-    `g.server({ id: ${graphId} }).on('whenEntityIsCreated', (_evt, f) => {`
+    `g.server(${serverOptions}).on('whenEntityIsCreated', (_evt, f) => {`
   ].join('\n')
 }
 
 export function footer(): string {
-  return `})\n`
+  return `})`
 }
 
 export function emitFile(
@@ -51,14 +63,15 @@ export function emitFile(
   title: string,
   graphId: number,
   producers: string | null,
-  calls: GeneratedCall[]
+  calls: GeneratedCall[],
+  options: EmitOptions = {}
 ) {
   const lines: string[] = []
-  lines.push(header(mode, title, graphId))
+  lines.push(header(mode, title, graphId, options))
   if (producers) lines.push(producers)
   for (const c of calls) {
     if (c.typeCase) lines.push(`  // ${c.fn} :: ${c.typeCase}`)
-    lines.push(`  ${c.code}`)
+    for (const line of c.code.split('\n')) lines.push(`  ${line}`)
   }
   lines.push(footer())
   return lines.join('\n') + '\n'

@@ -39,6 +39,10 @@ g.server({ id: 1073741843 }).on("whenCharacterRevives", (_evt, f) => {
   f.printString("event_whenCharacterRevives")
 })
 
+g.server({ id: 1073741843 }).on("whenComplexCreationPresetStatusChanges", (_evt, f) => {
+  f.printString("event_whenComplexCreationPresetStatusChanges")
+})
+
 g.server({ id: 1073741843 }).on("whenCreationEntersCombat", (_evt, f) => {
   f.printString("event_whenCreationEntersCombat")
 })
@@ -103,12 +107,24 @@ g.server({ id: 1073741843 }).on("whenEquipmentIsInitialized", (_evt, f) => {
   f.printString("event_whenEquipmentIsInitialized")
 })
 
+g.server({ id: 1073741843 }).on("whenEquipmentIsPurchased", (_evt, f) => {
+  f.printString("event_whenEquipmentIsPurchased")
+})
+
+g.server({ id: 1073741843 }).on("whenEquipmentIsSold", (_evt, f) => {
+  f.printString("event_whenEquipmentIsSold")
+})
+
 g.server({ id: 1073741843 }).on("whenEquipmentIsUnequipped", (_evt, f) => {
   f.printString("event_whenEquipmentIsUnequipped")
 })
 
 g.server({ id: 1073741843 }).on("whenExitingCollisionTrigger", (_evt, f) => {
   f.printString("event_whenExitingCollisionTrigger")
+})
+
+g.server({ id: 1073741843 }).on("whenFloatingInteractionPageIsTriggered", (_evt, f) => {
+  f.printString("event_whenFloatingInteractionPageIsTriggered")
 })
 
 g.server({ id: 1073741843 }).on("whenGlobalTimerIsTriggered", (_evt, f) => {

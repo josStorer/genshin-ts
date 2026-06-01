@@ -66,6 +66,9 @@ function emitEnum(enumTypeName: string, enumPick: EnumPickMap): string {
 }
 
 function typeSpecFromNodesValueType(t: string): TypeSpec | null {
+  if (/^(Player|Character|Stage|Object|Creation)?Entity$/.test(t) || /^EntityOf\s*</.test(t)) {
+    return { kind: 'primitive', name: 'entity' }
+  }
   switch (t) {
     case 'BoolValue':
     case 'boolean':
@@ -187,6 +190,9 @@ export function emitArgFromNodesTypeText(
 
   if (isFuncType(t)) {
     return `() => { f.printString(${JSON.stringify(`${mode}_cb_${m.name}_${paramIndex}`)}) }`
+  }
+  if (m.name === 'multipleBranches' && m.params[paramIndex]?.name === 'branches') {
+    return `({ 1: () => { f.printString(${JSON.stringify(`${mode}_b1_${m.name}_${paramIndex}`)}) }, default: () => { f.printString(${JSON.stringify(`${mode}_bd_${m.name}_${paramIndex}`)}) } })`
   }
   if (isRecordBranches(t)) {
     return `({ 1: () => { f.printString(${JSON.stringify(`${mode}_b1_${m.name}_${paramIndex}`)}) }, default: () => { f.printString(${JSON.stringify(`${mode}_bd_${m.name}_${paramIndex}`)}) } })`
