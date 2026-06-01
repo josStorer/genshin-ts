@@ -4563,6 +4563,42 @@ export const NODE_PIN_RECORDS = [
     outputs: []
   },
   {
+    name: 'No of Tasks Configured',
+    id: 829,
+    inputs: ['Ety', 'Int', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Increase Task Count',
+    id: 830,
+    inputs: ['Ety', 'Int', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Query if Specified Task is Completed',
+    id: 831,
+    inputs: ['Ety', 'Int'],
+    outputs: ['Bol']
+  },
+  {
+    name: 'Query Specified Task Count',
+    id: 832,
+    inputs: ['Ety', 'Int'],
+    outputs: ['Int']
+  },
+  {
+    name: 'Refresh Notification Queue',
+    id: 833,
+    inputs: ['Ety', 'Int', 'Int'],
+    outputs: []
+  },
+  {
+    name: 'Switch Custom Maps',
+    id: 834,
+    inputs: ['Ety', 'Cfg', 'Bol'],
+    outputs: []
+  },
+  {
     name: 'When Character Movement SPD Meets Condition',
     id: 946,
     inputs: [],

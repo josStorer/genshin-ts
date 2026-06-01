@@ -76,9 +76,9 @@ import {
   ElementalReactionType,
   ElementalType,
   EntityType,
-  ExistingSkillHandling,
   EnumerationType,
   EnumerationTypeMap,
+  ExistingSkillHandling,
   FixedMotionParameterType,
   FollowCoordinateSystem,
   FollowLocationType,
@@ -5966,10 +5966,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 动效控件索引: 界面动效控件/全屏界面动效控件的标识
    */
-  playUiAnimationOnControl(
-    playerEntity: PlayerEntity,
-    specialEffectControlIndex: IntValue
-  ): void {
+  playUiAnimationOnControl(playerEntity: PlayerEntity, specialEffectControlIndex: IntValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const specialEffectControlIndexObj = parseValue(specialEffectControlIndex, 'int')
     this.registry.registerNode({
@@ -5977,6 +5974,37 @@ export class ServerExecutionFlowFunctions {
       type: 'exec',
       nodeType: 'play_ui_animation_on_control',
       args: [playerEntityObj, specialEffectControlIndexObj]
+    })
+  }
+
+  /**
+   * The Notification Queue UI Control allows for the transmission of a given set of data to be displayed via a node graph. Once transmitted, the data will be displayed in the specified Notification Queue UI Control according to the graphic-text group template entered
+   *
+   * 更新消息队列: 消息队列界面控件可通过节点图传输一组指定数据用于显示。传输后，数据会按照录入的图文组模板在指定消息队列界面控件中显示
+   *
+   * @param playerEntity
+   *
+   * 玩家实体
+   * @param notificationQueueIndex
+   *
+   * 消息队列索引
+   * @param notificationItemId
+   *
+   * 消息项ID
+   */
+  refreshNotificationQueue(
+    playerEntity: PlayerEntity,
+    notificationQueueIndex: IntValue,
+    notificationItemId: IntValue
+  ): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const notificationQueueIndexObj = parseValue(notificationQueueIndex, 'int')
+    const notificationItemIdObj = parseValue(notificationItemId, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'refresh_notification_queue',
+      args: [playerEntityObj, notificationQueueIndexObj, notificationItemIdObj]
     })
   }
 
@@ -6088,12 +6116,7 @@ export class ServerExecutionFlowFunctions {
       id: 0,
       type: 'exec',
       nodeType: 'update_floating_interaction_page_list_data',
-      args: [
-        playerEntityObj,
-        listIndexObj,
-        visibleListItemObj,
-        selectFirstItemByDefaultObj
-      ]
+      args: [playerEntityObj, listIndexObj, visibleListItemObj, selectFirstItemByDefaultObj]
     })
   }
 
@@ -6227,12 +6250,7 @@ export class ServerExecutionFlowFunctions {
       id: 0,
       type: 'exec',
       nodeType: 'set_voice_chat_permissions',
-      args: [
-        targetPlayerObj,
-        channelListObj,
-        restrictVoiceChatSpeakObj,
-        restrictVoiceChatListenObj
-      ]
+      args: [targetPlayerObj, channelListObj, restrictVoiceChatSpeakObj, restrictVoiceChatListenObj]
     })
   }
 
@@ -6640,12 +6658,7 @@ export class ServerExecutionFlowFunctions {
       id: 0,
       type: 'exec',
       nodeType: 'bind_custom_skill_instance_to_specified_slot',
-      args: [
-        targetEntityObj,
-        skillInstanceIdObj,
-        skillSlotObj,
-        originalSlotSkillHandlingObj
-      ]
+      args: [targetEntityObj, skillInstanceIdObj, skillSlotObj, originalSlotSkillHandlingObj]
     })
     const ret = new int()
     ret.markPin(ref, 'originalSlotSkillInstanceId', 0)
@@ -8504,11 +8517,7 @@ export class ServerExecutionFlowFunctions {
       id: 0,
       type: 'exec',
       nodeType: 'remove_equipment_from_specified_slot',
-      args: [
-        equipmentSlotOwnerEntityObj,
-        equipmentSlotRowCountObj,
-        equipmentSlotColumnCountObj
-      ]
+      args: [equipmentSlotOwnerEntityObj, equipmentSlotRowCountObj, equipmentSlotColumnCountObj]
     })
   }
 
@@ -8926,6 +8935,37 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
+   * Allows switching the Target Player's currently active minimap configuration
+   *
+   * 切换自定义地图: 可以切换目标玩家当前生效的小地图配置
+   *
+   * @param targetPlayer
+   *
+   * 目标玩家
+   * @param mapConfigId
+   *
+   * 地图配置ID
+   * @param displayMap
+   *
+   * 是否显示地图
+   */
+  switchCustomMaps(
+    targetPlayer: PlayerEntity,
+    mapConfigId: ConfigIdValue,
+    displayMap: BoolValue
+  ): void {
+    const targetPlayerObj = parseValue(targetPlayer, 'entity')
+    const mapConfigIdObj = parseValue(mapConfigId, 'config_id')
+    const displayMapObj = parseValue(displayMap, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'switch_custom_maps',
+      args: [targetPlayerObj, mapConfigIdObj, displayMapObj]
+    })
+  }
+
+  /**
    * Immediately switch the patrol template for the Creation and move according to the new template
    *
    * 切换造物巡逻模板: 造物切换的巡逻模板即刻切换，并按照新的巡逻模板进行移动
@@ -9337,6 +9377,64 @@ export class ServerExecutionFlowFunctions {
       type: 'exec',
       nodeType: 'consume_gift_box',
       args: [playerEntityObj, giftBoxIndexObj, consumptionQuantityObj]
+    })
+  }
+
+  /**
+   * Available only for Beyond Mode; Allows the setting of player's current corresponding task count to a specified value
+   *
+   * 设置任务计数: 仅超限模式可用; 可将玩家当前对应任务计数设置为指定值
+   *
+   * @param playerEntity
+   *
+   * 玩家实体
+   * @param questIndex
+   *
+   * 任务索引
+   * @param taskCount
+   *
+   * 任务计数
+   */
+  noOfTasksConfigured(playerEntity: PlayerEntity, questIndex: IntValue, taskCount: IntValue): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const questIndexObj = parseValue(questIndex, 'int')
+    const taskCountObj = parseValue(taskCount, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'no_of_tasks_configured',
+      args: [playerEntityObj, questIndexObj, taskCountObj]
+    })
+  }
+
+  /**
+   * Available only for Beyond Mode; Use this to increase the current count of the corresponding player tasks (value entered may be negative)
+   *
+   * 增加任务计数: 仅超限模式可用; 可增加对应玩家任务的当前计数（输入值可为负数）
+   *
+   * @param playerEntity
+   *
+   * 玩家实体
+   * @param questIndex
+   *
+   * 任务索引
+   * @param taskCountIncreasedBy
+   *
+   * 任务计数增加值
+   */
+  increaseTaskCount(
+    playerEntity: PlayerEntity,
+    questIndex: IntValue,
+    taskCountIncreasedBy: IntValue
+  ): void {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const questIndexObj = parseValue(questIndex, 'int')
+    const taskCountIncreasedByObj = parseValue(taskCountIncreasedBy, 'int')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'increase_task_count',
+      args: [playerEntityObj, questIndexObj, taskCountIncreasedByObj]
     })
   }
 
@@ -16204,6 +16302,66 @@ export class ServerExecutionFlowFunctions {
     const ret = new int()
     ret.markPin(ref, 'quantity', 0)
     return ret as unknown as bigint
+  }
+
+  /**
+   * Available only in Beyond Mode; Returns the corresponding player's current task count for specified tasks
+   *
+   * 查询指定任务计数: 仅超限模式可用; 可以查询对应玩家的指定任务的当前计数
+   *
+   * @param playerEntity
+   *
+   * 玩家实体
+   * @param questIndex
+   *
+   * 任务索引
+   *
+   * @returns
+   *
+   * 任务计数
+   */
+  querySpecifiedTaskCount(playerEntity: PlayerEntity, questIndex: IntValue): bigint {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const questIndexObj = parseValue(questIndex, 'int')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'query_specified_task_count',
+      args: [playerEntityObj, questIndexObj]
+    })
+    const ret = new int()
+    ret.markPin(ref, 'taskCount', 0)
+    return ret as unknown as bigint
+  }
+
+  /**
+   * Available only in Beyond Mode; Use this to check if a specified task has been completed by the corresponding player
+   *
+   * 查询指定任务是否完成: 仅超限模式可用; 可以查询对应玩家的指定任务是否完成
+   *
+   * @param playerEntity The Player Entity queried
+   *
+   * 玩家实体: 所查询的玩家实体
+   * @param questIndex The corresponding index number for the task queried
+   *
+   * 任务索引: 所要查询的任务对应的索引
+   *
+   * @returns
+   *
+   * 是否完成
+   */
+  queryIfSpecifiedTaskIsCompleted(playerEntity: PlayerEntity, questIndex: IntValue): boolean {
+    const playerEntityObj = parseValue(playerEntity, 'entity')
+    const questIndexObj = parseValue(questIndex, 'int')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'query_if_specified_task_is_completed',
+      args: [playerEntityObj, questIndexObj]
+    })
+    const ret = new bool()
+    ret.markPin(ref, 'completed', 0)
+    return ret as unknown as boolean
   }
   // === AUTO-GENERATED END ===
 }
