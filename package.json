@@ -65,6 +65,7 @@
   "scripts": {
     "pretest": "node scripts/clean-tests.mjs",
     "test": "npm run build && tsx scripts/generate-node-gia-tests.ts && tsx scripts/generate-enum-gia-tests.ts && node ./bin/gsts.mjs -c gsts.test.config.ts",
+    "quicktest": "npm run build && node ./bin/gsts.mjs -c gsts.test.config.ts",
     "prebuild": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "tsc -p tsconfig.json",
     "postbuild": "node scripts/postbuild.mjs",
