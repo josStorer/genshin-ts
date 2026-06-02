@@ -742,9 +742,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Converts input parameter types to another type for output. For specific rules, see Basic Concepts - [Conversion Rules Between Basic Data Types]
+   * Converts input parameter types to another type for output. For specific rules, see Basic Concepts - [Conversion Rules Between Basic Data Types]. Floating point numbers are rounded to integers when converted
    *
-   * 数据类型转换: 将输入的参数类型转换为另一种类型输出。具体规则见基础概念-【基础数据类型之间的转换规则】
+   * 数据类型转换: 将输入的参数类型转换为另一种类型输出。具体规则见基础概念-【基础数据类型之间的转换规则】。浮点数转换为整数时会进行四舍五入
    *
    * @param input
    *
@@ -3347,7 +3347,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Edit the value at the specified ID Location in the specified List
    *
-   * 对列表修改值: 修改指定列表的指定序号位置的值
+   * 对列表修改值: 设置指定列表中指定序号位置的值
    *
    * @param list Edited list reference
    *
@@ -3863,9 +3863,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Destroy the specified Entity with a destruction effect. This can trigger logic that runs only after destruction, such as end-of-lifecycle behaviors for Local Projectiles; The [When Entity Is Destroyed] and [When Entity Is Removed/Destroyed] events can be monitored on Stage Entities
+   * Destroying a specified entity will result in a destruction effect and can also trigger logic that only occurs after destruction, such as end-of-life behaviors in local projectiles or the dropping of energy orbs from destroyed creations. The [When Entity Is Destroyed] and [When Entity Is Removed/Destroyed] events can be monitored on Stage Entities
    *
-   * 销毁实体: 销毁指定实体，会有销毁表现，也可以触发一些销毁后才会触发的逻辑，比如本地投射物中的生命周期结束时行为; 在关卡实体上可以监听到【实体销毁时】以及【实体移除/销毁时】事件
+   * 销毁实体: 销毁指定实体会产生销毁表现，也可能触发销毁后逻辑，例如本地投射物生命周期结束行为，或被销毁造物掉落能量球; 在关卡实体上可以监听到【实体销毁时】以及【实体移除/销毁时】事件
    *
    * @param targetEntity The entity to be destroyed
    *
@@ -3882,9 +3882,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Remove the specified Entity. Unlike destroying an Entity, this has no destruction effect and does not trigger logic that runs only after destruction; Removing an Entity does not trigger the [On Entity Destroyed] event, but it can trigger the [On Entity Removed/Destroyed] event
+   * Removing a specified entity is different from destroying it; there will be no destruction effect, and it will not trigger any logic that would occur after destruction, such as end-of-life behaviors in local projectiles or the dropping of energy orbs from removed creations. Removing an Entity does not trigger the [On Entity Destroyed] event, but it can trigger the [On Entity Removed/Destroyed] event
    *
-   * 移除实体: 移除指定实体，与销毁实体不同的是，不会有销毁表现，也不会触发销毁后才会触发的逻辑; 移除实体不会触发【实体销毁时】事件，但可以触发【实体移除/销毁时】事件
+   * 移除实体: 移除指定实体与销毁实体不同，不会产生销毁表现，也不会触发销毁后逻辑，例如本地投射物生命周期结束行为，或被移除造物掉落能量球; 移除实体不会触发【实体销毁时】事件，但可以触发【实体移除/销毁时】事件
    *
    * @param targetEntity The entity to be removed
    *
@@ -3953,9 +3953,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the Faction of the specified Target Entity
+   * Set the faction of the specified target entity.
    *
-   * 修改实体阵营: 修改指定目标实体的阵营
+   * 修改实体阵营: 设置指定目标实体的阵营
    *
    * @param targetEntity Entity whose faction is to be edited
    *
@@ -3976,9 +3976,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Teleport the specified Player Entity. A loading interface may appear depending on teleport distance
+   * Teleport the specified Player Entity. A loading interface may appear depending on teleport distance. If teleporting onto an object, ensure the target Y-coordinate is slightly higher than the landing position
    *
-   * 传送玩家: 传送指定玩家实体。会根据传送距离的远近决定是否有加载界面；若传送落点位于物体上方，建议将 Y 值设置为略高于落点位置
+   * 传送玩家: 传送指定玩家实体。会根据传送距离决定是否显示加载界面；若传送到物体上，需确保目标 Y 坐标略高于落点位置
    *
    * GSTS Note: There is an internal cd, and it cannot be used for frequent coordinate movement
    *
@@ -4030,9 +4030,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Revive all Character Entities of the specified player. In Beyond Mode, since each player has only one character, this is equivalent to [Revive Character]
+   * Revive all character entities of a specified player, but this node is only effective when the player is in a state where all their characters are down. In Beyond Mode, since each player has only one character, this node has the same effect as the [Revive Character] node. In Classic Mode, players can have multiple characters. If only some of the characters are down, this node will not take effect, meaning it will not revive the downed characters.
    *
-   * 复苏玩家所有角色: 复苏指定玩家的所有角色实体。在超限模式中，由于每个玩家只有一个角色，与【复苏角色】的效果相同
+   * 复苏玩家所有角色: 复苏指定玩家的所有角色实体，但只有该玩家所有角色都倒下时此节点才有效。在超限模式中，每个玩家只有一个角色，效果等同于【复苏角色】; 在经典模式中，若只有部分角色倒下，此节点不会生效
    *
    * @param playerEntity The Player Entity that owns the Character
    *
@@ -4053,11 +4053,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Revive the active character of the specified player
+   * Available only in Classic Mode, revive the defeated active character entity of the specified player
    *
    * Available only in Classic Mode.
    *
-   * 复苏当前场上角色: 复苏指定玩家当前场上角色
+   * 复苏当前场上角色: 仅经典模式可用，复苏指定玩家已倒下的当前场上角色实体
    *
    * 仅经典模式可用
    *
@@ -4390,10 +4390,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * You can modify whether the pathfinding obstacle component of the target entity, corresponding to the specified
-   * index, is active
+   * You can modify whether the pathfinding obstacle component of the target entity, corresponding to the specified index, is active.
    *
-   * 激活/关闭寻路阻挡: 修改目标实体的寻路阻挡组件中指定序号的激活状态
+   * 激活/关闭寻路阻挡: 修改目标实体的寻路阻挡组件中对应序号的寻路阻挡是否激活
    *
    * @param targetEntity Only applies to objects
    *
@@ -4422,9 +4421,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * You can modify whether the pathfinding obstacle feature of the target entity is activated
+   * You can modify whether the pathfinding obstacle function of the target entity is activated.
    *
-   * 激活/关闭寻路阻挡功能: 修改目标实体的寻路阻挡功能是否启用
+   * 激活/关闭寻路阻挡功能: 修改目标实体的寻路阻挡功能是否激活
    *
    * @param targetEntity Only applies to objects
    *
@@ -5521,7 +5520,7 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Adjust the time of a running Global Timer via the Node Graph; If the timer is paused first and then modified to reduce the time, the modified time will be at least 0 seconds.; For countdown timers, pausing followed by modifying the time to 0s will trigger the [When the Global Timer Is Triggered] event upon resuming the timer.; If the timer is paused first, then modified to 0s, followed by modifying the time to increase it, and finally resumed, the [When the Global Timer Is Triggered] event will not be triggered.
+   * Adjust the time of a running Global Timer via the Node Graph If the timer is paused first and then modified to reduce the time, the modified time will be at least 0 seconds. For countdown timers, pausing followed by modifying the time to 0s will trigger the [When the Global Timer Is Triggered] event upon resuming the timer. If the timer is paused first, then modified to 0s, followed by modifying the time to increase it, and finally resumed, the [When the Global Timer Is Triggered] event will not be triggered.
    *
    * 修改全局计时器: 通过节点图，可以将运行中的全局计时器时间进行调整; 若计时器先暂停，后修改减少时间，则修改后时间最少为0s; 若为倒计时，则暂停后修改时间为0s且恢复计时器后，会触发【全局计时器触发时】事件; 若计时器先暂停，后修改时间到0s，再修改增加时间，再恢复计时器，则不会触发【全局计时器触发时】事件; 若有界面控件引用对应计时器，则界面控件的计时表现会同步修改
    *
@@ -5617,9 +5616,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the Character Disruptor Device active on the Target Entity by ID; if the ID does not exist, the device will no longer function after the modification
+   * Edit the Character Disruptor Device active on the Target Entity by ID; if the ID does not exist, the Character Disruptor Device will no longer function after the modification
    *
-   * 修改角色扰动装置: 通过序号修改目标实体上生效的角色扰动装置，若序号不存在则修改后该装置将不再生效
+   * 修改角色扰动装置: 通过序号修改目标实体上生效的角色扰动装置，若序号不存在，则修改过后角色扰动装置将不再生效
    *
    * @param targetEntity Active Entity
    *
@@ -6281,9 +6280,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the cooldown percentage of a skill in a Character's Skill Slot based on its maximum cooldown
+   * Modify the skill in a character's skill slot by adjusting the percentage of the skill's maximum cooldown time.
    *
-   * 按最大冷却时间修改技能冷却百分比: 通过技能最大冷却时间的百分比来修改角色某个技能槽位内的技能
+   * 按最大冷却时间修改技能冷却百分比: 通过技能最大冷却时间的百分比调整角色某个技能槽位内的技能
    *
    * @param targetEntity Active Character Entity
    *
@@ -6458,9 +6457,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the skill's resource amount by adding the change value to the current value. The change value can be negative
+   * Modifying the resource amount of a skill will add an increase to the current value; this increase can be a negative number.
    *
-   * 修改技能资源量: 修改技能的资源量，会在当前值上加上变更值，变更值可以为负数
+   * 修改技能资源量: 修改技能的资源量，会在当前值上加上增加值，增加值可以为负数
    *
    * @param targetEntity Active Character Entity
    *
@@ -6538,9 +6537,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the cooldown of the specified Skill Slot on the Target Character. The edit value is added to the current cooldown and can be negative
+   * Modifying the cooldown of a target character's skill slot will add an increase to the current cooldown time; this increase can be a negative number.
    *
-   * 修改角色技能冷却: 修改目标角色某个技能槽位的冷却，会在当前冷却时间上加修改值，修改值可以为负数
+   * 修改角色技能冷却: 修改目标角色某个技能槽位的冷却，会在当前冷却时间上加上增加值，增加值可以为负数
    *
    * @param targetEntity Active Character Entity
    *
@@ -6778,9 +6777,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Cast the skill currently active in the specified skill slot on the Character Entity
+   * Cast the skill currently active in the specified skill slot on the Character Entity. This input works only if the skill is bound to a button and is currently active
    *
-   * 施放指定槽位面板技能: 使角色实体施放其对应技能槽位当前处于前台的技能
+   * 施放指定槽位面板技能: 使角色实体施放其对应技能槽位当前处于前台的技能。该输入仅在技能已绑定按键且当前处于激活状态时有效
    *
    * This input works only if the skill is bound to a button and is currently active
    *
@@ -6813,9 +6812,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Cast the skill corresponding to the specified skill instance ID on the Character Entity
+   * Cast the skill corresponding to the specified skill instance ID on the Character Entity. This input works only if the skill is bound to a button and is currently active
    *
-   * 施放指定技能实例: 使角色实体施放指定技能实例ID对应的技能
+   * 施放指定技能实例: 使角色实体施放指定技能实例ID对应的技能。该输入仅在技能已绑定按键且当前处于激活状态时有效
    *
    * This input works only if the skill is bound to a button and is currently active
    *
@@ -7110,9 +7109,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit background music parameters for the Player
+   * Set player background music parameters
    *
-   * 修改玩家背景音乐: 修改玩家背景音乐相关参数
+   * 修改玩家背景音乐: 设置玩家背景音乐相关参数
    *
    * @param targetEntity Active Player Entity
    *
@@ -8139,9 +8138,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit sale info for inventory shop items
+   * Set up information on items for sale in the inventory shop.
    *
-   * 修改背包商店商品出售信息: 修改背包商店商品出售信息
+   * 修改背包商店商品出售信息: 设置背包商店商品出售信息
    *
    * @param shopOwnerEntity
    *
@@ -8198,9 +8197,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit Item Purchase Information in the Item Purchase List
+   * Set up item acquisition table
    *
-   * 修改物品收购表中道具收购信息: 修改物品收购表中道具收购信息
+   * 修改物品收购表中道具收购信息: 设置物品收购表中道具收购信息
    *
    * @param shopOwnerEntity
    *
@@ -8245,9 +8244,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit sale info for custom shop items
+   * Set custom store product sales information
    *
-   * 修改自定义商店商品出售信息: 修改自定义商店商品出售信息
+   * 修改自定义商店商品出售信息: 设置自定义商店商品出售信息
    *
    * @param shopOwnerEntity
    *
@@ -8322,9 +8321,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the value of the specified Affix on the Equipment instance
+   * Sets the value on the corresponding entry for a specified equipment instance.
    *
-   * 修改装备词条值: 修改指定装备实例对应词条上的值
+   * 修改装备词条值: 设置指定装备实例对应词条上的值
    *
    * @param equipmentIndex Integer ID generated during Equipment Initialization to identify the equipment instance
    *
@@ -8638,9 +8637,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the quantity of the specified Item in the Inventory
+   * Modifying the quantity of a specified item in your inventory will add an increase to the current value; the increase can be a negative number.
    *
-   * 修改背包道具数量: 修改背包内指定道具的数量
+   * 修改背包道具数量: 修改背包内指定道具的数量，会在当前值上加上增加值，增加值可以为负数
    *
    * @param inventoryOwnerEntity
    *
@@ -8669,9 +8668,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the amount of the specified Currency in the Inventory
+   * Modify the amount of a specified currency in the player's inventory. This will add the specified increase value to the current amount, and the increase value can be negative.
    *
-   * 修改背包货币数量: 修改背包内指定货币的数量
+   * 修改背包货币数量: 修改玩家背包内指定货币的数量，会在当前数量上加上指定增加值，增加值可以为负数
    *
    * @param inventoryOwnerEntity
    *
@@ -8700,9 +8699,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the quantity of the specified Item in the Loot Component on the Loot Prefab
+   * Modify the quantity of a specified item in the drop component of a loot prefab. This will add the specified increase value to the current quantity, and the increase value can be negative.
    *
-   * 修改掉落物组件道具数量: 修改掉落物元件上掉落物组件内指定道具的数量
+   * 修改掉落物组件道具数量: 修改掉落物预制体的掉落组件内指定道具的数量，会在当前数量上加上指定增加值，增加值可以为负数
    *
    * @param lootEntity
    *
@@ -8731,9 +8730,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the amount of the specified Currency in the Loot Component on the Loot Prefab
+   * Modify the amount of a specified currency in the drop component of a loot prefab. This will add the specified increase value to the current amount, and the increase value can be negative.
    *
-   * 修改掉落物组件货币数量: 修改掉落物元件上掉落物组件内指定货币的数量
+   * 修改掉落物组件货币数量: 修改掉落物预制体的掉落组件内指定货币的数量，会在当前数量上加上指定增加值，增加值可以为负数
    *
    * @param lootEntity
    *
@@ -8881,9 +8880,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the map scale of the Target Player's mini-map UI control
+   * Set the map scale of the mini-map interface control for the target player.
    *
-   * 修改小地图缩放: 修改目标玩家的小地图界面控件的地图比例
+   * 修改小地图缩放: 设置目标玩家小地图界面控件的地图比例
    *
    * @param targetPlayer
    *
@@ -8904,9 +8903,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Set the mini-map marker at the specified ID on the Target Entity to Tracking Display for the input Player
+   * Set the mini-map marker of the target entity with the corresponding index to a tracking appearance for the specified player.
    *
-   * 修改追踪小地图标识的玩家列表: 将目标实体的对应序号的小地图标识对入参玩家修改为追踪表现
+   * 修改追踪小地图标识的玩家列表: 将目标实体对应序号的小地图标识对指定玩家设置为追踪表现
    *
    * @param targetEntity
    *
@@ -9319,9 +9318,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit Player Channel Permissions
+   * Set player channel permissions
    *
-   * 修改玩家频道权限: 修改玩家频道权限
+   * 修改玩家频道权限: 设置玩家聊天语音频道权限
    *
    * @param playerGuid
    *
@@ -9363,21 +9362,28 @@ export class ServerExecutionFlowFunctions {
    * @param consumptionQuantity
    *
    * 消耗数量
+   *
+   * @returns
+   *
+   * 是否成功消耗礼盒
    */
   consumeGiftBox(
     playerEntity: PlayerEntity,
     giftBoxIndex: IntValue,
     consumptionQuantity: IntValue
-  ): void {
+  ): boolean {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const giftBoxIndexObj = parseValue(giftBoxIndex, 'int')
     const consumptionQuantityObj = parseValue(consumptionQuantity, 'int')
-    this.registry.registerNode({
+    const ref = this.registry.registerNode({
       id: 0,
       type: 'exec',
       nodeType: 'consume_gift_box',
       args: [playerEntityObj, giftBoxIndexObj, consumptionQuantityObj]
     })
+    const ret = new bool()
+    ret.markPin(ref, 'consumer', 0)
+    return ret as unknown as boolean
   }
 
   /**
@@ -9797,9 +9803,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Converts the Forward Vector and Upward Vector to Euler Angles
+   * Converts the Forward Vector and Upward Vector to Euler Angles. Example: For a Character, suppose it has an initial orientation in 3D space. To rotate the character to a desired orientation: The Forward Vector indicates the direction we want the Character's nose to face. The Upward Vector indicates the direction we want the Character's head to point. Output: A 3D Euler rotation vector representing the rotation the Character must undergo to move from its initial orientation to the specified target orientation. Note: Ensure the Forward and Upward Vectors are normalized. Using non-normalized vectors can produce unintended scaling and inaccurate rotation results.
    *
-   * 方向向量转旋转: 给定向前向量和向上向量，转化为欧拉角
+   * 方向向量转旋转: 将向前向量和向上向量转换为欧拉角。例如角色在三维空间中有初始朝向，要旋转到目标朝向时，向前向量表示希望角色面朝的方向，向上向量表示希望角色头顶指向的方向。输出为角色从初始朝向旋转到目标朝向所需的三维欧拉角。注意：请确保向前向量和向上向量已归一化，未归一化向量可能导致非预期缩放和不准确的旋转结果
    *
    * @param forwardVector Represents the desired Orientation of the Unit
    *
@@ -10450,9 +10456,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Returns the modulus of Input 2 and Input 1
+   * Returns the result of input 1 modulo input 2, with input 1 as the dividend
    *
-   * 模运算: 返回输入2对输入1的取模运算
+   * 模运算: 返回输入1对输入2取模的结果，其中输入1为被除数
    *
    * @param input1
    * @param input2
@@ -10873,9 +10879,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Rotates the input 3D Vector by the Euler Angles specified by the rotation and returns the result
+   * Rotates the input 3D Vector by the Euler Angles specified by the rotation and returns the result. Note: The Rotated 3D Vector is the one you want to rotate. The Rotated Euler Angles define how the vector should be rotated. The resulting output vector shows the position of the original 3D Vector after applying the rotation.
    *
-   * 三维向量旋转: 将被旋转的三维向量，按照旋转所表示的欧拉角进行旋转后返回结果
+   * 三维向量旋转: 将输入三维向量按旋转所表示的欧拉角进行旋转后返回结果。注意：被旋转三维向量是你希望旋转的向量；旋转欧拉角定义该向量应如何旋转；输出向量表示原三维向量应用该旋转后的结果位置
    *
    * @param rotate This 3D input vector represents a specific rotation in Euler angles
    *
@@ -12499,9 +12505,14 @@ export class ServerExecutionFlowFunctions {
     cdReduction: number
     /**
      *
-     * 护盾强效
+     * 超限模式护盾强效
      */
-    shieldStrength: number
+    beyondModeShieldStrength: number
+    /**
+     *
+     * 经典模式护盾强效
+     */
+    classicModeShieldStrength: number
   } {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const ref = this.registry.registerNode({
@@ -12541,9 +12552,14 @@ export class ServerExecutionFlowFunctions {
         ret.markPin(ref, 'cdReduction', 5)
         return ret as unknown as number
       })(),
-      shieldStrength: (() => {
+      beyondModeShieldStrength: (() => {
         const ret = new float()
-        ret.markPin(ref, 'shieldStrength', 6)
+        ret.markPin(ref, 'beyondModeShieldStrength', 6)
+        return ret as unknown as number
+      })(),
+      classicModeShieldStrength: (() => {
+        const ret = new float()
+        ret.markPin(ref, 'classicModeShieldStrength', 7)
         return ret as unknown as number
       })()
     }
@@ -13746,9 +13762,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Available only in Classic Mode. Returns the Character ID for the target character
+   * Available only in Classic Mode. You can search for the character ID of the target character to see the appendix for the specific character in Classic Mode Character ID List
    *
-   * 查询经典模式角色编号: 仅经典模式可用，查询指定角色的角色编号
+   * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号；具体角色可见经典模式角色编号列表附录
    *
    * @param targetCharacter
    *
@@ -13922,9 +13938,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Returns the Aggro List in Classic Mode. This Node only outputs a valid list when the Aggro Configuration is set to [Default Type]
+   * Returns the Aggro List in Default Mode. This Node only outputs a valid list when the Aggro Configuration is set to [Default Type]
    *
-   * 获取造物的经典模式仇恨列表: 获取造物的经典仇恨模式的仇恨列表，即仅仇恨配置为【默认类型】时，该节点才会有正确的输出列表
+   * 获取造物的经典模式仇恨列表: 获取造物的默认模式仇恨列表，仅当仇恨配置为【默认类型】时，该节点才会输出有效列表
    *
    * @param creationEntity Runtime Creation Entity
    *
