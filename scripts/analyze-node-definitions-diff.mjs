@@ -355,7 +355,11 @@ function parseNodesTs() {
       } else {
         const returnTypeText = member.type?.getText(source) ?? 'void'
         const base = normalizeTypeText(returnTypeText, enumNames, 'return')
-        if (base !== 'void') outputs.push({ name: null, type: base })
+        if (base !== 'void') {
+          const bodyText = member.body?.getText(source) ?? ''
+          const markPin = bodyText.match(/\.markPin\(\s*ref\s*,\s*'([^']+)'\s*,\s*0\s*\)/)
+          outputs.push({ name: markPin?.[1] ?? null, type: base })
+        }
       }
 
       nodes.set(name, { name, inputs: params, outputs })

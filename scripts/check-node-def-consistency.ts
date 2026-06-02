@@ -36,7 +36,15 @@ const ARG_MISMATCH_ALLOWLIST = new Set<string>([
   'create_prefab_group',
   'activate_disable_follow_motion_device',
   'activate_disable_collision_trigger_source',
-  'activate_disable_character_disruptor_device'
+  'activate_disable_character_disruptor_device',
+  // Editor export verification: 2026-06-01-verify1.gia.
+  // These nodes keep hidden/hole input pin indices in exported GIA, so nodes.ts intentionally
+  // exposes only the logical arguments.
+  'set_custom_variable',
+  'activate_disable_pathfinding_obstacle',
+  'activate_disable_pathfinding_obstacle_feature',
+  'remove_unit_status',
+  'exponentiation'
 ])
 
 function posOf(sf: ts.SourceFile, n: ts.Node) {
@@ -265,5 +273,4 @@ function main() {
 }
 
 main()
-
 
