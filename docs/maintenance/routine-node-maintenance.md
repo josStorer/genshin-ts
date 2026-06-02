@@ -104,6 +104,35 @@
   - `events-payload.ts`
   - `server_on_overloads.d.ts`
 
+### 不要全量覆盖定义详情文件
+
+`resources/node_definitions.json` 可以作为差分输入，但不应该直接全量生成覆盖以下详情文件：
+
+- `src/definitions/nodes.ts`
+- `src/definitions/events.ts`
+- `src/definitions/events-payload.ts`
+- `src/definitions/entity_helpers.ts`
+- `src/definitions/zh_aliases.ts`
+
+原因是资源文件的节点顺序、中文条目顺序、局部文案和类型粒度可能发生漂移。全量覆盖会造成：
+
+- 原本存在的节点方法被删除或改名
+- 事件中文注释错配到相邻事件
+- `CharacterEntity` / `PlayerEntity` 等精细类型被退化成 `EntityValue`
+- `zh_aliases.ts` 中稳定的中英文映射被清空或洗牌
+- diff 被大规模重排淹没，无法审查真实维护点
+
+推荐做法是：
+
+1. 先用脚本只生成差分报告，不直接写入详情文件。
+2. 将变更分类为：新增节点、疑似重命名、参数变化、返回值变化、仅注释变化。
+3. 对新增节点/事件，从资源文件生成候选代码块，再手工插入到现有文件的对应位置。
+4. 对已有节点/事件，只按字段更新必要的签名或注释，保留原方法名、顺序和精细类型。
+5. 对中文注释使用 `zh_aliases.ts` 的既有映射校正，不能依赖中英文资源数组下标对齐。
+6. 每次小块修改后运行无产物检查，例如 `npx tsc -p tsconfig.json --noEmit`。
+
+除非本轮目标就是重建整套定义层，否则不要把 `npm run gen` 的输出直接作为最终改动提交。
+
 ### 本轮补过的新增事件
 
 - `whenFloatingInteractionPageIsTriggered`
@@ -199,6 +228,7 @@
 - 要求按顺序创建节点，连续编号
 - 每个枚举值都用明确的非默认值
 - 关键出参要连出去，避免导出后 pin 看不见
+- 对已有图导入验证，优先使用 `.on(...).on(...)` 链式声明，把不同风险点拆到不同事件里；这样只需注入一个图，导出后也便于按事件定位节点。
 
 本轮为此准备过的辅助文件：
 
@@ -256,6 +286,28 @@
 - `docs/maintenance/2026-04-13-verify2-decoded.md`
 
 这类反解文件建议以后每轮都留一份，避免同一套值重复手工确认。
+
+### 静态不一致报告的处理规则
+
+`scripts/check-node-def-consistency.ts` 是发现风险的入口，但它只能做静态对账，不能直接判断编辑器里的 hidden pin 是否真实存在。
+
+处理原则：
+
+1. `nodes.ts` 的 `registerNode(args)` 数量和 `node_pin_records.ts` 的 `inputs` 数量不一致时，先列为风险，不要立即改 API。
+2. 生成手工验证脚本，导入编辑器后再导出 `.gia`。
+3. 反解导出的 `.gia`，确认实际 input pin index。
+4. 如果编辑器导出本身跳过某个 index，例如 `0/1/2/4`，说明这是 editor-truth hole，可把节点加入 consistency checker allowlist，并在文档里记录导出文件路径和实际 pin index。
+5. 如果编辑器导出存在该 pin 且有有效值，才考虑补 API 参数或编译器发射逻辑。
+
+本轮 `2026-06-01-verify1.gia` 证明：
+
+- `set_custom_variable`: 导出 input 为 `0/1/2/4`，pin `3` 是 hole。
+- `activate_disable_pathfinding_obstacle`: 导出 input 为 `1/2/3`，pin `0` 是 leading hole。
+- `activate_disable_pathfinding_obstacle_feature`: 导出 input 为 `0/2`，pin `1` 是 hole。
+- `remove_unit_status`: 导出 input 为 `0/1/2/4`，pin `3` 是 hole。
+- `exponentiation`: 导出 input 为 `0/1`，thirdparty 记录里的额外 enum pin 不由编辑器导出。
+
+`data_type_conversion_*` 这类动态 node type 不应和 hidden pin 混为一谈。它属于 checker 展开策略问题：本地实现按目标类型动态生成 concrete node type，静态脚本无法枚举所有变体时可以保留单独的 `dynamic_node_type` finding。
 
 ## 第六步：更新编译器与第三方节点数据
 
@@ -336,6 +388,21 @@
 - 关键枚举值用非默认值
 - 关键返回值接出去，确保导出后 pin 可观察
 - 同时覆盖新增事件与新增执行/查询节点
+- 对有返回值的节点，不能只调用方法；必须把返回值保存并连到消费节点，例如 `dataTypeConversion -> printString`，否则输出 pin 没有被测试。
+- classic-only 节点和事件要单独生成 classic 图或 classic 事件文件；不要把 classic-only event 混进 beyond 默认事件覆盖。
+
+### 生成测试的维护边界
+
+自动生成测试可以帮助覆盖新增节点，但不应该把全量生成产物作为例行更新的主体 diff。
+
+本轮形成的规则：
+
+1. `scripts/generate-node-gia-tests.ts` 可以增强生成能力，例如 classic 覆盖、entity 参数推断、返回值消费。
+2. `tests/generated` 只提交与本轮新增/修正直接相关的最小变化。
+3. 不要因为重跑生成器而提交大量 `group_*` 重排、报告文件或无关快照。
+4. 对新增节点补 literal 与 wire 两种调用；对有返回值节点同时补输出 pin 消费。
+5. 增加轻量覆盖检查脚本，例如 `scripts/check-node-gia-test-coverage.mjs`，用来防止遗漏 classic 图、输出 pin 消费、错误 entity 参数等问题。
+6. generated 临时报表，例如 `_node_def_consistency.json`、`_node_def_consistency.md`，一般属于检查产物，不应作为维护改动提交，除非本轮明确要保存报告。
 
 ## 第九步：统计节点总量与模式总量
 
@@ -432,6 +499,7 @@
 - pin 是否连续
 - 哪个 index 上有 hole
 - 旧 hole 是否在新版消失
+- 不能只看 `node_pin_records.ts` 的 `inputs.length` 推断缺参；必须以编辑器导出 `.gia` 的实际 pin index 为准。
 
 ### 5. 模式限制漏改
 
@@ -450,6 +518,39 @@
 
 因此必须以真实导出编码为准，不要只看语义名称。
 
+### 7. 生成测试只调用查询节点但不消费输出
+
+查询节点、数学节点、转换节点等有输出 pin 的节点，如果生成测试只是：
+
+```ts
+f.querySomething(...)
+```
+
+那么只能证明方法可以调用，不能证明输出 pin 可以连线。
+
+正确做法是：
+
+```ts
+const value = f.querySomething(...)
+const text = f.dataTypeConversion(value, 'str')
+f.printString(text)
+```
+
+对象、列表、字典返回值也要接到合适的消费节点，例如字段转换、`getListLength`、`queryDictionarySLength`。
+
+### 8. 直接跑 `npm test` 会产生清理和生成副作用
+
+`npm test` 当前会触发 `pretest` 清理、build、生成测试和 `.gia` 编译，容易扩大本地工作区改动。
+
+例行维护中如果只是做类型或静态校验，优先使用无产物或低副作用命令：
+
+- `npx tsc -p tsconfig.json --noEmit`
+- `git diff --check`
+- `node scripts/check-node-gia-test-coverage.mjs`
+- `npx tsx scripts/check-node-def-consistency.ts`
+
+最后一个命令会写 `tests/generated/_node_def_consistency.*` 报告；运行后如果只是临时核验，应删除这些产物或明确说明它们不进入提交。
+
 ## 未来复用时的执行模板
 
 以后每轮维护都建议按下面这个模板开工：
@@ -464,6 +565,31 @@
   - 旧节点注释变化
   - 旧事件变化
   - 未支持体系
+
+推荐先运行只读差分报告：
+
+```bash
+node scripts/analyze-node-definitions-diff.mjs --full --stdout
+```
+
+这个命令只读取 `resources/node_definitions.json` 和当前定义文件，输出 Markdown 报告，不写入 `src/definitions/*`。报告中的重点分组是：
+
+- `Rename Candidates`：疑似旧节点改名，必须人工确认后再决定是否保留旧 API、增加别名，或迁移到新 API。
+- `New Node Candidates`：资源中存在但当前仓库还没有的节点，适合逐一手工补到 `nodes.ts`。
+- `Removed Node Candidates`：当前仓库存在但资源中找不到的节点，通常不能直接删除，需要先确认是否是改名或资源遗漏。
+- `Signature Changes`：同名节点/事件的参数或返回值差异，其中手写特殊节点可能需要按仓库现有实现判断。
+
+本轮确认策略：
+
+- 疑似改名节点保留旧 TypeScript API 名，不批量新增别名；只在 `SPECIAL_NODE_MAPPINGS` 和 `scripts/testgen/vendor_ids.ts` 中维护新资源名到既有 vendor 名的映射。
+- `whenTheActiveCharacterChanges` 在编辑器中确认仍有参数，资源差异视为文档/解析漂移，保留现有事件 payload。
+
+如果需要落地报告文件，可以去掉 `--stdout`，脚本会写入：
+
+- `resources/node_definitions_diff_full.json`
+- `resources/node_definitions_diff_full.md`
+
+这些文件是维护辅助产物，不是定义层源码。
 
 ### B. 定义层落地
 
@@ -496,7 +622,10 @@
 
 ### E. 最终验证
 
-- `npm run build`
+- `npx tsc -p tsconfig.json --noEmit`
+- `git diff --check`
+- 运行必要的轻量覆盖脚本
+- 如确实需要完整产物验证，再运行 `npm run build` 或更高层命令
 - 生成导入验证脚本
 - 导出单文件 `.gia`
 - 导入编辑器
