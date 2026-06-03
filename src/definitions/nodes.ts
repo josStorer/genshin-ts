@@ -1096,6 +1096,50 @@ export class ServerExecutionFlowFunctions {
   /**
    * @gsts
    *
+   * Copy a list: when you get a list from `f.get()`, `entity.get()`,
+   * `entity.getCustomVariable()`, or similar APIs, use `copyList()` to create an explicit
+   * data copy if later changes should not affect the original variable.
+   *
+   * 复制列表: 当你从 `f.get()`、`entity.get()`、`entity.getCustomVariable()` 等接口取得列表,
+   * 但不希望后续修改影响原始变量时, 用 `copyList()` 显式创建一份列表数据拷贝。
+   *
+   * In generated node graphs, variables initialized from `copyList(...)` use LocalVariable
+   * nodes to keep a snapshot.
+   *
+   * 生成节点图时, 通过 `copyList(...)` 初始化的变量会使用 LocalVariable 节点保存快照。
+   */
+  copyList(input: FloatValue[], type?: 'float'): number[]
+  copyList(input: IntValue[], type?: 'int'): bigint[]
+  copyList(input: BoolValue[], type?: 'bool'): boolean[]
+  copyList(input: ConfigIdValue[], type?: 'config_id'): configId[]
+  copyList(input: EntityValue[], type?: 'entity'): entity[]
+  copyList(input: FactionValue[], type?: 'faction'): faction[]
+  copyList(input: GuidValue[], type?: 'guid'): guid[]
+  copyList(input: PrefabIdValue[], type?: 'prefab_id'): prefabId[]
+  copyList(input: StrValue[], type?: 'str'): string[]
+  copyList(input: Vec3Value[], type?: 'vec3'): vec3[]
+  copyList<
+    T extends
+      | 'bool'
+      | 'config_id'
+      | 'entity'
+      | 'faction'
+      | 'float'
+      | 'guid'
+      | 'int'
+      | 'prefab_id'
+      | 'str'
+      | 'vec3'
+  >(
+    input: RuntimeParameterValueTypeMap[`${T}_list`],
+    _type?: T
+  ): RuntimeReturnValueTypeMap[`${T}_list`] {
+    return input as unknown as RuntimeReturnValueTypeMap[`${T}_list`]
+  }
+
+  /**
+   * @gsts
+   *
    * Create an empty List of the specified type.
    *
    * 创建空列表: 仅指定类型创建一个真正的空列表。

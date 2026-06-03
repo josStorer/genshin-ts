@@ -24,6 +24,8 @@ export type TimerCaptureInfo = {
   useLocalVar?: boolean
 }
 
+export type CollectionSourceKind = 'liveRef' | 'copy' | 'temporary' | 'unknown'
+
 export type VarPlanEntry = {
   /**
    * 变量需要“局部变量语义”（Get/Set Local Variable）以模拟可变状态
@@ -33,6 +35,11 @@ export type VarPlanEntry = {
    * 变量被判定为 collection（list/dict）
    */
   isCollection: boolean
+  /**
+   * collection initializer provenance. liveRef means mutations should write through
+   * to the source instead of being copied into a LocalVariable.
+   */
+  collectionSourceKind?: CollectionSourceKind
 }
 
 export type VarPlan = ReadonlyMap<ts.Symbol, VarPlanEntry>

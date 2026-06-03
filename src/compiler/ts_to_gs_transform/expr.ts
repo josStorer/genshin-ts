@@ -7,6 +7,7 @@ import { isEntityLikeType } from '../../shared/ts_type_utils.js'
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
 import { fail, warn } from './errors.js'
 import { tryTransformListMethodCall } from './list_methods.js'
+import { isFMethodCall } from './matcher.js'
 import {
   inferArrayListType,
   inferConcreteTypeFromString,
@@ -261,62 +262,6 @@ function isRawWrapperCall(expr: ts.CallExpression): boolean {
 function isListWrapperCall(expr: ts.CallExpression): boolean {
   const callee = expr.expression
   return ts.isIdentifier(callee) && callee.text === 'list'
-}
-
-function isAssemblyListFCall(env: Env, expr: ts.CallExpression): boolean {
-  const callee = expr.expression
-  if (!ts.isPropertyAccessExpression(callee)) return false
-  if (callee.name.text !== 'assemblyList') return false
-  const left = callee.expression
-
-  // shape 1: gsts.f.assemblyList(...) / __gsts.f.assemblyList(...) / globalThis.gsts.f.assemblyList(...)
-  if (ts.isPropertyAccessExpression(left) && left.name.text === 'f') {
-    const root = left.expression
-    if (ts.isIdentifier(root) && (root.text === env.gstsIdent || root.text === 'gsts')) return true
-    if (
-      ts.isPropertyAccessExpression(root) &&
-      ts.isIdentifier(root.expression) &&
-      root.expression.text === 'globalThis' &&
-      root.name.text === 'gsts'
-    ) {
-      return true
-    }
-  }
-
-  // shape 2: f.assemblyList(...) (handler 2nd param)
-  if (ts.isIdentifier(left) && env.fIdent && left.text === env.fIdent) {
-    return true
-  }
-
-  return false
-}
-
-function isMultipleBranchesFCall(env: Env, expr: ts.CallExpression): boolean {
-  const callee = expr.expression
-  if (!ts.isPropertyAccessExpression(callee)) return false
-  if (callee.name.text !== 'multipleBranches') return false
-  const left = callee.expression
-
-  // shape 1: gsts.f.multipleBranches(...) / __gsts.f.multipleBranches(...) / globalThis.gsts.f.multipleBranches(...)
-  if (ts.isPropertyAccessExpression(left) && left.name.text === 'f') {
-    const root = left.expression
-    if (ts.isIdentifier(root) && (root.text === env.gstsIdent || root.text === 'gsts')) return true
-    if (
-      ts.isPropertyAccessExpression(root) &&
-      ts.isIdentifier(root.expression) &&
-      root.expression.text === 'globalThis' &&
-      root.name.text === 'gsts'
-    ) {
-      return true
-    }
-  }
-
-  // shape 2: f.multipleBranches(...) (handler 2nd param)
-  if (ts.isIdentifier(left) && env.fIdent && left.text === env.fIdent) {
-    return true
-  }
-
-  return false
 }
 
 function tryMapArrayLiteralThroughWrappers(
@@ -1542,7 +1487,7 @@ export function transformExpression(
 
   if (
     ts.isCallExpression(expr) &&
-    isMultipleBranchesFCall(env, expr) &&
+    isFMethodCall(env, expr, ['multipleBranches']) &&
     expr.arguments.length >= 2
   ) {
     const args = [...expr.arguments]
@@ -1617,7 +1562,11 @@ export function transformExpression(
   // gsts.f.assemblyList(items, ...): avoid nested assemblyList(assemblyList([...]))
   // - if items is an array literal without spread: keep it as JS array literal, but still transform element expressions
   // - if items contains spread: use the original array->list concatenation logic (same as normal array transform)
-  if (ts.isCallExpression(expr) && isAssemblyListFCall(env, expr) && expr.arguments.length >= 1) {
+  if (
+    ts.isCallExpression(expr) &&
+    isFMethodCall(env, expr, ['assemblyList']) &&
+    expr.arguments.length >= 1
+  ) {
     const args = [...expr.arguments]
     const items = args[0]
     const mapped = tryMapArrayLiteralThroughWrappers(items, (arr) => {

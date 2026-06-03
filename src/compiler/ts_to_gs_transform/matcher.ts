@@ -1,5 +1,6 @@
 import ts from 'typescript'
 
+import type { Env } from './types.js'
 import { isIdentifierText } from './utils.js'
 
 function unwrapExpression(expr: ts.Expression): ts.Expression {
@@ -73,4 +74,42 @@ export function isServerOnCall(call: ts.CallExpression, checker: ts.TypeChecker)
   if (!ts.isPropertyAccessExpression(callee)) return false
   if (callee.name.text !== 'on' && callee.name.text !== 'onSignal') return false
   return isServerInstanceExpression(callee.expression, checker, new Set())
+}
+
+export function isGstsRootExpression(env: Env, expr: ts.Expression): boolean {
+  if (ts.isIdentifier(expr)) return expr.text === env.gstsIdent || expr.text === 'gsts'
+  return (
+    ts.isPropertyAccessExpression(expr) &&
+    ts.isIdentifier(expr.expression) &&
+    expr.expression.text === 'globalThis' &&
+    expr.name.text === 'gsts'
+  )
+}
+
+export function isFObjectExpression(env: Env, expr: ts.Expression): boolean {
+  if (ts.isIdentifier(expr) && env.fIdent && expr.text === env.fIdent) return true
+  if (ts.isPropertyAccessExpression(expr) && expr.name.text === 'f') {
+    return isGstsRootExpression(env, expr.expression)
+  }
+  return false
+}
+
+export function getFMethodCall(
+  env: Env,
+  call: ts.CallExpression
+): { method: string; callee: ts.PropertyAccessExpression } | null {
+  const callee = call.expression
+  if (!ts.isPropertyAccessExpression(callee)) return null
+  if (!isFObjectExpression(env, callee.expression)) return null
+  return { method: callee.name.text, callee }
+}
+
+export function isFMethodCall(
+  env: Env,
+  expr: ts.Expression,
+  names: readonly string[]
+): expr is ts.CallExpression {
+  if (!ts.isCallExpression(expr)) return false
+  const call = getFMethodCall(env, expr)
+  return !!call && names.includes(call.method)
 }
