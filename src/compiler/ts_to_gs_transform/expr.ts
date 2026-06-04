@@ -227,6 +227,10 @@ function wrapWithFloat(expr: ts.Expression): ts.Expression {
   return ts.factory.createCallExpression(ts.factory.createIdentifier('float'), undefined, [expr])
 }
 
+function wrapWithInt(expr: ts.Expression): ts.Expression {
+  return ts.factory.createCallExpression(ts.factory.createIdentifier('int'), undefined, [expr])
+}
+
 function shouldWrapLoopIndexByContext(env: Env, id: ts.Identifier): boolean {
   if (!isLoopIndexIdentifier(env, id)) return false
   const parent = id.parent
@@ -2062,16 +2066,25 @@ export function transformExpression(
       if (isNumericOp) {
         const leftIsLoop = isLoopIndexIdentifier(env, expr.left)
         const rightIsLoop = isLoopIndexIdentifier(env, expr.right)
-        if (leftIsLoop) {
-          const otherKind = getNumericKind(env, env.checker.getTypeAtLocation(expr.right))
-          if (otherKind === 'float') {
-            left = wrapWithFloat(left)
+        if (op === ts.SyntaxKind.PercentToken) {
+          if (leftIsLoop) {
+            left = wrapWithInt(left)
           }
-        }
-        if (rightIsLoop) {
-          const otherKind = getNumericKind(env, env.checker.getTypeAtLocation(expr.left))
-          if (otherKind === 'float') {
-            right = wrapWithFloat(right)
+          if (rightIsLoop) {
+            right = wrapWithInt(right)
+          }
+        } else {
+          if (leftIsLoop) {
+            const otherKind = getNumericKind(env, env.checker.getTypeAtLocation(expr.right))
+            if (otherKind === 'float') {
+              left = wrapWithFloat(left)
+            }
+          }
+          if (rightIsLoop) {
+            const otherKind = getNumericKind(env, env.checker.getTypeAtLocation(expr.left))
+            if (otherKind === 'float') {
+              right = wrapWithFloat(right)
+            }
           }
         }
       }
