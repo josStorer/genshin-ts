@@ -66,67 +66,9 @@ function unwrapConstExpression(expr: ts.Expression): ts.Expression {
   }
 }
 
-function cloneLiteralExpression(expr: ts.Expression): ts.Expression | null {
-  const unwrapped = unwrapConstExpression(expr)
-
-  if (ts.isNumericLiteral(unwrapped)) {
-    return ts.factory.createNumericLiteral(unwrapped.text)
-  }
-  if (ts.isBigIntLiteral(unwrapped)) {
-    return ts.factory.createBigIntLiteral(unwrapped.text)
-  }
-  if (ts.isStringLiteral(unwrapped) || ts.isNoSubstitutionTemplateLiteral(unwrapped)) {
-    return ts.factory.createStringLiteral(unwrapped.text)
-  }
-  if (unwrapped.kind === ts.SyntaxKind.TrueKeyword) return ts.factory.createTrue()
-  if (unwrapped.kind === ts.SyntaxKind.FalseKeyword) return ts.factory.createFalse()
-
-  if (ts.isPrefixUnaryExpression(unwrapped)) {
-    const operand = cloneLiteralExpression(unwrapped.operand)
-    if (!operand) return null
-    if (
-      unwrapped.operator === ts.SyntaxKind.PlusToken ||
-      unwrapped.operator === ts.SyntaxKind.MinusToken ||
-      unwrapped.operator === ts.SyntaxKind.ExclamationToken ||
-      unwrapped.operator === ts.SyntaxKind.TildeToken
-    ) {
-      return ts.factory.createPrefixUnaryExpression(unwrapped.operator, operand)
-    }
-  }
-
-  return null
-}
-
 function isConstVariableDeclaration(decl: ts.VariableDeclaration): boolean {
   const list = decl.parent
   return ts.isVariableDeclarationList(list) && (list.flags & ts.NodeFlags.Const) !== 0
-}
-
-function isConstAssertedObjectInitializer(expr: ts.Expression): boolean {
-  const unwrapped = unwrapConstExpression(expr)
-  return ts.isObjectLiteralExpression(unwrapped) || ts.isArrayLiteralExpression(unwrapped)
-}
-
-function getEnclosingConstObjectDeclaration(node: ts.Node): ts.VariableDeclaration | null {
-  let cur: ts.Node | undefined = node
-  while (cur) {
-    if (ts.isVariableDeclaration(cur)) {
-      if (!cur.initializer || !isConstVariableDeclaration(cur)) return null
-      return isConstAssertedObjectInitializer(cur.initializer) ? cur : null
-    }
-    if (ts.isFunctionLike(cur) || ts.isSourceFile(cur)) return null
-    cur = cur.parent
-  }
-  return null
-}
-
-function propertyInitializerFromSymbol(sym: ts.Symbol): ts.Expression | null {
-  for (const decl of sym.declarations ?? []) {
-    if (!ts.isPropertyAssignment(decl)) continue
-    if (!getEnclosingConstObjectDeclaration(decl)) continue
-    return decl.initializer
-  }
-  return null
 }
 
 function constInitializerFromSymbol(sym: ts.Symbol): ts.Expression | null {
@@ -145,14 +87,95 @@ function resolveSymbol(sym: ts.Symbol, checker: ts.TypeChecker): ts.Symbol {
   return sym
 }
 
-export function tryEvaluateConstExpression(
+function literalFromSignedText(
+  text: string,
+  makePositiveLiteral: (positiveText: string) => ts.Expression
+): ts.Expression | null {
+  if (text.startsWith('-')) {
+    const positiveText = text.slice(1)
+    if (!positiveText) return null
+    return ts.factory.createPrefixUnaryExpression(
+      ts.SyntaxKind.MinusToken,
+      makePositiveLiteral(positiveText)
+    )
+  }
+  return makePositiveLiteral(text.startsWith('+') ? text.slice(1) : text)
+}
+
+function literalExpressionFromType(env: Env, expr: ts.Expression): ts.Expression | null {
+  const t = env.checker.getTypeAtLocation(expr)
+  if (t.isUnion()) return null
+
+  if (t.isStringLiteral()) {
+    return ts.factory.createStringLiteral(t.value)
+  }
+  if ((t.flags & ts.TypeFlags.BigIntLiteral) !== 0) {
+    const value = (t as ts.BigIntLiteralType).value
+    const text = `${value.negative ? '-' : ''}${value.base10Value}`
+    return literalFromSignedText(text, (positiveText) =>
+      ts.factory.createBigIntLiteral(`${positiveText}n`)
+    )
+  }
+  if (t.isNumberLiteral()) {
+    return literalFromSignedText(String(t.value), (text) => ts.factory.createNumericLiteral(text))
+  }
+
+  const typeText = env.checker.typeToString(t)
+  if (typeText === 'true') return ts.factory.createTrue()
+  if (typeText === 'false') return ts.factory.createFalse()
+
+  return null
+}
+
+function isLiteralLikeExpression(expr: ts.Expression): boolean {
+  const unwrapped = unwrapConstExpression(expr)
+  if (
+    ts.isNumericLiteral(unwrapped) ||
+    ts.isBigIntLiteral(unwrapped) ||
+    ts.isStringLiteral(unwrapped) ||
+    ts.isNoSubstitutionTemplateLiteral(unwrapped) ||
+    unwrapped.kind === ts.SyntaxKind.TrueKeyword ||
+    unwrapped.kind === ts.SyntaxKind.FalseKeyword
+  ) {
+    return true
+  }
+  if (ts.isPrefixUnaryExpression(unwrapped)) {
+    return (
+      (unwrapped.operator === ts.SyntaxKind.PlusToken ||
+        unwrapped.operator === ts.SyntaxKind.MinusToken ||
+        unwrapped.operator === ts.SyntaxKind.ExclamationToken ||
+        unwrapped.operator === ts.SyntaxKind.TildeToken) &&
+      isLiteralLikeExpression(unwrapped.operand)
+    )
+  }
+  return false
+}
+
+function propertyNameText(name: ts.PropertyName): string | null {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name))
+    return name.text
+  return null
+}
+
+function propertyInitializerFromObject(
+  object: ts.ObjectLiteralExpression,
+  name: string
+): ts.Expression | null {
+  for (const prop of object.properties) {
+    if (!ts.isPropertyAssignment(prop)) continue
+    if (propertyNameText(prop.name) === name) return prop.initializer
+  }
+  return null
+}
+
+function resolveConstObjectExpression(
   env: Env,
   expr: ts.Expression,
-  seen = new Set<ts.Symbol>()
-): ts.Expression | null {
+  seen: Set<ts.Symbol>
+): ts.ObjectLiteralExpression | null {
   const unwrapped = unwrapConstExpression(expr)
-  const directLiteral = cloneLiteralExpression(unwrapped)
-  if (directLiteral) return directLiteral
+
+  if (ts.isObjectLiteralExpression(unwrapped)) return unwrapped
 
   if (ts.isIdentifier(unwrapped)) {
     const sym = env.checker.getSymbolAtLocation(unwrapped)
@@ -161,20 +184,83 @@ export function tryEvaluateConstExpression(
     if (seen.has(resolved)) return null
     seen.add(resolved)
     const initializer = constInitializerFromSymbol(resolved)
-    return initializer ? tryEvaluateConstExpression(env, initializer, seen) : null
+    return initializer ? resolveConstObjectExpression(env, initializer, seen) : null
   }
 
   if (ts.isPropertyAccessExpression(unwrapped)) {
-    const sym = env.checker.getSymbolAtLocation(unwrapped.name)
+    const initializer = propertyInitializerFromAccess(env, unwrapped, seen)
+    return initializer ? resolveConstObjectExpression(env, initializer, seen) : null
+  }
+
+  return null
+}
+
+function propertyInitializerFromAccess(
+  env: Env,
+  expr: ts.PropertyAccessExpression,
+  seen: Set<ts.Symbol>
+): ts.Expression | null {
+  const object = resolveConstObjectExpression(env, expr.expression, seen)
+  return object ? propertyInitializerFromObject(object, expr.name.text) : null
+}
+
+function hasSafeConstOrigin(env: Env, expr: ts.Expression, seen: Set<ts.Symbol>): boolean {
+  const unwrapped = unwrapConstExpression(expr)
+
+  if (isLiteralLikeExpression(unwrapped)) return true
+
+  if (ts.isIdentifier(unwrapped)) {
+    const sym = env.checker.getSymbolAtLocation(unwrapped)
+    if (!sym) return false
+    const resolved = resolveSymbol(sym, env.checker)
+    if (seen.has(resolved)) return false
+    seen.add(resolved)
+    const initializer = constInitializerFromSymbol(resolved)
+    return initializer ? hasSafeConstOrigin(env, initializer, seen) : false
+  }
+
+  if (ts.isPropertyAccessExpression(unwrapped)) {
+    const initializer = propertyInitializerFromAccess(env, unwrapped, seen)
+    return initializer ? hasSafeConstOrigin(env, initializer, seen) : false
+  }
+
+  return false
+}
+
+function literalExpressionFromConstOrigin(
+  env: Env,
+  expr: ts.Expression,
+  seen: Set<ts.Symbol>
+): ts.Expression | null {
+  const directLiteral = literalExpressionFromType(env, expr)
+  if (directLiteral) return directLiteral
+
+  const unwrapped = unwrapConstExpression(expr)
+  if (ts.isIdentifier(unwrapped)) {
+    const sym = env.checker.getSymbolAtLocation(unwrapped)
     if (!sym) return null
     const resolved = resolveSymbol(sym, env.checker)
     if (seen.has(resolved)) return null
     seen.add(resolved)
-    const initializer = propertyInitializerFromSymbol(resolved)
-    return initializer ? tryEvaluateConstExpression(env, initializer, seen) : null
+    const initializer = constInitializerFromSymbol(resolved)
+    return initializer ? literalExpressionFromConstOrigin(env, initializer, seen) : null
+  }
+
+  if (ts.isPropertyAccessExpression(unwrapped)) {
+    const initializer = propertyInitializerFromAccess(env, unwrapped, seen)
+    return initializer ? literalExpressionFromConstOrigin(env, initializer, seen) : null
   }
 
   return null
+}
+
+export function tryEvaluateConstExpression(
+  env: Env,
+  expr: ts.Expression,
+  seen = new Set<ts.Symbol>()
+): ts.Expression | null {
+  if (!hasSafeConstOrigin(env, expr, seen)) return null
+  return literalExpressionFromConstOrigin(env, expr, new Set())
 }
 
 export function isConstEvaluableExpression(env: Env, expr: ts.Expression): boolean {

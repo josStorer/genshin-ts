@@ -9,11 +9,14 @@ const fixture = './tests/const_object_member_folding_test.ts'
 
 const expectedHandlerText = `}).on('whenEntityIsCreated', (_evt, f) => {
     const gsts = globalThis.gsts;
-    const selectedRoute: bigint = 10n;
-    const selectedLabel: string = "ready";
-    gsts.f.multipleBranches(10n, {
+    const selectedRoute: bigint = DefaultRoute;
+    const selectedLabel: string = ReadyLabel;
+    const RepeatedBonus = WorkflowCodes.Metrics.Bonus;
+    const ComputedRoute = gsts.f.initLocalVariable("int");
+    gsts.f.setLocalVariable(ComputedRoute.localVariable, ComputedCodes.Route.Start);
+    gsts.f.multipleBranches(selectedRoute, {
         "10": () => {
-            f.printString(str(300n));
+            f.printString(str(WorkflowCodes.Metrics.Bonus));
         },
         "11": () => {
             f.printString('stop');
@@ -22,18 +25,25 @@ const expectedHandlerText = `}).on('whenEntityIsCreated', (_evt, f) => {
             f.printString('unknown route');
         }
     });
-    gsts.f.multipleBranches("ready", {
+    gsts.f.multipleBranches(selectedLabel, {
         "ready": () => {
-            f.printString("ready");
+            f.printString(WorkflowCodes.Labels.Ready);
         },
         default: () => {
             f.printString('unknown label');
         }
     });
-    f.printString(str(300n));
-    f.printString(str(300n));
+    f.printString(str(RepeatedBonus));
+    f.printString(str(RepeatedBonus));
+    gsts.f.doubleBranch(gsts.f.greaterThan(selectedRoute, 0n), () => {
+        AliasWorkflowCodes = OtherWorkflowCodes;
+    }, () => {
+    });
+    f.printString(str(AliasWorkflowCodes.Route.Start));
     f.printString(str(RuntimeCodes.Route.Start));
     f.printString(str(ComputedCodes.Route.Start));
+    f.printString(str(ComputedRoute.value));
+    f.printString(str(ComputedRoute.value));
 });
 {
     const ShadowedCodes = {
@@ -46,14 +56,14 @@ const expectedHandlerText = `}).on('whenEntityIsCreated', (_evt, f) => {
         id: 1073741879
     }).on('whenEntityIsCreated', (_evt, f) => {
         const gsts = globalThis.gsts;
-        f.printString(str(31n));
+        f.printString(str(ShadowedRoute));
     });
 }
 g.server({
     id: 1073741880
 }).on('whenEntityIsCreated', (_evt, f) => {
     const gsts = globalThis.gsts;
-    f.printString(str(30n));
+    f.printString(str(ShadowedCodes.Route.Start));
 });`
 
 function normalizeGeneratedText(text: string) {
@@ -67,6 +77,18 @@ function assertSameGeneratedHandler(actual: string) {
     throw new Error(
       `Generated handler did not match expected output.\n\nExpected:\n${expectedNormalized}\n\nActual:\n${actualNormalized}`
     )
+  }
+}
+
+function assertContains(text: string, expected: string) {
+  if (!text.includes(expected)) {
+    throw new Error(`Expected generated output to contain:\n${expected}`)
+  }
+}
+
+function assertNotContains(text: string, unexpected: string) {
+  if (text.includes(unexpected)) {
+    throw new Error(`Expected generated output not to contain:\n${unexpected}`)
   }
 }
 
@@ -93,6 +115,13 @@ try {
   const handlerText = text.slice(handlerStart)
 
   assertSameGeneratedHandler(handlerText)
+  assertNotContains(handlerText, 'RepeatedBonus.value')
+  assertContains(handlerText, 'const ComputedRoute = gsts.f.initLocalVariable("int");')
+  assertContains(
+    handlerText,
+    'gsts.f.setLocalVariable(ComputedRoute.localVariable, ComputedCodes.Route.Start);'
+  )
+  assertContains(handlerText, 'f.printString(str(ComputedRoute.value));')
 
   console.log(`[ok] const object member folding output verified: ${outFile}`)
 } finally {

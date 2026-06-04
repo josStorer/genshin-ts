@@ -2,8 +2,9 @@ import { g } from 'genshin-ts/runtime/core'
 
 // Expected:
 // - nested const object members are accepted in switch case labels
-// - const object members are folded to literal values in ordinary expressions
-// - repeated const aliases stay as literals instead of becoming LocalVariable nodes
+// - ordinary expression positions keep const object member access unchanged
+// - repeated const-evaluable aliases do not become LocalVariable nodes
+// - repeated non-const-evaluable aliases still become LocalVariable nodes
 // - non-const objects and non-literal initializers are not folded
 // - shadowed const object names resolve to the nearest TypeScript symbol, then restore outer scope
 
@@ -20,9 +21,15 @@ const WorkflowCodes = {
   }
 } as const
 
+const OtherWorkflowCodes = {
+  Route: {
+    Start: 12n
+  }
+} as const
+
 const DefaultRoute = WorkflowCodes.Route.Start
 const ReadyLabel = WorkflowCodes.Labels.Ready
-const RepeatedBonus = WorkflowCodes.Metrics.Bonus
+let AliasWorkflowCodes: typeof WorkflowCodes | typeof OtherWorkflowCodes = WorkflowCodes
 
 let RuntimeCodes = {
   Route: {
@@ -47,6 +54,8 @@ g.server({
 }).on('whenEntityIsCreated', (_evt, f) => {
   const selectedRoute: bigint = DefaultRoute
   const selectedLabel: string = ReadyLabel
+  const RepeatedBonus = WorkflowCodes.Metrics.Bonus
+  const ComputedRoute = ComputedCodes.Route.Start
 
   switch (selectedRoute) {
     case WorkflowCodes.Route.Start:
@@ -71,8 +80,14 @@ g.server({
 
   f.printString(str(RepeatedBonus))
   f.printString(str(RepeatedBonus))
+  if (selectedRoute > 0n) {
+    AliasWorkflowCodes = OtherWorkflowCodes
+  }
+  f.printString(str(AliasWorkflowCodes.Route.Start))
   f.printString(str(RuntimeCodes.Route.Start))
   f.printString(str(ComputedCodes.Route.Start))
+  f.printString(str(ComputedRoute))
+  f.printString(str(ComputedRoute))
 })
 
 {

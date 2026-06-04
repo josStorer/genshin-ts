@@ -69,7 +69,6 @@
     "prebuild": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "tsc -p tsconfig.json",
     "postbuild": "node scripts/postbuild.mjs",
-    "test:const-folding": "npm run build && tsx scripts/assert-const-object-member-folding.ts",
     "pack": "npm run build && npm pack",
     "gen": "tsx ./scripts/generate-definitions.ts && prettier --write src/definitions/**/*.ts",
     "to-gs": "tsx ./src/compiler/ts_to_gs.ts",
