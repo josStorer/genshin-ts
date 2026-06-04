@@ -12,6 +12,8 @@ const expectedHandlerText = `}).on('whenEntityIsCreated', (_evt, f) => {
     const selectedRoute: bigint = DefaultRoute;
     const selectedLabel: string = ReadyLabel;
     const RepeatedBonus = WorkflowCodes.Metrics.Bonus;
+    const MutableBonus = gsts.f.initLocalVariable("int");
+    gsts.f.setLocalVariable(MutableBonus.localVariable, WorkflowCodes.Metrics.Bonus);
     const ComputedRoute = gsts.f.initLocalVariable("int");
     gsts.f.setLocalVariable(ComputedRoute.localVariable, ComputedCodes.Route.Start);
     gsts.f.multipleBranches(selectedRoute, {
@@ -35,6 +37,8 @@ const expectedHandlerText = `}).on('whenEntityIsCreated', (_evt, f) => {
     });
     f.printString(str(RepeatedBonus));
     f.printString(str(RepeatedBonus));
+    gsts.f.setLocalVariable(MutableBonus.localVariable, gsts.f.addition(MutableBonus.value, 2n));
+    f.printString(str(MutableBonus.value));
     gsts.f.doubleBranch(gsts.f.greaterThan(selectedRoute, 0n), () => {
         AliasWorkflowCodes = OtherWorkflowCodes;
     }, () => {
@@ -116,6 +120,15 @@ try {
 
   assertSameGeneratedHandler(handlerText)
   assertNotContains(handlerText, 'RepeatedBonus.value')
+  assertContains(handlerText, 'const MutableBonus = gsts.f.initLocalVariable("int");')
+  assertContains(
+    handlerText,
+    'gsts.f.setLocalVariable(MutableBonus.localVariable, WorkflowCodes.Metrics.Bonus);'
+  )
+  assertContains(
+    handlerText,
+    'gsts.f.setLocalVariable(MutableBonus.localVariable, gsts.f.addition(MutableBonus.value, 2n));'
+  )
   assertContains(handlerText, 'const ComputedRoute = gsts.f.initLocalVariable("int");')
   assertContains(
     handlerText,

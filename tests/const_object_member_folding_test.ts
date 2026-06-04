@@ -55,6 +55,7 @@ g.server({
   const selectedRoute: bigint = DefaultRoute
   const selectedLabel: string = ReadyLabel
   const RepeatedBonus = WorkflowCodes.Metrics.Bonus
+  let MutableBonus = WorkflowCodes.Metrics.Bonus
   const ComputedRoute = ComputedCodes.Route.Start
 
   switch (selectedRoute) {
@@ -80,6 +81,8 @@ g.server({
 
   f.printString(str(RepeatedBonus))
   f.printString(str(RepeatedBonus))
+  MutableBonus += 2n
+  f.printString(str(MutableBonus))
   if (selectedRoute > 0n) {
     AliasWorkflowCodes = OtherWorkflowCodes
   }

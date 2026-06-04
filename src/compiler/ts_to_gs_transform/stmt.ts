@@ -115,7 +115,7 @@ function inferBasicType(env: Env, t: ts.Type): ListType | null {
     }
     return base
   }
-  return inferConcreteTypeFromType(env.checker, t, env.file)
+  return inferConcreteTypeFromType(env.checker, env.checker.getBaseTypeOfLiteralType(t), env.file)
 }
 
 function makeLocalVarTypeString(
@@ -140,7 +140,7 @@ function makeLocalVarTypeString(
     return `${ct}_list`
   }
 
-  const base = inferConcreteTypeFromType(env.checker, t, env.file)
+  const base = inferBasicType(env, t)
   if (base) return base
   fail(env, decl, `cannot infer type, please add type annotation`)
 }
