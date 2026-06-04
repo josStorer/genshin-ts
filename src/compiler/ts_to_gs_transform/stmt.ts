@@ -283,6 +283,12 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     if (!expr) return 'unknown'
     const unwrapped = unwrapCollectionSourceExpression(expr)
 
+    if (ts.isIdentifier(unwrapped)) {
+      const sourceSym = env.checker.getSymbolAtLocation(unwrapped)
+      const sourceKind = sourceSym ? usage.get(sourceSym)?.collectionSourceKind : undefined
+      if (sourceKind) return sourceKind
+    }
+
     // `f.get(...)` 已经带有节点图变量元数据推断, 裸调用就应视为实时引用,
     // 不应依赖用户再手动追加 `.asType(...)` / `.asDict(...)`。
     if (isFMethodCall(env, unwrapped, ['get'])) return 'liveRef'
