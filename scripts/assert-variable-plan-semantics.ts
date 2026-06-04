@@ -9,7 +9,7 @@ const fixture = './tests/variable_plan_semantics_test.ts'
 
 type CaseExpectation = {
   name: string
-  mode: 'direct' | 'local'
+  mode: 'direct' | 'local' | 'mixed'
   description: string
   includes?: string[]
   excludes?: string[]
@@ -136,15 +136,51 @@ const cases: CaseExpectation[] = [
     ]
   },
   {
-    name: 'let_live_list_rebound_local',
-    mode: 'local',
-    description: 'let live list rebound to a new list should use LocalVariable for JS binding semantics',
+    name: 'let_live_list_rebound_direct',
+    mode: 'mixed',
+    description: 'straight-line live list rebound should snapshot only after rebinding to temporary list',
     includes: [
-      `const letLiveListRebound = gsts.f.initLocalVariable("int_list");`,
-      `gsts.f.setLocalVariable(letLiveListRebound.localVariable, f.get(Vars.LiveList));`,
-      `gsts.f.modifyValueInList(letLiveListRebound.value, 1, 3n);`,
-      `gsts.f.setLocalVariable(letLiveListRebound.localVariable, list('int', [1n]));`,
-      `gsts.f.modifyValueInList(letLiveListRebound.value, idx(0n), 2n);`
+      `let letLiveListRebound = f.get(Vars.LiveList);`,
+      `gsts.f.modifyValueInList(letLiveListRebound, 1, 3n);`,
+      `const __gsts_collection_rebind_`,
+      `gsts.f.initLocalVariable("int_list")`,
+      `gsts.f.setLocalVariable(__gsts_collection_rebind_`,
+      `list('int', [1n])`,
+      `letLiveListRebound = __gsts_collection_rebind_`,
+      `gsts.f.modifyValueInList(letLiveListRebound, idx(0n), 2n);`
+    ]
+  },
+  {
+    name: 'let_live_list_alias_rebound_direct',
+    mode: 'mixed',
+    description:
+      'straight-line aliases of live list sources should stay direct and snapshot only temporary rebinds',
+    includes: [
+      `const liveListAliasSource = f.get(Vars.LiveList);`,
+      `const liveListAliasCustom = f`,
+      `.getCustomVariable(liveListAliasSelf, 'custom_list')`,
+      `.asType('int_list');`,
+      `let letLiveListAliasRebound = liveListAliasSource;`,
+      `gsts.f.modifyValueInList(letLiveListAliasRebound, idx(1n), 31n);`,
+      `const __gsts_collection_rebind_`,
+      `gsts.f.setLocalVariable(__gsts_collection_rebind_`,
+      `list('int', [1n, 2n])`,
+      `letLiveListAliasRebound = __gsts_collection_rebind_`,
+      `gsts.f.modifyValueInList(letLiveListAliasRebound, idx(0n), 33n);`,
+      `letLiveListAliasRebound = liveListAliasCustom;`,
+      `gsts.f.modifyValueInList(letLiveListAliasRebound, idx(2n), 32n);`
+    ],
+    excludes: [`const letLiveListAliasRebound = gsts.f.initLocalVariable("int_list");`]
+  },
+  {
+    name: 'let_live_list_rebound_in_branch_local',
+    mode: 'local',
+    description: 'live list rebound inside a branch should use LocalVariable for runtime state',
+    includes: [
+      `const letLiveListReboundInBranch = gsts.f.initLocalVariable("int_list");`,
+      `gsts.f.setLocalVariable(letLiveListReboundInBranch.localVariable, f.get(Vars.LiveList));`,
+      `gsts.f.setLocalVariable(letLiveListReboundInBranch.localVariable, list('int', [2n]));`,
+      `gsts.f.modifyValueInList(letLiveListReboundInBranch.value, idx(0n), 24n);`
     ]
   },
   {
@@ -291,7 +327,7 @@ for (const expectation of cases) {
   const segment = caseSegment(text, expectation.name)
   if (expectation.mode === 'direct') {
     assertNotIncludes(segment, 'initLocalVariable', `${expectation.name} LocalVariable`)
-  } else {
+  } else if (expectation.mode === 'local') {
     assertIncludes(segment, 'initLocalVariable', `${expectation.name} LocalVariable`)
   }
   for (const include of expectation.includes ?? []) {

@@ -84,13 +84,38 @@ g.server({
   f.printString(str(letLiveListLocal[idx(0n)]))
   f.printString('__CASE__:let_live_list_local:end')
 
-  f.printString('__CASE__:let_live_list_rebound_local:start')
+  f.printString('__CASE__:let_live_list_rebound_direct:start')
   let letLiveListRebound = f.get(Vars.LiveList)
   letLiveListRebound[1] = 3n
   letLiveListRebound = list('int', [1n])
   letLiveListRebound[idx(0n)] = 2n
   f.printString(str(letLiveListRebound[idx(0n)]))
-  f.printString('__CASE__:let_live_list_rebound_local:end')
+  f.printString('__CASE__:let_live_list_rebound_direct:end')
+
+  f.printString('__CASE__:let_live_list_alias_rebound_direct:start')
+  const liveListAliasSource = f.get(Vars.LiveList)
+  const liveListAliasSelf = f.getSelfEntity()
+  const liveListAliasCustom = f
+    .getCustomVariable(liveListAliasSelf, 'custom_list')
+    .asType('int_list')
+  let letLiveListAliasRebound = liveListAliasSource
+  letLiveListAliasRebound[idx(1n)] = 31n
+  letLiveListAliasRebound = list('int', [1n, 2n])
+  letLiveListAliasRebound[idx(0n)] = 33n
+  letLiveListAliasRebound = liveListAliasCustom
+  letLiveListAliasRebound[idx(2n)] = 32n
+  f.printString(str(liveListAliasSource[idx(1n)]))
+  f.printString(str(liveListAliasCustom[idx(2n)]))
+  f.printString('__CASE__:let_live_list_alias_rebound_direct:end')
+
+  f.printString('__CASE__:let_live_list_rebound_in_branch_local:start')
+  let letLiveListReboundInBranch = f.get(Vars.LiveList)
+  if (f.get(Vars.BoolValue)) {
+    letLiveListReboundInBranch = list('int', [2n])
+  }
+  letLiveListReboundInBranch[idx(0n)] = 24n
+  f.printString(str(letLiveListReboundInBranch[idx(0n)]))
+  f.printString('__CASE__:let_live_list_rebound_in_branch_local:end')
 
   f.printString('__CASE__:copy_list_local:start')
   const copyListLocal = f.copyList(f.get(Vars.LiveList))

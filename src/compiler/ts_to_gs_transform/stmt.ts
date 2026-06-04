@@ -51,6 +51,46 @@ function isCollectionType(env: Env, t: ts.Type): boolean {
   return false
 }
 
+function unwrapCollectionSourceExpression(expr: ts.Expression): ts.Expression {
+  let cur = expr
+  while (true) {
+    if (ts.isParenthesizedExpression(cur)) {
+      cur = cur.expression
+      continue
+    }
+    if (ts.isAsExpression(cur)) {
+      cur = cur.expression
+      continue
+    }
+    if (ts.isTypeAssertionExpression(cur)) {
+      cur = cur.expression
+      continue
+    }
+    if (ts.isSatisfiesExpression(cur)) {
+      cur = cur.expression
+      continue
+    }
+    return cur
+  }
+}
+
+function isListWrapperCallExpression(expr: ts.Expression): expr is ts.CallExpression {
+  const unwrapped = unwrapCollectionSourceExpression(expr)
+  return (
+    ts.isCallExpression(unwrapped) &&
+    ts.isIdentifier(unwrapped.expression) &&
+    unwrapped.expression.text === 'list'
+  )
+}
+
+function needsCollectionRebindSnapshot(env: Env, expr: ts.Expression): boolean {
+  const unwrapped = unwrapCollectionSourceExpression(expr)
+  if (isListWrapperCallExpression(unwrapped)) return true
+  if (isFMethodCall(env, unwrapped, ['copyList', 'assemblyList'])) return true
+  if (ts.isArrayLiteralExpression(unwrapped)) return true
+  return false
+}
+
 function inferBasicType(env: Env, t: ts.Type): ListType | null {
   if (t.flags & ts.TypeFlags.Union) {
     const u = t as ts.UnionType
@@ -231,7 +271,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     if (expr.expression.name.text !== 'get' && expr.expression.name.text !== 'getCustomVariable') {
       return false
     }
-    const receiver = unwrapPlanExpression(expr.expression.expression)
+    const receiver = unwrapCollectionSourceExpression(expr.expression.expression)
     return isEntityReceiverType(env.checker.getTypeAtLocation(receiver), receiver)
   }
 
@@ -239,32 +279,9 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     return ts.isCallExpression(expr) && ts.isIdentifier(expr.expression) && expr.expression.text === 'list'
   }
 
-  const unwrapPlanExpression = (expr: ts.Expression): ts.Expression => {
-    let cur = expr
-    while (true) {
-      if (ts.isParenthesizedExpression(cur)) {
-        cur = cur.expression
-        continue
-      }
-      if (ts.isAsExpression(cur)) {
-        cur = cur.expression
-        continue
-      }
-      if (ts.isTypeAssertionExpression(cur)) {
-        cur = cur.expression
-        continue
-      }
-      if (ts.isSatisfiesExpression(cur)) {
-        cur = cur.expression
-        continue
-      }
-      return cur
-    }
-  }
-
   const classifyCollectionSource = (expr: ts.Expression | undefined): CollectionSourceKind => {
     if (!expr) return 'unknown'
-    const unwrapped = unwrapPlanExpression(expr)
+    const unwrapped = unwrapCollectionSourceExpression(expr)
 
     // `f.get(...)` 已经带有节点图变量元数据推断, 裸调用就应视为实时引用,
     // 不应依赖用户再手动追加 `.asType(...)` / `.asDict(...)`。
@@ -273,7 +290,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     if (ts.isCallExpression(unwrapped) && ts.isPropertyAccessExpression(unwrapped.expression)) {
       const method = unwrapped.expression.name.text
       if (method === 'asType' || method === 'asDict') {
-        const base = unwrapPlanExpression(unwrapped.expression.expression)
+        const base = unwrapCollectionSourceExpression(unwrapped.expression.expression)
         // `getNodeGraphVariable` / `getCustomVariable` 返回 generic, 需要通过 asType/asDict
         // 确认集合类型。这里保留 `get` 仅用于兼容 `f.get(...).asType(...)` 这种冗余写法。
         if (isFMethodCall(env, base, ['getNodeGraphVariable', 'get', 'getCustomVariable'])) {
@@ -615,9 +632,18 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     if (u.isCollection) {
       if (u.collectionSourceKind === 'copy') {
         needsLocalVar = u.readCount > 0 || u.modified
+      } else if (u.collectionSourceKind === 'liveRef') {
+        // 顺序代码里的 live collection 绑定重赋值可以保持 JS 变量重绑定语义:
+        //   let xs = f.get(...)
+        //   xs[0] = 1n      // 写回原始 live list
+        //   xs = list(...)
+        //   xs[0] = 2n      // 写入新的 list
+        //
+        // 但如果绑定重赋值发生在 if/loop/switch 等运行期控制流中, 后续引用需要在运行期
+        // 根据实际分支结果决定指向哪个集合, 只能用 LocalVariable 作为统一状态承载。
+        needsLocalVar = u.modified && u.hasBindingWrite && u.wroteInExec
       } else {
-        needsLocalVar =
-          u.modified && (u.hasBindingWrite || u.collectionSourceKind !== 'liveRef')
+        needsLocalVar = u.modified
       }
     } else if (u.isBasic) {
       if (decl.isLet || u.wroteInExec) {
@@ -875,6 +901,68 @@ function collectLocalVarSymbols(plan: VarPlan): Set<ts.Symbol> {
     if (entry.needsLocalVar) out.add(sym)
   }
   return out
+}
+
+function tryTransformCollectionRebindSnapshot(
+  env: Env,
+  context: ts.TransformationContext,
+  stmt: ts.ExpressionStatement
+): ts.Statement[] | null {
+  const expr = stmt.expression
+  if (!ts.isBinaryExpression(expr)) return null
+  if (expr.operatorToken.kind !== ts.SyntaxKind.EqualsToken) return null
+  if (!ts.isIdentifier(expr.left)) return null
+
+  const sym = env.checker.getSymbolAtLocation(expr.left)
+  const plan = sym ? env.varPlan?.get(sym) : undefined
+  if (!plan?.isCollection || plan.needsLocalVar) return null
+  if (!needsCollectionRebindSnapshot(env, expr.right)) return null
+
+  const concreteType = inferListConcreteType(env, env.checker.getTypeAtLocation(expr.left))
+  if (!concreteType) return null
+
+  const localId = ts.factory.createIdentifier(`__gsts_collection_rebind_${env.tempCounter++}`)
+  const rhs = transformExpression(env, context, expr.right)
+
+  return [
+    withSameRange(
+      ts.factory.createVariableStatement(
+        undefined,
+        ts.factory.createVariableDeclarationList(
+          [
+            ts.factory.createVariableDeclaration(
+              localId,
+              undefined,
+              undefined,
+              makeFCall(env, 'initLocalVariable', [
+                ts.factory.createStringLiteral(`${concreteType}_list`)
+              ])
+            )
+          ],
+          ts.NodeFlags.Const
+        )
+      ),
+      stmt
+    ),
+    withSameRange(
+      ts.factory.createExpressionStatement(
+        makeFCall(env, 'setLocalVariable', [
+          ts.factory.createPropertyAccessExpression(localId, 'localVariable'),
+          rhs
+        ])
+      ),
+      stmt
+    ),
+    withSameRange(
+      ts.factory.createExpressionStatement(
+        ts.factory.createAssignment(
+          ts.factory.createIdentifier(expr.left.text),
+          ts.factory.createPropertyAccessExpression(localId, 'value')
+        )
+      ),
+      stmt
+    )
+  ]
 }
 
 export function transformBlockStatements(
@@ -1223,6 +1311,11 @@ export function transformBlockStatements(
     }
 
     if (ts.isExpressionStatement(s)) {
+      const collectionRebind = tryTransformCollectionRebindSnapshot(env, context, s)
+      if (collectionRebind) {
+        out.push(...collectionRebind)
+        continue
+      }
       out.push(
         withSameRange(
           ts.factory.updateExpressionStatement(s, transformExpression(env, context, s.expression)),
