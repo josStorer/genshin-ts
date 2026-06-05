@@ -20,5 +20,5 @@
 
 ## 其他
 - `Math` / `Mathf` / `Vector3` / `Random`
-- `send('signal')` + `onSignal`
+- `send('signal')` / `send(Signal.xxx, ...)` + `onSignal(Signal.xxx, ...)`
 - `setTimeout` / `setInterval` / `clearTimeout` / `clearInterval`
