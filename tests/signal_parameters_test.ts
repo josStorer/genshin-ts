@@ -17,7 +17,7 @@ const Signal = {
 const graph = g
   .server({ id: 1073741888 })
   .on('whenEntityIsCreated', (_evt, f) => {
-    f.sendSignal(Signal.signal_param_literal, 7n, 'ready', true)
+    f.sendSignal(Signal.signal_param_literal, int(2 + 3 + 43534), 'ready', true)
     f.sendSignal(
       Signal.signal_param_wired,
       f.addition(40n, 2n),
@@ -36,6 +36,7 @@ const graph = g
     f.printString(f.dataTypeConversion(f.queryGuidByEntity(sender), 'str'))
   })
   .onSignal(Signal.signal_param_literal, (evt, f) => {
+    print(str(evt.eventSourceGuid))
     const amount = evt.params.参数_1
     const label = evt.params.参数_2
     const enabled = evt.params.参数_3

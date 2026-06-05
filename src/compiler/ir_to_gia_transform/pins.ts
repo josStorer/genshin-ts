@@ -13,6 +13,12 @@ function pinKind(p: Pin | undefined): number | undefined {
   return p.kind
 }
 
+function getPinIndex(p: Pin | undefined): number | undefined {
+  if (!p) return undefined
+  // @ts-ignore 强制访问私有变量
+  return p.index
+}
+
 function toVendorBaseTag(argType: string): BaseTag | null {
   switch (argType) {
     case 'bool':
@@ -41,29 +47,22 @@ function toVendorBaseTag(argType: string): BaseTag | null {
 }
 
 function ensureInputPin(node: GiaNode, pinIndex: number): Pin {
-  const existing = node.pins?.[pinIndex]
-  if (existing && pinKind(existing) === 3) return existing
+  const existing = node.pins?.find((pin) => pinKind(pin) === 3 && pinIndex === getPinIndex(pin))
+  if (existing) return existing
 
   const p = new Pin(node.ConcreteId!, 3, pinIndex)
-  // 如果当前位置有输出 pin（或其他 pin），插入并整体右移，避免覆盖输出 pins
-  if (existing) {
-    node.pins.splice(pinIndex, 0, p)
-  } else {
-    node.pins[pinIndex] = p
-  }
+  node.pins.push(p)
   return p
 }
 
 function ensureClientExecPin(node: GiaNode, pinIndex: number): Pin {
-  const existing = node.pins?.[pinIndex]
-  if (existing && pinKind(existing) === CLIENT_EXEC_PIN_KIND) return existing
+  const existing = node.pins?.find(
+    (pin) => pinKind(pin) === CLIENT_EXEC_PIN_KIND && pinIndex === getPinIndex(pin)
+  )
+  if (existing) return existing
 
   const p = new Pin(node.GenericId, CLIENT_EXEC_PIN_KIND, pinIndex)
-  if (existing) {
-    node.pins.splice(pinIndex, 0, p)
-  } else {
-    node.pins[pinIndex] = p
-  }
+  node.pins.push(p)
   return p
 }
 
@@ -132,7 +131,7 @@ export function setLiteralArgValue(
     }
   }
 
-  giaNode.setVal(pinIndex, value as BasicValue)
+  pin.setVal(value as BasicValue)
 }
 
 export function setClientExecLiteralArgValue(

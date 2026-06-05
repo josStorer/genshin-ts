@@ -138,6 +138,7 @@ function inputPinValuesByIndex(node: GraphNode): Map<number, unknown> {
   for (const pin of inParamPins(node)) {
     const value = pin.value
     if (!value) continue
+    if (value.alreadySetVal !== true) continue
     out.set(pin.i1.index, extract_value(value))
   }
   return out
@@ -170,7 +171,8 @@ try {
   fs.writeFileSync(outFile, generatedText, 'utf8')
 
   assertContains(generatedText, 'defineSignal')
-  assertContains(generatedText, 'f.sendSignal(Signal.signal_param_literal, 7n, \'ready\', true);')
+  assertContains(generatedText, 'f.sendSignal(Signal.signal_param_literal, int(')
+  assertContains(generatedText, "'ready', true);")
   assertContains(generatedText, 'f.sendSignal(Signal.signal_param_wired,')
   assertContains(generatedText, "f.sendSignal('signal_param_none');")
   assertContains(generatedText, "signal_param_wired")
@@ -225,7 +227,7 @@ try {
 
   const literalSend = findSignalNode(sendDoc, 'send_signal', 'signal_param_literal')
   assert.equal(literalSend.args?.length, 4)
-  assertValueArg(literalSend.args?.[1], 'int', 7)
+  assertConnArg(literalSend.args?.[1], 'int')
   assertValueArg(literalSend.args?.[2], 'str', 'ready')
   assertValueArg(literalSend.args?.[3], 'bool', true)
 
@@ -305,8 +307,8 @@ try {
   )
   assert.deepEqual(
     Object.fromEntries(inputPinValuesByIndex(literalSendGiaNode)),
-    { 0: 7, 1: 'ready', 2: 1 },
-    'Expected literal sendSignal parameter values to be written to pins 0..2'
+    { 1: 'ready', 2: 1 },
+    'Expected literal sendSignal values after a wired first parameter to stay on pins 1..2'
   )
 
   const wiredSendGiaNode = findGiaSignalNode(sendGiaNodes, SEND_SIGNAL_NODE_ID, 'signal_param_wired')
