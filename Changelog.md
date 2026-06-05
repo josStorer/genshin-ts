@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.1.10
+
+** This release contains potentially breaking changes. Please read the changelog before updating. ** - Thanks to @wangxiangyao and @longyuan1996 for contributing code to this release.
+
+- Signal sending and listening now support passing and reading parameters. After map injection settings are configured, compilation automatically extracts all signals and parameters from the map and provides complete TypeScript type information. See https://gsts.moe/doc/events/signals for usage details. #9
+- When reading a node graph variable or custom variable whose type is a list, modifying the returned value now directly affects the original value. Previous versions modified a copy of the list; use `f.copyList` manually when you need a list copy. The old behavior made it inconvenient to modify the original list directly and could produce different results for similarly shaped code, which was unintuitive, so this is treated as a bug fix. The new behavior can produce simpler and more efficient node graphs. See https://gsts.moe/doc/writing/ts-subset for details. #11
+- Updated nodes added in the latest Miliastra Wonderland version. In addition, the return values of `consumeGiftBox` and `getEntityAdvancedAttribute` have changed, which may potentially cause compile errors after upgrading. Function node descriptions have also been synced with the official documentation.
+- `switch` cases with constant values now compile correctly. #12
+- Accessing constant expressions now produces fewer redundant local variable nodes. #12
+- Preset resources now include all character IDs: `CharacterPrefabZh` and `CharacterPrefab`.
+- Fixed an issue where assigning a literal constant to a variable did not use a local variable node correctly even when the variable was declared with `let`.
+- Fixed an issue where taking the modulo of a loop variable inside a loop was incorrectly handled as `float`. Miliastra Wonderland only supports integer modulo, so this is now forced to integer handling.
+- The IR JSON now supports a series of node aliases. Because the official English names of some nodes changed, both old and new names can now compile successfully.
+- Updated the `create-genshin-ts` project template.
+
 ## v0.1.9
 
 - Updated a batch of newly added server nodes and events from the latest game version.
