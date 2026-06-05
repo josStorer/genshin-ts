@@ -924,6 +924,8 @@ function tryTransformCollectionRebindSnapshot(
 
   const sym = env.checker.getSymbolAtLocation(expr.left)
   const plan = sym ? env.varPlan?.get(sym) : undefined
+  const captureInfo = sym ? env.timerCaptureMap?.get(sym) : undefined
+  if (captureInfo?.useLocalVar) return null
   if (!plan?.isCollection || plan.needsLocalVar) return null
   if (!needsCollectionRebindSnapshot(env, expr.right)) return null
 
