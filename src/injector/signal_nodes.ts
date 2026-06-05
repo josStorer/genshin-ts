@@ -1,4 +1,4 @@
-import { parseMessage, readVarint } from './binary.js'
+import { decodeUtf8, parseMessage, readFieldBytes, readFieldMessages, readVarint } from './binary.js'
 import type { LenField } from './types.js'
 
 type SignalNodeKind = 'send' | 'monitor' | 'sendServer'
@@ -29,93 +29,6 @@ const SIGNAL_NODE_ID_PLACEHOLDERS = new Map<number, SignalNodeKind>([
   [300000, 'send'],
   [300001, 'monitor']
 ])
-
-function decodeUtf8(buf: Uint8Array): string | undefined {
-  try {
-    return Buffer.from(buf).toString('utf8')
-  } catch {
-    return undefined
-  }
-}
-
-function readFieldMessages(buf: Uint8Array, targetField: number): Uint8Array[] {
-  const list: Uint8Array[] = []
-  let offset = 0
-  while (offset < buf.length) {
-    const key = readVarint(buf, offset)
-    if (!key) break
-    offset = key.next
-    const field = key.value >> 3
-    const wire = key.value & 7
-    if (wire === 2) {
-      const lenVar = readVarint(buf, offset)
-      if (!lenVar) break
-      const len = lenVar.value
-      const dataStart = lenVar.next
-      const dataEnd = dataStart + len
-      if (dataEnd > buf.length) break
-      const data = buf.subarray(dataStart, dataEnd)
-      if (field === targetField) list.push(data)
-      offset = dataEnd
-      continue
-    }
-    if (wire === 0) {
-      const v = readVarint(buf, offset)
-      if (!v) break
-      offset = v.next
-      continue
-    }
-    if (wire === 1) {
-      offset += 8
-      continue
-    }
-    if (wire === 5) {
-      offset += 4
-      continue
-    }
-    break
-  }
-  return list
-}
-
-function readFieldBytes(buf: Uint8Array, targetField: number): Uint8Array | undefined {
-  let offset = 0
-  while (offset < buf.length) {
-    const key = readVarint(buf, offset)
-    if (!key) break
-    offset = key.next
-    const field = key.value >> 3
-    const wire = key.value & 7
-    if (wire === 2) {
-      const lenVar = readVarint(buf, offset)
-      if (!lenVar) break
-      const len = lenVar.value
-      const dataStart = lenVar.next
-      const dataEnd = dataStart + len
-      if (dataEnd > buf.length) break
-      const data = buf.subarray(dataStart, dataEnd)
-      if (field === targetField) return data
-      offset = dataEnd
-      continue
-    }
-    if (wire === 0) {
-      const v = readVarint(buf, offset)
-      if (!v) break
-      offset = v.next
-      continue
-    }
-    if (wire === 1) {
-      offset += 8
-      continue
-    }
-    if (wire === 5) {
-      offset += 4
-      continue
-    }
-    break
-  }
-  return undefined
-}
 
 function parseNodeGraphId(buf: Uint8Array): NodeGraphIdInfo {
   const out: NodeGraphIdInfo = {}
@@ -172,10 +85,11 @@ function parseSignalName(buf: Uint8Array): string | undefined {
 }
 
 function extractSignalNameFromNode(node: {
-  pins?: Array<{ value?: unknown }>
+  pins?: Array<{ i1?: { kind?: number }; value?: unknown }>
 }): string | undefined {
   const pins = node.pins ?? []
   for (const pin of pins) {
+    if (pin?.i1?.kind !== 5) continue
     const s = extractStringFromVarBase(pin?.value as Record<string, unknown> | undefined)
     if (s) return s
   }

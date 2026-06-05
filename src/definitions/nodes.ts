@@ -1,7 +1,12 @@
 import * as z from 'zod'
 
 import { t } from '../i18n/index.js'
-import type { MetaCallRegistry } from '../runtime/core.js'
+import {
+  isSignalDefinition,
+  type MetaCallRegistry,
+  type SignalDefinition,
+  type SignalParamValues
+} from '../runtime/core.js'
 import {
   CommonLiteralValueListTypeMap,
   CommonLiteralValueTypeMap,
@@ -7393,21 +7398,40 @@ export class ServerExecutionFlowFunctions {
    *
    * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; 使用信号分发能够避免一些大循环触发负载限制, 可用于性能优化
    *
-   * @param signalName Only literal string is supported
+   * @param signalName Only literal string or extracted Signal.xxx definition is supported
    *
-   * 信号名（仅支持字面量字符串）
+   * 信号名（仅支持字面量字符串或提取出的 Signal.xxx 定义）
    *
    * @param params Signal parameters to pass, matching the signal's registered parameters in the editor
    *
    * 信号参数，需与编辑器信号管理器中注册的参数一一对应
    */
-  sendSignal(signalName: StrValue, ...params: any[]): void {
-    const signalNameObj = ensureLiteralStr(signalName, 'signalName')
-    const paramObjs = params.map(p => {
-      const genericType = matchTypes([
-        'float', 'int', 'bool', 'config_id', 'entity', 'faction',
-        'guid', 'prefab_id', 'str', 'vec3', 'dict'
-      ], p)
+  sendSignal<S extends SignalDefinition>(signalName: S, ...params: SignalParamValues<S>): void
+  sendSignal(signalName: StrValue, ...params: any[]): void
+  sendSignal(signalName: StrValue | SignalDefinition, ...params: any[]): void {
+    const signalDefinition = isSignalDefinition(signalName) ? signalName : undefined
+    const rawSignalName = signalDefinition ? signalDefinition.name : (signalName as StrValue)
+    const signalNameObj = ensureLiteralStr(rawSignalName, 'signalName')
+    const paramObjs = params.map((p, index) => {
+      const signalParamType = signalDefinition?.params[index]?.[1]
+      if (signalParamType && signalParamType !== 'unknown') {
+        return parseValue(p, signalParamType as any)
+      }
+      const genericType = matchTypes(
+        [
+          'float',
+          'int',
+          'bool',
+          'config_id',
+          'entity',
+          'faction',
+          'guid',
+          'prefab_id',
+          'str',
+          'vec3'
+        ],
+        p
+      )
       return parseValue(p, genericType)
     })
     this.registry.registerNode({

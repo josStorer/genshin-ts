@@ -1,6 +1,7 @@
 import type { PlayerEntity, StageEntity } from '../definitions/entity_helpers.js'
 import type { ServerEventPayloads } from '../definitions/events-payload.js'
 import type { ServerExecutionFlowFunctions } from '../definitions/nodes.js'
+import type { SignalDefinition, SignalParamValues } from './core.js'
 import type {
   BoolValue,
   configId,
@@ -185,11 +186,12 @@ declare global {
    *
    * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; 使用信号分发能够避免一些大循环触发负载限制, 可用于性能优化
    *
-   * @param signalName Only literal string is supported
+   * @param signalName Only literal string or extracted Signal.xxx definition is supported
    *
-   * 信号名（仅支持字面量字符串）
+   * 信号名（仅支持字面量字符串或提取出的 Signal.xxx 定义）
    */
-  function send(signalName: StrValue): void
+  function send<S extends SignalDefinition>(signalName: S, ...params: SignalParamValues<S>): void
+  function send(signalName: StrValue, ...params: any[]): void
 
   /**
    * Returns the Player Entity based on Player ID, where the ID indicates which Player they are

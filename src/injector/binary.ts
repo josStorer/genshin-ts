@@ -27,6 +27,131 @@ export function encodeVarint(value: number): Uint8Array {
   return Uint8Array.from(bytes)
 }
 
+export function decodeUtf8(
+  buf: Uint8Array,
+  start: number = 0,
+  end: number = buf.length
+): string | undefined {
+  try {
+    return Buffer.from(buf.subarray(start, end)).toString('utf8')
+  } catch {
+    return undefined
+  }
+}
+
+export function readFieldBytes(buf: Uint8Array, targetField: number): Uint8Array | undefined {
+  let offset = 0
+  while (offset < buf.length) {
+    const key = readVarint(buf, offset)
+    if (!key) break
+    offset = key.next
+    const field = key.value >> 3
+    const wire = key.value & 7
+    if (wire === 2) {
+      const lenVar = readVarint(buf, offset)
+      if (!lenVar) break
+      const len = lenVar.value
+      const dataStart = lenVar.next
+      const dataEnd = dataStart + len
+      if (dataEnd > buf.length) break
+      const data = buf.subarray(dataStart, dataEnd)
+      if (field === targetField) return data
+      offset = dataEnd
+      continue
+    }
+    if (wire === 0) {
+      const v = readVarint(buf, offset)
+      if (!v) break
+      offset = v.next
+      continue
+    }
+    if (wire === 1) {
+      offset += 8
+      continue
+    }
+    if (wire === 5) {
+      offset += 4
+      continue
+    }
+    break
+  }
+  return undefined
+}
+
+export function readFieldMessages(buf: Uint8Array, targetField: number): Uint8Array[] {
+  const list: Uint8Array[] = []
+  let offset = 0
+  while (offset < buf.length) {
+    const key = readVarint(buf, offset)
+    if (!key) break
+    offset = key.next
+    const field = key.value >> 3
+    const wire = key.value & 7
+    if (wire === 2) {
+      const lenVar = readVarint(buf, offset)
+      if (!lenVar) break
+      const len = lenVar.value
+      const dataStart = lenVar.next
+      const dataEnd = dataStart + len
+      if (dataEnd > buf.length) break
+      const data = buf.subarray(dataStart, dataEnd)
+      if (field === targetField) list.push(data)
+      offset = dataEnd
+      continue
+    }
+    if (wire === 0) {
+      const v = readVarint(buf, offset)
+      if (!v) break
+      offset = v.next
+      continue
+    }
+    if (wire === 1) {
+      offset += 8
+      continue
+    }
+    if (wire === 5) {
+      offset += 4
+      continue
+    }
+    break
+  }
+  return list
+}
+
+export function readFieldVarint(buf: Uint8Array, targetField: number): number | undefined {
+  let offset = 0
+  while (offset < buf.length) {
+    const key = readVarint(buf, offset)
+    if (!key) break
+    offset = key.next
+    const field = key.value >> 3
+    const wire = key.value & 7
+    if (wire === 0) {
+      const value = readVarint(buf, offset)
+      if (!value) break
+      offset = value.next
+      if (field === targetField) return value.value
+      continue
+    }
+    if (wire === 2) {
+      const lenVar = readVarint(buf, offset)
+      if (!lenVar) break
+      offset = lenVar.next + lenVar.value
+      continue
+    }
+    if (wire === 1) {
+      offset += 8
+      continue
+    }
+    if (wire === 5) {
+      offset += 4
+      continue
+    }
+    break
+  }
+  return undefined
+}
+
 export type ParseCollectors = {
   nodeGraphBlobFields?: LenField[]
 }

@@ -24,6 +24,7 @@ import { maybeCheckRemoteMarkdown } from './checks.js'
 import { ensureDataDirs } from './data.js'
 import { resolveGilFolder, resolveGilTarget } from './gil_paths.js'
 import { DEFAULT_RESOURCES_PATH, extractCustomResourcesFromGil } from './gil_resources.js'
+import { DEFAULT_SIGNALS_PATH, extractSignalsFromGil } from './gil_signals.js'
 import { getMapKey, loadState, saveState } from './state.js'
 import { createUi } from './ui.js'
 import { openAndSelect, openDir } from './windows_open.js'
@@ -1274,6 +1275,11 @@ function resolveResourcesPath(cfgDir: string, injectCfg: GstsInjectConfig): stri
   return path.isAbsolute(raw) ? raw : path.resolve(cfgDir, raw)
 }
 
+function resolveSignalsPath(cfgDir: string, injectCfg: GstsInjectConfig): string {
+  const raw = injectCfg.signalsPath ?? DEFAULT_SIGNALS_PATH
+  return path.isAbsolute(raw) ? raw : path.resolve(cfgDir, raw)
+}
+
 function maybeExtractResources(params: {
   cfgDir: string
   injectCfg: GstsInjectConfig | undefined
@@ -1283,7 +1289,12 @@ function maybeExtractResources(params: {
   reason?: 'map-change'
 }) {
   const { injectCfg, opts, lang } = params
-  if (!injectCfg || opts.noinject || injectCfg.extractResources === false) return
+  if (!injectCfg || opts.noinject) return
+
+  const shouldExtractResources = injectCfg.extractResources !== false
+  const shouldExtractSignals = injectCfg.extractSignals !== false
+  if (!shouldExtractResources && !shouldExtractSignals) return
+
   const { t } = initCliI18n(detectLang(lang ?? opts.lang))
 
   let gilPath = params.gilPath
@@ -1292,7 +1303,9 @@ function maybeExtractResources(params: {
       gilPath = resolveGilTarget(injectCfg).gilPath
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
-      ui.warn(t('extractResourcesFail', { error: msg.replace('[error]', '').trim() }))
+      const error = msg.replace('[error]', '').trim()
+      if (shouldExtractResources) ui.warn(t('extractResourcesFail', { error }))
+      if (shouldExtractSignals) ui.warn(t('extractSignalsFail', { error }))
       return
     }
   }
@@ -1301,17 +1314,29 @@ function maybeExtractResources(params: {
     ui.info(t('devResourcesReextract'))
   }
 
-  const outPath = resolveResourcesPath(params.cfgDir, injectCfg)
-  const result = extractCustomResourcesFromGil({ gilPath, outPath, lang })
-  if (result.status === 'ok') {
-    ui.ok(t('extractResourcesOk', { path: result.outPath, count: result.count }))
-    return
+  if (shouldExtractResources) {
+    const outPath = resolveResourcesPath(params.cfgDir, injectCfg)
+    const result = extractCustomResourcesFromGil({ gilPath, outPath, lang })
+    if (result.status === 'ok') {
+      ui.ok(t('extractResourcesOk', { path: result.outPath, count: result.count }))
+    } else if (result.status === 'skipped-existing') {
+      ui.warn(t('extractResourcesSkipExisting', { path: result.outPath }))
+    } else {
+      ui.warn(t('extractResourcesFail', { error: result.error }))
+    }
   }
-  if (result.status === 'skipped-existing') {
-    ui.warn(t('extractResourcesSkipExisting', { path: result.outPath }))
-    return
+
+  if (shouldExtractSignals) {
+    const outPath = resolveSignalsPath(params.cfgDir, injectCfg)
+    const result = extractSignalsFromGil({ gilPath, outPath })
+    if (result.status === 'ok') {
+      ui.ok(t('extractSignalsOk', { path: result.outPath, count: result.count }))
+    } else if (result.status === 'skipped-existing') {
+      ui.warn(t('extractSignalsSkipExisting', { path: result.outPath }))
+    } else {
+      ui.warn(t('extractSignalsFail', { error: result.error }))
+    }
   }
-  ui.warn(t('extractResourcesFail', { error: result.error }))
 }
 
 function maybeInjectGia(

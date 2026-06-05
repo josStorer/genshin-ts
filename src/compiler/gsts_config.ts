@@ -174,6 +174,26 @@ export type GstsInjectConfig = {
    * - Default: `src/resources/prefabs.ts`
    */
   resourcesPath?: string
+  /**
+   * [ZH] 自动提取信号定义到文件。
+   *
+   * - 默认启用
+   *
+   * [EN] Auto extract signal definitions to file.
+   *
+   * - Enabled by default
+   */
+  extractSignals?: boolean
+  /**
+   * [ZH] 信号定义提取路径（相对 config 所在目录）。
+   *
+   * - 默认：`src/resources/signals.ts`
+   *
+   * [EN] Signal definitions output path (relative to the config file).
+   *
+   * - Default: `src/resources/signals.ts`
+   */
+  signalsPath?: string
 }
 
 export type GstsConfig = {

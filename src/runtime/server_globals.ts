@@ -7,7 +7,7 @@ import {
 } from '../definitions/entity_helpers.js'
 import { EntityType, RoundingMode } from '../definitions/enum.js'
 import { DataTypeConversionMap, parseValue } from '../definitions/nodes.js'
-import type { MetaCallRegistry } from './core.js'
+import type { MetaCallRegistry, SignalDefinition, SignalParamValues } from './core.js'
 import {
   bool,
   BoolValue,
@@ -402,7 +402,8 @@ export type ServerGlobalFactories = {
     items?: RuntimeParameterValueTypeMap[T][] | null | 0
   ) => RuntimeReturnValueTypeMap[`${T}_list`]
   print: (string: StrValue) => void
-  send: (signalName: StrValue, ...params: any[]) => void
+  send: (<S extends SignalDefinition>(signalName: S, ...params: SignalParamValues<S>) => void) &
+    ((signalName: StrValue, ...params: any[]) => void)
   player: (playerId: IntValue) => PlayerEntity
   setTimeout: (handler: (evt: unknown, f: unknown) => void, delayMs?: FloatValue) => string
   setInterval: (handler: (evt: unknown, f: unknown) => void, delayMs?: FloatValue) => string
@@ -553,9 +554,9 @@ function makeFactories(): ServerGlobalFactories {
       ensureServerCtx('print')
       gsts.f.printString(string)
     },
-    send: (signalName: StrValue, ...params: any[]) => {
+    send: (signalName: StrValue | SignalDefinition, ...params: any[]) => {
       ensureServerCtx('send')
-      gsts.f.sendSignal(signalName, ...params)
+      gsts.f.sendSignal(signalName as any, ...params)
     },
     player: (playerId: IntValue) => {
       ensureServerCtx('player')

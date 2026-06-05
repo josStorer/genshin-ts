@@ -1,8 +1,3 @@
-import { spawnSync } from 'node:child_process'
-import fs from 'node:fs'
-import { createRequire } from 'node:module'
-import path from 'node:path'
-
 import {
   CreationPrefab,
   CreationPrefabZh,
@@ -12,8 +7,14 @@ import {
   StaticPrefabZh
 } from '../definitions/prefabs.js'
 import { detectLang, initCliI18n } from '../i18n/index.js'
-import { findAncestorFields, parseMessage, readUint32BE, readVarint } from '../injector/binary.js'
+import { findAncestorFields, readVarint } from '../injector/binary.js'
 import type { LenField } from '../injector/types.js'
+import {
+  checkExistingGeneratedFile,
+  decodeUtf8,
+  readGilPayloadFields,
+  writeGeneratedFile
+} from './gil_extract_utils.js'
 
 export const RESOURCES_HEADER = '// @gsts:resources'
 export const DEFAULT_RESOURCES_PATH = 'src/resources/prefabs.ts'
@@ -76,10 +77,6 @@ function readEntryIds(buf: Uint8Array, start: number, end: number) {
   return { customId, basePrefabId }
 }
 
-function decodeUtf8(buf: Uint8Array, start: number, end: number): string {
-  return Buffer.from(buf.subarray(start, end)).toString('utf8')
-}
-
 function buildPrefabNameMap(lang: string): Map<number, string> {
   const useZh = lang.toLowerCase().startsWith('zh')
   const sources = useZh
@@ -94,41 +91,6 @@ function buildPrefabNameMap(lang: string): Map<number, string> {
     }
   }
   return map
-}
-
-function hasResourcesHeader(text: string): boolean {
-  const lines = text.split(/\r?\n/)
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    return trimmed === RESOURCES_HEADER
-  }
-  return false
-}
-
-function tryFormatWithPrettier(filePath: string) {
-  try {
-    const require = createRequire(import.meta.url)
-    let prettierBin: string | undefined
-    try {
-      prettierBin = require.resolve('prettier/bin-prettier.cjs')
-    } catch {
-      try {
-        prettierBin = require.resolve('prettier/bin/prettier.cjs')
-      } catch {
-        return
-      }
-    }
-    const res = spawnSync(process.execPath, [prettierBin, '--write', filePath], {
-      encoding: 'utf8',
-      windowsHide: true
-    })
-    if (res.error || res.status !== 0) {
-      // best-effort formatting; ignore failures
-    }
-  } catch {
-    // prettier not installed; ignore
-  }
 }
 
 function parseCustomPrefabs(payload: Uint8Array, fields: LenField[]): CustomPrefabEntry[] {
@@ -166,35 +128,11 @@ export function extractCustomResourcesFromGil(params: {
   const resolvedLang = detectLang(params.lang)
   const { t } = initCliI18n(resolvedLang)
 
-  if (fs.existsSync(params.outPath)) {
-    try {
-      const existing = fs.readFileSync(params.outPath, 'utf8')
-      if (!hasResourcesHeader(existing)) {
-        return { status: 'skipped-existing', outPath: params.outPath }
-      }
-    } catch (e) {
-      return {
-        status: 'failed',
-        outPath: params.outPath,
-        error: e instanceof Error ? e.message : String(e)
-      }
-    }
-  }
+  const existingCheck = checkExistingGeneratedFile(params.outPath, RESOURCES_HEADER)
+  if (existingCheck) return existingCheck
 
   try {
-    const bytes = new Uint8Array(fs.readFileSync(params.gilPath))
-    if (bytes.length < 24) {
-      throw new Error('[error] invalid gil size')
-    }
-    const headTag = readUint32BE(bytes, 8)
-    const tailTag = readUint32BE(bytes, bytes.length - 4)
-    if (headTag !== 0x0326 || tailTag !== 0x0679) {
-      throw new Error('[error] invalid gil header tags')
-    }
-
-    const payload = bytes.slice(20, -4)
-    const fields: LenField[] = []
-    parseMessage(payload, 0, payload.length, 0, 0, 0, 0, 0, 0, 0, fields)
+    const { payload, fields } = readGilPayloadFields(params.gilPath)
     const entries = parseCustomPrefabs(payload, fields)
     const baseNameMap = buildPrefabNameMap(resolvedLang)
     const nameCounts = new Map<string, number>()
@@ -219,9 +157,7 @@ export function extractCustomResourcesFromGil(params: {
     })
     lines.push('}', '')
 
-    fs.mkdirSync(path.dirname(params.outPath), { recursive: true })
-    fs.writeFileSync(params.outPath, lines.join('\n'))
-    tryFormatWithPrettier(params.outPath)
+    writeGeneratedFile(params.outPath, lines.join('\n'))
     return { status: 'ok', outPath: params.outPath, count: entries.length }
   } catch (e) {
     return {
