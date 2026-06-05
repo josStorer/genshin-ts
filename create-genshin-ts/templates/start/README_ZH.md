@@ -14,6 +14,7 @@ npm run dev
 ## 项目结构
 
 - `src/main.ts`：入口示例（`g.server(...).on(...)`）
+- `src/resources/signals.ts`：配置 `inject` 后生成的信号定义
 - `gsts.config.ts`：编译与输出配置
 - `dist/`：编译产物（`.gs.ts` / `.json` / `.gia`）
 - `docs/EDITOR_BOUNDARIES.md`：英文版代码与编辑器职责边界说明
@@ -186,7 +187,9 @@ g.server({
 
 信号与事件：
 
-- `send('signalName')` 发送信号，配合 `g.server().onSignal(...)` 监听。
+- 字符串写法可用：`send('signalName')` 配合 `g.server().onSignal('signalName', ...)`。
+- 推荐使用提取定义：`send(Signal.xxx, ...)` 和 `g.server().onSignal(Signal.xxx, ...)`。
+- `Signal.xxx` 来自 `src/resources/signals.ts`，可获得参数类型检查。
 
 定时器：
 

@@ -14,6 +14,7 @@ Docs: `https://gsts.moe`
 ## Project Layout
 
 - `src/main.ts`: entry example (`g.server(...).on(...)`)
+- `src/resources/signals.ts`: generated signal definitions when `inject` is configured
 - `gsts.config.ts`: compile/output configuration
 - `dist/`: build outputs (`.gs.ts` / `.json` / `.gia`)
 - `docs/EDITOR_BOUNDARIES.md`: English code-vs-editor responsibility guide
@@ -176,7 +177,9 @@ Math and vectors:
 - `Mathf.*` / `Vector3.*` / `Random.*`: Unity-style APIs.
 
 Signals and events:
-- `send('signalName')` with `g.server().onSignal(...)`.
+- String usage works: `send('signalName')` with `g.server().onSignal('signalName', ...)`.
+- Prefer extracted definitions: `send(Signal.xxx, ...)` and `g.server().onSignal(Signal.xxx, ...)`.
+- `Signal.xxx` comes from `src/resources/signals.ts` and enables parameter type checks.
 
 Timers:
 - `setTimeout` / `setInterval` / `clearTimeout` / `clearInterval`.
