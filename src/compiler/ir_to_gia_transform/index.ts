@@ -341,8 +341,8 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
           const arg = args[i]
           if (!arg) continue
           if (arg.type === 'conn') {
-            const connType = (arg as ConnectionArgument).value.type as ScalarType
-            const pinType = baseNodeType(connType)
+            const connType = (arg as ConnectionArgument).value.type
+            const pinType = valueTypeToNodeType(connType)
             if (pinType) {
               const p = new Pin(giaNode.ConcreteId!, 3, i - 1)
               p.setType(pinType)
