@@ -96,7 +96,10 @@ export function createInjector(options?: { protoPath?: string; lang?: string }):
     const fields: LenField[] = []
     const nodeGraphBlobFields: LenField[] = []
     parseMessage(payload, 0, payload.length, 0, 0, 0, 0, 0, 0, 0, fields, { nodeGraphBlobFields })
-    patchSignalNodeIds(newGraph, input.gilBytes, { payload, fields }, t)
+    const signalFields = fields.filter(function (f) {
+      return f.depth === 3 && f.p0 === 10 && f.p1 === 2 && f.p2 === 1 && f.field === 1
+    })
+    patchSignalNodeIds(newGraph, input.gilBytes, { payload, fields: signalFields }, t)
     const matches = findNodeGraphTargets(
       payload,
       nodeGraphBlobFields.length ? nodeGraphBlobFields : fields,
