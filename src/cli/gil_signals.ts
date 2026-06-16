@@ -197,7 +197,10 @@ export function extractSignalsFromGil(params: {
 
   try {
     const { payload, fields } = readGilPayloadFields(params.gilPath)
-    const entries = parseSignalEntries(payload, fields)
+    const signalFields = fields.filter(function (f) {
+      return f.depth === 3 && f.p0 === 10 && f.p1 === 2 && f.p2 === 1 && f.field === 1
+    })
+    const entries = parseSignalEntries(payload, signalFields)
 
     writeGeneratedFile(params.outPath, buildSignalsSource(entries))
     return { status: 'ok', outPath: params.outPath, count: entries.length }
