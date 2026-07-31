@@ -23,11 +23,19 @@ export {
 export { createInjector, injectGilBytes, injectGilFile } from './injector/index.js'
 
 export type {
+  InjectGilBatchInput,
+  InjectGilBatchItem,
+  InjectGilBatchItemResult,
+  InjectGilBatchItemTimings,
+  InjectGilBatchResult,
+  InjectGilBatchSkipReason,
+  InjectGilBatchTimings,
   InjectGilFileOptions,
   InjectGilFileResult,
   InjectGilInput,
   InjectGilResult,
-  Injector
+  Injector,
+  ParsedGilPayload
 } from './injector/index.js'
 
 export * from './definitions/prefabs.js'

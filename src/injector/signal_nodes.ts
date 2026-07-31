@@ -1,4 +1,10 @@
-import { decodeUtf8, parseMessage, readFieldBytes, readFieldMessages, readVarint } from './binary.js'
+import {
+  decodeUtf8,
+  parseMessage,
+  readFieldBytes,
+  readFieldMessages,
+  readVarint
+} from './binary.js'
 import type { LenField } from './types.js'
 
 type SignalNodeKind = 'send' | 'monitor' | 'sendServer'
@@ -14,6 +20,16 @@ type SignalNodeIds = {
   send?: NodeGraphIdInfo
   monitor?: NodeGraphIdInfo
   sendServer?: NodeGraphIdInfo
+}
+
+export type SignalNodeIdMap = Map<string, SignalNodeIds>
+
+export type SignalPatchGraph = {
+  nodes?: Array<{
+    genericId?: NodeGraphIdInfo
+    concreteId?: NodeGraphIdInfo
+    pins?: Array<{ i1?: { kind?: number }; value?: unknown }>
+  }>
 }
 
 type SignalParseContext = {
@@ -106,11 +122,11 @@ function extractStringFromVarBase(val?: Record<string, unknown>): string | undef
   return undefined
 }
 
-function buildSignalNodeIdMapFromFields(
+export function buildSignalNodeIdMapFromFields(
   payload: Uint8Array,
   fields: LenField[],
   t?: TFunc
-): Map<string, SignalNodeIds> {
+): SignalNodeIdMap {
   const result = new Map<string, SignalNodeIds>()
   const maxContainerBytes = 4096
 
@@ -157,7 +173,7 @@ function buildSignalParseContext(
   parsed?: SignalParseContext
 ): SignalParseContext {
   if (parsed) return parsed
-  const payload = gilBytes.slice(20, -4)
+  const payload = gilBytes.subarray(20, gilBytes.length - 4)
   const fields: LenField[] = []
   parseMessage(payload, 0, payload.length, 0, 0, 0, 0, 0, 0, 0, fields)
   return { payload, fields }
@@ -184,7 +200,8 @@ function placeholderKindOfNode(node: {
   const targets: NodeGraphIdInfo[] = []
   let kind: SignalNodeKind | undefined
   for (const id of [node.genericId, node.concreteId]) {
-    const k = typeof id?.nodeId === 'number' ? SIGNAL_NODE_ID_PLACEHOLDERS.get(id.nodeId) : undefined
+    const k =
+      typeof id?.nodeId === 'number' ? SIGNAL_NODE_ID_PLACEHOLDERS.get(id.nodeId) : undefined
     if (!k) continue
     if (k === 'sendServer' && id?.type !== SIGNAL_NODE_TYPE_SKILLS) continue
     kind = k
@@ -193,26 +210,17 @@ function placeholderKindOfNode(node: {
   return kind ? { kind, targets } : undefined
 }
 
-export function patchSignalNodeIds(
-  graph: {
-    nodes?: Array<{
-      genericId?: NodeGraphIdInfo
-      concreteId?: NodeGraphIdInfo
-      pins?: Array<{ value?: unknown }>
-    }>
-  },
-  gilBytes: Uint8Array,
-  parsed?: SignalParseContext,
+export function hasSignalNodePlaceholders(graph: SignalPatchGraph): boolean {
+  const nodes = graph.nodes ?? []
+  return nodes.some((node) => placeholderKindOfNode(node) !== undefined)
+}
+
+export function patchSignalNodeIdsFromMap(
+  graph: SignalPatchGraph,
+  signalMap: SignalNodeIdMap,
   t?: TFunc
 ) {
-  const nodes = graph.nodes ?? []
-  const needsPatch = nodes.some((n) => placeholderKindOfNode(n) !== undefined)
-  if (!needsPatch) return
-
-  const ctx = buildSignalParseContext(gilBytes, parsed)
-  const signalMap = buildSignalNodeIdMapFromFields(ctx.payload, ctx.fields, t)
-
-  for (const node of nodes) {
+  for (const node of graph.nodes ?? []) {
     const placeholder = placeholderKindOfNode(node)
     if (!placeholder) continue
     const signalName = extractSignalNameFromNode(node)
@@ -231,4 +239,17 @@ export function patchSignalNodeIds(
       setNodeGraphIdFields(idTarget, target)
     }
   }
+}
+
+export function patchSignalNodeIds(
+  graph: SignalPatchGraph,
+  gilBytes: Uint8Array,
+  parsed?: SignalParseContext,
+  t?: TFunc
+) {
+  if (!hasSignalNodePlaceholders(graph)) return
+
+  const ctx = buildSignalParseContext(gilBytes, parsed)
+  const signalMap = buildSignalNodeIdMapFromFields(ctx.payload, ctx.fields, t)
+  patchSignalNodeIdsFromMap(graph, signalMap, t)
 }

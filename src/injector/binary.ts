@@ -1,4 +1,4 @@
-import type { LenField, Patch } from './types.js'
+import type { FieldReplacement, LenField, Patch } from './types.js'
 
 export function readVarint(
   buf: Uint8Array,
@@ -259,19 +259,34 @@ export function readUint32BE(buf: Uint8Array, offset: number): number {
 }
 
 export function applyPatches(buf: Uint8Array, patches: Patch[]): Uint8Array {
+  if (patches.length === 0) return buf
+
   const sorted = [...patches].sort((a, b) => b.start - a.start)
-  // 性能：避免每个 patch 都做一次 Buffer.concat（会反复复制整段数据）
+  // 性能：收集切片后只做一次 Buffer.concat，避免每个 patch 都复制整段数据。
   const parts: Buffer[] = []
-  const src = Buffer.from(buf)
+  const src = Buffer.isBuffer(buf) ? buf : Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength)
   let lastEnd = src.length
   for (const patch of sorted) {
-    // unchanged tail
-    if (patch.end < lastEnd) parts.unshift(src.subarray(patch.end, lastEnd))
-    // replacement
-    parts.unshift(Buffer.from(patch.replacement))
+    if (patch.start < 0 || patch.end < patch.start || patch.end > src.length) {
+      throw new Error('[error] patch range is invalid')
+    }
+    if (patch.end > lastEnd) {
+      throw new Error('[error] patch ranges overlap')
+    }
+    if (patch.end < lastEnd) parts.push(src.subarray(patch.end, lastEnd))
+    parts.push(
+      Buffer.isBuffer(patch.replacement)
+        ? patch.replacement
+        : Buffer.from(
+            patch.replacement.buffer,
+            patch.replacement.byteOffset,
+            patch.replacement.byteLength
+          )
+    )
     lastEnd = patch.start
   }
-  if (lastEnd > 0) parts.unshift(src.subarray(0, lastEnd))
+  if (lastEnd > 0) parts.push(src.subarray(0, lastEnd))
+  parts.reverse()
   return Buffer.concat(parts)
 }
 
@@ -287,33 +302,107 @@ export function applyReplacement(
   target: LenField,
   newData: Uint8Array
 ): Uint8Array {
+  return applyReplacements(payload, fields, [{ field: target, data: newData }])
+}
+
+export function applyReplacements(
+  payload: Uint8Array,
+  fields: LenField[],
+  replacements: FieldReplacement[]
+): Uint8Array {
+  if (replacements.length === 0) return payload
+
+  const replacementByField = new Map<LenField, Uint8Array>()
+  for (const replacement of replacements) {
+    if (replacementByField.has(replacement.field)) {
+      throw new Error('[error] duplicate replacement field')
+    }
+    replacementByField.set(replacement.field, replacement.data)
+  }
+
+  const targets = [...replacementByField.keys()].sort((a, b) => a.lenOffset - b.lenOffset)
+  for (let i = 1; i < targets.length; i++) {
+    if (targets[i].lenOffset < targets[i - 1].dataEnd) {
+      throw new Error('[error] replacement fields overlap')
+    }
+  }
+
+  const targetSet = new Set(targets)
+  const ancestorChains = new Map<LenField, LenField[]>()
+  const stack: LenField[] = []
+  for (const field of fields) {
+    while (stack.length > 0) {
+      const parent = stack[stack.length - 1]
+      if (parent.dataStart <= field.lenOffset && parent.dataEnd >= field.dataEnd) break
+      stack.pop()
+    }
+    if (targetSet.has(field)) {
+      ancestorChains.set(field, [...stack])
+    }
+    stack.push(field)
+  }
+
+  const affected = new Set<LenField>()
+  const parentByField = new Map<LenField, LenField>()
+  for (const target of targets) {
+    const ancestors = ancestorChains.get(target)
+    if (!ancestors) {
+      throw new Error('[error] replacement field is not part of parsed fields')
+    }
+    const chain = [...ancestors, target]
+    chain.forEach((field) => affected.add(field))
+    for (let i = 1; i < chain.length; i++) {
+      parentByField.set(chain[i], chain[i - 1])
+    }
+  }
+
+  const childrenByField = new Map<LenField, LenField[]>()
+  for (const [child, parent] of parentByField) {
+    const children = childrenByField.get(parent) ?? []
+    children.push(child)
+    childrenByField.set(parent, children)
+  }
+
   const patches: Patch[] = []
-  const oldLen = target.dataEnd - target.dataStart
-  const newLen = newData.length
-  const newLenBytes = encodeVarint(newLen)
-  let delta = newLen - oldLen + (newLenBytes.length - target.lenSize)
-
-  patches.push({
-    start: target.lenOffset,
-    end: target.dataEnd,
-    replacement: Buffer.concat([Buffer.from(newLenBytes), Buffer.from(newData)])
-  })
-
-  const ancestors = findAncestorFields(fields, target)
-  for (const ancestor of ancestors) {
-    const oldAncestorLen = ancestor.dataEnd - ancestor.dataStart
-    const newAncestorLen = oldAncestorLen + delta
-    if (newAncestorLen < 0) {
+  const segmentDeltaByField = new Map<LenField, number>()
+  const deepestFirst = [...affected].sort((a, b) => b.depth - a.depth)
+  for (const field of deepestFirst) {
+    const oldDataLength = field.dataEnd - field.dataStart
+    const replacement = replacementByField.get(field)
+    const newDataLength = replacement
+      ? replacement.length
+      : oldDataLength +
+        (childrenByField.get(field) ?? []).reduce(
+          (sum, child) => sum + (segmentDeltaByField.get(child) ?? 0),
+          0
+        )
+    if (newDataLength < 0) {
       throw new Error('[error] ancestor length underflow')
     }
-    const newAncestorLenBytes = encodeVarint(newAncestorLen)
-    const ancestorLenSizeDelta = newAncestorLenBytes.length - ancestor.lenSize
-    patches.push({
-      start: ancestor.lenOffset,
-      end: ancestor.dataStart,
-      replacement: newAncestorLenBytes
-    })
-    delta += ancestorLenSizeDelta
+    const newLengthBytes = encodeVarint(newDataLength)
+    segmentDeltaByField.set(
+      field,
+      newDataLength - oldDataLength + (newLengthBytes.length - field.lenSize)
+    )
+
+    if (replacement) {
+      patches.push({
+        start: field.lenOffset,
+        end: field.dataEnd,
+        replacement: Buffer.concat([
+          Buffer.from(newLengthBytes),
+          Buffer.isBuffer(replacement)
+            ? replacement
+            : Buffer.from(replacement.buffer, replacement.byteOffset, replacement.byteLength)
+        ])
+      })
+    } else if (newDataLength !== oldDataLength) {
+      patches.push({
+        start: field.lenOffset,
+        end: field.dataStart,
+        replacement: newLengthBytes
+      })
+    }
   }
 
   return applyPatches(payload, patches)
@@ -330,7 +419,10 @@ export function buildFile(
   view.setUint32(8, header.headTag, false)
   view.setUint32(12, header.fileType, false)
   view.setUint32(16, payload.length, false)
-  Buffer.from(payload).copy(buffer, 20)
+  const src = Buffer.isBuffer(payload)
+    ? payload
+    : Buffer.from(payload.buffer, payload.byteOffset, payload.byteLength)
+  src.copy(buffer, 20)
   view.setUint32(buffer.length - 4, header.tailTag, false)
   return buffer
 }

@@ -4,6 +4,10 @@ import { readVarint } from './binary.js'
 import type { LenField } from './types.js'
 
 export type NodeGraphObj = Record<string, unknown>
+export type NodeGraphFieldInfo = {
+  field: LenField
+  type?: number
+}
 
 function isNodeGraphBlobField(f: LenField): boolean {
   // 只匹配 NodeGraph “原始 bytes”字段本身，避免扫描 10.1.1 子树内部的海量嵌套字段
@@ -68,7 +72,7 @@ function tryReadNodeGraphIdAndType(bytes: Uint8Array): { id: number; type?: numb
 }
 
 export function unwrapGia(bytes: Uint8Array): Uint8Array {
-  return bytes.slice(20, -4)
+  return bytes.subarray(20, bytes.length - 4)
 }
 
 function toNumberIfLongLike(v: unknown): number | undefined {
@@ -180,6 +184,22 @@ export function findNodeGraphTargets(
   }
 
   return matches
+}
+
+export function buildNodeGraphFieldIndex(
+  payload: Uint8Array,
+  fields: LenField[]
+): Map<number, NodeGraphFieldInfo[]> {
+  const index = new Map<number, NodeGraphFieldInfo[]>()
+  for (const field of fields) {
+    if (!isNodeGraphBlobField(field)) continue
+    const info = tryReadNodeGraphIdAndType(payload.subarray(field.dataStart, field.dataEnd))
+    if (!info) continue
+    const list = index.get(info.id) ?? []
+    list.push({ field, type: info.type })
+    index.set(info.id, list)
+  }
+  return index
 }
 
 export function buildGraphTypeMap(

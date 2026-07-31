@@ -36,5 +36,10 @@
     "gsts.config.ts",
     "gsts.test.config.ts"
   ],
-  "exclude": ["tests/generated", "tests/enum_cases", "src/runtime/server_globals.d.ts"]
+  "exclude": [
+    "tests/generated",
+    "tests/enum_cases",
+    "tests/package-consumer",
+    "src/runtime/server_globals.d.ts"
+  ]
 }
