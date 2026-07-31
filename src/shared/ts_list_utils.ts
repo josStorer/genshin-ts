@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { isEntityLikeType } from './ts_type_utils.js'
+import { isEntityLikeType, typeToStringCached } from './ts_type_utils.js'
 import {
   inferConcreteTypeFromString,
   inferListTypeFromTypeString,
@@ -16,7 +16,7 @@ export function inferConcreteTypeFromType(
   location?: ts.Node
 ): ListType | null {
   if (isEntityLikeType(checker, type, location)) return 'entity'
-  const s = checker.typeToString(type)
+  const s = typeToStringCached(checker, type)
   return inferConcreteTypeFromString(s)
 }
 
@@ -56,7 +56,7 @@ export function inferListTypeFromType(
     }
   }
 
-  const s = checker.typeToString(type)
+  const s = typeToStringCached(checker, type)
   return inferListTypeFromTypeString(s)
 }
 
@@ -97,7 +97,7 @@ export function inferListElementTypeFromType(
 
 export function isArrayLikeType(checker: ts.TypeChecker, type: ts.Type): boolean {
   if (checker.isArrayType(type) || checker.isTupleType(type)) return true
-  const s = checker.typeToString(type)
+  const s = typeToStringCached(checker, type)
   if (/\[\]\s*$/.test(s)) return true
   if (/^Array<.+>$/.test(s)) return true
   if (/^ReadonlyArray<.+>$/.test(s)) return true
