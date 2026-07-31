@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs'
 import path from 'node:path'
+import { performance } from 'node:perf_hooks'
 import { clearTimeout, setTimeout } from 'node:timers'
 
 import chokidar from 'chokidar'
@@ -19,13 +20,23 @@ import { mergeIrJsonFilesByGraphId } from '../compiler/ir_merge.js'
 import { writeGiaFromIrJsonFile, writeGiaFromIrJsonFiles } from '../compiler/ir_to_gia_pipeline.js'
 import { compileTsToGs } from '../compiler/ts_to_gs_pipeline.js'
 import { detectLang, initCliI18n, type Lang } from '../i18n/index.js'
-import { injectGilFile } from '../injector/index.js'
+import { createInjector } from '../injector/index.js'
 import { resolveGraphIdForGraph } from '../runtime/graph_defaults.js'
 import { maybeCheckRemoteMarkdown } from './checks.js'
 import { ensureDataDirs } from './data.js'
+import {
+  assertGilFileUnchanged,
+  getGilFileVersion,
+  writeFileAtomic
+} from './gil_file_transaction.js'
 import { resolveGilFolder, resolveGilTarget } from './gil_paths.js'
 import { DEFAULT_RESOURCES_PATH, extractCustomResourcesFromGil } from './gil_resources.js'
 import { DEFAULT_SIGNALS_PATH, extractSignalsFromGil } from './gil_signals.js'
+import {
+  createInjectionTaskQueue,
+  runInjectionAttempt,
+  type InjectionAttemptHooks
+} from './injection_lifecycle.js'
 import { getMapKey, loadState, saveState } from './state.js'
 import { createUi } from './ui.js'
 import { openAndSelect, openDir } from './windows_open.js'
@@ -33,17 +44,34 @@ import { openAndSelect, openDir } from './windows_open.js'
 type GlobalOptions = {
   config?: string
   noinject?: boolean
+  injectProfile?: boolean
   lang?: string
+}
+
+type InjectManyParams = {
+  giaPaths: string[]
+  opts: GlobalOptions
+  gilCfg: GstsInjectConfig | undefined
+  useConfiguredTargetId: boolean
+  lang: string
+  t: ReturnType<typeof initCliI18n>['t']
+}
+
+type InjectManyResult = {
+  ok: number
+  skipped: number
+  fail: number
+  count: number
+  totalMs: number
+  wroteGil: boolean
 }
 
 const ui = createUi()
 
 type MergeResult = { graphId: number; outJsonPath: string; sourceJsonPaths: string[] }
 
-type RunBatchHooks = {
-  onGiaPaths?: (paths: string[]) => void
-  onBeforeInject?: () => void
-  onAfterInject?: () => void
+type RunBatchHooks = InjectionAttemptHooks & {
+  onPrepared?: (result: { giaPaths: string[]; mergeResults?: MergeResult[] }) => void
 }
 
 type CachedConfig = { mtimeMs: number; cfg: GstsConfig }
@@ -117,41 +145,292 @@ function planGiaTaskFromOutJson(
   return { irPath: outJson, opts: { includeIndices: idxs, preserveIndices: true } }
 }
 
-function injectMany(params: {
-  giaPaths: string[]
-  opts: GlobalOptions
-  gilCfg: GstsInjectConfig | undefined
-  useConfiguredTargetId: boolean
-  lang: string
-  t: ReturnType<typeof initCliI18n>['t']
-  onFail?: (err: unknown, giaPath: string) => void
-}): { ok: number; fail: number; count: number } {
+function roundMs(value: number): number {
+  return Math.round(value * 1000) / 1000
+}
+
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+function injectProfileEnabled(opts: GlobalOptions): boolean {
+  return !!opts.injectProfile || process.env.GSTS_INJECT_PROFILE === '1'
+}
+
+function injectManyCore(params: InjectManyParams): InjectManyResult {
+  const totalStart = performance.now()
   if (params.opts.noinject || !params.gilCfg) {
-    return { ok: 0, fail: 0, count: params.giaPaths.length }
-  }
-  let ok = 0
-  let fail = 0
-  for (const giaPath of params.giaPaths) {
-    try {
-      const did = maybeInjectGia(
-        giaPath,
-        params.opts,
-        params.gilCfg,
-        params.useConfiguredTargetId,
-        params.lang
-      )
-      if (did) ok++
-    } catch (e) {
-      fail++
-      if (params.onFail) params.onFail(e, giaPath)
-      else {
-        const raw = e instanceof Error ? e.message : String(e)
-        const msg = raw.replace(/^\[error\]\s*/i, '').trim()
-        ui.error(params.t('injectFail', { file: path.basename(giaPath), error: msg }))
-      }
+    return {
+      ok: 0,
+      skipped: 0,
+      fail: 0,
+      count: params.giaPaths.length,
+      totalMs: 0,
+      wroteGil: false
     }
   }
-  return { ok, fail, count: params.giaPaths.length }
+  if (params.giaPaths.length === 0) {
+    return {
+      ok: 0,
+      skipped: 0,
+      fail: 0,
+      count: 0,
+      totalMs: performance.now() - totalStart,
+      wroteGil: false
+    }
+  }
+
+  const resolveStart = performance.now()
+  const target = resolveGilTarget(params.gilCfg)
+  const resolveTargetMs = performance.now() - resolveStart
+
+  const backupStart = performance.now()
+  maybeBackupGil(target.playerId, target.mapId, target.gilPath)
+  const backupMs = performance.now() - backupStart
+
+  const prepared: Array<{
+    giaPath: string
+    giaBytes: Uint8Array
+    readGiaMs: number
+  }> = []
+  const readFailures: Array<{ giaPath: string; error: string; readGiaMs: number }> = []
+  let readGiaMs = 0
+  let giaBytesTotal = 0
+  for (const giaPath of params.giaPaths) {
+    const readStart = performance.now()
+    try {
+      const giaBytes = fs.readFileSync(giaPath)
+      const cost = performance.now() - readStart
+      readGiaMs += cost
+      giaBytesTotal += giaBytes.length
+      prepared.push({ giaPath, giaBytes, readGiaMs: cost })
+    } catch (error) {
+      const cost = performance.now() - readStart
+      readGiaMs += cost
+      const message = errorText(error)
+      readFailures.push({ giaPath, error: message, readGiaMs: cost })
+      const msg = message.replace(/^\[error\]\s*/i, '').trim()
+      ui.error(params.t('injectFail', { file: path.basename(giaPath), error: msg }))
+    }
+  }
+
+  if (prepared.length === 0) {
+    const totalMs = performance.now() - totalStart
+    if (injectProfileEnabled(params.opts)) {
+      console.log(
+        '[inject-profile]',
+        JSON.stringify({
+          kind: 'gsts-inject-profile',
+          version: 2,
+          strategy: 'batch',
+          mapFile: path.basename(target.gilPath),
+          files: params.giaPaths.length,
+          ok: 0,
+          skipped: 0,
+          fail: readFailures.length,
+          timingsMs: {
+            resolveTarget: roundMs(resolveTargetMs),
+            backup: roundMs(backupMs),
+            readGia: roundMs(readGiaMs),
+            total: roundMs(totalMs)
+          },
+          items: readFailures.map((item) => ({
+            file: path.basename(item.giaPath),
+            status: 'failed',
+            error: item.error,
+            timingsMs: { readGia: roundMs(item.readGiaMs) }
+          }))
+        })
+      )
+    }
+    if (readFailures.length > 0) process.exitCode = 1
+    return {
+      ok: 0,
+      skipped: 0,
+      fail: readFailures.length,
+      count: params.giaPaths.length,
+      totalMs,
+      wroteGil: false
+    }
+  }
+
+  const beforeRead = getGilFileVersion(target.gilPath)
+  const readGilStart = performance.now()
+  const gilBytes = fs.readFileSync(target.gilPath)
+  const readGilMs = performance.now() - readGilStart
+  const afterRead = assertGilFileUnchanged(
+    target.gilPath,
+    beforeRead,
+    '[error] target gil changed while it was being read; injection aborted'
+  )
+
+  const createInjectorStart = performance.now()
+  const injector = createInjector({ lang: params.lang })
+  const createInjectorMs = performance.now() - createInjectorStart
+  const batch = injector.injectManyBytes({
+    gilBytes,
+    items: prepared.map((item) => ({
+      giaBytes: item.giaBytes,
+      targetId: params.useConfiguredTargetId ? params.gilCfg?.nodeGraphId : undefined
+    })),
+    skipNonEmptyCheck: !!params.gilCfg.skipSafeCheck,
+    lang: params.lang
+  })
+
+  const writeStart = performance.now()
+  const wroteGil = batch.stats.replacementCount > 0
+  if (wroteGil) {
+    assertGilFileUnchanged(
+      target.gilPath,
+      afterRead,
+      '[error] target gil changed during batch injection; write aborted'
+    )
+    writeFileAtomic(target.gilPath, batch.bytes)
+  }
+  const writeGilMs = performance.now() - writeStart
+
+  let ok = 0
+  let skipped = 0
+  let fail = readFailures.length
+  const reportItemsStart = performance.now()
+  batch.items.forEach((result, index) => {
+    const giaPath = prepared[index].giaPath
+    if (result.status === 'ok') {
+      ok++
+      ui.ok(params.t('injectOk', { file: path.basename(giaPath), outPath: target.gilPath }))
+      return
+    }
+
+    if (result.status === 'skipped') {
+      skipped++
+      const message = result.message.replace(/^\[error\]\s*/i, '').trim()
+      ui.warn(params.t('injectSkip', { file: path.basename(giaPath), reason: message }))
+      return
+    }
+
+    fail++
+    const msg = result.error.replace(/^\[error\]\s*/i, '').trim()
+    ui.error(params.t('injectFail', { file: path.basename(giaPath), error: msg }))
+  })
+  const reportItemsMs = performance.now() - reportItemsStart
+
+  const totalMs = performance.now() - totalStart
+  if (injectProfileEnabled(params.opts)) {
+    const core = batch.timings
+    const profileItems = prepared.map((item, index) => {
+      const result = batch.items[index]
+      return {
+        file: path.basename(item.giaPath),
+        bytes: item.giaBytes.length,
+        status: result.status,
+        targetId: result.targetId,
+        ...(result.status === 'failed' ? { error: result.error } : {}),
+        ...(result.status === 'skipped' ? { reason: result.reason, message: result.message } : {}),
+        timingsMs: {
+          readGia: roundMs(item.readGiaMs),
+          decodeGia: roundMs(result.timings.decodeGiaMs),
+          patchSignalIds: roundMs(result.timings.patchSignalIdsMs),
+          validateTarget: roundMs(result.timings.validateTargetMs),
+          encodeGraph: roundMs(result.timings.encodeGraphMs),
+          coreTotal: roundMs(result.timings.totalMs)
+        }
+      }
+    })
+    profileItems.push(
+      ...readFailures.map((item) => ({
+        file: path.basename(item.giaPath),
+        bytes: 0,
+        status: 'failed' as const,
+        targetId: undefined,
+        error: item.error,
+        timingsMs: {
+          readGia: roundMs(item.readGiaMs),
+          decodeGia: 0,
+          patchSignalIds: 0,
+          validateTarget: 0,
+          encodeGraph: 0,
+          coreTotal: 0
+        }
+      }))
+    )
+    console.log(
+      '[inject-profile]',
+      JSON.stringify({
+        kind: 'gsts-inject-profile',
+        version: 2,
+        strategy: 'batch',
+        mapFile: path.basename(target.gilPath),
+        files: params.giaPaths.length,
+        ok,
+        skipped,
+        fail,
+        stats: {
+          ...batch.stats,
+          giaBytes: giaBytesTotal
+        },
+        timingsMs: {
+          resolveTarget: roundMs(resolveTargetMs),
+          backup: roundMs(backupMs),
+          readGia: roundMs(readGiaMs),
+          readGil: roundMs(readGilMs),
+          createInjector: roundMs(createInjectorMs),
+          parseGil: roundMs(core.parseGilMs),
+          indexNodeGraphs: roundMs(core.indexNodeGraphsMs),
+          buildSignalMap: roundMs(core.buildSignalMapMs),
+          prepareItems: roundMs(core.prepareItemsMs),
+          applyReplacements: roundMs(core.applyReplacementsMs),
+          buildFile: roundMs(core.buildFileMs),
+          writeGil: roundMs(writeGilMs),
+          reportItems: roundMs(reportItemsMs),
+          coreTotal: roundMs(core.totalMs),
+          total: roundMs(totalMs)
+        },
+        items: profileItems
+      })
+    )
+  }
+
+  if (fail > 0) process.exitCode = 1
+  return {
+    ok,
+    skipped,
+    fail,
+    count: params.giaPaths.length,
+    totalMs,
+    wroteGil
+  }
+}
+
+function injectMany(params: InjectManyParams): InjectManyResult {
+  const totalStart = performance.now()
+  try {
+    return injectManyCore(params)
+  } catch (error) {
+    process.exitCode = 1
+    if (injectProfileEnabled(params.opts)) {
+      try {
+        console.log(
+          '[inject-profile]',
+          JSON.stringify({
+            kind: 'gsts-inject-profile',
+            version: 2,
+            strategy: 'batch',
+            status: 'failed',
+            fatal: true,
+            ...(typeof params.gilCfg?.mapId === 'number'
+              ? { mapFile: `${params.gilCfg.mapId}.gil` }
+              : {}),
+            files: params.giaPaths.length,
+            error: errorText(error),
+            timingsMs: { total: roundMs(performance.now() - totalStart) }
+          })
+        )
+      } catch {
+        // Profiling must not replace the original injection error.
+      }
+    }
+    throw error
+  }
 }
 
 async function runCliChecks(lang: Lang) {
@@ -556,28 +835,38 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
     giaAll.push(...detailed.map((x) => x.giaPath))
 
     ui.info(t('giaAllDone', { count: giaAll.length }))
+  }
 
-    // 批量模式：忽略 config.inject.nodeGraphId，使用 GIA 内的 graph id 推断
-    if (!opts.noinject && cfg.inject) {
-      hooks?.onBeforeInject?.()
-      const stat = injectMany({
-        giaPaths: giaAll,
-        opts,
-        gilCfg: cfg.inject,
-        useConfiguredTargetId: false,
-        lang,
-        t
+  hooks?.onPrepared?.({ giaPaths: giaAll, mergeResults: lastMergeResults })
+
+  // 批量模式：忽略 config.inject.nodeGraphId，使用 GIA 内的 graph id 推断
+  if (entryOutFiles.length && !opts.noinject && cfg.inject) {
+    const stat = runInjectionAttempt(
+      () =>
+        injectMany({
+          giaPaths: giaAll,
+          opts,
+          gilCfg: cfg.inject,
+          useConfiguredTargetId: false,
+          lang,
+          t
+        }),
+      hooks
+    )
+    ui.info(
+      t('injectAllDone', {
+        ok: stat.ok,
+        skipped: stat.skipped,
+        fail: stat.fail,
+        count: stat.count,
+        ms: roundMs(stat.totalMs)
       })
-      hooks?.onAfterInject?.()
-      ui.info(t('injectAllDone', { ok: stat.ok, fail: stat.fail, count: stat.count }))
-    }
+    )
   }
 
   if (opts.noinject) {
     ui.warn(t('warnNoInject'))
   }
-
-  hooks?.onGiaPaths?.(giaAll)
 
   return {
     cfgDir,
@@ -615,7 +904,14 @@ async function runDev(opts: GlobalOptions) {
   const markGilIgnoreCooldown = () => {
     gilIgnoreUntil = Date.now() + 800
   }
-  let injecting = false
+  // injectMany is synchronous, so Chokidar callbacks run only after this hook settles.
+  // Mark only committed writes as self-write cooldowns; failed attempts leave the queued event visible.
+  const injectionHooks: InjectionAttemptHooks = {
+    onAfterInject: (outcome) => {
+      if (outcome.status === 'ok' && outcome.wroteGil) markGilIgnoreCooldown()
+      else gilIgnoreUntil = 0
+    }
+  }
 
   const injectCfg = cfg.inject
   const reinjectOnMapChange =
@@ -646,59 +942,40 @@ async function runDev(opts: GlobalOptions) {
   const safeRunBatch = async () => {
     try {
       const res = await runBatch(opts, {
-        onGiaPaths: (paths) => trackGiaPaths(paths, 'replace'),
-        onBeforeInject: () => {
-          injecting = true
+        onPrepared: ({ giaPaths, mergeResults }) => {
+          trackGiaPaths(giaPaths, 'replace')
+          updateMergeCache(mergeResults)
         },
-        onAfterInject: () => {
-          injecting = false
-          markGilIgnoreCooldown()
-        }
+        ...injectionHooks
       })
-      updateMergeCache(res?.mergeResults)
       return res
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       ui.error(msg.replace('[error]', '').trim())
-      injecting = false
+      process.exitCode = 1
       return undefined
     }
   }
 
-  let running = false
-  let pendingCodeCompile = false
-  let pendingReinject = false
   let codeChangeTimer: ReturnType<typeof setTimeout> | undefined
   let gilChangeTimer: ReturnType<typeof setTimeout> | undefined
+
+  const reportDevTaskError = (error: unknown) => {
+    const msg = error instanceof Error ? error.message : String(error)
+    ui.error(msg.replace('[error]', '').trim())
+    process.exitCode = 1
+  }
+
+  const injectionTasks = createInjectionTaskQueue({
+    runCodeChange: () => runChanged(),
+    runReinject: () => runReinject(),
+    onError: reportDevTaskError
+  })
 
   const triggerCodeChange = () => {
     if (codeChangeTimer) clearTimeout(codeChangeTimer)
     codeChangeTimer = setTimeout(() => {
-      void (async () => {
-        try {
-          if (running) {
-            pendingCodeCompile = true
-            return
-          }
-          running = true
-          await runChanged()
-        } catch (e) {
-          // 理论上 safeRunBatch 不会抛出；这里兜底避免未处理 rejection 让 dev 崩溃
-          const msg = e instanceof Error ? e.message : String(e)
-          ui.error(msg.replace('[error]', '').trim())
-        } finally {
-          running = false
-          const hadPendingCodeCompile = pendingCodeCompile
-          if (pendingCodeCompile) {
-            pendingCodeCompile = false
-            triggerCodeChange()
-          }
-          if (!hadPendingCodeCompile && pendingReinject) {
-            pendingReinject = false
-            triggerReinject()
-          }
-        }
-      })()
+      void injectionTasks.schedule('code-change')
     }, 150)
   }
 
@@ -706,30 +983,7 @@ async function runDev(opts: GlobalOptions) {
     if (!reinjectOnMapChange || !gilPath) return
     if (gilChangeTimer) clearTimeout(gilChangeTimer)
     gilChangeTimer = setTimeout(() => {
-      void (async () => {
-        try {
-          if (running) {
-            pendingReinject = true
-            return
-          }
-          running = true
-          await runReinject()
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : String(e)
-          ui.error(msg.replace('[error]', '').trim())
-        } finally {
-          running = false
-          const hadPendingCodeCompile = pendingCodeCompile
-          if (pendingCodeCompile) {
-            pendingCodeCompile = false
-            triggerCodeChange()
-          }
-          if (!hadPendingCodeCompile && pendingReinject) {
-            pendingReinject = false
-            triggerReinject()
-          }
-        }
-      })()
+      void injectionTasks.schedule('reinject')
     }, 200)
   }
 
@@ -1022,39 +1276,33 @@ async function runDev(opts: GlobalOptions) {
       trackGiaPaths(all.map((x) => x.giaPath))
     }
 
-    const byIr = new Map<string, { giaPath: string; graphId: number }[]>()
-    for (const r of all) {
-      const key = path.resolve(r.irPath)
-      const arr = byIr.get(key) ?? []
-      arr.push(r)
-      byIr.set(key, arr)
-    }
-
     for (const [outJson] of entries) {
-      const key = path.resolve(outJson)
-      const detailed = byIr.get(key) ?? []
-
       ui.ok(outJson)
       // GIA 输出由 runner 实时打印，这里避免重复输出
+    }
 
-      if (!detailed.length) continue
-      if (!opts.noinject && cfg.inject) {
-        injecting = true
-        try {
-          const stat = injectMany({
-            giaPaths: detailed.map((x) => x.giaPath),
+    if (all.length && !opts.noinject && cfg.inject) {
+      const stat = runInjectionAttempt(
+        () =>
+          injectMany({
+            giaPaths: all.map((x) => x.giaPath),
             opts,
             gilCfg: cfg.inject,
             useConfiguredTargetId: false,
             lang,
             t
-          })
-          ui.info(t('injectAllDone', { ok: stat.ok, fail: stat.fail, count: stat.count }))
-        } finally {
-          injecting = false
-          markGilIgnoreCooldown()
-        }
-      }
+          }),
+        injectionHooks
+      )
+      ui.info(
+        t('injectAllDone', {
+          ok: stat.ok,
+          skipped: stat.skipped,
+          fail: stat.fail,
+          count: stat.count,
+          ms: roundMs(stat.totalMs)
+        })
+      )
     }
   }
 
@@ -1090,21 +1338,27 @@ async function runDev(opts: GlobalOptions) {
     }
 
     ui.info(t('devMapChanged'))
-    injecting = true
-    try {
-      const stat = injectMany({
-        giaPaths: tracked,
-        opts,
-        gilCfg: cfg.inject,
-        useConfiguredTargetId: false,
-        lang,
-        t
+    const stat = runInjectionAttempt(
+      () =>
+        injectMany({
+          giaPaths: tracked,
+          opts,
+          gilCfg: cfg.inject,
+          useConfiguredTargetId: false,
+          lang,
+          t
+        }),
+      injectionHooks
+    )
+    ui.info(
+      t('injectAllDone', {
+        ok: stat.ok,
+        skipped: stat.skipped,
+        fail: stat.fail,
+        count: stat.count,
+        ms: roundMs(stat.totalMs)
       })
-      ui.info(t('injectAllDone', { ok: stat.ok, fail: stat.fail, count: stat.count }))
-    } finally {
-      injecting = false
-      markGilIgnoreCooldown()
-    }
+    )
     maybeExtractResources({
       cfgDir,
       injectCfg: cfg.inject,
@@ -1117,7 +1371,6 @@ async function runDev(opts: GlobalOptions) {
 
   const onGilChange = () => {
     if (!reinjectOnMapChange || !gilPath) return
-    if (injecting) return
     if (Date.now() < gilIgnoreUntil) return
     triggerReinject()
   }
@@ -1339,8 +1592,8 @@ function maybeExtractResources(params: {
   }
 }
 
-function maybeInjectGia(
-  giaPath: string,
+function maybeInjectGias(
+  giaPaths: string[],
   opts: GlobalOptions,
   gilCfg: GstsInjectConfig | undefined,
   useConfiguredTargetId: boolean,
@@ -1350,20 +1603,24 @@ function maybeInjectGia(
   if (!gilCfg) return
 
   const { t } = initCliI18n(detectLang(resolvedLang ?? opts.lang))
-  const target = resolveGilTarget(gilCfg)
-  maybeBackupGil(target.playerId, target.mapId, target.gilPath)
-
-  const t0 = Date.now()
-  const result = injectGilFile({
-    gilPath: target.gilPath,
-    giaPath,
-    targetId: useConfiguredTargetId ? gilCfg.nodeGraphId : undefined,
-    skipNonEmptyCheck: !!gilCfg.skipSafeCheck,
-    lang: resolvedLang
+  const stat = injectMany({
+    giaPaths,
+    opts,
+    gilCfg,
+    useConfiguredTargetId,
+    lang: resolvedLang ?? detectLang(opts.lang),
+    t
   })
-  const costMs = Date.now() - t0
-  ui.ok(t('injectOkTime', { file: path.basename(giaPath), outPath: result.outPath, ms: costMs }))
-  return true
+  ui.info(
+    t('injectAllDone', {
+      ok: stat.ok,
+      skipped: stat.skipped,
+      fail: stat.fail,
+      count: stat.count,
+      ms: roundMs(stat.totalMs)
+    })
+  )
+  return stat
 }
 
 async function runSingle(file: string, opts: GlobalOptions) {
@@ -1379,7 +1636,7 @@ async function runSingle(file: string, opts: GlobalOptions) {
 
   if (isGiaPath(abs)) {
     // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    maybeInjectGia(abs, opts, injectCfg, true, lang)
+    maybeInjectGias([abs], opts, injectCfg, true, lang)
     return
   }
 
@@ -1387,7 +1644,13 @@ async function runSingle(file: string, opts: GlobalOptions) {
     ui.info(t('startGia'))
     const out = writeGiaFromOutJson(abs, undefined, (x) => ui.ok(`${x.giaPath} (id=${x.graphId})`))
     // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    out.forEach((x) => maybeInjectGia(x.giaPath, opts, injectCfg, true, lang))
+    maybeInjectGias(
+      out.map((x) => x.giaPath),
+      opts,
+      injectCfg,
+      true,
+      lang
+    )
     return
   }
 
@@ -1397,7 +1660,13 @@ async function runSingle(file: string, opts: GlobalOptions) {
     ui.info(t('startGia'))
     const out = writeGiaFromOutJson(abs, undefined, (x) => ui.ok(`${x.giaPath} (id=${x.graphId})`))
     // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    out.forEach((x) => maybeInjectGia(x.giaPath, opts, injectCfg, true, lang))
+    maybeInjectGias(
+      out.map((x) => x.giaPath),
+      opts,
+      injectCfg,
+      true,
+      lang
+    )
     return
   } catch {
     // not json
@@ -1450,7 +1719,13 @@ async function runSingle(file: string, opts: GlobalOptions) {
     ui.ok(`${x.giaPath} (id=${x.graphId})`)
   )
   // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-  giaOut.forEach((x) => maybeInjectGia(x.giaPath, opts, injectCfg, true, lang))
+  maybeInjectGias(
+    giaOut.map((x) => x.giaPath),
+    opts,
+    injectCfg,
+    true,
+    lang
+  )
 }
 
 async function main() {
@@ -1464,6 +1739,7 @@ async function main() {
     .description(t('desc'))
     .option('-c, --config <file>', t('optConfig'))
     .option('--noinject', t('optNoInject'))
+    .option('--inject-profile', t('optInjectProfile'))
     .option('--lang <lang>', t('optLang'))
     .argument('[file]', t('argFile'))
     .showHelpAfterError(t('helpAfterError'))
