@@ -1,6 +1,6 @@
 {
   "name": "genshin-ts",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Use Typescript to develop Genshin UGC - Miliastra Wonderland",
   "type": "module",
   "author": "josStorer <josstorer@outlook.com> (https://github.com/josStorer)",
