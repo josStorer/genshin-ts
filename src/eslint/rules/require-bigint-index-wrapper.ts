@@ -77,7 +77,7 @@ const rule: Rule.RuleModule = {
 
     const helperName = options.helperName.trim() || 'idx'
     const checker = services.program.getTypeChecker()
-    const sourceCode = context.sourceCode ?? context.getSourceCode()
+    const sourceCode = context.sourceCode
     const scopeIndex = buildServerScopeIndex(context)
 
     return {

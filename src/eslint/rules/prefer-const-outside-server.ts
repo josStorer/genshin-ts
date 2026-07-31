@@ -181,7 +181,7 @@ const rule: Rule.RuleModule = {
     }
     const { destructuring, ignoreReadBeforeAssign } = opt
     const shouldMatchAnyDestructuredVariable = destructuring !== 'all'
-    const sourceCode = context.sourceCode ?? context.getSourceCode()
+    const sourceCode = context.sourceCode
     const variables: any[] = []
     const scopeIndex = buildServerScopeIndex(context)
 

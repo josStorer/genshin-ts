@@ -10,7 +10,7 @@ export type ParserServices = {
 type RuleContext = Rule.RuleContext
 
 export function getSourceCode(context: RuleContext) {
-  return context.sourceCode ?? context.getSourceCode()
+  return context.sourceCode
 }
 
 export function getParserServices(context: RuleContext): ParserServices | null {
