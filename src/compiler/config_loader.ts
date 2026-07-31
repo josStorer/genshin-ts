@@ -1,11 +1,13 @@
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
-import os from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+import { build } from 'esbuild'
+
 import type { GstsConfig } from './gsts_config.js'
+
+let configBundleId = 0
 
 export function existsFile(p: string) {
   try {
@@ -39,55 +41,80 @@ function isGstsConfig(v: unknown): v is GstsConfig {
   return true
 }
 
-export async function loadGstsConfig(configPath: string): Promise<GstsConfig> {
-  const ext = path.extname(configPath).toLowerCase()
-  const isTs = ext === '.ts' || ext === '.mts' || ext === '.cts'
+async function loadViaImport(configPath: string): Promise<unknown> {
+  const mod = (await import(pathToFileURL(configPath).href)) as unknown
+  return isRecord(mod) && 'default' in mod ? ((mod as { default?: unknown }).default ?? mod) : mod
+}
 
-  const loadViaImport = async (): Promise<unknown> => {
-    const mod = (await import(pathToFileURL(configPath).href)) as unknown
-    return isRecord(mod) && 'default' in mod ? ((mod as { default?: unknown }).default ?? mod) : mod
-  }
+async function loadViaEsbuild(configPath: string): Promise<unknown> {
+  const configDir = path.dirname(configPath)
+  const entrySource = 'gsts-config-loader-entry.mjs'
+  const configSpecifier = `./${path.basename(configPath).replaceAll('\\', '/')}`
+  const result = await build({
+    absWorkingDir: configDir,
+    stdin: {
+      contents: [
+        `import { writeFileSync as writeGstsConfigResult } from 'node:fs'`,
+        `import * as configModule from ${JSON.stringify(configSpecifier)}`,
+        `const config = configModule && typeof configModule === 'object' && 'default' in configModule`,
+        `  ? (configModule.default ?? configModule)`,
+        `  : configModule`,
+        `writeGstsConfigResult(3, JSON.stringify(config))`
+      ].join('\n'),
+      resolveDir: configDir,
+      sourcefile: entrySource,
+      loader: 'js'
+    },
+    bundle: true,
+    write: false,
+    platform: 'node',
+    format: 'esm',
+    packages: 'external',
+    target: `node${process.versions.node.split('.')[0]}`,
+    sourcemap: 'inline',
+    sourcesContent: true,
+    logLevel: 'silent'
+  })
+  const output = result.outputFiles[0]
+  if (!output) throw new Error('[error] esbuild did not produce a config module')
 
-  const loadViaTsx = (): unknown => {
-    const require = createRequire(import.meta.url)
-    let tsxCli: string
+  const tempBundle = path.join(
+    configDir,
+    `.gsts-config-${process.pid}-${Date.now()}-${configBundleId++}.mjs`
+  )
+  fs.writeFileSync(tempBundle, output.contents, { flag: 'wx' })
+  try {
+    const executed = spawnSync(process.execPath, ['--enable-source-maps', tempBundle], {
+      encoding: 'utf8',
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe', 'pipe']
+    })
+    if (executed.error) throw executed.error
+    if (executed.status !== 0) {
+      const msg = (executed.stderr || executed.stdout || '').trim()
+      throw new Error(msg || `exit code ${String(executed.status)}`)
+    }
+    const serialized = executed.output[3]
+    if (typeof serialized !== 'string' || !serialized) {
+      throw new Error('[error] config process produced no result')
+    }
+
+    return JSON.parse(serialized)
+  } finally {
     try {
-      tsxCli = require.resolve('tsx/cli')
+      fs.unlinkSync(tempBundle)
     } catch {
-      throw new Error('[error] ts config requires tsx (install it or use gsts.config.js)')
-    }
-
-    const tmp = path.join(os.tmpdir(), `gsts-load-config-${process.pid}-${Date.now()}.mjs`)
-    const code = [
-      `import { pathToFileURL } from 'node:url'`,
-      `const cfgPath = process.argv[2]`,
-      `const mod = await import(pathToFileURL(cfgPath).href)`,
-      `const out = (mod && typeof mod === 'object' && 'default' in mod) ? (mod.default ?? mod) : mod`,
-      `process.stdout.write(JSON.stringify(out))`
-    ].join('\n')
-
-    fs.writeFileSync(tmp, code, 'utf8')
-    try {
-      const res = spawnSync(process.execPath, [tsxCli, tmp, configPath], {
-        encoding: 'utf8',
-        windowsHide: true
-      })
-      if (res.error) throw res.error
-      if (res.status !== 0) {
-        const msg = (res.stderr || res.stdout || '').trim()
-        throw new Error(msg || `exit code ${String(res.status)}`)
-      }
-      return JSON.parse(res.stdout)
-    } finally {
-      try {
-        fs.unlinkSync(tmp)
-      } catch {
-        // ignore
-      }
+      // ignore
     }
   }
+}
 
-  const exported = isTs ? loadViaTsx() : await loadViaImport()
+export async function loadGstsConfig(configPath: string): Promise<GstsConfig> {
+  const resolvedPath = path.resolve(configPath)
+  const ext = path.extname(resolvedPath).toLowerCase()
+  const isTs = ext === '.ts' || ext === '.mts' || ext === '.cts'
+  const exported = isTs ? await loadViaEsbuild(resolvedPath) : await loadViaImport(resolvedPath)
+
   if (!isGstsConfig(exported)) {
     throw new Error('[error] config must provide compileRoot, entries, outDir')
   }
