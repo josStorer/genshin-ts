@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1
+
+- Improved map signal checking and extraction performance by filtering out unrelated fields. This prevents extremely long waits and apparent hangs during node graph injection and when compiling signal-sending nodes for complex maps. Thanks to @AncherEven.
+- Added targeted data reuse, caching, and batch processing throughout the compilation, injection, and resource extraction pipeline, improving end-to-end project performance by more than 50%.
+- Updated project dependencies. If your project was created from an older template and you upgrade to ESLint 10, you must install `@eslint/js` manually for linting to work. Upgrading only `genshin-ts` is unaffected.
+
 ## v0.2.0
 
 ** This release contains potentially breaking changes. Please read the changelog before updating. **
