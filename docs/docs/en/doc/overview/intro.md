@@ -1,6 +1,6 @@
 # Project Introduction
 
-Genshin-TS is a toolchain that supports building Genshin UGC - Miliastra Wonderland with TypeScript. It focuses on a code-first workflow, controllable node-graph semantics, and AI-friendly development.
+Genshin-TS is a toolchain that makes Genshin UGC - Miliastra Wonderland development programmable with TypeScript. It focuses on a code-first workflow, controllable node-graph semantics, and AI-friendly development.
 
 > Note: This documentation is AI-generated and still under construction. Content may change frequently.
 
