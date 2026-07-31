@@ -7,8 +7,8 @@ import {
   StaticPrefabZh
 } from '../definitions/prefabs.js'
 import { detectLang, initCliI18n } from '../i18n/index.js'
-import { findAncestorFields, readVarint } from '../injector/binary.js'
-import type { LenField } from '../injector/types.js'
+import { readVarint } from '../injector/binary.js'
+import type { LenField, ParsedGilPayload } from '../injector/types.js'
 import {
   checkExistingGeneratedFile,
   decodeUtf8,
@@ -19,7 +19,7 @@ import {
 export const RESOURCES_HEADER = '// @gsts:resources'
 export const DEFAULT_RESOURCES_PATH = 'src/resources/prefabs.ts'
 
-type CustomPrefabEntry = {
+export type CustomPrefabEntry = {
   name: string
   id: number
   basePrefabId?: number
@@ -77,8 +77,14 @@ function readEntryIds(buf: Uint8Array, start: number, end: number) {
   return { customId, basePrefabId }
 }
 
-function buildPrefabNameMap(lang: string): Map<number, string> {
+const prefabNameMapCache = new Map<'zh' | 'en', Map<number, string>>()
+
+function getPrefabNameMap(lang: string): Map<number, string> {
   const useZh = lang.toLowerCase().startsWith('zh')
+  const cacheKey = useZh ? 'zh' : 'en'
+  const cached = prefabNameMapCache.get(cacheKey)
+  if (cached) return cached
+
   const sources = useZh
     ? [DynamicPrefabZh, StaticPrefabZh, CreationPrefabZh]
     : [DynamicPrefab, StaticPrefab, CreationPrefab]
@@ -90,32 +96,41 @@ function buildPrefabNameMap(lang: string): Map<number, string> {
       }
     }
   }
+  prefabNameMapCache.set(cacheKey, map)
   return map
 }
 
-function parseCustomPrefabs(payload: Uint8Array, fields: LenField[]): CustomPrefabEntry[] {
-  const entryInfoByRange = new Map<string, { customId?: number; basePrefabId?: number }>()
-  for (const f of fields) {
-    if (!isCustomPrefabEntryField(f)) continue
-    const ids = readEntryIds(payload, f.dataStart, f.dataEnd)
-    entryInfoByRange.set(`${f.dataStart}:${f.dataEnd}`, ids)
-  }
-
+export function parseCustomPrefabs(payload: Uint8Array, fields: LenField[]): CustomPrefabEntry[] {
   const entries: CustomPrefabEntry[] = []
-  const seenEntry = new Set<string>()
+  const entryStack: Array<{
+    field: LenField
+    customId?: number
+    basePrefabId?: number
+    hasName: boolean
+  }> = []
+
   for (const f of fields) {
+    while (entryStack.length > 0) {
+      const current = entryStack[entryStack.length - 1].field
+      if (current.dataStart <= f.lenOffset && current.dataEnd >= f.dataEnd) break
+      entryStack.pop()
+    }
+
+    if (isCustomPrefabEntryField(f)) {
+      entryStack.push({
+        field: f,
+        ...readEntryIds(payload, f.dataStart, f.dataEnd),
+        hasName: false
+      })
+      continue
+    }
     if (!isCustomPrefabNameField(f)) continue
-    const ancestors = findAncestorFields(fields, f)
-    const entryField = ancestors.find(isCustomPrefabEntryField)
-    if (!entryField) continue
-    const entryKey = `${entryField.dataStart}:${entryField.dataEnd}`
-    if (seenEntry.has(entryKey)) continue
-    const ids = entryInfoByRange.get(entryKey)
-    if (!ids?.customId) continue
+    const entry = entryStack[entryStack.length - 1]
+    if (!entry?.customId || entry.hasName) continue
     const name = decodeUtf8(payload, f.dataStart, f.dataEnd)
     if (!name) continue
-    entries.push({ name, id: ids.customId, basePrefabId: ids.basePrefabId })
-    seenEntry.add(entryKey)
+    entries.push({ name, id: entry.customId, basePrefabId: entry.basePrefabId })
+    entry.hasName = true
   }
   return entries
 }
@@ -125,16 +140,36 @@ export function extractCustomResourcesFromGil(params: {
   outPath: string
   lang?: string
 }): ExtractCustomResourcesOutcome {
-  const resolvedLang = detectLang(params.lang)
-  const { t } = initCliI18n(resolvedLang)
-
   const existingCheck = checkExistingGeneratedFile(params.outPath, RESOURCES_HEADER)
   if (existingCheck) return existingCheck
 
   try {
-    const { payload, fields } = readGilPayloadFields(params.gilPath)
-    const entries = parseCustomPrefabs(payload, fields)
-    const baseNameMap = buildPrefabNameMap(resolvedLang)
+    return extractCustomResourcesFromParsedGil({
+      parsed: readGilPayloadFields(params.gilPath),
+      outPath: params.outPath,
+      lang: params.lang
+    })
+  } catch (e) {
+    return {
+      status: 'failed',
+      outPath: params.outPath,
+      error: e instanceof Error ? e.message : String(e)
+    }
+  }
+}
+
+export function extractCustomResourcesFromParsedGil(params: {
+  parsed: ParsedGilPayload
+  outPath: string
+  lang?: string
+  format?: boolean
+}): ExtractCustomResourcesOutcome {
+  const resolvedLang = detectLang(params.lang)
+  const { t } = initCliI18n(resolvedLang)
+
+  try {
+    const entries = parseCustomPrefabs(params.parsed.payload, params.parsed.fields)
+    const baseNameMap = getPrefabNameMap(resolvedLang)
     const nameCounts = new Map<string, number>()
 
     const lines: string[] = []
@@ -157,7 +192,7 @@ export function extractCustomResourcesFromGil(params: {
     })
     lines.push('}', '')
 
-    writeGeneratedFile(params.outPath, lines.join('\n'))
+    writeGeneratedFile(params.outPath, lines.join('\n'), { format: params.format })
     return { status: 'ok', outPath: params.outPath, count: entries.length }
   } catch (e) {
     return {

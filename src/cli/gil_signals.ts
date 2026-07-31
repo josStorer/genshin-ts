@@ -1,5 +1,5 @@
-import type { LenField } from '../injector/types.js'
 import { readVarint } from '../injector/binary.js'
+import type { LenField, ParsedGilPayload } from '../injector/types.js'
 import type { SignalParamType } from '../runtime/core.js'
 import {
   checkExistingGeneratedFile,
@@ -159,8 +159,7 @@ function parseSignalEntries(payload: Uint8Array, fields: LenField[]): SignalEntr
     const idBytes = readFieldBytes(containerBytes, 4)
     const nodeId = idBytes ? parseCompositeDefId(idBytes) : undefined
     const outputs = readFieldMessages(containerBytes, 103).length
-    const isSendSignal =
-      !!nodeId?.nodeId && nodeId.type !== SIGNAL_NODE_TYPE_SKILLS && outputs < 3
+    const isSendSignal = !!nodeId?.nodeId && nodeId.type !== SIGNAL_NODE_TYPE_SKILLS && outputs < 3
     if (!isSendSignal) continue
 
     const params = readFieldMessages(containerBytes, 102)
@@ -196,13 +195,33 @@ export function extractSignalsFromGil(params: {
   if (existingCheck) return existingCheck
 
   try {
-    const { payload, fields } = readGilPayloadFields(params.gilPath)
-    const signalFields = fields.filter(function (f) {
+    return extractSignalsFromParsedGil({
+      parsed: readGilPayloadFields(params.gilPath),
+      outPath: params.outPath
+    })
+  } catch (e) {
+    return {
+      status: 'failed',
+      outPath: params.outPath,
+      error: e instanceof Error ? e.message : String(e)
+    }
+  }
+}
+
+export function extractSignalsFromParsedGil(params: {
+  parsed: ParsedGilPayload
+  outPath: string
+  format?: boolean
+}): ExtractSignalsOutcome {
+  try {
+    const signalFields = params.parsed.fields.filter(function (f) {
       return f.depth === 3 && f.p0 === 10 && f.p1 === 2 && f.p2 === 1 && f.field === 1
     })
-    const entries = parseSignalEntries(payload, signalFields)
+    const entries = parseSignalEntries(params.parsed.payload, signalFields)
 
-    writeGeneratedFile(params.outPath, buildSignalsSource(entries))
+    writeGeneratedFile(params.outPath, buildSignalsSource(entries), {
+      format: params.format
+    })
     return { status: 'ok', outPath: params.outPath, count: entries.length }
   } catch (e) {
     return {

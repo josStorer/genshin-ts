@@ -4,7 +4,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { parseMessage, readUint32BE } from '../injector/binary.js'
-import type { LenField } from '../injector/types.js'
+import type { LenField, ParsedGilPayload } from '../injector/types.js'
 
 export {
   decodeUtf8,
@@ -13,14 +13,17 @@ export {
   readFieldVarint
 } from '../injector/binary.js'
 
-export type ParsedGilPayload = {
-  payload: Uint8Array
-  fields: LenField[]
-}
+export type { ParsedGilPayload } from '../injector/types.js'
 
 export type ExistingGeneratedFileCheck =
   | { status: 'skipped-existing'; outPath: string }
   | { status: 'failed'; outPath: string; error: string }
+
+export type FormatWithPrettierResult = {
+  attempted: boolean
+  succeeded: boolean
+  error?: string
+}
 
 export function hasGeneratedHeader(text: string, header: string): boolean {
   const lines = text.split(/\r?\n/)
@@ -52,8 +55,7 @@ export function checkExistingGeneratedFile(
   }
 }
 
-export function readGilPayloadFields(gilPath: string): ParsedGilPayload {
-  const bytes = new Uint8Array(fs.readFileSync(gilPath))
+export function parseGilPayloadFields(bytes: Uint8Array): ParsedGilPayload {
   if (bytes.length < 24) {
     throw new Error('[error] invalid gil size')
   }
@@ -63,39 +65,68 @@ export function readGilPayloadFields(gilPath: string): ParsedGilPayload {
     throw new Error('[error] invalid gil header tags')
   }
 
-  const payload = bytes.slice(20, -4)
+  const payload = bytes.subarray(20, bytes.length - 4)
   const fields: LenField[] = []
   parseMessage(payload, 0, payload.length, 0, 0, 0, 0, 0, 0, 0, fields)
   return { payload, fields }
 }
 
-export function tryFormatWithPrettier(filePath: string) {
+export function readGilPayloadFields(gilPath: string): ParsedGilPayload {
+  return parseGilPayloadFields(fs.readFileSync(gilPath))
+}
+
+export function tryFormatWithPrettier(filePaths: string | string[]): FormatWithPrettierResult {
+  const paths = Array.isArray(filePaths) ? filePaths : [filePaths]
+  if (paths.length === 0) return { attempted: false, succeeded: false }
+
+  let prettierBin: string | undefined
   try {
     const require = createRequire(import.meta.url)
-    let prettierBin: string | undefined
     try {
       prettierBin = require.resolve('prettier/bin-prettier.cjs')
     } catch {
       try {
         prettierBin = require.resolve('prettier/bin/prettier.cjs')
       } catch {
-        return
+        return {
+          attempted: false,
+          succeeded: false,
+          error: 'Prettier executable not found'
+        }
       }
     }
-    const res = spawnSync(process.execPath, [prettierBin, '--write', filePath], {
+    const res = spawnSync(process.execPath, [prettierBin, '--write', ...paths], {
       encoding: 'utf8',
       windowsHide: true
     })
     if (res.error || res.status !== 0) {
-      // best-effort formatting; ignore failures
+      return {
+        attempted: true,
+        succeeded: false,
+        error:
+          res.error?.message ||
+          res.stderr.trim() ||
+          (res.signal
+            ? `Prettier terminated by signal ${res.signal}`
+            : `Prettier exited with code ${String(res.status)}`)
+      }
     }
-  } catch {
-    // prettier not installed; ignore
+    return { attempted: true, succeeded: true }
+  } catch (error) {
+    return {
+      attempted: !!prettierBin,
+      succeeded: false,
+      error: error instanceof Error ? error.message : String(error)
+    }
   }
 }
 
-export function writeGeneratedFile(outPath: string, source: string) {
+export function writeGeneratedFile(
+  outPath: string,
+  source: string,
+  options?: { format?: boolean }
+) {
   fs.mkdirSync(path.dirname(outPath), { recursive: true })
   fs.writeFileSync(outPath, source)
-  tryFormatWithPrettier(outPath)
+  if (options?.format !== false) tryFormatWithPrettier(outPath)
 }

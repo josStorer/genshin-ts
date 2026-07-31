@@ -21,17 +21,19 @@ import { writeGiaFromIrJsonFile, writeGiaFromIrJsonFiles } from '../compiler/ir_
 import { compileTsToGs } from '../compiler/ts_to_gs_pipeline.js'
 import { detectLang, initCliI18n, type Lang } from '../i18n/index.js'
 import { createInjector } from '../injector/index.js'
+import type { ParsedGilPayload } from '../injector/types.js'
 import { resolveGraphIdForGraph } from '../runtime/graph_defaults.js'
 import { maybeCheckRemoteMarkdown } from './checks.js'
 import { ensureDataDirs } from './data.js'
+import { extractGilArtifacts } from './gil_artifacts.js'
 import {
   assertGilFileUnchanged,
   getGilFileVersion,
   writeFileAtomic
 } from './gil_file_transaction.js'
 import { resolveGilFolder, resolveGilTarget } from './gil_paths.js'
-import { DEFAULT_RESOURCES_PATH, extractCustomResourcesFromGil } from './gil_resources.js'
-import { DEFAULT_SIGNALS_PATH, extractSignalsFromGil } from './gil_signals.js'
+import { DEFAULT_RESOURCES_PATH } from './gil_resources.js'
+import { DEFAULT_SIGNALS_PATH } from './gil_signals.js'
 import {
   createInjectionTaskQueue,
   runInjectionAttempt,
@@ -64,6 +66,7 @@ type InjectManyResult = {
   count: number
   totalMs: number
   wroteGil: boolean
+  parsedGil?: ParsedGilCache
 }
 
 const ui = createUi()
@@ -72,6 +75,11 @@ type MergeResult = { graphId: number; outJsonPath: string; sourceJsonPaths: stri
 
 type RunBatchHooks = InjectionAttemptHooks & {
   onPrepared?: (result: { giaPaths: string[]; mergeResults?: MergeResult[] }) => void
+}
+
+type ParsedGilCache = {
+  gilPath: string
+  parsed: ParsedGilPayload
 }
 
 type CachedConfig = { mtimeMs: number; cfg: GstsConfig }
@@ -397,7 +405,8 @@ function injectManyCore(params: InjectManyParams): InjectManyResult {
     fail,
     count: params.giaPaths.length,
     totalMs,
-    wroteGil
+    wroteGil,
+    parsedGil: { gilPath: target.gilPath, parsed: batch.parsed }
   }
 }
 
@@ -785,6 +794,7 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
   let lastMergeResults: MergeResult[] | undefined
 
   const giaAll: string[] = []
+  let parsedGil: ParsedGilCache | undefined
 
   if (entryOutFiles.length) {
     console.log('')
@@ -853,6 +863,7 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
         }),
       hooks
     )
+    parsedGil = stat.parsedGil
     ui.info(
       t('injectAllDone', {
         ok: stat.ok,
@@ -874,7 +885,8 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
     lang,
     outDirAbs,
     mergeResults: lastMergeResults,
-    giaPaths: giaAll
+    giaPaths: giaAll,
+    parsedGil
   }
 }
 
@@ -994,7 +1006,8 @@ async function runDev(opts: GlobalOptions) {
       injectCfg: initial.cfg.inject,
       opts,
       lang: initial.lang,
-      gilPath
+      gilPath,
+      parsedGil: initial.parsedGil
     })
   }
 
@@ -1326,7 +1339,8 @@ async function runDev(opts: GlobalOptions) {
           opts,
           lang: res.lang,
           gilPath,
-          reason: 'map-change'
+          reason: 'map-change',
+          parsedGil: res.parsedGil
         })
       }
       return
@@ -1365,7 +1379,8 @@ async function runDev(opts: GlobalOptions) {
       opts,
       lang,
       gilPath,
-      reason: 'map-change'
+      reason: 'map-change',
+      parsedGil: stat.parsedGil
     })
   }
 
@@ -1539,6 +1554,7 @@ function maybeExtractResources(params: {
   opts: GlobalOptions
   lang: string | undefined
   gilPath?: string
+  parsedGil?: ParsedGilCache
   reason?: 'map-change'
 }) {
   const { injectCfg, opts, lang } = params
@@ -1567,9 +1583,23 @@ function maybeExtractResources(params: {
     ui.info(t('devResourcesReextract'))
   }
 
-  if (shouldExtractResources) {
-    const outPath = resolveResourcesPath(params.cfgDir, injectCfg)
-    const result = extractCustomResourcesFromGil({ gilPath, outPath, lang })
+  const cached =
+    params.parsedGil && path.resolve(params.parsedGil.gilPath) === path.resolve(gilPath)
+      ? params.parsedGil.parsed
+      : undefined
+  const extracted = extractGilArtifacts({
+    gilPath,
+    parsed: cached,
+    resources: shouldExtractResources
+      ? { outPath: resolveResourcesPath(params.cfgDir, injectCfg), lang }
+      : undefined,
+    signals: shouldExtractSignals
+      ? { outPath: resolveSignalsPath(params.cfgDir, injectCfg) }
+      : undefined
+  })
+
+  if (extracted.resources) {
+    const result = extracted.resources
     if (result.status === 'ok') {
       ui.ok(t('extractResourcesOk', { path: result.outPath, count: result.count }))
     } else if (result.status === 'skipped-existing') {
@@ -1579,9 +1609,8 @@ function maybeExtractResources(params: {
     }
   }
 
-  if (shouldExtractSignals) {
-    const outPath = resolveSignalsPath(params.cfgDir, injectCfg)
-    const result = extractSignalsFromGil({ gilPath, outPath })
+  if (extracted.signals) {
+    const result = extracted.signals
     if (result.status === 'ok') {
       ui.ok(t('extractSignalsOk', { path: result.outPath, count: result.count }))
     } else if (result.status === 'skipped-existing') {
@@ -1589,6 +1618,39 @@ function maybeExtractResources(params: {
     } else {
       ui.warn(t('extractSignalsFail', { error: result.error }))
     }
+  }
+
+  if (injectProfileEnabled(opts)) {
+    const profile = extracted.profile
+    console.log(
+      '[extract-profile]',
+      JSON.stringify({
+        kind: 'gsts-extract-profile',
+        version: 2,
+        mapFile: path.basename(gilPath),
+        resources: extracted.resources?.status,
+        signals: extracted.signals?.status,
+        stats: {
+          inputBytes: profile.inputBytes,
+          fieldCount: profile.fieldCount,
+          reusedInjectionParse: profile.reusedParsed,
+          formatAttempts: profile.formatAttempts,
+          formatRuns: profile.formatRuns,
+          formatRequestedFiles: profile.formatRequestedFiles,
+          formattedFiles: profile.formattedFiles,
+          ...(profile.formatError ? { formatError: profile.formatError } : {})
+        },
+        timingsMs: {
+          checks: roundMs(profile.checksMs),
+          readGil: roundMs(profile.readGilMs),
+          parseGil: roundMs(profile.parseGilMs),
+          resources: roundMs(profile.resourcesMs),
+          signals: roundMs(profile.signalsMs),
+          format: roundMs(profile.formatMs),
+          total: roundMs(profile.totalMs)
+        }
+      })
+    )
   }
 }
 
@@ -1752,7 +1814,8 @@ async function main() {
           cfgDir: res.cfgDir,
           injectCfg: res.cfg.inject,
           opts,
-          lang: res.lang
+          lang: res.lang,
+          parsedGil: res.parsedGil
         })
       }
     })
