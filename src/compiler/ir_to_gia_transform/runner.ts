@@ -22,6 +22,8 @@ function main() {
   const preserveIndices = preserveFlag === '1'
   const includeIndices = parseIndicesCsv(indicesCsv)
 
+  const profiling = process.env.GSTS_PIPELINE_PROFILE === '1'
+  let profile: Parameters<NonNullable<Parameters<typeof writeGiaFromIrJsonFile>[4]>>[0] | undefined
   const outputs = writeGiaFromIrJsonFile(
     irPath,
     outFile,
@@ -29,8 +31,12 @@ function main() {
     (x) => {
       // Print progress immediately (stderr is inherited by parent).
       process.stderr.write(`[ok] ${x.giaPath} (id=${x.graphId})\n`)
-    }
+    },
+    profiling ? (value) => (profile = value) : undefined
   )
+  if (profile) {
+    process.stderr.write(`[gsts-profile:ir-to-gia] ${JSON.stringify(profile)}\n`)
+  }
   process.stdout.write(JSON.stringify(outputs))
 }
 

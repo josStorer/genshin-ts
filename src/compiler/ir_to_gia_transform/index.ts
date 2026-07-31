@@ -1,3 +1,5 @@
+import { performance } from 'node:perf_hooks'
+
 import { SERVER_LITERAL_ARGUMENT_INDEXES_BY_NODE_TYPE } from '../../definitions/server_node_metadata.js'
 import { loadGiaProto } from '../../injector/proto.js'
 import { resolveGraphIdForGraph } from '../../runtime/graph_defaults.js'
@@ -33,6 +35,34 @@ export interface IrToGiaOptions {
   name?: string
   protoPath: string
   optimize?: IrToGiaOptimizeOptions
+  onProfile?: (profile: IrToGiaProfile) => void
+}
+
+export type IrToGiaProfile = {
+  kind: 'server' | 'client'
+  stats: {
+    nodes: number
+    variables: number
+    flowConnections: number
+    dataConnections: number
+    outputBytes: number
+  }
+  timingsMs: {
+    preprocess: number
+    optimize: number
+    buildExecutionGraph: number
+    initializeGraph: number
+    layout: number
+    connectionIndex: number
+    variables: number
+    buildNodes: number
+    connect: number
+    encodeGraph: number
+    postprocess: number
+    loadProto: number
+    wrapGia: number
+    total: number
+  }
 }
 
 function buildVarsByName(ir: IRDocument): Map<string, Variable> {
@@ -194,9 +224,38 @@ function assertServerGraphRuntimeModeCompatible(
 }
 
 export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
+  const profiling = !!opts.onProfile
+  const totalStart = profiling ? performance.now() : 0
   if (ir.graph.type === 'client') {
     // TS cannot narrow the IRDocument union through the nested graph.type discriminant
-    return clientIrToGia(ir as ClientIRDocument, opts)
+    const bytes = clientIrToGia(ir as ClientIRDocument, opts)
+    opts.onProfile?.({
+      kind: 'client',
+      stats: {
+        nodes: ir.nodes?.length ?? 0,
+        variables: ir.variables?.length ?? 0,
+        flowConnections: 0,
+        dataConnections: 0,
+        outputBytes: bytes.length
+      },
+      timingsMs: {
+        preprocess: 0,
+        optimize: 0,
+        buildExecutionGraph: 0,
+        initializeGraph: 0,
+        layout: 0,
+        connectionIndex: 0,
+        variables: 0,
+        buildNodes: 0,
+        connect: 0,
+        encodeGraph: 0,
+        postprocess: 0,
+        loadProto: 0,
+        wrapGia: 0,
+        total: performance.now() - totalStart
+      }
+    })
+    return bytes
   }
   const graphId = opts.graphId ?? resolveGraphIdForGraph(ir.graph)
   const name = opts.name ?? ir.graph?.name ?? '_GSTS_Generated_Graph'
@@ -206,13 +265,20 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
     throw new Error('IR document must have at least one node')
   }
 
+  const preprocessStart = profiling ? performance.now() : 0
   const expanded = expandListLiterals(ir)
   ir = expanded.ir
+  const preprocessMs = profiling ? performance.now() - preprocessStart : 0
   const timerDispatchAggregate =
     opts.optimize?.timerDispatchAggregate ?? process.env.GSTS_OPT_TIMER_DISPATCH === '1'
+  const optimizeStart = profiling ? performance.now() : 0
   ir = optimizeTimerDispatchAggregate(ir, timerDispatchAggregate)
+  const optimizeMs = profiling ? performance.now() - optimizeStart : 0
 
+  const buildExecutionGraphStart = profiling ? performance.now() : 0
   const graphInfo = buildExecutionGraph(ir.nodes!)
+  const buildExecutionGraphMs = profiling ? performance.now() - buildExecutionGraphStart : 0
+  const initializeGraphStart = profiling ? performance.now() : 0
   const serverSubType = ir.graph.type === 'server' ? ir.graph.sub_type : undefined
   const serverMode = resolveServerGraphMode(serverSubType)
   const graphRuntimeMode = ir.graph.type === 'server' ? ir.graph.mode : undefined
@@ -223,10 +289,17 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
     graph.rootModeFlag = 1
   }
   const nodesById = new Map<NodeId, GiaNode>()
+  const initializeGraphMs = profiling ? performance.now() - initializeGraphStart : 0
+  const layoutStart = profiling ? performance.now() : 0
   const positions = layoutPositions(ir.nodes!, graphInfo)
+  const layoutMs = profiling ? performance.now() - layoutStart : 0
+  const connectionIndexStart = profiling ? performance.now() : 0
   const connIndex = buildConnTypeIndex(ir)
+  const connectionIndexMs = profiling ? performance.now() - connectionIndexStart : 0
   const varsByName = buildVarsByName(ir)
+  const variablesStart = profiling ? performance.now() : 0
   applyGraphVariables(graph, ir.variables ?? [])
+  const variablesMs = profiling ? performance.now() - variablesStart : 0
 
   // 以下为引脚设置逻辑
   type ValueArgument = Exclude<Argument, ConnectionArgument | null>
@@ -462,6 +535,7 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
 
   const irNodeTypeById = new Map<NodeId, string>()
   const assemblyDictMeta = new Map<NodeId, { keyConn: boolean[] }>()
+  const buildNodesStart = profiling ? performance.now() : 0
   ir.nodes!.forEach((irNode) => {
     const nodeType = irNode.type
     const nodeId = resolveGiaNodeId(irNode, connIndex, varsByName, resolvedRuntimeMode)
@@ -496,7 +570,9 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
     nodesById.set(irNode.id, giaNode)
     graph.add_node(giaNode)
   })
+  const buildNodesMs = profiling ? performance.now() - buildNodesStart : 0
 
+  const connectStart = profiling ? performance.now() : 0
   for (const { fromId, toId, fromIndex, toIndex } of graphInfo.flowConnections) {
     const from = nodesById.get(fromId)
     const to = nodesById.get(toId)
@@ -531,7 +607,9 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
     const mappedToIndex = remapInputIndexForHiddenPin(toType, toIndex)
     graph.connect(from, to, mappedFromIndex, mappedToIndex)
   }
+  const connectMs = profiling ? performance.now() - connectStart : 0
 
+  const encodeGraphStart = profiling ? performance.now() : 0
   let root: GiaRoot
   try {
     root = graph.encode()
@@ -553,7 +631,9 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
     }
     throw e
   }
+  const encodeGraphMs = profiling ? performance.now() - encodeGraphStart : 0
 
+  const postprocessStart = profiling ? performance.now() : 0
   if (assemblyDictMeta.size > 0) {
     const setNestedAlreadySetValFalse = (pin: { value?: unknown }) => {
       const value = (pin.value as { bConcreteValue?: { value?: { alreadySetVal?: boolean } } })
@@ -594,11 +674,42 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
       }
     }
   }
+  const postprocessMs = profiling ? performance.now() - postprocessStart : 0
 
   const protoPath = opts.protoPath
+  const loadProtoStart = profiling ? performance.now() : 0
   const { rootMessage } = loadGiaProto(protoPath)
+  const loadProtoMs = profiling ? performance.now() - loadProtoStart : 0
+  const wrapGiaStart = profiling ? performance.now() : 0
   const buffer = wrap_gia(rootMessage, root)
   const bytes = new Uint8Array(buffer)
+  const wrapGiaMs = profiling ? performance.now() - wrapGiaStart : 0
 
+  opts.onProfile?.({
+    kind: 'server',
+    stats: {
+      nodes: ir.nodes?.length ?? 0,
+      variables: ir.variables?.length ?? 0,
+      flowConnections: graphInfo.flowConnections.length,
+      dataConnections: graphInfo.dataConnections.length,
+      outputBytes: bytes.length
+    },
+    timingsMs: {
+      preprocess: preprocessMs,
+      optimize: optimizeMs,
+      buildExecutionGraph: buildExecutionGraphMs,
+      initializeGraph: initializeGraphMs,
+      layout: layoutMs,
+      connectionIndex: connectionIndexMs,
+      variables: variablesMs,
+      buildNodes: buildNodesMs,
+      connect: connectMs,
+      encodeGraph: encodeGraphMs,
+      postprocess: postprocessMs,
+      loadProto: loadProtoMs,
+      wrapGia: wrapGiaMs,
+      total: performance.now() - totalStart
+    }
+  })
   return bytes
 }

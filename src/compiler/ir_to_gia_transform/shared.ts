@@ -1,10 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { performance } from 'node:perf_hooks'
 
 import { DEFAULT_GIA_PROTO } from '../../injector/proto.js'
 import { resolveGraphIdForGraph } from '../../runtime/graph_defaults.js'
 import type { IRDocument } from '../../runtime/IR.js'
-import { irToGia } from './index.js'
+import { irToGia, type IrToGiaProfile } from './index.js'
 
 function ensurePrefixedDefaultName(raw: string): string {
   if (raw.startsWith('_GSTS')) return raw
@@ -35,13 +36,48 @@ export type GiaWriteResult = {
   sourceIndex: number
 }
 
+export type GiaWriteItemProfile = {
+  graphId: number
+  sourceIndex: number
+  nodes: number
+  variables: number
+  outputBytes: number
+  transformProfile?: IrToGiaProfile
+  timingsMs: {
+    transform: number
+    write: number
+    report: number
+    total: number
+  }
+}
+
+export type GiaWriteFileProfile = {
+  irPath: string
+  inputBytes: number
+  documents: number
+  timingsMs: {
+    read: number
+    parse: number
+    total: number
+  }
+  items: GiaWriteItemProfile[]
+}
+
 export function writeGiaFromIrJsonFile(
   irPath: string,
   outFile?: string,
   opts?: WriteGiaFromIrJsonFileOptions,
-  onWriteGia?: (res: GiaWriteResult) => void
+  onWriteGia?: (res: GiaWriteResult) => void,
+  onProfile?: (profile: GiaWriteFileProfile) => void
 ): GiaWriteResult[] {
-  const raw: unknown = JSON.parse(fs.readFileSync(irPath, 'utf-8'))
+  const profiling = !!onProfile
+  const totalStart = profiling ? performance.now() : 0
+  const readStart = profiling ? performance.now() : 0
+  const source = fs.readFileSync(irPath, 'utf-8')
+  const readMs = profiling ? performance.now() - readStart : 0
+  const parseStart = profiling ? performance.now() : 0
+  const raw: unknown = JSON.parse(source)
+  const parseMs = profiling ? performance.now() - parseStart : 0
   const list: unknown[] = Array.isArray(raw) ? (raw as unknown[]) : [raw]
   if (list.length === 0) {
     throw new Error(`[error] empty IR list: ${irPath}`)
@@ -61,7 +97,9 @@ export function writeGiaFromIrJsonFile(
       : list.map((_, i) => i)
 
   const outputs: GiaWriteResult[] = []
+  const itemProfiles: GiaWriteItemProfile[] = []
   indices.forEach((idx) => {
+    const itemStart = profiling ? performance.now() : 0
     const item = list[idx]
     if (!item) return
 
@@ -81,12 +119,51 @@ export function writeGiaFromIrJsonFile(
       ir.graph.name = ensurePrefixedDefaultName(inputBaseName)
     }
 
-    const bytes = irToGia(ir, { protoPath: DEFAULT_GIA_PROTO })
+    const transformStart = profiling ? performance.now() : 0
+    let transformProfile: IrToGiaProfile | undefined
+    const bytes = irToGia(ir, {
+      protoPath: DEFAULT_GIA_PROTO,
+      onProfile: profiling ? (value) => (transformProfile = value) : undefined
+    })
+    const transformMs = profiling ? performance.now() - transformStart : 0
+    const writeStart = profiling ? performance.now() : 0
     fs.mkdirSync(path.dirname(target), { recursive: true })
     fs.writeFileSync(target, Buffer.from(bytes))
+    const writeMs = profiling ? performance.now() - writeStart : 0
     const res = { irPath, giaPath: target, graphId: resolveGraphId(ir), sourceIndex: idx }
     outputs.push(res)
+    const reportStart = profiling ? performance.now() : 0
     onWriteGia?.(res)
+    const reportMs = profiling ? performance.now() - reportStart : 0
+    if (profiling) {
+      itemProfiles.push({
+        graphId: res.graphId,
+        sourceIndex: idx,
+        nodes: ir.nodes?.length ?? 0,
+        variables: ir.variables?.length ?? 0,
+        outputBytes: bytes.length,
+        transformProfile,
+        timingsMs: {
+          transform: transformMs,
+          write: writeMs,
+          report: reportMs,
+          total: performance.now() - itemStart
+        }
+      })
+    }
   })
+  if (profiling) {
+    onProfile({
+      irPath,
+      inputBytes: Buffer.byteLength(source),
+      documents: list.length,
+      timingsMs: {
+        read: readMs,
+        parse: parseMs,
+        total: performance.now() - totalStart
+      },
+      items: itemProfiles
+    })
+  }
   return outputs
 }

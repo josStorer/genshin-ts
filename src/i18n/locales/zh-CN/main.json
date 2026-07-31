@@ -2,7 +2,7 @@
   "desc": "Genshin TS 工具链：TS -> .gs.ts -> IR JSON -> .gia -> 注入 .gil",
   "optConfig": "配置文件路径（默认：./gsts.config.ts）",
   "optNoInject": "强制禁用注入（忽略配置）",
-  "optInjectProfile": "输出地图注入和资源提取的结构化分阶段耗时统计",
+  "optInjectProfile": "输出完整构建、地图注入和资源提取的结构化分阶段耗时统计",
   "optLang": "语言：auto|zh-CN|en-US（默认 auto）",
   "argFile": "编译单文件（.ts/.json/.gia）",
   "cmdDev": "监控文件变更并自动编译",

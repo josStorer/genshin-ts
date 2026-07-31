@@ -2,7 +2,7 @@
   "desc": "Genshin TS toolchain: TS -> .gs.ts -> IR JSON -> .gia -> inject .gil",
   "optConfig": "Config file path (default: ./gsts.config.ts)",
   "optNoInject": "Disable injection even if configured",
-  "optInjectProfile": "Print structured phase timings for map injection and extraction",
+  "optInjectProfile": "Print structured phase timings for the full build, map injection, and extraction",
   "optLang": "Language: auto|zh-CN|en-US (default: auto)",
   "argFile": "Compile a single file (.ts/.json/.gia)",
   "cmdDev": "Watch files and recompile on change",

@@ -13,12 +13,17 @@ import { existsFile, loadGstsConfig } from '../compiler/config_loader.js'
 import {
   emitIrJsonForEntries,
   hasEntryMarker,
-  resolveIrOutputPath
+  resolveIrOutputPath,
+  type GsToIrBatchProfile
 } from '../compiler/gs_to_ir_json_transform/index.js'
 import type { GstsConfig, GstsInjectConfig } from '../compiler/gsts_config.js'
 import { mergeIrJsonFilesByGraphId } from '../compiler/ir_merge.js'
-import { writeGiaFromIrJsonFile, writeGiaFromIrJsonFiles } from '../compiler/ir_to_gia_pipeline.js'
-import { compileTsToGs } from '../compiler/ts_to_gs_pipeline.js'
+import {
+  writeGiaFromIrJsonFile,
+  writeGiaFromIrJsonFiles,
+  type IrToGiaBatchProfile
+} from '../compiler/ir_to_gia_pipeline.js'
+import { compileTsToGs, type TsToGsCompileProfile } from '../compiler/ts_to_gs_pipeline.js'
 import { detectLang, initCliI18n, type Lang } from '../i18n/index.js'
 import { createInjector } from '../injector/index.js'
 import type { ParsedGilPayload } from '../injector/types.js'
@@ -80,6 +85,39 @@ type RunBatchHooks = InjectionAttemptHooks & {
 type ParsedGilCache = {
   gilPath: string
   parsed: ParsedGilPayload
+}
+
+type CliChecksProfile = {
+  timingsMs: {
+    update: number
+    notice: number
+    total: number
+  }
+}
+
+type RunBatchProfile = {
+  stats: {
+    sourceFiles: number
+    entryFiles: number
+    jsonFiles: number
+    giaFiles: number
+  }
+  timingsMs: {
+    loadConfig: number
+    checks: number
+    compile: number
+    emitIr: number
+    mergeIr: number
+    reportJson: number
+    planGia: number
+    generateGia: number
+    inject: number
+    total: number
+  }
+  checks?: CliChecksProfile
+  compile?: TsToGsCompileProfile
+  gsToIr?: GsToIrBatchProfile
+  irToGia?: IrToGiaBatchProfile
 }
 
 type CachedConfig = { mtimeMs: number; cfg: GstsConfig }
@@ -444,16 +482,28 @@ function injectMany(params: InjectManyParams): InjectManyResult {
   }
 }
 
-async function runCliChecks(lang: Lang) {
+async function runCliChecks(lang: Lang, profile = false): Promise<CliChecksProfile | undefined> {
+  const totalStart = profile ? performance.now() : 0
+  const updateStart = profile ? performance.now() : 0
   try {
     await maybeCheckRemoteMarkdown('update', lang)
   } catch (e) {
     ui.warn(`update check failed: ${e instanceof Error ? e.message : String(e)}`)
   }
+  const updateMs = profile ? performance.now() - updateStart : 0
+  const noticeStart = profile ? performance.now() : 0
   try {
     await maybeCheckRemoteMarkdown('notice', lang)
   } catch (e) {
     ui.warn(`notice check failed: ${e instanceof Error ? e.message : String(e)}`)
+  }
+  if (!profile) return
+  return {
+    timingsMs: {
+      update: updateMs,
+      notice: performance.now() - noticeStart,
+      total: performance.now() - totalStart
+    }
   }
 }
 
@@ -515,7 +565,7 @@ function isEligibleInputTsFile(p: string): boolean {
   return true
 }
 
-async function findEntryOutFiles(outDirAbs: string, compileRoot: string): Promise<string[]> {
+async function findGeneratedGsFiles(outDirAbs: string, compileRoot: string): Promise<string[]> {
   const files = await fg('**/*.gs.ts', {
     cwd: outDirAbs,
     absolute: true,
@@ -531,13 +581,23 @@ async function findEntryOutFiles(outDirAbs: string, compileRoot: string): Promis
       const rel = path.relative(outDirAbs, file)
       const src = path.resolve(compileRoot, rel.replace(/\.gs\.ts$/i, '.ts'))
       if (!fs.existsSync(src)) continue
-      const text = fs.readFileSync(file, 'utf8')
-      if (hasEntryMarker(text)) out.push(file)
+      out.push(file)
     } catch {
       // ignore
     }
   }
-  return out
+  return out.sort((a, b) => a.localeCompare(b))
+}
+
+async function findEntryOutFiles(outDirAbs: string, compileRoot: string): Promise<string[]> {
+  const files = await findGeneratedGsFiles(outDirAbs, compileRoot)
+  return files.filter((file) => {
+    try {
+      return hasEntryMarker(fs.readFileSync(file, 'utf8'))
+    } catch {
+      return false
+    }
+  })
 }
 
 function toPosixPath(p: string): string {
@@ -619,20 +679,49 @@ function collectModuleDeps(fileAbs: string, options: ts.CompilerOptions): Set<st
   const sf = ts.createSourceFile(fileAbs, text, ts.ScriptTarget.Latest, true)
   const specs: string[] = []
 
-  for (const stmt of sf.statements) {
-    if (ts.isImportDeclaration(stmt) && ts.isStringLiteral(stmt.moduleSpecifier)) {
-      specs.push(stmt.moduleSpecifier.text)
-      continue
+  const visit = (node: ts.Node) => {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier) &&
+      !node.importClause?.isTypeOnly &&
+      !(
+        !node.importClause?.name &&
+        node.importClause?.namedBindings &&
+        ts.isNamedImports(node.importClause.namedBindings) &&
+        node.importClause.namedBindings.elements.length > 0 &&
+        node.importClause.namedBindings.elements.every((element) => element.isTypeOnly)
+      )
+    ) {
+      specs.push(node.moduleSpecifier.text)
+    } else if (
+      ts.isExportDeclaration(node) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier) &&
+      !node.isTypeOnly &&
+      !(
+        node.exportClause &&
+        ts.isNamedExports(node.exportClause) &&
+        node.exportClause.elements.length > 0 &&
+        node.exportClause.elements.every((element) => element.isTypeOnly)
+      )
+    ) {
+      specs.push(node.moduleSpecifier.text)
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments[0] &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
+      specs.push(node.arguments[0].text)
     }
-    if (ts.isExportDeclaration(stmt) && stmt.moduleSpecifier) {
-      if (ts.isStringLiteral(stmt.moduleSpecifier)) specs.push(stmt.moduleSpecifier.text)
-    }
+    ts.forEachChild(node, visit)
   }
+  visit(sf)
 
   const out = new Set<string>()
   for (const spec of specs) {
     const resolved = ts.resolveModuleName(spec, fileAbs, options, ts.sys).resolvedModule
-    if (!resolved || resolved.isExternalLibraryImport) continue
+    if (!resolved || resolved.isExternalLibraryImport || resolved.packageId) continue
     const target = resolved.resolvedFileName
     if (!isEligibleInputTsFile(target)) continue
     out.add(path.resolve(target))
@@ -772,7 +861,11 @@ function buildDevWatchGlobs(
 }
 
 async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
+  const profiling = injectProfileEnabled(opts)
+  const totalStart = profiling ? performance.now() : 0
+  const loadConfigStart = profiling ? performance.now() : 0
   const loaded = await loadConfigOrNull(opts)
+  const loadConfigMs = profiling ? performance.now() - loadConfigStart : 0
   if (!loaded) {
     throw new Error(
       `[error] config not found: ${resolveConfigPath(opts)} (use -c/--config or create gsts.config.ts)`
@@ -782,18 +875,32 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
   const { cfgDir, cfg } = loaded
   const lang = detectLang(opts.lang ?? cfg.lang)
   const { t } = initCliI18n(lang)
-  await runCliChecks(lang)
+  const checksStart = profiling ? performance.now() : 0
+  const checksProfile = await runCliChecks(lang, profiling)
+  const checksMs = profiling ? performance.now() - checksStart : 0
   applyIrToGiaOptimizeEnv(cfg)
 
   ui.info(t('startCompile'))
-  const { entryOutFiles } = await compileTsToGs({
+  const compileStart = profiling ? performance.now() : 0
+  const compileResult = await compileTsToGs({
     cfgDir,
     cfg,
+    profile: profiling,
     onWriteGs: (outFile) => ui.ok(outFile)
   })
+  const compileMs = profiling ? performance.now() - compileStart : 0
+  const { entryOutFiles } = compileResult
 
   let outDirAbs: string | undefined
   let lastMergeResults: MergeResult[] | undefined
+  let gsToIrProfile: GsToIrBatchProfile | undefined
+  let irToGiaProfile: IrToGiaBatchProfile | undefined
+  let emitIrMs = 0
+  let mergeIrMs = 0
+  let reportJsonMs = 0
+  let planGiaMs = 0
+  let generateGiaMs = 0
+  let jsonFileCount = 0
 
   const giaAll: string[] = []
   let parsedGil: ParsedGilCache | undefined
@@ -801,26 +908,38 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
   if (entryOutFiles.length) {
     console.log('')
     ui.info(t('startGia'))
+    const emitIrStart = profiling ? performance.now() : 0
     await emitIrJsonForEntries(entryOutFiles, {
       cwd: cfgDir,
+      moduleFiles: compileResult.moduleOutFiles,
+      moduleRoot: compileResult.outDir,
+      profile: profiling,
+      onProfile: (profile) => (gsToIrProfile = profile),
       runtimeOptions: {
         precompileExpression: cfg.options?.optimize?.precompileExpression ?? true,
         removeUnusedNodes: cfg.options?.optimize?.removeUnusedNodes ?? true
       }
     })
+    emitIrMs = profiling ? performance.now() - emitIrStart : 0
     outDirAbs = path.resolve(cfgDir, cfg.outDir)
     const irPaths = entryOutFiles.map((gsEntry) => resolveIrOutputPath(gsEntry))
 
     // 合并：同 graph.id 的 IR 输出合并成一个 JSON（用于更好的 DSL 拆分/工程化）
+    const mergeIrStart = profiling ? performance.now() : 0
     const merged = mergeIrJsonFilesByGraphId({ outDirAbs, irJsonPaths: irPaths })
+    mergeIrMs = profiling ? performance.now() - mergeIrStart : 0
     lastMergeResults = merged.map((m) => ({
       graphId: m.graphId,
       outJsonPath: m.outJsonPath,
       sourceJsonPaths: m.sourceJsonPaths
     }))
     const uniqueJsonPaths = [...new Set(merged.map((m) => m.outJsonPath))]
+    jsonFileCount = uniqueJsonPaths.length
+    const reportJsonStart = profiling ? performance.now() : 0
     uniqueJsonPaths.forEach((p) => ui.ok(p))
+    reportJsonMs = profiling ? performance.now() - reportJsonStart : 0
 
+    const planGiaStart = profiling ? performance.now() : 0
     const outJsonToGraphIds = new Map<string, Set<number>>()
     for (const m of merged) {
       const s = outJsonToGraphIds.get(m.outJsonPath) ?? new Set<number>()
@@ -839,10 +958,15 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
           opts?: { includeIndices?: number[]; preserveIndices?: boolean }
         } => Boolean(t)
       )
+    planGiaMs = profiling ? performance.now() - planGiaStart : 0
+    const generateGiaStart = profiling ? performance.now() : 0
     const detailed = await writeGiaFromIrJsonFiles(tasks, {
       cwd: cfgDir,
+      profile: profiling,
+      onProfile: (profile) => (irToGiaProfile = profile),
       onOkLine: (msg) => ui.ok(msg)
     })
+    generateGiaMs = profiling ? performance.now() - generateGiaStart : 0
     // GIA 输出由 runner 实时打印，这里避免重复输出
     giaAll.push(...detailed.map((x) => x.giaPath))
 
@@ -851,8 +975,10 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
 
   hooks?.onPrepared?.({ giaPaths: giaAll, mergeResults: lastMergeResults })
 
+  let injectMs = 0
   // 批量模式：忽略 config.inject.nodeGraphId，使用 GIA 内的 graph id 推断
   if (entryOutFiles.length && !opts.noinject && cfg.inject) {
+    const injectStart = profiling ? performance.now() : 0
     const stat = runInjectionAttempt(
       () =>
         injectMany({
@@ -865,6 +991,7 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
         }),
       hooks
     )
+    injectMs = profiling ? performance.now() - injectStart : 0
     parsedGil = stat.parsedGil
     ui.info(
       t('injectAllDone', {
@@ -885,10 +1012,40 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
     cfgDir,
     cfg,
     lang,
+    sourceFiles: compileResult.runtimeSourceFiles,
+    moduleFiles: compileResult.moduleOutFiles,
     outDirAbs,
     mergeResults: lastMergeResults,
     giaPaths: giaAll,
-    parsedGil
+    parsedGil,
+    ...(profiling
+      ? {
+          profile: {
+            stats: {
+              sourceFiles: compileResult.outFiles.length,
+              entryFiles: entryOutFiles.length,
+              jsonFiles: jsonFileCount,
+              giaFiles: giaAll.length
+            },
+            timingsMs: {
+              loadConfig: loadConfigMs,
+              checks: checksMs,
+              compile: compileMs,
+              emitIr: emitIrMs,
+              mergeIr: mergeIrMs,
+              reportJson: reportJsonMs,
+              planGia: planGiaMs,
+              generateGia: generateGiaMs,
+              inject: injectMs,
+              total: performance.now() - totalStart
+            },
+            checks: checksProfile,
+            compile: compileResult.profile,
+            gsToIr: gsToIrProfile,
+            irToGia: irToGiaProfile
+          } satisfies RunBatchProfile
+        }
+      : {})
   }
 }
 
@@ -1019,7 +1176,12 @@ async function runDev(opts: GlobalOptions) {
     reverseByFile: new Map(),
     absByNorm: new Map()
   }
-  const allSources = await listAllSourceFiles(compileRoot, cfg.entries)
+  const allSources = [
+    ...new Set([
+      ...(await listAllSourceFiles(compileRoot, cfg.entries)),
+      ...(initial?.sourceFiles ?? [])
+    ])
+  ]
   allSources.forEach((abs) => updateDepsForFile(depGraph, abs, compilerOptions))
 
   const entryOutBySource = new Map<string, string>()
@@ -1043,11 +1205,57 @@ async function runDev(opts: GlobalOptions) {
     updateEntryMapping(entryOutFiles)
   }
 
+  const collectActiveModuleFiles = () => {
+    const files = new Set<string>()
+    const seen = new Set<string>()
+    const queue = [...entrySources]
+    while (queue.length) {
+      const norm = queue.shift()!
+      if (seen.has(norm)) continue
+      seen.add(norm)
+      const source = depGraph.absByNorm.get(norm)
+      if (source) {
+        const rel = path.relative(compileRoot, source)
+        if (!rel.startsWith('..') && !path.isAbsolute(rel)) {
+          const outFile = path.resolve(outDirAbs, rel.replace(/\.ts$/i, '.gs.ts'))
+          if (fs.existsSync(outFile)) files.add(outFile)
+        }
+      }
+      for (const dep of depGraph.depsByFile.get(norm) ?? []) queue.push(normForMap(dep))
+    }
+    return [...files].sort((a, b) => a.localeCompare(b))
+  }
+
   await refreshEntryMapping()
 
   const { cwd, watch, ignored } = buildDevWatchGlobs(cfgDir, cfg)
   const changed = new Set<string>()
   const removed = new Set<string>()
+  let runtimeDependencyWatcher: ReturnType<typeof chokidar.watch> | undefined
+
+  const registerRuntimeSources = (sourceFiles: string[]) => {
+    const rels: string[] = []
+    for (const source of sourceFiles) {
+      if (!fs.existsSync(source)) continue
+      updateDepsForFile(depGraph, source, compilerOptions)
+      const rel = path.relative(compileRoot, source)
+      if (rel.startsWith('..') || path.isAbsolute(rel)) continue
+      rels.push(toPosixPath(rel))
+    }
+    if (rels.length) runtimeDependencyWatcher?.add(rels)
+  }
+
+  const refreshCompilerState = async (runtimeSources: string[]) => {
+    depGraph.depsByFile.clear()
+    depGraph.reverseByFile.clear()
+    depGraph.absByNorm.clear()
+    const currentSources = [
+      ...new Set([...(await listAllSourceFiles(compileRoot, cfg.entries)), ...runtimeSources])
+    ]
+    currentSources.forEach((source) => updateDepsForFile(depGraph, source, compilerOptions))
+    await refreshEntryMapping()
+    registerRuntimeSources(runtimeSources)
+  }
 
   const sourceJsonToGraphIds = new Map<string, Set<number>>()
 
@@ -1078,8 +1286,11 @@ async function runDev(opts: GlobalOptions) {
 
       console.log('')
       ui.info(t('startGia'))
+      const moduleFiles = collectActiveModuleFiles()
       await emitIrJsonForEntries(entryOutFiles, {
         cwd: cfgDir,
+        moduleFiles,
+        moduleRoot: outDirAbs,
         runtimeOptions: {
           precompileExpression: cfg.options?.optimize?.precompileExpression ?? true,
           removeUnusedNodes: cfg.options?.optimize?.removeUnusedNodes ?? true
@@ -1124,7 +1335,8 @@ async function runDev(opts: GlobalOptions) {
     if (removed.size > 20 || changed.size > 20) {
       removed.clear()
       changed.clear()
-      await safeRunBatch()
+      const result = await safeRunBatch()
+      if (result) await refreshCompilerState(result.sourceFiles)
       return
     }
 
@@ -1134,8 +1346,12 @@ async function runDev(opts: GlobalOptions) {
     const rels = [...changed]
     changed.clear()
 
+    const impactedEntryNorms = new Set<string>()
     for (const rel of removedRels) {
       const abs = path.resolve(compileRoot, rel)
+      for (const dependent of collectDependents(depGraph, abs)) {
+        if (entrySources.has(dependent)) impactedEntryNorms.add(dependent)
+      }
       removeFileFromDeps(depGraph, abs)
       const norm = normForMap(abs)
       entrySources.delete(norm)
@@ -1162,6 +1378,10 @@ async function runDev(opts: GlobalOptions) {
         )
 
       sourceJsonToGraphIds.delete(irPath)
+      deleteIfExists(gsOut)
+      deleteIfExists(gsOut.replace(/\.gs\.ts$/i, '.gs.js'))
+      deleteIfExists(gsOut.replace(/\.gs\.ts$/i, '.gs.js.map'))
+      deleteIfExists(irPath)
 
       for (const gid of graphIds) {
         affectedGraphIdsByRemoval.add(gid)
@@ -1218,7 +1438,6 @@ async function runDev(opts: GlobalOptions) {
       }
     }
 
-    const impactedEntryNorms = new Set<string>()
     for (const abs of changedAbs) {
       const dependents = collectDependents(depGraph, abs)
       for (const dep of dependents) {
@@ -1235,26 +1454,30 @@ async function runDev(opts: GlobalOptions) {
 
     if (rels.length) {
       ui.info(t('startCompile'))
-      const { entryOutFiles } = await compileTsToGs({
+      const compileResult = await compileTsToGs({
         cfgDir,
         cfg,
         emitEntries: rels,
         programEntries: cfg.entries,
         onWriteGs: (p) => ui.ok(p)
       })
+      registerRuntimeSources(compileResult.runtimeSourceFiles)
+      const { entryOutFiles } = compileResult
       updateEntryMapping(entryOutFiles)
       entryOutFiles.forEach((p) => pendingEntryGs.add(p))
     }
 
     if (impactedEntryRels.length) {
       ui.info(t('startCompile'))
-      const { entryOutFiles } = await compileTsToGs({
+      const compileResult = await compileTsToGs({
         cfgDir,
         cfg,
         emitEntries: impactedEntryRels,
         programEntries: cfg.entries,
         onWriteGs: (p) => ui.ok(p)
       })
+      registerRuntimeSources(compileResult.runtimeSourceFiles)
+      const { entryOutFiles } = compileResult
       updateEntryMapping(entryOutFiles)
       entryOutFiles.forEach((p) => pendingEntryGs.add(p))
     }
@@ -1335,6 +1558,7 @@ async function runDev(opts: GlobalOptions) {
       ui.warn(t('devReinjectMissingGia', { count: missing.length }))
       const res = await safeRunBatch()
       if (res) {
+        await refreshCompilerState(res.sourceFiles)
         maybeExtractResources({
           cfgDir,
           injectCfg: res.cfg.inject,
@@ -1392,33 +1616,44 @@ async function runDev(opts: GlobalOptions) {
     triggerReinject()
   }
 
-  // eslint-disable-next-line
+  const onSourceAddOrChange = (p: string) => {
+    changed.add(p)
+    triggerCodeChange()
+  }
+  const onSourceUnlink = (p: string) => {
+    removed.add(p)
+    triggerCodeChange()
+  }
+  const onSourceWatchError = (err: unknown) => {
+    ui.error(`watch error: ${err instanceof Error ? err.message : String(err)}`)
+  }
+
   chokidar
-    // eslint-disable-next-line
-    .watch(watch, {
+    .watch(watch, { cwd, ignoreInitial: true, ignored })
+    .on('add', onSourceAddOrChange)
+    .on('change', onSourceAddOrChange)
+    .on('unlink', onSourceUnlink)
+    .on('error', onSourceWatchError)
+
+  const runtimeWatchFiles = allSources
+    .map((source) => path.relative(compileRoot, source))
+    .filter((rel) => rel && !rel.startsWith('..') && !path.isAbsolute(rel))
+    .map(toPosixPath)
+  runtimeDependencyWatcher = chokidar
+    .watch(runtimeWatchFiles, {
       cwd,
       ignoreInitial: true,
-      ignored
+      ignored: [
+        '**/node_modules/**',
+        '**/*.d.ts',
+        '**/*.gs.ts',
+        toPosixPath(path.posix.join(stripDotSlash(cfg.outDir), '**'))
+      ]
     })
-    // eslint-disable-next-line
-    .on('add', (p: string) => {
-      changed.add(p)
-      triggerCodeChange()
-    })
-    // eslint-disable-next-line
-    .on('change', (p: string) => {
-      changed.add(p)
-      triggerCodeChange()
-    })
-    // eslint-disable-next-line
-    .on('unlink', (p: string) => {
-      removed.add(p)
-      triggerCodeChange()
-    })
-    // eslint-disable-next-line
-    .on('error', (err: unknown) => {
-      ui.error(`watch error: ${err instanceof Error ? err.message : String(err)}`)
-    })
+    .on('add', onSourceAddOrChange)
+    .on('change', onSourceAddOrChange)
+    .on('unlink', onSourceUnlink)
+    .on('error', onSourceWatchError)
 
   if (reinjectOnMapChange && gilPath) {
     // eslint-disable-next-line
@@ -1654,6 +1889,7 @@ function maybeExtractResources(params: {
       })
     )
   }
+  return extracted
 }
 
 function maybeInjectGias(
@@ -1757,11 +1993,12 @@ async function runSingle(file: string, opts: GlobalOptions) {
     return { ...cfg, entries: [rel] }
   })()
   ui.info(t('startCompile'))
-  const { entryOutFiles } = await compileTsToGs({
+  const compileResult = await compileTsToGs({
     cfgDir,
     cfg: singleCfg,
     onWriteGs: (p) => ui.ok(p)
   })
+  const { entryOutFiles } = compileResult
 
   const gsFile = entryOutFiles[0]
   if (!gsFile) {
@@ -1773,6 +2010,8 @@ async function runSingle(file: string, opts: GlobalOptions) {
   ui.info(t('startGia'))
   await emitIrJsonForEntries([gsFile], {
     cwd: cfgDir,
+    moduleFiles: compileResult.moduleOutFiles,
+    moduleRoot: compileResult.outDir,
     runtimeOptions: {
       precompileExpression: singleCfg.options?.optimize?.precompileExpression ?? true,
       removeUnusedNodes: singleCfg.options?.optimize?.removeUnusedNodes ?? true
@@ -1793,8 +2032,14 @@ async function runSingle(file: string, opts: GlobalOptions) {
 }
 
 async function main() {
-  const pre = preparseArgv(process.argv.slice(2))
+  const argv = process.argv.slice(2)
+  const startupProfiling =
+    process.env.GSTS_INJECT_PROFILE === '1' || argv.includes('--inject-profile')
+  const mainStart = startupProfiling ? performance.now() : 0
+  const pre = preparseArgv(argv)
+  const initialConfigLoadStart = startupProfiling ? performance.now() : 0
   const preLoaded = await loadConfigOrNull({ config: pre.config, lang: pre.lang })
+  const initialConfigLoadMs = startupProfiling ? performance.now() - initialConfigLoadStart : 0
   const lang = detectLang(pre.lang ?? (preLoaded && !pre.lang ? preLoaded.cfg.lang : undefined))
   const { t } = initCliI18n(lang)
 
@@ -1811,14 +2056,38 @@ async function main() {
       const opts = program.opts<GlobalOptions>()
       if (file) await runSingle(file, opts)
       else {
+        const actionStart = injectProfileEnabled(opts) ? performance.now() : 0
         const res = await runBatch(opts)
-        maybeExtractResources({
+        const extractStart = injectProfileEnabled(opts) ? performance.now() : 0
+        const extracted = maybeExtractResources({
           cfgDir: res.cfgDir,
           injectCfg: res.cfg.inject,
           opts,
           lang: res.lang,
           parsedGil: res.parsedGil
         })
+        if (injectProfileEnabled(opts)) {
+          const extractMs = performance.now() - extractStart
+          console.log(
+            '[pipeline-profile]',
+            JSON.stringify({
+              kind: 'gsts-pipeline-profile',
+              version: 1,
+              mode: 'batch',
+              configFile: path.basename(resolveConfigPath(opts)),
+              stats: res.profile?.stats,
+              timingsMs: {
+                initialConfigLoad: roundMs(initialConfigLoadMs),
+                startupBeforeAction: roundMs(actionStart - mainStart),
+                batch: roundMs(res.profile?.timingsMs.total ?? 0),
+                extraction: roundMs(extractMs),
+                total: roundMs(performance.now() - mainStart)
+              },
+              batch: res.profile,
+              extraction: extracted?.profile
+            })
+          )
+        }
       }
     })
 
