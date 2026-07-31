@@ -125,6 +125,7 @@
     "@formatjs/intl-localematcher": "^0.6.2",
     "chokidar": "^3.6.0",
     "commander": "^14.0.2",
+    "esbuild": "^0.25.12",
     "fast-glob": "^3.3.3",
     "i18next": "^25.10.10",
     "os-locale": "^6.0.0",
