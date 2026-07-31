@@ -188,6 +188,8 @@ function injectManyCore(params: InjectManyParams): InjectManyResult {
     }
   }
 
+  ui.info(params.t('startInject'))
+
   const resolveStart = performance.now()
   const target = resolveGilTarget(params.gilCfg)
   const resolveTargetMs = performance.now() - resolveStart

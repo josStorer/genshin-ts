@@ -31,6 +31,7 @@
   "warn_timerIntervalHighFrequency": "setInterval interval {{ms}}ms is very short. High-frequency timers may cause performance issues and could be removed from the game; use motion controllers for movement and collision boxes for detection.",
   "startCompile": "Starting compilation...",
   "startGia": "Starting GIA generation...",
+  "startInject": "Preparing to inject data into the configured map...",
   "checkUpdate": "Checking for updates...",
   "checkNotice": "Checking announcements...",
   "updateFound": "New version found",

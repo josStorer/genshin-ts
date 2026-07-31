@@ -31,6 +31,7 @@
   "warn_timerIntervalHighFrequency": "setInterval 间隔 {{ms}}ms 过短，高频定时器可能导致高负载并被移出游戏；运动控制请用运动器，检测类请用碰撞盒。",
   "startCompile": "开始编译…",
   "startGia": "开始生成 GIA…",
+  "startInject": "正在准备将数据注入到配置的地图中...",
   "checkUpdate": "检查更新…",
   "checkNotice": "检查公告…",
   "updateFound": "发现新版本",
