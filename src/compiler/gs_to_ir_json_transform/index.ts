@@ -13,7 +13,6 @@ import {
 } from '../gs_to_js_pipeline.js'
 
 const require = createRequire(import.meta.url)
-const tsxCli = require.resolve('tsx/cli')
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const runnerJsPath = path.join(__dirname, 'runner.js')
 const runnerPath = fs.existsSync(runnerJsPath) ? runnerJsPath : path.join(__dirname, 'runner.ts')
@@ -105,7 +104,7 @@ function spawnRunner(
     const wallStart = profile ? performance.now() : 0
     const args = directNode
       ? ['--enable-source-maps', runnerPath, runtimeEntry, outFile, compact ? '1' : '0']
-      : [tsxCli, runnerPath, runtimeEntry, outFile, compact ? '1' : '0']
+      : [require.resolve('tsx/cli'), runnerPath, runtimeEntry, outFile, compact ? '1' : '0']
     const env = { ...process.env }
     if (runtimeOptions && runtimeOptions.precompileExpression !== undefined) {
       env.GSTS_PRECOMPILE_EXPR = runtimeOptions.precompileExpression ? '1' : '0'

@@ -18,11 +18,14 @@ program
     const cfgDir = path.dirname(cfgAbsPath)
     const cfg = await loadGstsConfig(cfgAbsPath)
 
-    const { outFiles, entryOutFiles } = await compileTsToGs({ cfgDir, cfg })
+    const result = await compileTsToGs({ cfgDir, cfg })
+    const { outFiles, entryOutFiles } = result
     outFiles.forEach((outFile) => console.log(`[ok] ${outFile}`))
     if (entryOutFiles.length) {
       await emitIrJsonForEntries(entryOutFiles, {
         cwd: cfgDir,
+        moduleFiles: result.moduleOutFiles,
+        moduleRoot: result.outDir,
         runtimeOptions: {
           precompileExpression: cfg.options?.optimize?.precompileExpression ?? true,
           removeUnusedNodes: cfg.options?.optimize?.removeUnusedNodes ?? true

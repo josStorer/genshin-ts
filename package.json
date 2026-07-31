@@ -122,7 +122,8 @@
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "tsx": "^4.23.1"
   },
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.6.2",
@@ -135,7 +136,6 @@
     "picocolors": "^1.1.1",
     "protobufjs": "^7.6.5",
     "semver": "^7.7.2",
-    "tsx": "^4.23.1",
     "type-fest": "^5.3.1",
     "typescript": "^5.9.3",
     "undici": "^7.28.0",

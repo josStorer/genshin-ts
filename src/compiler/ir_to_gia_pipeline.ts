@@ -20,7 +20,6 @@ export type {
 } from './ir_to_gia_transform/shared.js'
 
 const require = createRequire(import.meta.url)
-const tsxCli = require.resolve('tsx/cli')
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const runnerPath = path.join(__dirname, 'ir_to_gia_transform', 'runner.js')
 const runnerMode = fs.existsSync(runnerPath) ? 'node' : 'tsx'
@@ -78,7 +77,8 @@ function spawnRunner(
     const preserve = task.opts?.preserveIndices ? '1' : '0'
     const indices = task.opts?.includeIndices?.length ? task.opts.includeIndices.join(',') : ''
     const runnerArgs = [runnerPath, absIr, out, preserve, indices]
-    const args = runnerMode === 'node' ? runnerArgs : [tsxCli, ...runnerArgs]
+    const args =
+      runnerMode === 'node' ? runnerArgs : [require.resolve('tsx/cli'), ...runnerArgs]
     const env = { ...process.env }
     if (opts?.profile) env.GSTS_PIPELINE_PROFILE = '1'
     const child = spawn(process.execPath, args, {
