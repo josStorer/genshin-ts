@@ -628,6 +628,84 @@ g.characterSkill({ id: 1082130676 }).on('start', (_evt, f) => {
     /CLIENT_LITERAL_REQUIRED.*triggerSphericalHitboxAtSpecificLocation\.attackTagList.*assembly_list\.list/
   )
 
+  const clientEntityListInferenceGraphId = 1082130794
+  const clientEntityListInferencePath = path.join(tempRoot, 'client-entity-list-inference.ts')
+  fs.writeFileSync(
+    clientEntityListInferencePath,
+    `import type { clientEntity } from 'genshin-ts/definitions/client_entity_helpers'
+import { g } from 'genshin-ts/runtime/core'
+import type { EntityRuntimeBase } from 'genshin-ts/runtime/value'
+
+type SkillEntityAlias = clientEntity<'character_skill', 'beyond'>
+interface ExtendedSkillEntity extends EntityRuntimeBase {
+  readonly customEntityMarker?: 'extended'
+}
+type DirectedEntity<T> = T extends EntityRuntimeBase ? T : never
+
+g.characterSkill({ id: ${clientEntityListInferenceGraphId} }).on('start', (_evt, f) => {
+  const cursorResult = f.getCursorHitResult()
+  const direct = cursorResult.hitEntityList
+  const aliased = direct as SkillEntityAlias[]
+  const inherited = direct as ExtendedSkillEntity[]
+  const directed = direct as DirectedEntity<SkillEntityAlias>[]
+
+  if (cursorResult.hitEntityList.length == 0) f.forceExitAimingState()
+  if (aliased.length == 0) f.forceExitAimingState()
+  if (inherited.length == 0) f.forceExitAimingState()
+  if (directed.length == 0) f.forceExitAimingState()
+})`,
+    'utf8'
+  )
+  const clientEntityListInferenceResult = await compile([relative(clientEntityListInferencePath)])
+  const [clientEntityListInferenceDocument] = buildClientDocumentsInIsolatedProcess(
+    clientEntityListInferenceResult.entryOutFiles[0]
+  )
+  assert.strictEqual(
+    clientEntityListInferenceDocument?.graph.id,
+    clientEntityListInferenceGraphId,
+    'client entity list inference graph id'
+  )
+  const cursorHitResultNode = clientEntityListInferenceDocument.nodes?.find(
+    (node) => node.type === 'get_cursor_hit_result'
+  )
+  assert.ok(cursorHitResultNode, 'client entity list inference: missing cursor hit result')
+  const clientEntityLengthNodes =
+    clientEntityListInferenceDocument.nodes?.filter((node) => node.type === 'get_list_length') ?? []
+  assert.strictEqual(
+    clientEntityLengthNodes.length,
+    4,
+    'direct, alias, inherited, and conditional client entity lists must lower length'
+  )
+  for (const lengthNode of clientEntityLengthNodes) {
+    const input = lengthNode.args?.[0]
+    assert.strictEqual(input?.type, 'conn', `get_list_length #${lengthNode.id}: input connection`)
+    if (input?.type !== 'conn') continue
+    assert.strictEqual(input.value.type, 'entity_list', `get_list_length #${lengthNode.id}: type`)
+    assert.strictEqual(
+      input.value.node_id,
+      cursorHitResultNode.id,
+      `get_list_length #${lengthNode.id}: source node`
+    )
+    assert.strictEqual(input.value.index, 0, `get_list_length #${lengthNode.id}: source pin`)
+  }
+  assert.ok(
+    irToGia(clientEntityListInferenceDocument, { protoPath }).length > 0,
+    'client entity list inference GIA is empty'
+  )
+  await expectCompileError(
+    'client-mixed-entity-list-length',
+    `import type { clientEntity } from 'genshin-ts/definitions/client_entity_helpers'
+import { g } from 'genshin-ts/runtime/core'
+
+g.characterSkill({ id: 1082130795 }).on('start', (_evt, f) => {
+  const mixed = f.getCursorHitResult().hitEntityList as Array<
+    clientEntity<'character_skill', 'beyond'> | string
+  >
+  if (mixed.length == 0) f.forceExitAimingState()
+})`,
+    /cannot infer list element type for length/
+  )
+
   const classicCreationGraphId = 1082130670
   const classicCreationPath = path.join(tempRoot, 'classic-creation-skill.ts')
   fs.writeFileSync(

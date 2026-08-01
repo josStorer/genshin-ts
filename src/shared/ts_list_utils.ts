@@ -76,7 +76,10 @@ export function inferListElementTypeFromType(
     }
     return base
   }
+
   if (type.flags & ts.TypeFlags.Intersection) {
+    if (isEntityLikeType(checker, type, location)) return 'entity'
+
     const i = type as ts.IntersectionType
     let base: ListType | null = null
     for (const t of i.types) {

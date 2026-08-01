@@ -92,7 +92,7 @@ export function isEntityLikeType(
     return done(true)
   }
 
-  const brand = checker.getPropertyOfType(type, '__brandEntity')
+  const brand = checker.getPropertyOfType(type, '__entityRuntimeBrand')
   if (!brand) return done(false)
   const brandDecl = brand.valueDeclaration ?? brand.declarations?.[0]
   if (!brandDecl) return done(true)
