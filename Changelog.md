@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.2
+
+- Fixed #18, where some client nodes with literal list arguments failed to compile.
+- Improved compiler recognition of client entity types, preventing errors in convenience operations such as `clientEntityList.length`.
+
 ## v0.2.1
 
 - Improved map signal checking and extraction performance by filtering out unrelated fields. This prevents extremely long waits and apparent hangs during node graph injection and when compiling signal-sending nodes for complex maps. Thanks to @AncherEven.
