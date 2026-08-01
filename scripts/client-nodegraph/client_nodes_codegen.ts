@@ -1220,6 +1220,13 @@ function paramTsOf(p: ParamSpec): string {
   return paramTs(p.irType!)
 }
 
+function parsedParamExpr(p: ParamSpec, expression: string): string {
+  const literalOnlyList =
+    !p.connectable &&
+    (p.reflective ? p.candidates?.every(isListType) === true : isListType(p.irType!))
+  return literalOnlyList ? `foldClientLiteralList(${expression})` : expression
+}
+
 function returnTsForIr(irType: string, subType: string): string {
   if (irType === 'entity') return `clientEntity<'${subType}', Mode>`
   if (irType === 'entity_list') return `clientEntity<'${subType}', Mode>[]`
@@ -1266,7 +1273,9 @@ function emitNonReflectMethod(spec: MethodSpec): string {
 
   const body: string[] = []
   for (const p of spec.params) {
-    body.push(`    const ${p.ident}Obj = parseValue(${p.ident}, '${p.irType}')`)
+    body.push(
+      `    const ${p.ident}Obj = ${parsedParamExpr(p, `parseValue(${p.ident}, '${p.irType}')`)}`
+    )
     if (!p.connectable) {
       body.push(`    assertClientLiteralValue(${p.ident}Obj, '${spec.methodName}.${p.ident}')`)
     }
@@ -1369,13 +1378,15 @@ function emitReflectMethod(spec: MethodSpec): string {
 
   // ---- parseValue per param ----
   for (const p of spec.params) {
+    let parseExpr: string
     if (!p.reflective) {
-      body.push(`    const ${p.ident}Obj = parseValue(${p.ident}, '${p.irType}')`)
+      parseExpr = `parseValue(${p.ident}, '${p.irType}')`
     } else {
       const t = typeExprByPin.get(p.pinIndex)!
       const typeExpr = t.isList ? `\`\${${t.matched}}_list\` as const` : t.matched
-      body.push(`    const ${p.ident}Obj = parseValue(${p.ident}, ${typeExpr})`)
+      parseExpr = `parseValue(${p.ident}, ${typeExpr})`
     }
+    body.push(`    const ${p.ident}Obj = ${parsedParamExpr(p, parseExpr)}`)
     if (!p.connectable) {
       body.push(`    assertClientLiteralValue(${p.ident}Obj, '${spec.methodName}.${p.ident}')`)
     }
@@ -3234,6 +3245,7 @@ class ClientExecutionFlowFunctionsBase<
     'enumeration',
     'faction',
     'float',
+    'foldClientLiteralList',
     'generic',
     'guid',
     'int',

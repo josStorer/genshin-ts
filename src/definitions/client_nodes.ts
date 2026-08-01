@@ -25,6 +25,7 @@ import {
   enumeration,
   faction,
   float,
+  foldClientLiteralList,
   generic,
   guid,
   int,
@@ -6582,7 +6583,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(attackTagListObj, 'triggerHitboxAtSpecificLocation.attackTagList')
     const elementalTypeObj = parseValue(elementalType, 'enum')
     assertClientLiteralValue(elementalTypeObj, 'triggerHitboxAtSpecificLocation.elementalType')
@@ -6988,7 +6989,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -7325,7 +7326,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerRectangularHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerRectangularHitboxAtSpecificLocation.attackTagList'
@@ -7665,7 +7666,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -8048,7 +8049,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSectorHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSectorHitboxAtSpecificLocation.attackTagList'
@@ -8442,7 +8443,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSectorHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSectorHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -8782,7 +8783,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSphericalHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSphericalHitboxAtSpecificLocation.attackTagList'
@@ -9128,7 +9129,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSphericalHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSphericalHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -16090,7 +16091,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(attackTagListObj, 'triggerHitboxAtSpecificLocation.attackTagList')
     const elementalTypeObj = parseValue(elementalType, 'enum')
     assertClientLiteralValue(elementalTypeObj, 'triggerHitboxAtSpecificLocation.elementalType')
@@ -16496,7 +16497,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -16833,7 +16834,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerRectangularHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerRectangularHitboxAtSpecificLocation.attackTagList'
@@ -17173,7 +17174,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -17556,7 +17557,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSectorHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSectorHitboxAtSpecificLocation.attackTagList'
@@ -17950,7 +17951,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSectorHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSectorHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -18290,7 +18291,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSphericalHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSphericalHitboxAtSpecificLocation.attackTagList'
@@ -18636,7 +18637,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSphericalHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSphericalHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -24115,7 +24116,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(attackTagListObj, 'triggerHitboxAtSpecificLocation.attackTagList')
     const elementalTypeObj = parseValue(elementalType, 'enum')
     assertClientLiteralValue(elementalTypeObj, 'triggerHitboxAtSpecificLocation.elementalType')
@@ -24521,7 +24522,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -24858,7 +24859,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerRectangularHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerRectangularHitboxAtSpecificLocation.attackTagList'
@@ -25198,7 +25199,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -25581,7 +25582,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSectorHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSectorHitboxAtSpecificLocation.attackTagList'
@@ -25975,7 +25976,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSectorHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSectorHitboxAtSpecifiedAttachmentPoint.attackTagList'
@@ -26315,7 +26316,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSphericalHitboxAtSpecificLocation.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSphericalHitboxAtSpecificLocation.attackTagList'
@@ -26661,7 +26662,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
       attackLayerFilterObj,
       'triggerSphericalHitboxAtSpecifiedAttachmentPoint.attackLayerFilter'
     )
-    const attackTagListObj = parseValue(attackTagList, 'str_list')
+    const attackTagListObj = foldClientLiteralList(parseValue(attackTagList, 'str_list'))
     assertClientLiteralValue(
       attackTagListObj,
       'triggerSphericalHitboxAtSpecifiedAttachmentPoint.attackTagList'

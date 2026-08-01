@@ -97,6 +97,49 @@ async function expectRuntimeSuccess(name: string, source: string) {
   await import(`${pathToFileURL(result.entryOutFiles[0]).href}?test=${Date.now()}`)
 }
 
+function literalOnlyHitboxListSource(graphId: number, setup: string, attackTags: string) {
+  return `import * as CE from 'genshin-ts/definitions/client_enums'
+import * as E from 'genshin-ts/definitions/enum'
+import { g } from 'genshin-ts/runtime/core'
+
+g.characterSkill({ id: ${graphId} }).on('start', (_evt, f) => {
+  ${setup}
+  f.triggerSphericalHitboxAtSpecificLocation(
+    E.TargetType.None,
+    [0, 0, 0],
+    [0, 0, 0],
+    0,
+    0,
+    [E.EntityType.Creation],
+    E.TriggerRestriction.TriggerOnlyOnce,
+    0n,
+    1,
+    CE.AttackLayerConfig.OnlyOnHitHurtbox,
+    ${attackTags},
+    E.ElementalType.None,
+    0,
+    E.HitType.None,
+    E.AttackType.None,
+    0,
+    false,
+    0n,
+    CE.KnockbackDirectionType.HitboxOnHitDirection,
+    false,
+    [0, 0, 0],
+    [0, 0, 0],
+    1,
+    [0, 0, 0],
+    [0, 0, 0],
+    1,
+    0,
+    0n,
+    CE.HitLevel.NoEffect,
+    0,
+    0
+  )
+})`
+}
+
 fs.rmSync(tempRoot, { recursive: true, force: true })
 fs.mkdirSync(tempRoot, { recursive: true })
 
@@ -498,6 +541,93 @@ g.characterSkill({ id: 1082130676 }).on('start', (_evt, f) => {
 })`,
     /CLIENT_LITERAL_REQUIRED.*notifyServerNodeGraph\.string1.*data_type_conversion_str\.output/
   )
+
+  const literalOnlyListCases = [
+    {
+      name: 'direct-array',
+      graphId: 1082130790,
+      setup: '',
+      attackTags: "['direct_tag']",
+      expectedTag: 'direct_tag'
+    },
+    {
+      name: 'list-wrapper',
+      graphId: 1082130791,
+      setup: '',
+      attackTags: "list('str', ['wrapped_tag'])",
+      expectedTag: 'wrapped_tag'
+    },
+    {
+      name: 'const-alias',
+      graphId: 1082130792,
+      setup: "const tags = ['alias_tag']",
+      attackTags: 'tags',
+      expectedTag: 'alias_tag'
+    }
+  ] as const
+
+  for (const testCase of literalOnlyListCases) {
+    const file = path.join(tempRoot, `client-literal-list-${testCase.name}.ts`)
+    fs.writeFileSync(
+      file,
+      literalOnlyHitboxListSource(testCase.graphId, testCase.setup, testCase.attackTags),
+      'utf8'
+    )
+    const caseResult = await compile([relative(file)])
+    const [document] = buildClientDocumentsInIsolatedProcess(caseResult.entryOutFiles[0])
+    assert.strictEqual(document?.graph.id, testCase.graphId, `${testCase.name}: wrong graph id`)
+
+    const hitboxNode = document.nodes?.find(
+      (node) => node.type === 'trigger_spherical_hitbox_at_specific_location'
+    )
+    assert.ok(hitboxNode, `${testCase.name}: missing hitbox node`)
+    assert.deepStrictEqual(
+      hitboxNode.args?.[10],
+      { type: 'str_list', value: [testCase.expectedTag] },
+      `${testCase.name}: attack tags must be an inline IR literal`
+    )
+
+    const bytes = irToGia(document, { protoPath })
+    const decoded = rootMessage.toObject(rootMessage.decode(bytes.slice(20, -4)), {
+      defaults: true,
+      longs: Number
+    }) as GiaRoot
+    const giaNode = decoded.graph?.graph?.inner.graph?.nodes?.find(
+      (node) => Number(node.nodeIndex) === hitboxNode.id
+    )
+    assert.strictEqual(
+      Number(giaNode?.genericId?.nodeId),
+      200111,
+      `${testCase.name}: wrong hitbox generic id`
+    )
+    const attackTagPin = giaNode?.pins?.find(
+      (pin) => pin.i1?.kind === NodePin_Index_Kind.InParam && Number(pin.i1?.index) === 17
+    )
+    const attackTagValue = attackTagPin?.value?.bConcreteValue?.value ?? attackTagPin?.value
+    assert.strictEqual(Number(attackTagPin?.type), 10, `${testCase.name}: wrong tag pin type`)
+    assert.strictEqual(
+      attackTagPin?.connects?.length ?? 0,
+      0,
+      `${testCase.name}: literal-only tag pin must not connect`
+    )
+    assert.strictEqual(
+      attackTagValue?.alreadySetVal,
+      true,
+      `${testCase.name}: tag pin must be explicitly set`
+    )
+    assert.deepStrictEqual(
+      attackTagValue?.bArray?.entries?.map((entry) => entry.bString?.val),
+      [testCase.expectedTag],
+      `${testCase.name}: wrong encoded tag values`
+    )
+  }
+
+  await expectRuntimeError(
+    'client-literal-list-dynamic-element',
+    literalOnlyHitboxListSource(1082130793, 'const tags = [str(f.addition(1n, 2n))]', 'tags'),
+    /CLIENT_LITERAL_REQUIRED.*triggerSphericalHitboxAtSpecificLocation\.attackTagList.*assembly_list\.list/
+  )
+
   const classicCreationGraphId = 1082130670
   const classicCreationPath = path.join(tempRoot, 'classic-creation-skill.ts')
   fs.writeFileSync(

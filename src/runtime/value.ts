@@ -715,6 +715,41 @@ export class listLiteral<K extends ListConcreteType = ListConcreteType> extends 
   }
 }
 
+/**
+ * Fold a pure client `assembly_list` output back into an inline List literal.
+ *
+ * Client arrays are normally lowered to `assembly_list` so they can carry dynamic values.
+ * Literal-only input pins cannot connect that node, but they can store the same literal items
+ * directly. Keep dynamic/mixed lists untouched so the existing literal-only check still rejects
+ * them.
+ */
+export function foldClientLiteralList<K extends ListConcreteType>(input: list<K>): list<K> {
+  const metadata = input.getMetadata()
+  if (
+    metadata?.kind !== 'pin' ||
+    metadata.record.nodeType !== 'assembly_list' ||
+    metadata.pinIndex !== 0
+  ) {
+    return input
+  }
+
+  const concreteType = input.getConcreteType()
+  const elementType = concreteType === 'enumeration' ? 'enum' : concreteType
+  const items: unknown[] = []
+
+  for (const item of metadata.record.args) {
+    if (item.getMetadata()?.kind !== 'literal') return input
+    const literal = item.toIRLiteral()
+    if (!literal || literal.type === 'conn') return input
+
+    const literalType = literal.type === 'enumeration' ? 'enum' : literal.type
+    if (literalType !== elementType) return input
+    items.push(elementType === 'enum' ? item : literal.value)
+  }
+
+  return new listLiteral(elementType as K, items as RuntimeReturnValueTypeMap[K][]) as list<K>
+}
+
 export type DictLiteralPair = { k: unknown; v: unknown }
 
 export class dictLiteral {

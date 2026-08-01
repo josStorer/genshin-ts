@@ -1,5 +1,6 @@
 import ts from 'typescript'
 
+import { CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE } from '../../definitions/client_method_modes.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { isEntityLikeType as isSharedEntityLikeType } from '../../shared/ts_type_utils.js'
 import {
@@ -256,6 +257,12 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
 
   const isReadOnlyFArg = (method: string, argIndex: number): boolean => {
     if (readOnlyFAllArgs.has(method)) return true
+    if (env.graphDocumentType === 'client' && env.clientSubType) {
+      const literalIndexes = CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE[
+        env.clientSubType
+      ] as Readonly<Record<string, readonly number[]>>
+      if (literalIndexes[method]?.includes(argIndex)) return true
+    }
     // mutate 节点中只有部分参数是只读：concatenateList(target, input) 的 input
     if (method === 'concatenateList') return argIndex === 1
     return false
