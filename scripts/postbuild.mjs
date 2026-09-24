@@ -29,6 +29,7 @@ fs.copyFileSync(srcProto, distProto)
 console.log('[ok] copied', srcProto, '->', distProto)
 
 const extraDtsFiles = [
+  path.join(repoRoot, 'src', 'runtime', 'lua-globals.d.ts'),
   path.join(repoRoot, 'src', 'definitions', 'server_on_overloads.d.ts'),
   path.join(repoRoot, 'src', 'runtime', 'IR.d.ts')
 ]
@@ -55,3 +56,5 @@ if (fs.existsSync(serverGlobalsSrc)) {
   fs.copyFileSync(serverGlobalsSrc, serverGlobalsDest)
   console.log('[ok] copied', serverGlobalsSrc, '->', serverGlobalsDest)
 }
+
+fs.cpSync(path.join(repoRoot, "src/runtime/lua-assets"), path.join(repoRoot, "dist/src/runtime/lua-assets"), { recursive: true })

@@ -148,11 +148,13 @@
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
+    "fengari": "0.1.4",
     "prettier": "^3.6.2",
     "tsx": "^4.23.1"
   },
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.6.2",
+    "@typescript-to-lua/language-extensions": "1.19.0",
     "chokidar": "^3.6.0",
     "commander": "^14.0.2",
     "esbuild": "^0.28.1",
@@ -163,7 +165,8 @@
     "protobufjs": "^7.6.5",
     "semver": "^7.7.2",
     "type-fest": "^5.3.1",
-    "typescript": "^5.9.3",
+    "typescript": "5.9.3",
+    "typescript-to-lua": "1.34.0",
     "undici": "^7.28.0",
     "yaml": "^2.8.0"
   }
