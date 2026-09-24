@@ -216,11 +216,28 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
           '客户端 Lua 暂不支持异步调度、生成器、动态 import 或 bigint；请使用生命周期和普通 number。'
         )
       )
-    if (ts.isIfStatement(node) || ts.isWhileStatement(node) || ts.isConditionalExpression(node)) {
-      const condition = ts.isConditionalExpression(node) ? node.condition : node.expression
+    let condition: ts.Expression | undefined
+    if (ts.isIfStatement(node) || ts.isWhileStatement(node) || ts.isDoStatement(node))
+      condition = node.expression
+    else if (ts.isConditionalExpression(node) || ts.isForStatement(node)) condition = node.condition
+    else if (ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.ExclamationToken)
+      condition = node.operand
+    else if (
+      ts.isBinaryExpression(node) &&
+      (node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken ||
+        node.operatorToken.kind === ts.SyntaxKind.BarBarToken)
+    )
+      condition = node.left
+    if (condition) {
       const type = checker.getTypeAtLocation(condition)
       const parts = type.isUnion() ? type.types : [type]
-      if (parts.some((t) => t.flags & (ts.TypeFlags.NumberLike | ts.TypeFlags.StringLike)))
+      if (
+        parts.some((t) => {
+          if (t.isStringLiteral()) return t.value === ''
+          if (t.isNumberLiteral()) return t.value === 0
+          return !!(t.flags & (ts.TypeFlags.NumberLike | ts.TypeFlags.StringLike))
+        })
+      )
         diagnostics.push(
           diagnostic(
             condition,

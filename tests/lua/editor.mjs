@@ -19,6 +19,7 @@ fs.writeFileSync(
 const source = `import {g} from 'genshin-ts/runtime/core';
 export default g.clientControlScript(lua=>{
  if (0) {}
+ const n=lua.tonumber("0") ?? 0; const negated=!n; const fallback=n || 1;
  lua./*env*/;
  lua.game./*game*/;
  if(lua.helper.isControl(self,'ClientUITextBoxControl')) {self./*control*/;}
@@ -73,5 +74,11 @@ assert.ok(
   proxy.getSemanticDiagnostics(file).some((d) => d.code === 97001),
   'Lua diagnostics must also reach tsserver'
 )
+const semanticDiagnostics = proxy.getSemanticDiagnostics(file)
+for (const start of [source.indexOf('!n') + 1, source.indexOf('n ||')])
+  assert.ok(
+    semanticDiagnostics.some((d) => d.code === 97001 && d.start === start),
+    'truthiness warning must reach the editor at the tested operand'
+  )
 service.dispose()
 console.log('Lua language service: globals, hooks, dt and narrowed controls: PASS')

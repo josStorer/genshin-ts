@@ -210,6 +210,32 @@ const deferred = success(
   })
 )
 execute(deferred.files, "print=function(value)assert(value==7)end;require('main');OnStart()")
+const truthiness = success(
+  build({
+    'main.ts': `import {g} from 'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{
+    function check(n:number,s:string){
+      const negated = !n;
+      const fallback = s || 'fallback';
+      const both = n && s;
+      for(;n;){break}
+      do {break} while(s);
+      const nullable = n ?? 20;
+      const explicit = n !== 0 && s !== '';
+      const known='known nonempty';if(known){};
+      return [negated,fallback,both,nullable,explicit]
+    }
+    return {onStart(){lua.print(check(0,''))}}
+  })`
+  })
+)
+const truthWarnings = truthiness.diagnostics.filter((d) =>
+  String(d.messageText).includes('Lua 中 0')
+)
+assert.equal(truthWarnings.length, 5, formatLuaDiagnostics(truthiness.diagnostics))
+assert.deepEqual(
+  truthWarnings.map((d) => d.file.text.slice(d.start, d.start + d.length)),
+  ['n', 's', 'n', 'n', 's']
+)
 const wrongId = build({
   'main.ts': `import {g} from 'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{lua.game.GetClientUIControl(lua.self.prefabIndex);return {}})`
 })
