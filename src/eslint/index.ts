@@ -6,6 +6,7 @@ import clientFilterReturn from './rules/client-filter-return.js'
 import clientGraphScopedF from './rules/client-graph-scoped-f.js'
 import clientLiteralArguments from './rules/client-literal-arguments.js'
 import clientLocalVariableSupport from './rules/client-local-variable-support.js'
+import { luaRule } from './rules/client-lua.js'
 import clientRepeatedEvaluation from './rules/client-repeated-evaluation.js'
 import clientScopedGlobals from './rules/client-scoped-globals.js'
 import clientSyntaxCapabilities from './rules/client-syntax-capabilities.js'
@@ -47,6 +48,8 @@ import timerOuterCapture from './rules/timer-outer-capture.js'
 import unsupportedBinaryOperator from './rules/unsupported-binary-operator.js'
 
 export const rules = {
+  'lua-syntax': luaRule(false),
+  'lua-semantics': luaRule(true),
   'assignment-restrictions': assignmentRestrictions,
   'builtin-console-log-arity': builtinConsoleLogArity,
   'builtin-math-support': builtinMathSupport,
@@ -97,6 +100,13 @@ export const rules = {
 }
 
 export const configs = {
+  lua: {
+    rules: {
+      ...Object.fromEntries(Object.keys(rules).map((name) => [`gsts/${name}`, 'off' as const])),
+      'gsts/lua-syntax': 'error' as const,
+      'gsts/lua-semantics': 'warn' as const
+    }
+  },
   recommended: {
     plugins: ['gsts'],
     rules: {

@@ -57,4 +57,18 @@ if (fs.existsSync(serverGlobalsSrc)) {
   console.log('[ok] copied', serverGlobalsSrc, '->', serverGlobalsDest)
 }
 
-fs.cpSync(path.join(repoRoot, "src/runtime/lua-assets"), path.join(repoRoot, "dist/src/runtime/lua-assets"), { recursive: true })
+fs.cpSync(
+  path.join(repoRoot, 'src/runtime/lua-assets'),
+  path.join(repoRoot, 'dist/src/runtime/lua-assets'),
+  { recursive: true }
+)
+
+const { build } = await import('esbuild')
+await build({
+  entryPoints: [path.join(repoRoot, 'src/compiler/lua/diagnostics.ts')],
+  outfile: path.join(repoRoot, 'dist/src/compiler/lua/editor.cjs'),
+  bundle: true,
+  platform: 'node',
+  format: 'cjs',
+  external: ['typescript']
+})

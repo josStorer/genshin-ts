@@ -415,6 +415,8 @@ function loadTsConfig(cwd: string): { options: ts.CompilerOptions; extraRoots: s
 }
 
 export type TsToGsCompileParams = {
+  /** 已交给其他目标处理的源文件；节点图实际引用的共享依赖仍会正常编译。 */
+  excludeFiles?: string[]
   cfgDir: string
   cfg: GstsConfig
   /**
@@ -572,11 +574,14 @@ export async function compileTsToGs(params: TsToGsCompileParams): Promise<TsToGs
   const globMs = profiling ? performance.now() - globStart : 0
 
   const prepareFilesStart = profiling ? performance.now() : 0
+  const excludedFiles = new Set((params.excludeFiles ?? []).map(normForMap))
   const matchedEmitFiles = emitMatched
+    .filter((abs) => !excludedFiles.has(normForMap(abs)))
     .filter((abs) => isEligibleInputTsFile(abs))
     .sort((a, b) => a.localeCompare(b))
 
   const programFiles = programMatched
+    .filter((abs) => !excludedFiles.has(normForMap(abs)))
     .filter((abs) => isEligibleInputTsFile(abs))
     .sort((a, b) => a.localeCompare(b))
 

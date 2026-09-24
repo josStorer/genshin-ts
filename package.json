@@ -104,7 +104,9 @@
     "to-gs": "tsx ./src/compiler/ts_to_gs.ts",
     "tool:computer-control": "python ./scripts/tools/computer_control_server.py",
     "example": "npm run build && node ./bin/gsts.mjs",
-    "dev": "npm run build && node ./bin/gsts.mjs dev"
+    "dev": "npm run build && node ./bin/gsts.mjs dev",
+    "test:lua": "tsx tests/lua/run.mjs",
+    "test:lua:sdk": "python scripts/lua/generate-sdk.py --check"
   },
   "peerDependencies": {
     "@eslint/js": "^9.39.1 || ^10.0.1",
@@ -141,6 +143,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@types/luaparse": "0.2.12",
     "@types/node": "^24.10.1",
     "@types/semver": "^7.7.1",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
@@ -160,6 +163,7 @@
     "esbuild": "^0.28.1",
     "fast-glob": "^3.3.3",
     "i18next": "^25.10.10",
+    "luaparse": "0.3.1",
     "os-locale": "^6.0.0",
     "picocolors": "^1.1.1",
     "protobufjs": "^7.6.5",

@@ -50,6 +50,7 @@ import {
   runInjectionAttempt,
   type InjectionAttemptHooks
 } from './injection_lifecycle.js'
+import { buildClientLua } from './lua.js'
 import { getMapKey, loadState, saveState } from './state.js'
 import { createUi } from './ui.js'
 import { openAndSelect, openDir } from './windows_open.js'
@@ -936,8 +937,10 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
   applyIrToGiaOptimizeEnv(cfg)
 
   ui.info(t('startCompile'))
+  const luaResult = await buildClientLua(cfgDir, cfg, !!opts.noinject)
   const compileStart = profiling ? performance.now() : 0
   const compileResult = await compileTsToGs({
+    excludeFiles: luaResult.dependencies,
     cfgDir,
     cfg,
     profile: profiling,
@@ -1337,6 +1340,8 @@ async function runDev(opts: GlobalOptions) {
   }
 
   const runChanged = async () => {
+    const luaResult = await buildClientLua(cfgDir, cfg, !!opts.noinject)
+    registerRuntimeSources(luaResult.dependencies)
     const queuedOutJson = new Map<string, Set<number>>()
     const queueOutJson = (outJson: string, gid: number) => {
       const s = queuedOutJson.get(outJson) ?? new Set<number>()
@@ -1436,10 +1441,10 @@ async function runDev(opts: GlobalOptions) {
       return
     }
 
-    const removedRels = [...removed]
+    const removedRels = [...removed].filter((rel) => isEligibleInputTsFile(rel))
     removed.clear()
 
-    const rels = [...changed]
+    const rels = [...changed].filter((rel) => isEligibleInputTsFile(rel))
     changed.clear()
 
     const impactedEntryNorms = new Set<string>()
@@ -1493,6 +1498,7 @@ async function runDev(opts: GlobalOptions) {
       const compileResult = await compileTsToGs({
         cfgDir,
         cfg,
+        excludeFiles: luaResult.dependencies,
         emitEntries: compileRels,
         programEntries: cfg.entries,
         programCache,
@@ -1671,7 +1677,11 @@ async function runDev(opts: GlobalOptions) {
   }
 
   chokidar
-    .watch(watch, { cwd, ignoreInitial: true, ignored })
+    .watch([...watch, '**/*.lua', '**/*.d.ts'], {
+      cwd,
+      ignoreInitial: true,
+      ignored: ignored.filter((pattern) => pattern !== '**/*.d.ts')
+    })
     .on('add', onSourceAddOrChange)
     .on('change', onSourceAddOrChange)
     .on('unlink', onSourceUnlink)
@@ -2030,6 +2040,9 @@ async function runSingle(file: string, opts: GlobalOptions) {
     }
     return { ...cfg, entries: [rel] }
   })()
+  const luaCfg = loaded ? singleCfg : { ...singleCfg, outDir: 'dist' }
+  const luaResult = await buildClientLua(cfgDir, luaCfg, !!opts.noinject, false)
+  if (luaResult.entries.length) return
   ui.info(t('startCompile'))
   const compileResult = await compileTsToGs({
     cfgDir,

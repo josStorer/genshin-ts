@@ -181,13 +181,18 @@ function init(modules) {
 
     proxy.getSemanticDiagnostics = (fileName) => {
       const base = languageService.getSemanticDiagnostics(fileName)
-      if (!Array.isArray(base) || base.length === 0) return base
+      if (!Array.isArray(base)) return base
       const program = languageService.getProgram()
       if (!program) return base
       const sourceFile = program.getSourceFile(fileName)
       if (!sourceFile) return base
       const checker = program.getTypeChecker()
-      return base.filter((d) => !shouldSuppress2538(d, sourceFile, checker))
+      const filtered = base.filter((d) => !shouldSuppress2538(d, sourceFile, checker))
+      if (program.getCompilerOptions().types?.includes('genshin-ts/runtime/lua-globals')) {
+        const { getLuaDiagnostics } = require('../../dist/src/compiler/lua/editor.cjs')
+        return filtered.concat(getLuaDiagnostics(sourceFile, checker))
+      }
+      return filtered
     }
 
     return proxy
