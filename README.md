@@ -125,3 +125,7 @@ See the template guide for the full list and best practices.
 - Before discovering this project, I spent nearly a month reversing GIA/GIL; their approach was more complete. I integrated it as a third-party module and merged some of my reverse-engineered data.
 
 - The work is excellent and MIT-licensed. Please consider supporting the project as well.
+
+### 客户端控件 Lua 脚本
+
+已增加独立的 TS → Lua 编译目标，使用 `g.clientControlScript`，沿用现有构建与注入配置。参见 [使用说明](docs/lua.md)。
