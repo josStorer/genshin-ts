@@ -6,6 +6,8 @@ declare const enumBrand: unique symbol
 export interface EnumItem<K extends string = string> { readonly Name: string; readonly FullName: string; readonly EnumType: string; readonly [enumBrand]: K }
 declare const colorBrand: unique symbol
 export interface ColorValue { readonly [colorBrand]: true }
+export type RuntimeControlId = number & { readonly __gstsControlId?: "runtime" }
+export type ControlPrefabIndex = number & { readonly __gstsControlId?: "prefab" }
 export interface Vector3Value { x: number; y: number; z: number }
 export type TweenProperties = Partial<Record<TweenField, number | ColorValue>>
 
@@ -893,7 +895,7 @@ export interface Script {
   readonly path: string
   /** 脚本启用状态 */
   enabled: boolean
-  /** 按变量名称 paramName 读取当前脚本内对应变量的参数 */
+  /** 按变量名称 paramName 读取当前脚本内对应变量的参数 返回值需检查类型；实测未观察到控件索引自动转对象，不作隐式转换。 */
   GetParam(this: Script, paramName: string): unknown
   /** 在UI脚本内定义的全局方法（脚本内环境）；调用当前脚本中名称为 funcName 的函数；参数应使用运行时支持的可传递类型 */
   Invoke(this: Script, funcName: string, ...args: unknown[]): LuaMultiReturn<unknown[]>
@@ -911,11 +913,11 @@ export interface HostGame {
   /** 将当前客户端控件树按父子层级写入日志 */
   PrintClientUITree(this: void): void
   /** 根据已配置的控件模板索引，在 parent 下创建控件实例 */
-  InstantiateClientUIControl(this: void, controlPrefabIndex: number, parent: ClientUIBaseControl): ClientUIBaseControl | undefined
+  InstantiateClientUIControl(this: void, controlPrefabIndex: ControlPrefabIndex, parent: ClientUIBaseControl): ClientUIBaseControl | undefined
   /** 销毁指定客户端控件实例 */
   DestroyClientUIControl(this: void, control: ClientUIBaseControl): void
-  /** 按客户端控件运行时ID获取控件 */
-  GetClientUIControl(this: void, controlId: number): ClientUIBaseControl | undefined
+  /** 按客户端控件运行时ID获取控件 参数是运行时 id，不是编辑器的控件索引。 */
+  GetClientUIControl(this: void, controlId: RuntimeControlId): ClientUIBaseControl | undefined
   /** 查找名称为 nodeName 的 UI 根控件 */
   FindClientUIRoot(this: void, nodeName: string): ClientUIBaseControl | undefined
   /** 获取全部 UI 根控件。即实际显示的客户端控件容器画布中的默认容器节点 */
@@ -1078,9 +1080,9 @@ export interface ClientUIBaseControl {
   /** 控件是否存活 */
   readonly alive: boolean
   /** 运行时ID */
-  readonly id: number
-  /** 控件模板索引 */
-  readonly prefabIndex: number
+  readonly id: RuntimeControlId
+  /** 控件模板索引 编辑器控件/模板索引，用于模板实例化，不是运行时 id。 */
+  readonly prefabIndex: ControlPrefabIndex
   /** 激活状态；true 时控件可见且挂载脚本逻辑运行，false 时控件不可见且脚本逻辑停止运行。默认为false。 */
   readonly active: boolean
   /** 计入全部父级后的实际激活状态 */

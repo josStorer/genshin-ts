@@ -1,16 +1,33 @@
-import { getLuaDiagnostics } from './diagnostics.js'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
 import ts from 'typescript'
 import * as tstl from 'typescript-to-lua'
+
+import { getLuaDiagnostics } from './diagnostics.js'
+import { checkLuaModuleCycles, collectNativeLua } from './native.js'
 import { createLuaPlugin, diagnostic, entryCall, hooks } from './plugin.js'
 
-export interface LuaBuildOptions { entries: string[]; rootDir: string; outDir: string }
-export interface LuaBuildResult { files: Map<string, string>; diagnostics: readonly ts.Diagnostic[]; entries: string[]; dependencies: string[] }
+export interface LuaBuildOptions {
+  entries: string[]
+  additionalFiles?: string[]
+  rootDir: string
+  outDir: string
+}
+export interface LuaBuildResult {
+  files: Map<string, string>
+  diagnostics: readonly ts.Diagnostic[]
+  entries: string[]
+  dependencies: string[]
+}
 const posix = (name: string) => name.replace(/\\/g, '/')
 export function formatLuaDiagnostics(diagnostics: readonly ts.Diagnostic[]) {
-  return ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: x => x, getCurrentDirectory: () => process.cwd(), getNewLine: () => '\n' })
+  return ts.formatDiagnosticsWithColorAndContext(diagnostics, {
+    getCanonicalFileName: (x) => x,
+    getCurrentDirectory: () => process.cwd(),
+    getNewLine: () => '\n'
+  })
 }
 export function hasLuaEntry(file: string) {
   if (!file.endsWith('.ts') || file.endsWith('.d.ts')) return false
@@ -35,94 +52,262 @@ export function compileLua(input: LuaBuildOptions): LuaBuildResult {
   const globals = path.join(sdkRoot, 'lua-globals.d.ts')
   if (!fs.existsSync(globals)) throw new Error('Lua 类型文件尚未生成，请先运行 npm run build。')
   const options: tstl.CompilerOptions = {
-    target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
-    lib: ['lib.es2022.d.ts'], types: [], strict: true, skipLibCheck: true, rootDir: root, outDir,
-    luaTarget: tstl.LuaTarget.Lua53, luaLibImport: tstl.LuaLibImportKind.Require, noHeader: true,
-    noImplicitSelf: false
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    lib: ['lib.es2022.d.ts'],
+    types: [],
+    strict: true,
+    skipLibCheck: true,
+    rootDir: root,
+    outDir,
+    luaTarget: tstl.LuaTarget.Lua53,
+    luaLibImport: tstl.LuaLibImportKind.RequireMinimal,
+    noHeader: true,
+    noImplicitSelf: true
+  }
+  const configDiagnostics: ts.Diagnostic[] = []
+  const configPath = ts.findConfigFile(
+    path.dirname(path.resolve(input.entries[0] ?? root)),
+    ts.sys.fileExists
+  )
+  if (configPath) {
+    const read = ts.readConfigFile(configPath, ts.sys.readFile)
+    if (read.error) configDiagnostics.push(read.error)
+    else {
+      const parsed = ts.parseJsonConfigFileContent(
+        { ...read.config, files: [], include: [] },
+        ts.sys,
+        path.dirname(configPath),
+        undefined,
+        configPath
+      )
+      options.baseUrl = parsed.options.baseUrl
+      options.paths = parsed.options.paths
+      configDiagnostics.push(...parsed.errors.filter((d) => d.code !== 18002 && d.code !== 18003))
+    }
   }
   const host = ts.createCompilerHost(options)
   const runtimeMap: Record<string, string> = {
-    'genshin-ts/runtime/core': 'lua-core.d.ts', 'genshin-ts/runtime/lua': 'lua.d.ts'
+    'genshin-ts/runtime/core': 'lua-core.d.ts',
+    'genshin-ts/runtime/lua': 'lua.d.ts'
   }
-  const resolve = (name: string, from: string) => runtimeMap[name]
-    ? { resolvedFileName: path.join(sdkRoot, runtimeMap[name]), extension: ts.Extension.Dts }
-    : ts.resolveModuleName(name, from, options, host).resolvedModule
-  host.resolveModuleNames = (names, from) => names.map(name => resolve(name, from))
-  const program = ts.createProgram([...input.entries.map(x => path.resolve(x)), globals], options, host)
+  const virtual = new Map<string, string>()
+  const originalRead = host.readFile.bind(host),
+    originalExists = host.fileExists.bind(host)
+  host.readFile = (file) => virtual.get(path.resolve(file)) ?? originalRead(file)
+  host.fileExists = (file) => virtual.has(path.resolve(file)) || originalExists(file)
+  const originalSource = host.getSourceFile.bind(host)
+  host.getSourceFile = (file, version, onError, fresh) =>
+    virtual.has(path.resolve(file))
+      ? ts.createSourceFile(file, virtual.get(path.resolve(file))!, version, true)
+      : originalSource(file, version, onError, fresh)
+  const resolve = (name: string, from: string): ts.ResolvedModuleFull | undefined => {
+    if (runtimeMap[name])
+      return { resolvedFileName: path.join(sdkRoot, runtimeMap[name]), extension: ts.Extension.Dts }
+    const resolved = ts.resolveModuleName(name, from, options, host).resolvedModule
+    if (resolved) return resolved
+    if (!name.startsWith('.')) return undefined
+    const native = path.resolve(path.dirname(from), name.endsWith('.lua') ? name : name + '.lua')
+    if (!fs.existsSync(native)) return undefined
+    const declaration = native.slice(0, -4) + '.d.ts'
+    if (!fs.existsSync(declaration))
+      virtual.set(declaration, 'declare const value: unknown; export = value;')
+    return { resolvedFileName: declaration, extension: ts.Extension.Dts }
+  }
+  host.resolveModuleNames = (names, from) => names.map((name) => resolve(name, from))
+  const additional = input.additionalFiles ?? []
+  const program = ts.createProgram(
+    [
+      ...input.entries.map((x) => path.resolve(x)),
+      ...additional.filter((x) => x.endsWith('.ts')),
+      globals
+    ],
+    options,
+    host
+  )
   const checker = program.getTypeChecker()
-  const diagnostics: ts.Diagnostic[] = [...ts.getPreEmitDiagnostics(program)]
+  const diagnostics: ts.Diagnostic[] = [...configDiagnostics, ...ts.getPreEmitDiagnostics(program)]
   const files = new Map<string, string>()
   const dependencies = new Set<string>()
-  const graph = new Map<string, { target: string; node: ts.Node }[]>()
-  const modules = program.getSourceFiles().filter(x => !x.isDeclarationFile)
-  const entryFiles = new Set(modules.filter(x => entryCall(x)).map(x => x.fileName))
+  const modules = program.getSourceFiles().filter((x) => !x.isDeclarationFile)
+  const entryFiles = new Set(modules.filter((x) => entryCall(x)).map((x) => x.fileName))
   const modulePath = (filename: string) => {
-    const relative = posix(path.relative(root, filename)).replace(/(?:\.d)?\.[cm]?[tj]s$/, '').replace(/\.lua$/, '')
-    if (relative === '..' || relative.startsWith('../') || path.isAbsolute(relative)) throw new Error(`Lua 依赖必须位于 compileRoot 内：${filename}`)
-    if (relative.startsWith('__gsts') || relative === 'lualib_bundle') throw new Error(`文件名 ${relative} 为编译器保留，请换一个名称。`)
+    const relative = posix(path.relative(root, filename))
+      .replace(/(?:\.d)?\.[cm]?[tj]s$/, '')
+      .replace(/\.lua$/, '')
+    if (relative === '..' || relative.startsWith('../') || path.isAbsolute(relative))
+      throw new Error(`Lua 依赖必须位于 compileRoot 内：${filename}`)
+    if (relative.startsWith('__gsts') || relative === 'lualib_bundle')
+      throw new Error(`文件名 ${relative} 为编译器保留，请换一个名称。`)
     return relative
   }
   const resolveLua = (name: string, from: string) => {
-    if (name === 'genshin-ts/runtime/lua' || name === 'genshin-ts/runtime/core') return '__gsts_helpers'
+    if (name === 'genshin-ts/runtime/lua' || name === 'genshin-ts/runtime/core')
+      return '__gsts_helpers'
     const resolved = resolve(name, from)
-    if (!resolved) throw new Error(`无法解析 Lua 依赖 ${name}（来自 ${posix(path.relative(root, from))}）。`)
+    if (!resolved)
+      throw new Error(`无法解析 Lua 依赖 ${name}（来自 ${posix(path.relative(root, from))}）。`)
     const target = resolved.resolvedFileName
-    if (entryFiles.has(target)) throw new Error('挂载入口不能作为模块导入；请把共享函数移到普通 TS 模块。')
+    if (entryFiles.has(target))
+      throw new Error('挂载入口不能作为模块导入；请把共享函数移到普通 TS 模块。')
     if (target.endsWith('.d.ts')) {
       const native = target.slice(0, -5) + '.lua'
-      if (!fs.existsSync(native)) throw new Error(`带类型的 Lua 模块缺少同名 .lua 文件：${posix(path.relative(root, native))}`)
-      dependencies.add(native)
-      files.set(modulePath(native) + '.lua', fs.readFileSync(native, 'utf8').replace(/^\uFEFF/, ''))
+      if (!fs.existsSync(native))
+        throw new Error(
+          `带类型的 Lua 模块缺少同名 .lua 文件：${posix(path.relative(root, native))}`
+        )
+      collectNativeLua(
+        native,
+        root,
+        files,
+        dependencies,
+        additional.length > 0,
+        new Set(modules.map((x) => modulePath(x.fileName)))
+      )
       return modulePath(native)
     }
     return modulePath(target)
   }
+  const rawRequires: ts.CallExpression[] = []
   for (const source of modules) {
+    const fromOutput = path.relative(outDir, source.fileName)
+    if (!fromOutput.startsWith('..') && !path.isAbsolute(fromOutput))
+      diagnostics.push(
+        diagnostic(source, 'Lua 源文件不能放在生成的 outDir/lua 目录中，请分开源码和产物。')
+      )
     dependencies.add(source.fileName)
-    const edges: { target: string; node: ts.Node }[] = []
-    graph.set(source.fileName, edges)
     diagnostics.push(...getLuaDiagnostics(source, checker))
     const visit = (node: ts.Node) => {
-      if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-        const clause = ts.isImportDeclaration(node) ? node.importClause : undefined
-        const typeOnly = ts.isExportDeclaration(node) ? node.isTypeOnly : clause?.isTypeOnly || clause?.namedBindings && ts.isNamedImports(clause.namedBindings) && !clause.name && clause.namedBindings.elements.every(e => e.isTypeOnly)
-        if (!typeOnly) {
-          const target = resolve(node.moduleSpecifier.text, source.fileName)?.resolvedFileName
-          if (target && !target.endsWith('.d.ts')) edges.push({ target, node })
-        }
+      if (ts.isCallExpression(node)) {
+        const declaration = checker.getResolvedSignature(node)?.declaration
+        if (
+          declaration &&
+          ts.isMethodSignature(declaration) &&
+          ts.isIdentifier(declaration.name) &&
+          declaration.name.text === 'require' &&
+          declaration.getSourceFile().fileName.endsWith('lua-standard.d.ts')
+        )
+          rawRequires.push(node)
       }
       ts.forEachChild(node, visit)
     }
     visit(source)
   }
-  const active: string[] = [], done = new Set<string>()
-  const checkCycle = (file: string) => {
-    if (done.has(file)) return
-    active.push(file)
-    for (const edge of graph.get(file) ?? []) {
-      if (active.includes(edge.target)) diagnostics.push(diagnostic(edge.node, `官方 require 不支持循环加载：${[...active.slice(active.indexOf(edge.target)), edge.target].map(x => posix(path.relative(root, x))).join(' → ')}。请提取共同依赖；仅类型引用请用 import type。`))
-      else checkCycle(edge.target)
-    }
-    active.pop(); done.add(file)
-  }
-  for (const source of modules) checkCycle(source.fileName)
-  if (!diagnostics.some(d => d.category === ts.DiagnosticCategory.Error)) {
+  if (!diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)) {
     try {
-      const result = new tstl.Transpiler().emit({ program, sourceFiles: modules, plugins: [createLuaPlugin(resolveLua)], writeFile: (filename, data) => {
-        const relative = posix(path.relative(outDir, filename))
-        if (relative.startsWith('../') || path.isAbsolute(relative)) throw new Error(`Lua 输出越过 outDir：${relative}`)
-        files.set(relative, data)
-      } })
+      const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))
+      for (const call of rawRequires) {
+        const argument = call.arguments[0]
+        if (!argument || !ts.isStringLiteralLike(argument)) {
+          if (!additional.length)
+            diagnostics.push(
+              diagnostic(
+                call,
+                '动态 require 需要在 gsts.config.ts 的 lua.include 中列出可能加载的文件。'
+              )
+            )
+          continue
+        }
+        const name = argument.text.replace(/\.lua$/, '')
+        if (
+          name.startsWith('.') ||
+          name.includes(':') ||
+          name.includes('\\') ||
+          name.split('/').includes('..')
+        )
+          throw new Error(`require 请使用从 compileRoot 开始的路径，不加 ./：${name}`)
+        if (availableModules.has(name) || availableModules.has(name.replace(/\./g, '/'))) continue
+        const literal = path.resolve(root, name + '.lua')
+        collectNativeLua(
+          fs.existsSync(literal) ? literal : path.resolve(root, name.replace(/\./g, '/') + '.lua'),
+          root,
+          files,
+          dependencies,
+          additional.length > 0,
+          availableModules
+        )
+      }
+      for (const file of additional.filter((x) => x.endsWith('.lua')))
+        collectNativeLua(
+          file,
+          root,
+          files,
+          dependencies,
+          true,
+          new Set(modules.map((x) => modulePath(x.fileName)))
+        )
+      const result = new tstl.Transpiler().emit({
+        program,
+        sourceFiles: modules,
+        plugins: [
+          createLuaPlugin(resolveLua, (name, from) => {
+            const target = resolve(name, from)?.resolvedFileName
+            return (
+              !!target &&
+              !!program
+                .getSourceFile(target)
+                ?.statements.some((s) => ts.isExportAssignment(s) && s.isExportEquals)
+            )
+          })
+        ],
+        writeFile: (filename, data) => {
+          const relative = posix(path.relative(outDir, filename))
+          if (relative.startsWith('../') || path.isAbsolute(relative))
+            throw new Error(`Lua 输出越过 outDir：${relative}`)
+          // The official sandbox exposes traceback but not debug.getinfo. Keep Error usable.
+          if (relative === 'lualib_bundle.lua')
+            data = data
+              .replaceAll(
+                'debug.getinfo(level, "f")',
+                '(debug.getinfo and debug.getinfo(level, "f"))'
+              )
+              .replaceAll('debug.getinfo(3, "f")', '(debug.getinfo and debug.getinfo(3, "f"))')
+          if (files.has(relative)) throw new Error(`TS 与原生 Lua 的输出路径重复：${relative}`)
+          files.set(relative, data)
+        }
+      })
       diagnostics.push(...result.diagnostics)
+      checkLuaModuleCycles(files)
     } catch (error) {
-      diagnostics.push({ category: ts.DiagnosticCategory.Error, code: 97002, file: undefined, start: undefined, length: undefined, messageText: error instanceof Error ? error.message : String(error) })
+      diagnostics.push({
+        category: ts.DiagnosticCategory.Error,
+        code: 97002,
+        file: undefined,
+        start: undefined,
+        length: undefined,
+        messageText: error instanceof Error ? error.message : String(error)
+      })
     }
   }
-  if (diagnostics.some(d => d.category === ts.DiagnosticCategory.Error)) files.clear()
+  if (diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)) files.clear()
   else {
     const helpers = path.join(packageRoot(), 'dist/src/runtime/lua-assets/helpers.lua')
     files.set('__gsts_helpers.lua', fs.readFileSync(helpers, 'utf8'))
-    for (const [name, text] of files) if (name.endsWith('.lua')) files.set(name, `-- @gsts:lua\n-- GSTS generated: ${name}\n${text.replace(/^-- @gsts:lua\r?\n/, '')}`)
+    const sources = new Map(
+      modules.map((source) => [
+        modulePath(source.fileName) + '.lua',
+        posix(path.relative(root, source.fileName))
+      ])
+    )
+    for (const [name, text] of files) {
+      if (!name.endsWith('.lua')) continue
+      const origin =
+        name === '__gsts_helpers.lua'
+          ? 'genshin-ts/runtime/lua'
+          : name === 'lualib_bundle.lua'
+            ? 'typescript-to-lua@1.34.0 (lualib)'
+            : (sources.get(name) ?? name)
+      files.set(
+        name,
+        `-- @gsts:lua\n-- 此文件由 GSTS 生成，请修改源文件后重新编译。\n-- 来源：${origin.replace(/[\r\n]/g, ' ')}\n${text.replace(/^-- @gsts:lua\r?\n/, '')}`
+      )
+    }
   }
-  return { files, diagnostics, entries: [...entryFiles].map(x => modulePath(x) + '.lua'), dependencies: [...dependencies] }
+  return {
+    files,
+    diagnostics,
+    entries: [...entryFiles].map((x) => modulePath(x) + '.lua'),
+    dependencies: [...dependencies]
+  }
 }

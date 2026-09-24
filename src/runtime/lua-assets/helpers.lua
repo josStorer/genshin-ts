@@ -1,4 +1,26 @@
 local M = {}
+function M.liveExports(exports, getters)
+    setmetatable(exports, {
+        __index = function(_, key)
+            local get = getters[key]
+            if get then return get() end
+        end,
+        __pairs = function(target)
+            local key, readingGetters = nil, false
+            return function()
+                if not readingGetters then
+                    key = next(target, key)
+                    if key ~= nil then return key, target[key] end
+                    readingGetters, key = true, nil
+                end
+                repeat key = next(getters, key) until key == nil or rawget(target, key) == nil
+                if key ~= nil then return key, getters[key]() end
+            end
+        end
+    })
+end
+function M.multi(...) return ... end
+function M.scriptHandle(script) return script end
 function M.clamp(value, low, high) return math.min(high, math.max(low, value)) end
 function M.lerp(a, b, t) return a + (b - a) * t end
 function M.moveTowards(value, target, delta)
