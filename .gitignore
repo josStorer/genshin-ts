@@ -9,3 +9,5 @@ __pycache__/
 *.pyc
 examples/test.json
 *.tgz
+.npm-cache/
+.tmp/
