@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -45,17 +46,32 @@ export async function buildClientLua(
     )
   })
   const outDir = path.resolve(cfgDir, cfg.outDir, 'lua')
-  if (!entries.length && !fs.existsSync(path.join(outDir, '.gsts-lua-files.json')))
+  const owner = createHash('sha256')
+    .update(process.platform === 'win32' ? rootDir.toLowerCase() : rootDir)
+    .digest('hex')
+    .slice(0, 12)
+  if (
+    !entries.length &&
+    (!complete || !fs.existsSync(path.join(outDir, `.gsts-lua-${owner}.json`)))
+  )
     return { dependencies: [] as string[], entries: [] as string[] }
   const [{ compileLua, formatLuaDiagnostics }, { writeLuaFiles, describeLuaConflicts }] =
     await Promise.all([import('../compiler/lua/build.js'), import('../compiler/lua/output.js')])
+  const additionalFiles = cfg.lua?.include?.length
+    ? await fg(cfg.lua.include, {
+        cwd: rootDir,
+        absolute: true,
+        onlyFiles: true,
+        ignore: ['**/node_modules/**']
+      })
+    : []
   const result = entries.length
-    ? compileLua({ entries, rootDir, outDir })
+    ? compileLua({ entries, rootDir, outDir, additionalFiles })
     : { files: new Map<string, string>(), entries: [], dependencies: [], diagnostics: [] }
   if (result.diagnostics.length) console.log(formatLuaDiagnostics(result.diagnostics))
   if (result.diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error))
     throw new Error('Lua 编译失败；未更新本地产物和游戏文件。')
-  const local = writeLuaFiles(outDir, result.files, complete)
+  const local = writeLuaFiles(outDir, result.files, complete, owner)
   if (local.conflicts.length) throw new Error(describeLuaConflicts(local, false))
   console.log(
     `[Lua] 本地产物 ${result.files.size} 个；更新 ${local.written.length}，未改动 ${local.unchanged.length}，移除 ${local.removed.length}。`
@@ -64,7 +80,7 @@ export async function buildClientLua(
     try {
       const target = resolveGilTarget(cfg.inject)
       const destination = path.join(target.saveLevelDir, String(target.mapId), 'external_lua_file')
-      const injected = writeLuaFiles(destination, result.files, complete)
+      const injected = writeLuaFiles(destination, result.files, complete, owner)
       if (injected.conflicts.length) throw new Error(describeLuaConflicts(injected, true))
       console.log(
         `[Lua] 注入完成：地图 ${target.mapId}；更新 ${injected.written.length}，未改动 ${injected.unchanged.length}，移除 ${injected.removed.length}。`

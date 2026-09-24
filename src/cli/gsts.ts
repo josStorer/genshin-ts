@@ -911,7 +911,10 @@ function buildDevWatchGlobs(
   }
 
   ignored.push('**/node_modules/**', '**/*.d.ts', '**/*.gs.ts')
-  ignored.push(toPosixPath(path.posix.join(stripDotSlash(cfg.outDir), '**')))
+  const relativeOut = path.relative(compileRoot, path.resolve(cfgDir, cfg.outDir))
+  if (relativeOut && !relativeOut.startsWith('..') && !path.isAbsolute(relativeOut))
+    ignored.push(`${toPosixPath(relativeOut)}/**`)
+  else if (!relativeOut) ignored.push('lua/**')
 
   return { cwd: compileRoot, watch, ignored }
 }
@@ -1062,7 +1065,7 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
     cfgDir,
     cfg,
     lang,
-    sourceFiles: compileResult.runtimeSourceFiles,
+    sourceFiles: [...new Set([...compileResult.runtimeSourceFiles, ...luaResult.dependencies])],
     moduleFiles: compileResult.moduleOutFiles,
     outDirAbs,
     mergeResults: lastMergeResults,
@@ -1699,7 +1702,7 @@ async function runDev(opts: GlobalOptions) {
         '**/node_modules/**',
         '**/*.d.ts',
         '**/*.gs.ts',
-        toPosixPath(path.posix.join(stripDotSlash(cfg.outDir), '**'))
+        ...ignored.filter((pattern) => pattern !== '**/*.d.ts')
       ]
     })
     .on('add', onSourceAddOrChange)
