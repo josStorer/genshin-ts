@@ -28,7 +28,17 @@ function M.moveTowards(value, target, delta)
     if math.abs(target - value) <= delta then return target end
     return value + (target > value and delta or -delta)
 end
-function M.isControl(control, kind) return control ~= nil and typeof(control) == kind end
+local controlTypes = {
+    ClientUIBaseControl=true, ClientUIImageControl=true, ClientUITextBoxControl=true,
+    ClientUITextWindowControl=true, ClientUIPresetButtonControl=true, ClientUICursorEventAreaControl=true,
+    ClientUIGridScrollerControl=true, ClientUIKeyHintControl=true, ClientUIAnimationControl=true,
+    ClientUIFullscreenAnimationControl=true, ClientUIContainerControl=true, ClientUIReferenceControl=true
+}
+function M.isControl(control, kind)
+    if control == nil then return false end
+    local actual = typeof(control)
+    return actual == kind or (kind == "ClientUIBaseControl" and controlTypes[actual] == true)
+end
 function M.findControl(root, path, kind)
     local current = root
     for part in string.gmatch(path, "[^/]+") do

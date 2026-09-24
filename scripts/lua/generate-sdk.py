@@ -110,6 +110,10 @@ for scope,members in interfaces.items():
     lines.append('}\n')
 lines.append('export type TweenField = '+' | '.join(json.dumps(x) for x in sorted(set(tween))) )
 controls=[x for x in interfaces if x.startswith('ClientUI')]
+helper_source = (ROOT / 'src/runtime/lua-assets/helpers.lua').read_text(encoding='utf-8')
+helper_controls = set(re.findall(r'(ClientUI\w+Control)=true', helper_source))
+if helper_controls != set(controls):
+    raise SystemExit('Lua helper base-control guard differs from SDK ControlTypes')
 lines.append('export interface ControlTypes { '+'; '.join(x+': '+x for x in controls)+' }')
 output='\n'.join(lines)+'\n'
 coverage={'source':'https://act.mihoyo.com/ys/ugc/tutorial/detail/mhtakr07vej4','members':sorted(set(rows)),'unresolved':sorted(set(unresolved))}

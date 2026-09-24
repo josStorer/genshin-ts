@@ -152,6 +152,8 @@ execute(
   `typeof=function(control)return control.kind end
 local h=require('__gsts_helpers');local label={name='Title',kind='ClientUITextBoxControl'}
 local panel={name='Panel',GetChildren=function()return {label}end};local root={GetChildren=function()return {panel}end}
+assert(h.isControl(label,'ClientUIBaseControl'))
+assert(not h.isControl({kind='Script'},'ClientUIBaseControl'))
 assert(h.findControl(root,'Panel/Title','ClientUITextBoxControl')==label)
 assert(h.findControl(root,'Missing','ClientUITextBoxControl')==nil)
 assert(not pcall(h.requireControl,root,'Missing','ClientUITextBoxControl'))
@@ -216,6 +218,17 @@ const methodTypes = build({
   'main.ts': `import {g} from 'genshin-ts/runtime/core';import type {TypedScript,ClientScriptDefinition} from 'genshin-ts/runtime/lua';declare const handle:TypedScript<ClientScriptDefinition<{twice:(this:void,n:number)=>number}>>;export default g.clientControlScript(lua=>{handle.Invoke('missing',1);return {}})`
 })
 assert.ok(methodTypes.diagnostics.some((d) => d.category === 1))
+const inferredMethods = build({
+  'other.ts':
+    "import{g}from'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{return {methods:{twice(n:number){return n*2}}}})",
+  'main.ts':
+    "import{g}from'genshin-ts/runtime/core';import type Other from './other';export default g.clientControlScript(lua=>{const handle=lua.helper.scriptHandle<typeof Other>(lua.script);const [n]=handle.Invoke('twice',3);const value:number=n;handle.Invoke('absent');handle.Invoke('twice','wrong');return {}})"
+})
+assert.equal(
+  inferredMethods.diagnostics.filter((d) => d.category === 1).length,
+  2,
+  formatLuaDiagnostics(inferredMethods.diagnostics)
+)
 const nativeCycle = build({
   'main.ts': `import './raw';export const n=1`,
   'raw.d.ts': 'export const value:number',
