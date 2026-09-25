@@ -20,7 +20,13 @@ export interface LuaBuildOptions {
 }
 export interface LuaCompileProfile {
   timingsMs: Record<string, number>
-  stats: { sourceFiles: number; programFiles: number; outputFiles: number; outputBytes: number }
+  stats: {
+    sourceFiles: number
+    programFiles: number
+    outputFiles: number
+    outputBytes: number
+    reusedTs: boolean
+  }
 }
 export interface LuaBuildResult {
   profile?: LuaCompileProfile
@@ -68,7 +74,11 @@ function packageRoot() {
   return current
 }
 /** 编译到内存；所有诊断通过后才由调用者写入输出目录。 */
-export function compileLua(input: LuaBuildOptions, cache?: LuaCompileCache): LuaBuildResult {
+export function compileLua(
+  input: LuaBuildOptions,
+  cache?: LuaCompileCache,
+  onPrepared?: (dependencies: string[]) => void
+): LuaBuildResult {
   const started = input.profile ? performance.now() : 0
   let previous = started
   const timingsMs: Record<string, number> = {}
@@ -180,6 +190,7 @@ export function compileLua(input: LuaBuildOptions, cache?: LuaCompileCache): Lua
     cache.sources = nextSources
   }
   mark('programLoad')
+  onPrepared?.(program.getSourceFiles().map((source) => source.fileName))
   const checker = program.getTypeChecker()
   mark('typeChecker')
   const cacheKey = JSON.stringify([options, program.getRootFileNames(), additional])
@@ -396,6 +407,7 @@ export function compileLua(input: LuaBuildOptions, cache?: LuaCompileCache): Lua
           profile: {
             timingsMs: { ...timingsMs, total: performance.now() - started },
             stats: {
+              reusedTs: !!reuse,
               sourceFiles: modules.length,
               programFiles: program.getSourceFiles().length,
               outputFiles: files.size,

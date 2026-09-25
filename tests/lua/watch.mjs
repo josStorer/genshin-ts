@@ -77,6 +77,21 @@ try {
   )
   fs.writeFileSync(path.join(source, 'raw.lua'), 'return {double=function(n)return n*4 end}')
   await wait(() => fs.readFileSync(output, 'utf8').includes('n*4'))
+  // 新 TS 文件会改变同名 Lua 的导入解析，不能被当成无关文件跳过。
+  fs.writeFileSync(path.join(source, 'raw.ts'), 'export function double(n:number){return n*99}')
+  await wait(() => fs.readFileSync(output, 'utf8').includes('n * 99'))
+  fs.unlinkSync(path.join(source, 'raw.ts'))
+  await wait(() => fs.readFileSync(output, 'utf8').includes('n*4'))
+  // 分组完成后再保存一次，验证正在编译时的新事件不会被本轮清空。
+  const main = path.join(source, 'main.ts')
+  const text = fs.readFileSync(main, 'utf8')
+  const preparedCount = (log.match(/\[lua-prepared\]/g) ?? []).length
+  fs.writeFileSync(main, text.replace('double(2)', 'double(21)'))
+  await wait(() => (log.match(/\[lua-prepared\]/g) ?? []).length > preparedCount)
+  fs.writeFileSync(main, text.replace('double(2)', 'double(22)'))
+  await wait(() =>
+    fs.readFileSync(path.join(source, 'build/lua/main.lua'), 'utf8').includes('(22)')
+  )
   const runs = (log.match(/本地产物/g) ?? []).length
   await new Promise((r) => setTimeout(r, 800))
   assert.equal(

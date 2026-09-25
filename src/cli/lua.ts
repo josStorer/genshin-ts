@@ -8,11 +8,14 @@ import ts from 'typescript'
 
 import type { GstsConfig } from '../compiler/gsts_config.js'
 import type { LuaCompileCache } from '../compiler/lua/build.js'
+import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker-client.js'
 import { resolveGilTarget } from './gil_paths.js'
 
 export interface ClientLuaSession {
   compiler?: LuaCompileCache
-  last?: { key: string; dependencies: string[]; entries: string[] }
+  worker?: LuaWorker
+  graphFiles?: Set<string>
+  last?: { key: string; dependencies: string[]; entries: string[]; candidates: string[] }
 }
 const normalize = (file: string) => {
   const absolute = path.resolve(file)
@@ -27,7 +30,8 @@ export async function buildClientLua(
   complete = true,
   profile = process.env.GSTS_INJECT_PROFILE === '1',
   session?: ClientLuaSession,
-  changedFiles?: readonly string[]
+  changedFiles?: readonly string[],
+  onPrepared?: (dependencies: string[]) => void
 ) {
   const started = profile ? performance.now() : 0
   let previous = started
@@ -68,14 +72,38 @@ export async function buildClientLua(
         s.expression.expression.name.text === 'clientControlScript'
     )
   })
-  const key = JSON.stringify([cfgDir, cfg, noinject, complete, [...entries].sort()])
+  mark('discover')
+  const additionalFiles = cfg.lua?.include?.length
+    ? await fg(cfg.lua.include, {
+        cwd: rootDir,
+        absolute: true,
+        onlyFiles: true,
+        ignore: ['**/node_modules/**']
+      })
+    : []
+  mark('additionalFiles')
+  const key = JSON.stringify([
+    cfgDir,
+    cfg,
+    noinject,
+    complete,
+    [...entries].sort(),
+    [...additionalFiles].sort()
+  ])
   const last = session?.last
   const dependencies = new Set(last?.dependencies.map(normalize))
+  const knownFiles = new Set(
+    [...(last?.candidates ?? []), ...(session?.graphFiles ?? [])].map(normalize)
+  )
   if (
     last?.key === key &&
     changedFiles &&
     changedFiles.every(
-      (file) => !dependencies.has(normalize(file)) && !/\.(lua|json)$|\.d\.ts$/i.test(file)
+      (file) =>
+        knownFiles.has(normalize(file)) &&
+        fs.existsSync(file) &&
+        !dependencies.has(normalize(file)) &&
+        !/\.(lua|json)$|\.d\.ts$/i.test(file)
     )
   ) {
     if (profile)
@@ -97,7 +125,6 @@ export async function buildClientLua(
     .update(process.platform === 'win32' ? rootDir.toLowerCase() : rootDir)
     .digest('hex')
     .slice(0, 12)
-  mark('discover')
   if (
     !entries.length &&
     (!complete || !fs.existsSync(path.join(outDir, `.gsts-lua-${owner}.json`)))
@@ -114,28 +141,39 @@ export async function buildClientLua(
       )
     return { dependencies: [] as string[], entries: [] as string[] }
   }
-  const [
-    { compileLua, formatLuaDiagnostics, createLuaCompileCache },
-    { writeLuaFiles, describeLuaConflicts }
-  ] = await Promise.all([import('../compiler/lua/build.js'), import('../compiler/lua/output.js')])
+  const { writeLuaFiles, describeLuaConflicts } = await import('../compiler/lua/output.js')
   mark('loadCompiler')
-  const additionalFiles = cfg.lua?.include?.length
-    ? await fg(cfg.lua.include, {
-        cwd: rootDir,
-        absolute: true,
-        onlyFiles: true,
-        ignore: ['**/node_modules/**']
-      })
-    : []
-  mark('additionalFiles')
-  if (session && !session.compiler) session.compiler = createLuaCompileCache()
+  const input = { entries, rootDir, outDir, additionalFiles, profile }
+  const prepared = (dependencies: string[]) => {
+    if (profile)
+      console.log('[lua-prepared]', JSON.stringify({ dependencies: dependencies.length }))
+    onPrepared?.(dependencies)
+  }
+  const compile = async () => {
+    if (session?.worker) return session.worker.compile(input, prepared)
+    const { compileLua, formatLuaDiagnostics, createLuaCompileCache } = await import(
+      '../compiler/lua/build.js'
+    )
+    if (session && !session.compiler) session.compiler = createLuaCompileCache()
+    const { diagnostics, ...result } = compileLua(input, session?.compiler, prepared)
+    return {
+      ...result,
+      diagnosticsText: formatLuaDiagnostics(diagnostics),
+      hasErrors: diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)
+    }
+  }
   const result = entries.length
-    ? compileLua({ entries, rootDir, outDir, additionalFiles, profile }, session?.compiler)
-    : { files: new Map<string, string>(), entries: [], dependencies: [], diagnostics: [] }
+    ? await compile()
+    : {
+        files: new Map<string, string>(),
+        entries: [],
+        dependencies: [],
+        diagnosticsText: '',
+        hasErrors: false
+      }
   mark('compile')
-  if (result.diagnostics.length) console.log(formatLuaDiagnostics(result.diagnostics))
-  if (result.diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error))
-    throw new Error('Lua 编译失败；未更新本地产物和游戏文件。')
+  if (result.diagnosticsText) console.log(result.diagnosticsText)
+  if (result.hasErrors) throw new Error('Lua 编译失败；未更新本地产物和游戏文件。')
   const local = writeLuaFiles(outDir, result.files, complete, owner)
   if (local.conflicts.length) throw new Error(describeLuaConflicts(local, false))
   mark('localWrite')
@@ -163,13 +201,59 @@ export async function buildClientLua(
       '[lua-profile]',
       JSON.stringify({
         kind: 'gsts-lua-profile',
+        execution: session?.worker ? 'worker' : 'main',
         candidates: candidates.length,
         entries: entries.length,
         timingsMs: { ...timingsMs, total: performance.now() - started },
         compiler: 'profile' in result ? result.profile : undefined
       })
     )
-  const summary = { key, dependencies: result.dependencies, entries: result.entries }
+  const summary = { key, dependencies: result.dependencies, entries: result.entries, candidates }
   if (session) session.last = summary
   return summary
+}
+
+/** 依赖分组完成后即可开始节点图编译；两种目标各用自己的类型环境。 */
+export function startClientLua(
+  cfgDir: string,
+  cfg: GstsConfig,
+  noinject: boolean,
+  profile: boolean,
+  session?: ClientLuaSession,
+  changedFiles?: readonly string[]
+) {
+  const state = session ?? {}
+  state.worker ??= createLuaWorker()
+  let ready!: (value: { dependencies: string[] }) => void
+  let failed!: (error: unknown) => void
+  const prepared = new Promise<{ dependencies: string[] }>((resolve, reject) => {
+    ready = resolve
+    failed = reject
+  })
+  const result = buildClientLua(
+    cfgDir,
+    cfg,
+    noinject,
+    true,
+    profile,
+    state,
+    changedFiles,
+    (dependencies) => ready({ dependencies })
+  )
+    .then(
+      (result) => {
+        ready(result)
+        return result
+      },
+      (error) => {
+        failed(error)
+        throw error
+      }
+    )
+    .finally(async () => {
+      if (!session) await state.worker?.close()
+    })
+  // 调用方可能先等待依赖分组；错误仍由返回的 Promise 交给调用方处理。
+  void result.catch(() => {})
+  return { prepared, result }
 }

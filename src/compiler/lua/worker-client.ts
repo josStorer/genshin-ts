@@ -1,0 +1,82 @@
+import fs from 'node:fs'
+import { Worker } from 'node:worker_threads'
+
+import type { LuaBuildOptions, LuaBuildResult } from './build.js'
+
+export type LuaWorkerResult = Omit<LuaBuildResult, 'diagnostics'> & {
+  diagnosticsText: string
+  hasErrors: boolean
+}
+type Reply =
+  | { kind: 'prepared'; dependencies: string[] }
+  | { kind: 'result'; result: LuaWorkerResult }
+  | { kind: 'error'; message: string }
+
+/** dev 期间保留一个 Lua 编译线程；空闲时不阻止命令退出。 */
+export function createLuaWorker() {
+  let worker: Worker | undefined
+  let pending:
+    | {
+        resolve: (result: LuaWorkerResult) => void
+        reject: (error: Error) => void
+        onPrepared?: (dependencies: string[]) => void
+      }
+    | undefined
+  const fail = (error: Error) => {
+    pending?.reject(error)
+    pending = undefined
+  }
+  return {
+    compile(input: LuaBuildOptions, onPrepared?: (dependencies: string[]) => void) {
+      if (pending) return Promise.reject(new Error('Lua 编译线程已有任务，请等待本轮完成。'))
+      if (!worker) {
+        let url = new URL('./worker.js', import.meta.url)
+        // 仓库测试从 TS 源码导入时仍运行正式构建的 worker。
+        if (!fs.existsSync(url))
+          url = new URL('../../../dist/src/compiler/lua/worker.js', import.meta.url)
+        const current = new Worker(url)
+        worker = current
+        current.on('message', (message: Reply) => {
+          if (worker !== current || !pending) return
+          if (message.kind === 'prepared') {
+            pending.onPrepared?.(message.dependencies)
+            return
+          }
+          if (message.kind === 'result') pending.resolve(message.result)
+          else pending.reject(new Error(message.message))
+          pending = undefined
+          current.unref()
+        })
+        current.on('error', (error) => {
+          if (worker === current) {
+            worker = undefined
+            fail(error)
+            void current.terminate()
+          }
+        })
+        current.on('exit', (code) => {
+          if (worker !== current) return
+          fail(new Error(`Lua 编译线程提前退出（${code}）；下次改动会重新启动。`))
+          worker = undefined
+        })
+      }
+      worker.ref()
+      return new Promise<LuaWorkerResult>((resolve, reject) => {
+        pending = { resolve, reject, onPrepared }
+        try {
+          worker!.postMessage(input)
+        } catch (error) {
+          fail(error instanceof Error ? error : new Error(String(error)))
+          worker!.unref()
+        }
+      })
+    },
+    async close() {
+      const current = worker
+      worker = undefined
+      fail(new Error('Lua 编译已取消。'))
+      if (current) await current.terminate()
+    }
+  }
+}
+export type LuaWorker = ReturnType<typeof createLuaWorker>
