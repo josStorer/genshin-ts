@@ -11,7 +11,7 @@ fs.mkdirSync(source)
 const config = path.join(dir, 'gsts.config.ts')
 fs.writeFileSync(
   config,
-  `export default {compileRoot:'src',entries:['main.ts'],outDir:'src/build',lang:'zh'}`
+  `export default {compileRoot:'src',entries:['*.ts'],outDir:'src/build',lang:'zh'}`
 )
 fs.writeFileSync(
   path.join(source, 'main.ts'),
@@ -19,9 +19,19 @@ fs.writeFileSync(
 )
 fs.writeFileSync(path.join(source, 'raw.d.ts'), 'export function double(this:void,n:number):number')
 fs.writeFileSync(path.join(source, 'raw.lua'), 'return {double=function(n)return n*2 end}')
+fs.writeFileSync(path.join(source, 'unrelated.ts'), 'export const value = 1')
 const child = spawn(
   process.execPath,
-  [path.resolve('bin/gsts.mjs'), 'dev', '-c', config, '--noinject', '--lang', 'zh'],
+  [
+    path.resolve('bin/gsts.mjs'),
+    'dev',
+    '-c',
+    config,
+    '--noinject',
+    '--lang',
+    'zh',
+    '--inject-profile'
+  ],
   { stdio: ['ignore', 'pipe', 'pipe'] }
 )
 let log = '',
@@ -48,6 +58,10 @@ try {
   await wait(() => fs.existsSync(output))
   // Wait until initial compilation has installed dependency watchers.
   await new Promise((r) => setTimeout(r, 800))
+  const initialRuns = (log.match(/本地产物/g) ?? []).length
+  fs.writeFileSync(path.join(source, 'unrelated.ts'), 'export const value = 2')
+  await wait(() => log.includes('unrelated-change'))
+  assert.equal((log.match(/本地产物/g) ?? []).length, initialRuns)
   fs.writeFileSync(path.join(source, 'raw.lua'), 'return {double=function(n)return n*3 end}')
   await wait(() => fs.readFileSync(output, 'utf8').includes('n*3'))
   const before = fs.readFileSync(path.join(source, 'build/lua/main.lua'), 'utf8')

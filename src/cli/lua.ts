@@ -9,13 +9,23 @@ import ts from 'typescript'
 import type { GstsConfig } from '../compiler/gsts_config.js'
 import { resolveGilTarget } from './gil_paths.js'
 
+export interface ClientLuaSession {
+  last?: { key: string; dependencies: string[]; entries: string[] }
+}
+const normalize = (file: string) => {
+  const absolute = path.resolve(file)
+  return process.platform === 'win32' ? absolute.toLowerCase() : absolute
+}
+
 /** Lua 独立编译与注入；没有 Lua 入口时不加载 TSTL。 */
 export async function buildClientLua(
   cfgDir: string,
   cfg: GstsConfig,
   noinject = false,
   complete = true,
-  profile = process.env.GSTS_INJECT_PROFILE === '1'
+  profile = process.env.GSTS_INJECT_PROFILE === '1',
+  session?: ClientLuaSession,
+  changedFiles?: readonly string[]
 ) {
   const started = profile ? performance.now() : 0
   let previous = started
@@ -56,6 +66,30 @@ export async function buildClientLua(
         s.expression.expression.name.text === 'clientControlScript'
     )
   })
+  const key = JSON.stringify([cfgDir, cfg, noinject, complete, [...entries].sort()])
+  const last = session?.last
+  const dependencies = new Set(last?.dependencies.map(normalize))
+  if (
+    last?.key === key &&
+    changedFiles &&
+    changedFiles.every(
+      (file) => !dependencies.has(normalize(file)) && !/\.(lua|json)$|\.d\.ts$/i.test(file)
+    )
+  ) {
+    if (profile)
+      console.log(
+        '[lua-profile]',
+        JSON.stringify({
+          kind: 'gsts-lua-profile',
+          skipped: true,
+          reason: 'unrelated-change',
+          timingsMs: { total: performance.now() - started }
+        })
+      )
+    return last
+  }
+  // 失败后下一轮必须重试，不能把上次成功当成本次成功。
+  if (session) session.last = undefined
   const outDir = path.resolve(cfgDir, cfg.outDir, 'lua')
   const owner = createHash('sha256')
     .update(process.platform === 'win32' ? rootDir.toLowerCase() : rootDir)
@@ -130,5 +164,7 @@ export async function buildClientLua(
         compiler: 'profile' in result ? result.profile : undefined
       })
     )
-  return { dependencies: result.dependencies, entries: result.entries }
+  const summary = { key, dependencies: result.dependencies, entries: result.entries }
+  if (session) session.last = summary
+  return summary
 }

@@ -50,7 +50,7 @@ import {
   runInjectionAttempt,
   type InjectionAttemptHooks
 } from './injection_lifecycle.js'
-import { buildClientLua } from './lua.js'
+import { buildClientLua, type ClientLuaSession } from './lua.js'
 import { getMapKey, loadState, saveState } from './state.js'
 import { createUi } from './ui.js'
 import { openAndSelect, openDir } from './windows_open.js'
@@ -100,6 +100,7 @@ type GiaGenerationTask = {
 }
 
 type RunBatchHooks = InjectionAttemptHooks & {
+  luaSession?: ClientLuaSession
   programCache?: TsToGsProgramCache
   invalidatedFiles?: Iterable<string>
   onPrepared?: (result: {
@@ -942,7 +943,14 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
 
   ui.info(t('startCompile'))
   const luaStart = profiling ? performance.now() : 0
-  const luaResult = await buildClientLua(cfgDir, cfg, !!opts.noinject, true, profiling)
+  const luaResult = await buildClientLua(
+    cfgDir,
+    cfg,
+    !!opts.noinject,
+    true,
+    profiling,
+    hooks?.luaSession
+  )
   const luaMs = profiling ? performance.now() - luaStart : 0
   const compileStart = profiling ? performance.now() : 0
   const compileResult = await compileTsToGs({
@@ -1120,6 +1128,7 @@ async function runDev(opts: GlobalOptions) {
   const { t } = initCliI18n(lang)
   applyIrToGiaOptimizeEnv(cfg)
   const programCache = createTsToGsProgramCache()
+  const luaSession: ClientLuaSession = {}
 
   const lastInjectedGiaItems = new Map<string, GiaInjectionItem>()
   // Invalidated outputs are not injectable, but a map save must still retry their generation.
@@ -1184,6 +1193,7 @@ async function runDev(opts: GlobalOptions) {
   const safeRunBatch = async (invalidatedFiles?: Iterable<string>) => {
     try {
       const res = await runBatch(opts, {
+        luaSession,
         programCache,
         invalidatedFiles,
         onPrepared: ({ giaItems, mergeResults }) => {
@@ -1352,7 +1362,9 @@ async function runDev(opts: GlobalOptions) {
       cfg,
       !!opts.noinject,
       true,
-      injectProfileEnabled(opts)
+      injectProfileEnabled(opts),
+      luaSession,
+      [...removed, ...changed].map((rel) => path.resolve(compileRoot, rel))
     )
     registerRuntimeSources(luaResult.dependencies)
     const queuedOutJson = new Map<string, Set<number>>()
