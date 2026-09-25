@@ -8,12 +8,15 @@ import ts from 'typescript'
 
 import type { GstsConfig } from '../compiler/gsts_config.js'
 import type { LuaCompileCache } from '../compiler/lua/build.js'
+import type { LuaOutputCache } from '../compiler/lua/output.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker-client.js'
 import { resolveGilTarget } from './gil_paths.js'
 
 export interface ClientLuaSession {
   compiler?: LuaCompileCache
   worker?: LuaWorker
+  localOutput?: LuaOutputCache
+  injectedOutput?: LuaOutputCache
   graphFiles?: Set<string>
   last?: { key: string; dependencies: string[]; entries: string[]; candidates: string[] }
 }
@@ -149,7 +152,8 @@ export async function buildClientLua(
     outDir,
     additionalFiles,
     profile,
-    typeCheck: cfg.lua?.typeCheck
+    typeCheck: cfg.lua?.typeCheck,
+    changedFiles: last?.key === key ? changedFiles : undefined
   }
   const prepared = (dependencies: string[]) => {
     if (profile)
@@ -181,7 +185,11 @@ export async function buildClientLua(
   mark('compile')
   if (result.diagnosticsText) console.log(result.diagnosticsText)
   if (result.hasErrors) throw new Error('Lua 编译失败；未更新本地产物和游戏文件。')
-  const local = writeLuaFiles(outDir, result.files, complete, owner)
+  if (session && (!changedFiles || last?.key !== key)) {
+    session.localOutput = {}
+    session.injectedOutput = {}
+  }
+  const local = writeLuaFiles(outDir, result.files, complete, owner, session?.localOutput)
   if (local.conflicts.length) throw new Error(describeLuaConflicts(local, false))
   mark('localWrite')
   console.log(
@@ -191,7 +199,13 @@ export async function buildClientLua(
     try {
       const target = resolveGilTarget(cfg.inject)
       const destination = path.join(target.saveLevelDir, String(target.mapId), 'external_lua_file')
-      const injected = writeLuaFiles(destination, result.files, complete, owner)
+      const injected = writeLuaFiles(
+        destination,
+        result.files,
+        complete,
+        owner,
+        session?.injectedOutput
+      )
       if (injected.conflicts.length) throw new Error(describeLuaConflicts(injected, true))
       console.log(
         `[Lua] 注入完成：地图 ${target.mapId}；更新 ${injected.written.length}，未改动 ${injected.unchanged.length}，移除 ${injected.removed.length}。`

@@ -13,6 +13,11 @@ export interface LuaWriteResult {
   removed: string[]
   conflicts: string[]
 }
+/** 仅记录本会话成功写出的内容；不同目录和项目各自维护。 */
+export interface LuaOutputCache {
+  key?: string
+  files?: Map<string, string>
+}
 export function hasLuaMarker(text: string) {
   return (
     text
@@ -80,16 +85,23 @@ function atomicWrite(target: string, content: string, owned = false) {
     if (fs.existsSync(temp)) fs.unlinkSync(temp)
   }
 }
-/** 先检查整个批次；有未授权文件时一份也不覆盖。complete 仅用于完整项目构建。 */
+/** 先预检待更新批次；有未授权文件时不覆盖。缓存跳过未变产物，实际覆盖/删除仍检查标记。
+ * complete 提供完整输出集合以清理旧文件；省略 cache 时检查全部目标，适用于主动构建。
+ */
 export function writeLuaFiles(
   rootDir: string,
   files: ReadonlyMap<string, string>,
   complete = false,
-  owner = 'default'
+  owner = 'default',
+  cache?: LuaOutputCache
 ): LuaWriteResult {
   // 只在本批预检中复用父目录检查；真正写入、删除前仍逐级重新检查。
   const checkedParents = new Set<string>()
   const root = path.resolve(rootDir)
+  const cacheKey = JSON.stringify([root, owner])
+  const previousFiles = cache?.key === cacheKey ? cache.files : undefined
+  // 预检失败或写到一半失败后，下一次不能继续信任旧的磁盘快照。
+  if (cache) cache.files = undefined
   checkLinks(root, checkedParents)
   const result: LuaWriteResult = { written: [], unchanged: [], removed: [], conflicts: [] }
   const manifestPath = path.join(root, luaManifestName(owner))
@@ -135,6 +147,10 @@ export function writeLuaFiles(
     if (names.has(name.toLowerCase())) throw new Error(`Lua 输出文件名大小写冲突：${name}`)
     names.add(name.toLowerCase())
     const target = safePath(root, name)
+    if (previousFiles?.get(name) === text) {
+      result.unchanged.push(name)
+      continue
+    }
     checkLinks(target, checkedParents)
     if (fs.existsSync(target)) {
       if (!fs.statSync(target).isFile()) throw new Error(`Lua 输出目标不是文件：${name}`)
@@ -147,13 +163,10 @@ export function writeLuaFiles(
   const stale: [string, string][] = []
   if (complete)
     for (const name of previous) {
+      if (names.has(name.toLowerCase()) || usedElsewhere.has(name.toLowerCase())) continue
       const target = safePath(root, name)
       checkLinks(target, checkedParents)
-      if (
-        !names.has(name.toLowerCase()) &&
-        !usedElsewhere.has(name.toLowerCase()) &&
-        fs.existsSync(target)
-      ) {
+      if (fs.existsSync(target)) {
         if (!fs.statSync(target).isFile() || !hasLuaMarker(fs.readFileSync(target, 'utf8')))
           result.conflicts.push(name)
         else stale.push([name, target])
@@ -179,6 +192,10 @@ export function writeLuaFiles(
     throw new Error(
       `Lua 写入未完成：${error instanceof Error ? error.message : String(error)}\n已更新：${result.written.join(', ') || '无'}；已移除：${result.removed.join(', ') || '无'}；尚未更新：${pending.join(', ') || '无'}。生成清单可能尚未更新，请修复原因后重新运行。`
     )
+  }
+  if (cache) {
+    cache.key = cacheKey
+    cache.files = complete ? new Map(files) : new Map([...(previousFiles ?? []), ...files])
   }
   return result
 }

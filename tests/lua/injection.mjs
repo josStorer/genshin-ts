@@ -24,19 +24,23 @@ const cfg = {
   outDir: 'dist',
   inject: { mapId: 123, playerId: 1, gameRegion: 'China' }
 }
+const session = {}
 try {
   await buildClientLua(dir, cfg, true)
   assert.equal(fs.existsSync(path.join(map, 'external_lua_file')), false)
-  await buildClientLua(dir, cfg, false)
+  await buildClientLua(dir, cfg, false, true, false, session, [path.join(dir, 'main.ts')])
   const destination = path.join(map, 'external_lua_file/main.lua')
   assert.match(fs.readFileSync(destination, 'utf8'), /v1/)
   fs.writeFileSync(destination, '-- user file\nreturn 9')
   fs.writeFileSync(path.join(dir, 'main.ts'), entry.replace('VERSION', 'v2'))
-  await assert.rejects(buildClientLua(dir, cfg, false), /Lua 注入未完成[\s\S]*-- @gsts:lua/)
+  await assert.rejects(
+    buildClientLua(dir, cfg, false, true, false, session, [path.join(dir, 'main.ts')]),
+    /Lua 注入未完成[\s\S]*-- @gsts:lua/
+  )
   assert.equal(fs.readFileSync(destination, 'utf8'), '-- user file\nreturn 9')
   assert.match(fs.readFileSync(path.join(dir, 'dist/lua/main.lua'), 'utf8'), /v2/)
   fs.writeFileSync(destination, '-- @gsts:lua\nreturn 9')
-  await buildClientLua(dir, cfg, false)
+  await buildClientLua(dir, cfg, false, true, false, session, [path.join(dir, 'main.ts')])
   assert.match(fs.readFileSync(destination, 'utf8'), /v2/)
   const target = path.join(dir, 'owners')
   const a = new Map([['a.lua', '-- @gsts:lua\nreturn 1']]),
