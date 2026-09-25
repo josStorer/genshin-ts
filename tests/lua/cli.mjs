@@ -28,6 +28,20 @@ assert.match(out, /本地产物/)
 assert.match(fs.readFileSync(path.join(root, 'out/lua/main.lua'), 'utf8'), /^-- @gsts:lua/)
 assert.equal(fs.existsSync(path.join(root, 'out/main.gs.ts')), false)
 run([path.join(root, 'main.ts'), '-c', path.join(root, 'gsts.config.ts'), '--noinject'])
+const profiled = run(['-c', path.join(root, 'gsts.config.ts'), '--noinject', '--inject-profile'])
+const profileLines = profiled.split(/\r?\n/)
+const luaProfile = JSON.parse(
+  profileLines.find((line) => line.startsWith('[lua-profile] ')).slice('[lua-profile] '.length)
+)
+assert.equal(luaProfile.compiler.stats.sourceFiles, 1)
+assert.ok(luaProfile.compiler.timingsMs.transpile >= 0)
+const pipelineProfile = JSON.parse(
+  profileLines
+    .find((line) => line.startsWith('[pipeline-profile] '))
+    .slice('[pipeline-profile] '.length)
+)
+assert.ok(pipelineProfile.batch.timingsMs.lua >= luaProfile.timingsMs.total)
+
 const conflict = path.join(root, 'out/lua/main.lua')
 fs.writeFileSync(conflict, '-- mine\nreturn 1')
 const bad = spawnSync(

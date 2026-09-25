@@ -132,6 +132,7 @@ type RunBatchProfile = {
   timingsMs: {
     loadConfig: number
     checks: number
+    lua: number
     compile: number
     emitIr: number
     mergeIr: number
@@ -940,7 +941,9 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
   applyIrToGiaOptimizeEnv(cfg)
 
   ui.info(t('startCompile'))
-  const luaResult = await buildClientLua(cfgDir, cfg, !!opts.noinject)
+  const luaStart = profiling ? performance.now() : 0
+  const luaResult = await buildClientLua(cfgDir, cfg, !!opts.noinject, true, profiling)
+  const luaMs = profiling ? performance.now() - luaStart : 0
   const compileStart = profiling ? performance.now() : 0
   const compileResult = await compileTsToGs({
     excludeFiles: luaResult.dependencies,
@@ -1083,6 +1086,7 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
             timingsMs: {
               loadConfig: loadConfigMs,
               checks: checksMs,
+              lua: luaMs,
               compile: compileMs,
               emitIr: emitIrMs,
               mergeIr: mergeIrMs,
@@ -1343,7 +1347,13 @@ async function runDev(opts: GlobalOptions) {
   }
 
   const runChanged = async () => {
-    const luaResult = await buildClientLua(cfgDir, cfg, !!opts.noinject)
+    const luaResult = await buildClientLua(
+      cfgDir,
+      cfg,
+      !!opts.noinject,
+      true,
+      injectProfileEnabled(opts)
+    )
     registerRuntimeSources(luaResult.dependencies)
     const queuedOutJson = new Map<string, Set<number>>()
     const queueOutJson = (outJson: string, gid: number) => {
@@ -2044,7 +2054,13 @@ async function runSingle(file: string, opts: GlobalOptions) {
     return { ...cfg, entries: [rel] }
   })()
   const luaCfg = loaded ? singleCfg : { ...singleCfg, outDir: 'dist' }
-  const luaResult = await buildClientLua(cfgDir, luaCfg, !!opts.noinject, false)
+  const luaResult = await buildClientLua(
+    cfgDir,
+    luaCfg,
+    !!opts.noinject,
+    false,
+    injectProfileEnabled(opts)
+  )
   if (luaResult.entries.length) return
   ui.info(t('startCompile'))
   const compileResult = await compileTsToGs({

@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { performance } from 'node:perf_hooks'
 import { fileURLToPath } from 'node:url'
 
 import ts from 'typescript'
@@ -11,11 +12,18 @@ import { createLuaPlugin, diagnostic, entryCall, hooks } from './plugin.js'
 
 export interface LuaBuildOptions {
   entries: string[]
+  /** 记录各阶段耗时；默认关闭。 */
+  profile?: boolean
   additionalFiles?: string[]
   rootDir: string
   outDir: string
 }
+export interface LuaCompileProfile {
+  timingsMs: Record<string, number>
+  stats: { sourceFiles: number; programFiles: number; outputFiles: number; outputBytes: number }
+}
 export interface LuaBuildResult {
+  profile?: LuaCompileProfile
   files: Map<string, string>
   diagnostics: readonly ts.Diagnostic[]
   entries: string[]
@@ -46,6 +54,15 @@ function packageRoot() {
 }
 /** 编译到内存；所有诊断通过后才由调用者写入输出目录。 */
 export function compileLua(input: LuaBuildOptions): LuaBuildResult {
+  const started = input.profile ? performance.now() : 0
+  let previous = started
+  const timingsMs: Record<string, number> = {}
+  const mark = (name: string) => {
+    if (!input.profile) return
+    const now = performance.now()
+    timingsMs[name] = now - previous
+    previous = now
+  }
   const root = path.resolve(input.rootDir)
   const outDir = path.resolve(input.outDir)
   const sdkRoot = path.join(packageRoot(), 'dist/src/runtime')
@@ -117,6 +134,7 @@ export function compileLua(input: LuaBuildOptions): LuaBuildResult {
   }
   host.resolveModuleNames = (names, from) => names.map((name) => resolve(name, from))
   const additional = input.additionalFiles ?? []
+  mark('setup')
   const program = ts.createProgram(
     [
       ...input.entries.map((x) => path.resolve(x)),
@@ -126,8 +144,11 @@ export function compileLua(input: LuaBuildOptions): LuaBuildResult {
     options,
     host
   )
+  mark('programLoad')
   const checker = program.getTypeChecker()
+  mark('typeChecker')
   const diagnostics: ts.Diagnostic[] = [...configDiagnostics, ...ts.getPreEmitDiagnostics(program)]
+  mark('typeCheck')
   const files = new Map<string, string>()
   const dependencies = new Set<string>()
   const modules = program.getSourceFiles().filter((x) => !x.isDeclarationFile)
@@ -194,6 +215,7 @@ export function compileLua(input: LuaBuildOptions): LuaBuildResult {
     }
     visit(source)
   }
+  mark('gstsCheck')
   if (!diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)) {
     try {
       const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))
@@ -237,6 +259,7 @@ export function compileLua(input: LuaBuildOptions): LuaBuildResult {
           true,
           new Set(modules.map((x) => modulePath(x.fileName)))
         )
+      mark('nativeInputs')
       const result = new tstl.Transpiler().emit({
         program,
         sourceFiles: modules,
@@ -267,8 +290,10 @@ export function compileLua(input: LuaBuildOptions): LuaBuildResult {
           files.set(relative, data)
         }
       })
+      mark('transpile')
       diagnostics.push(...result.diagnostics)
       checkLuaModuleCycles(files)
+      mark('luaValidate')
     } catch (error) {
       diagnostics.push({
         category: ts.DiagnosticCategory.Error,
@@ -304,7 +329,21 @@ export function compileLua(input: LuaBuildOptions): LuaBuildResult {
       )
     }
   }
+  mark('package')
   return {
+    ...(input.profile
+      ? {
+          profile: {
+            timingsMs: { ...timingsMs, total: performance.now() - started },
+            stats: {
+              sourceFiles: modules.length,
+              programFiles: program.getSourceFiles().length,
+              outputFiles: files.size,
+              outputBytes: [...files.values()].reduce((n, text) => n + Buffer.byteLength(text), 0)
+            }
+          }
+        }
+      : {}),
     files,
     diagnostics,
     entries: [...entryFiles].map((x) => modulePath(x) + '.lua'),
