@@ -10,7 +10,7 @@ fs.mkdirSync(path.join(root, 'private'))
 const write = (name, text) => fs.writeFileSync(path.join(root, name), text)
 write(
   'gsts.config.ts',
-  `export default{compileRoot:'.',entries:['main.ts','server.ts'],outDir:'out',lang:'zh',lua:{typeCheck:true}}`
+  `export default{compileRoot:'.',entries:['main.ts','server.ts','!shared.ts','!private/**'],outDir:'out',lang:'zh',lua:{typeCheck:true}}`
 )
 const lua = `import{g}from'genshin-ts/runtime/core';import{message}from'./shared';export default g.clientControlScript(lua=>{return{onStart(){lua.print(message,1)}}})`
 const server = `import{g}from'genshin-ts/runtime/core';import{message}from'./shared';g.server({id:1073741901,name:'Routing',mode:'beyond'}).on('whenEntityIsCreated',(evt,f)=>{f.printString(message)})`
@@ -85,7 +85,25 @@ try {
   await wait(() => read('lua/private/dep.lua').includes('extra-two'))
   await sleep(250)
   assert(!log.slice(offset).includes('开始编译'), log.slice(offset))
+  // 负向入口规则不能阻止原生 Lua 和声明依赖的更新。
+  write('private/native.d.ts', 'export function value(this:void):number')
+  write('private/native.lua', 'return {value=function() return 41 end}')
+  write(
+    'main.ts',
+    `import{value}from'./private/native';${lua.replace('message,1', 'message,value()')}`
+  )
+  await wait(() => has('lua/private/native.lua'))
+  await sleep(250)
+  write('private/native.lua', 'return {value=function() return 42 end}')
+  await wait(() => read('lua/private/native.lua').includes('42'))
+  write('private/native.d.ts', 'export function value(this:void, required:number):number')
+  await wait(() => log.includes('Lua 编译失败'))
+  write('private/native.d.ts', 'export function value(this:void):number')
+  await sleep(500)
+  write('main.ts', withDep)
+  await wait(() => !has('lua/private/native.lua'))
   // 先解析出新依赖但编译失败，也应补上监听，使只修复该依赖即可恢复。
+  log = ''
   write('private/bad.ts', 'export const broken = ;')
   write(
     'main.ts',

@@ -877,6 +877,7 @@ function buildDevWatchGlobs(
   cwd: string
   watch: string[]
   ignored: string[]
+  dependencyIgnored: string[]
 } {
   const compileRoot = path.resolve(cfgDir, cfg.compileRoot)
 
@@ -912,13 +913,14 @@ function buildDevWatchGlobs(
     watch.push('**/*.ts')
   }
 
-  ignored.push('**/node_modules/**', '**/*.d.ts', '**/*.gs.ts')
+  // 入口排除只控制入口发现；已导入的依赖仍需监听。
+  const dependencyIgnored = ['**/node_modules/**', '**/*.d.ts', '**/*.gs.ts']
   const relativeOut = path.relative(compileRoot, path.resolve(cfgDir, cfg.outDir))
   if (relativeOut && !relativeOut.startsWith('..') && !path.isAbsolute(relativeOut))
-    ignored.push(`${toPosixPath(relativeOut)}/**`)
-  else if (!relativeOut) ignored.push('lua/**')
+    dependencyIgnored.push(`${toPosixPath(relativeOut)}/**`)
+  else if (!relativeOut) dependencyIgnored.push('lua/**')
 
-  return { cwd: compileRoot, watch, ignored }
+  return { cwd: compileRoot, watch, ignored: [...ignored, ...dependencyIgnored], dependencyIgnored }
 }
 
 async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
@@ -1326,7 +1328,7 @@ async function runDev(opts: GlobalOptions) {
 
   await refreshEntryMapping()
 
-  const { cwd, watch, ignored } = buildDevWatchGlobs(cfgDir, cfg)
+  const { cwd, watch, ignored, dependencyIgnored } = buildDevWatchGlobs(cfgDir, cfg)
   const changed = new Set<string>()
   const removed = new Set<string>()
   let runtimeDependencyWatcher: ReturnType<typeof chokidar.watch> | undefined
@@ -1795,12 +1797,7 @@ async function runDev(opts: GlobalOptions) {
     .watch(runtimeWatchFiles, {
       cwd,
       ignoreInitial: true,
-      ignored: [
-        '**/node_modules/**',
-        '**/*.d.ts',
-        '**/*.gs.ts',
-        ...ignored.filter((pattern) => pattern !== '**/*.d.ts')
-      ]
+      ignored: dependencyIgnored
     })
     .on('add', onSourceAddOrChange)
     .on('change', onSourceAddOrChange)
@@ -1811,7 +1808,7 @@ async function runDev(opts: GlobalOptions) {
     .watch([], {
       cwd,
       ignoreInitial: true,
-      ignored: ignored.filter((pattern) => pattern !== '**/*.d.ts')
+      ignored: dependencyIgnored.filter((pattern) => pattern !== '**/*.d.ts')
     })
     .on('add', onSourceAddOrChange)
     .on('change', onSourceAddOrChange)
