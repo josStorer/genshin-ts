@@ -53,6 +53,7 @@ if (process.argv[2] === '--case') {
     ])
   const loadCompilerMs = performance.now() - importStart
   const cache = createLuaCompileCache()
+  const outputCache = {}
   const runs = []
   const entrySource = fs.readFileSync(entries[0], 'utf8')
   for (const mode of [
@@ -84,7 +85,15 @@ if (process.argv[2] === '--case') {
         entries,
         rootDir: root,
         outDir: path.join(root, 'out'),
-        profile: true
+        profile: true,
+        changedFiles:
+          mode === 'first'
+            ? undefined
+            : mode === 'ts-edit'
+              ? [entries[0]]
+              : mode === 'lua-edit'
+                ? [path.join(root, 'native.lua')]
+                : []
       },
       cache
     )
@@ -93,7 +102,13 @@ if (process.argv[2] === '--case') {
       formatLuaDiagnostics(result.diagnostics)
     )
     const writeStart = performance.now()
-    const written = writeLuaFiles(path.join(root, 'out'), result.files, true)
+    const written = writeLuaFiles(
+      path.join(root, 'out'),
+      result.files,
+      true,
+      'default',
+      outputCache
+    )
     assert.equal(written.conflicts.length, 0)
     runs.push({
       mode,
