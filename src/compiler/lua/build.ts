@@ -7,6 +7,7 @@ import ts from 'typescript'
 import * as tstl from 'typescript-to-lua'
 
 import { getLuaDiagnostics } from './diagnostics.js'
+import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
 import {
   checkLuaModuleCycles,
   collectNativeLua,
@@ -34,6 +35,7 @@ export interface LuaCompileProfile {
     outputBytes: number
     reusedTs: boolean
     parsedLuaFiles: number
+    transpiledFiles: number
   }
 }
 export interface LuaBuildResult {
@@ -53,7 +55,14 @@ export interface LuaCompileCache {
     sources: readonly ts.SourceFile[]
     diagnostics: readonly ts.Diagnostic[]
     emitted: Map<string, string>
-    nativeRoots: Set<string>
+    dependencyState: LuaDependencyState
+    sourceChecks: Map<
+      string,
+      { diagnostics: readonly ts.Diagnostic[]; rawRequires: ts.CallExpression[] }
+    >
+    printed: Map<string, { fileName: string; code: string }>
+    nativeImports: Map<string, Set<string>>
+    transpileDiagnostics: readonly ts.Diagnostic[]
   }
 }
 export function createLuaCompileCache(): LuaCompileCache {
@@ -152,13 +161,16 @@ export function compileLua(
   host.readFile = (file) => virtual.get(path.resolve(file)) ?? originalRead(file)
   host.fileExists = (file) => virtual.has(path.resolve(file)) || originalExists(file)
   const nextSources = new Map<string, ts.SourceFile>()
+  let refreshSources = new Set<string>()
   host.getSourceFile = (file, version, onError) => {
     const text = host.readFile(file)
     if (text === undefined) return undefined
     const key = path.resolve(file)
-    const previous = cache?.sources.get(key)
+    const previous = nextSources.get(key) ?? cache?.sources.get(key)
     const source =
-      previous?.text === text ? previous : ts.createSourceFile(file, text, version, true)
+      previous?.text === text && !refreshSources.has(luaFileKey(file))
+        ? previous
+        : ts.createSourceFile(file, text, version, true)
     nextSources.set(key, source)
     return source
   }
@@ -187,7 +199,7 @@ export function compileLua(
   host.resolveModuleNames = (names, from) => names.map((name) => resolve(name, from))
   const additional = input.additionalFiles ?? []
   mark('setup')
-  const program = ts.createProgram(
+  let program = ts.createProgram(
     [
       ...input.entries.map((x) => path.resolve(x)),
       ...additional.filter((x) => x.endsWith('.ts')),
@@ -197,14 +209,7 @@ export function compileLua(
     host,
     cache?.program
   )
-  if (cache) {
-    cache.program = program
-    cache.sources = nextSources
-  }
   mark('programLoad')
-  onPrepared?.(program.getSourceFiles().map((source) => source.fileName))
-  const checker = program.getTypeChecker()
-  mark('typeChecker')
   const cacheKey = JSON.stringify([
     options,
     program.getRootFileNames(),
@@ -212,7 +217,35 @@ export function compileLua(
     !!input.typeCheck
   ])
   const oldCheck = cache?.checked
-  const sources = program.getSourceFiles()
+  let sources = program.getSourceFiles()
+  const plan = planLuaModules(
+    sources,
+    resolve,
+    oldCheck?.key === cacheKey ? oldCheck.dependencyState : undefined
+  )
+  refreshSources = new Set(
+    sources
+      .filter(
+        (source) =>
+          plan.affected.has(luaFileKey(source.fileName)) &&
+          oldCheck?.dependencyState.sources.get(luaFileKey(source.fileName)) === source
+      )
+      .map((source) => luaFileKey(source.fileName))
+  )
+  if (refreshSources.size) {
+    // TSTL 按 AST 节点缓存 self 调用方式；依赖类型变化时，受影响的使用者也要换新节点。
+    program = ts.createProgram(program.getRootFileNames(), options, host, program)
+    sources = program.getSourceFiles()
+    plan.state.sources = new Map(sources.map((source) => [luaFileKey(source.fileName), source]))
+  }
+  if (cache) {
+    cache.program = program
+    cache.sources = nextSources
+  }
+  mark('affectedFiles')
+  onPrepared?.(sources.map((source) => source.fileName))
+  const checker = program.getTypeChecker()
+  mark('typeChecker')
   const reuse =
     oldCheck?.key === cacheKey &&
     sources.length === oldCheck.sources.length &&
@@ -240,10 +273,24 @@ export function compileLua(
       .filter((file) => !file.includes('/node_modules/') && !file.includes('\\node_modules\\'))
   )
   if (configPath) dependencies.add(configPath)
-  const nativeRoots = new Set<string>()
   const emitted = new Map<string, string>()
   const modules = program.getSourceFiles().filter((x) => !x.isDeclarationFile)
   const entryFiles = new Set(modules.filter((x) => entryCall(x)).map((x) => x.fileName))
+  const targets = modules.filter((source) => plan.affected.has(luaFileKey(source.fileName)))
+  const sourceChecks = new Map<
+    string,
+    { diagnostics: readonly ts.Diagnostic[]; rawRequires: ts.CallExpression[] }
+  >()
+  const printed = new Map<string, { fileName: string; code: string }>()
+  const nativeImports = new Map<string, Set<string>>()
+  let transpileDiagnostics: readonly ts.Diagnostic[] = reuse?.transpileDiagnostics ?? []
+  for (const source of modules) {
+    const key = luaFileKey(source.fileName)
+    if (plan.affected.has(key)) continue
+    const text = oldCheck?.printed.get(key)
+    if (text) printed.set(key, text)
+    nativeImports.set(key, oldCheck?.nativeImports.get(key) ?? new Set())
+  }
   const modulePaths = new Map<string, string>()
   const modulePath = (filename: string) => {
     const cached = modulePaths.get(filename)
@@ -260,7 +307,6 @@ export function compileLua(
   }
   const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))
   const collectNative = (file: string) => {
-    nativeRoots.add(file)
     collectNativeLua(
       file,
       root,
@@ -286,40 +332,52 @@ export function compileLua(
         throw new Error(
           `带类型的 Lua 模块缺少同名 .lua 文件：${posix(path.relative(root, native))}`
         )
+      const key = luaFileKey(from)
+      let imports = nativeImports.get(key)
+      if (!imports) nativeImports.set(key, (imports = new Set()))
+      imports.add(native)
       collectNative(native)
       return modulePath(native)
     }
     return modulePath(target)
   }
   const rawRequires: ts.CallExpression[] = []
-  for (const source of reuse ? [] : modules) {
-    const fromOutput = path.relative(outDir, source.fileName)
-    if (!fromOutput.startsWith('..') && !path.isAbsolute(fromOutput))
-      diagnostics.push(
-        diagnostic(source, 'Lua 源文件不能放在生成的 outDir/lua 目录中，请分开源码和产物。')
-      )
-    dependencies.add(source.fileName)
-    diagnostics.push(...getLuaDiagnostics(source, checker))
-    const visit = (node: ts.Node) => {
-      if (ts.isCallExpression(node)) {
-        const declaration = checker.getResolvedSignature(node)?.declaration
-        if (
-          declaration &&
-          ts.isMethodSignature(declaration) &&
-          ts.isIdentifier(declaration.name) &&
-          declaration.name.text === 'require' &&
-          declaration.getSourceFile().fileName.endsWith('lua-standard.d.ts')
+  for (const source of modules) {
+    const key = luaFileKey(source.fileName)
+    let checks = plan.affected.has(key) ? undefined : oldCheck?.sourceChecks.get(key)
+    if (!checks) {
+      const localDiagnostics = getLuaDiagnostics(source, checker)
+      const fromOutput = path.relative(outDir, source.fileName)
+      if (!fromOutput.startsWith('..') && !path.isAbsolute(fromOutput))
+        localDiagnostics.push(
+          diagnostic(source, 'Lua 源文件不能放在生成的 outDir/lua 目录中，请分开源码和产物。')
         )
-          rawRequires.push(node)
+      const calls: ts.CallExpression[] = []
+      const visit = (node: ts.Node) => {
+        if (ts.isCallExpression(node)) {
+          const declaration = checker.getResolvedSignature(node)?.declaration
+          if (
+            declaration &&
+            ts.isMethodSignature(declaration) &&
+            ts.isIdentifier(declaration.name) &&
+            declaration.name.text === 'require' &&
+            declaration.getSourceFile().fileName.endsWith('lua-standard.d.ts')
+          )
+            calls.push(node)
+        }
+        ts.forEachChild(node, visit)
       }
-      ts.forEachChild(node, visit)
+      visit(source)
+      checks = { diagnostics: localDiagnostics, rawRequires: calls }
     }
-    visit(source)
+    sourceChecks.set(key, checks)
+    if (!reuse) diagnostics.push(...checks.diagnostics)
+    rawRequires.push(...checks.rawRequires)
   }
   mark('gstsCheck')
   if (!diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)) {
     try {
-      for (const file of reuse?.nativeRoots ?? []) collectNative(file)
+      for (const imports of nativeImports.values()) for (const file of imports) collectNative(file)
       for (const call of rawRequires) {
         const argument = call.arguments[0]
         if (!argument || !ts.isStringLiteralLike(argument)) {
@@ -357,7 +415,7 @@ export function compileLua(
       } else {
         const result = new tstl.Transpiler().emit({
           program,
-          sourceFiles: modules,
+          sourceFiles: targets,
           plugins: [
             createLuaPlugin(resolveLua, (name, from) => {
               const target = resolve(name, from)?.resolvedFileName
@@ -367,7 +425,26 @@ export function compileLua(
                   .getSourceFile(target)
                   ?.statements.some((s) => ts.isExportAssignment(s) && s.isExportEquals)
               )
-            })
+            }),
+            {
+              afterPrint(_program, _options, _host, results) {
+                // 保存 require 路径改写前的文本；TSTL 后续仍处理完整集合并重建最小 lualib。
+                for (const result of results)
+                  printed.set(luaFileKey(result.fileName), {
+                    fileName: result.fileName,
+                    code: result.code
+                  })
+                results.splice(
+                  0,
+                  results.length,
+                  ...modules.map((source) => {
+                    const result = printed.get(luaFileKey(source.fileName))
+                    if (!result) throw new Error(`缺少 Lua 模块转译结果：${source.fileName}`)
+                    return { ...result, sourceFiles: [source] }
+                  })
+                )
+              }
+            }
           ],
           writeFile: (filename, data) => {
             const relative = posix(path.relative(outDir, filename))
@@ -386,7 +463,13 @@ export function compileLua(
             emitted.set(relative, data)
           }
         })
-        diagnostics.push(...result.diagnostics)
+        transpileDiagnostics = [
+          ...(oldCheck?.transpileDiagnostics.filter(
+            (d) => d.file && !plan.affected.has(luaFileKey(d.file.fileName))
+          ) ?? []),
+          ...result.diagnostics
+        ]
+        diagnostics.push(...transpileDiagnostics)
       }
       mark('transpile')
       checkLuaModuleCycles(files, luaCache)
@@ -410,7 +493,11 @@ export function compileLua(
         sources,
         diagnostics: [...diagnostics],
         emitted,
-        nativeRoots
+        dependencyState: plan.state,
+        sourceChecks,
+        printed,
+        nativeImports,
+        transpileDiagnostics
       }
     const helpers = path.join(packageRoot(), 'dist/src/runtime/lua-assets/helpers.lua')
     files.set('__gsts_helpers.lua', fs.readFileSync(helpers, 'utf8'))
@@ -445,6 +532,7 @@ export function compileLua(
             stats: {
               reusedTs: !!reuse,
               parsedLuaFiles: luaCache.parsed,
+              transpiledFiles: reuse ? 0 : targets.length,
               sourceFiles: modules.length,
               programFiles: program.getSourceFiles().length,
               outputFiles: files.size,
@@ -454,7 +542,7 @@ export function compileLua(
         }
       : {}),
     files,
-    diagnostics,
+    diagnostics: ts.sortAndDeduplicateDiagnostics(diagnostics),
     entries: [...entryFiles].map((x) => modulePath(x) + '.lua'),
     dependencies: [...dependencies]
   }
