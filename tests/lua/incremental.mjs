@@ -11,7 +11,11 @@ import {
 const base = path.resolve('.tmp/lua-incremental')
 fs.mkdirSync(base, { recursive: true })
 const root = fs.mkdtempSync(path.join(base, 'run-'))
-const write = (name, text) => fs.writeFileSync(path.join(root, name), text)
+const changes = new Set()
+const write = (name, text) => {
+  fs.writeFileSync(path.join(root, name), text)
+  changes.add(path.join(root, name))
+}
 const cache = createLuaCompileCache()
 const input = {
   entries: [path.join(root, 'main.ts')],
@@ -26,8 +30,8 @@ write('raw.lua', 'return {value=function() return 1 end}')
 write('shared.ts', 'export let value=1; export function increment(){value++}')
 const main = `import {g} from 'genshin-ts/runtime/core';import {value} from './raw';import {increment,value as count} from './shared';export default g.clientControlScript(lua=>{class Counter{n=0;next(){return ++this.n}}const counter=new Counter();return{onStart(){increment();lua.print(value(),count,counter.next())}}})`
 write('main.ts', main)
-function check(label, error = false) {
-  const warm = compileLua(input, cache),
+function check(label, error = false, events = true) {
+  const warm = compileLua({ ...input, ...(events ? { changedFiles: [...changes] } : {}) }, cache),
     fresh = compileLua(input)
   assert.equal(
     warm.diagnostics.some((d) => d.category === 1),
@@ -49,6 +53,7 @@ function check(label, error = false) {
     [...fresh.dependencies].sort(),
     label + ' dependencies'
   )
+  changes.clear()
   return warm
 }
 check('first')
@@ -56,7 +61,11 @@ const firstSource = cache.sources.get(input.entries[0])
 assert.equal(check('unchanged').profile.stats.parsedLuaFiles, 0)
 assert.equal(cache.sources.get(input.entries[0]), firstSource)
 write('raw.lua', 'return {value=function() return 2 end}')
-assert.equal(check('native edit').profile.stats.parsedLuaFiles, 2)
+const nativeEdit = check('native edit')
+assert.equal(nativeEdit.profile.stats.parsedLuaFiles, 2)
+assert.equal(nativeEdit.profile.stats.sourceReads, 0)
+assert.equal(nativeEdit.profile.stats.resolvedDependencyFiles, 0)
+assert.equal(nativeEdit.profile.stats.cycleChecks, 0)
 write('raw.lua', 'local other=require("other"); return {value=other.value}')
 write('other.lua', 'return {value=function() return 3 end}')
 check('new native dependency')
@@ -65,6 +74,7 @@ check('new native cycle', true)
 write('other.lua', 'return {value=function() return 4 end}')
 check('cycle recovery')
 fs.unlinkSync(path.join(root, 'other.lua'))
+changes.add(path.join(root, 'other.lua'))
 check('missing native dependency', true)
 write('raw.lua', 'return {value=function() return 5 end}')
 check('removed dependency recovery')
@@ -86,6 +96,7 @@ check('entry edit')
 write('raw.ts', 'export function value(){return 12}')
 check('new TS shadows native declaration')
 fs.unlinkSync(path.join(root, 'raw.ts'))
+changes.add(path.join(root, 'raw.ts'))
 check('restore native resolution')
 write('tsconfig.json', '{oops')
 check('invalid config', true)
@@ -101,3 +112,14 @@ check('explicit typecheck catches ordinary type errors', true)
 input.typeCheck = false
 write('main.ts', main.replace('class Counter', 'const invalid = ; class Counter'))
 check('syntax errors still block compilation', true)
+
+// 没有变化清单的主动构建仍读取磁盘；合成声明不能遮住后来添加的真实声明。
+write('main.ts', main)
+check('non-watch build rereads disk', false, false)
+write('loose.lua', 'return {n=1}')
+write('main.ts', `import './loose';${main}`)
+check('untyped native module')
+write('loose.d.ts', 'export const n: number')
+const typed = check('real declaration replaces virtual declaration')
+assert.equal(cache.sources.get(path.join(root, 'loose.d.ts')).text, 'export const n: number')
+assert.ok(typed.profile.stats.sourceReads > 1)

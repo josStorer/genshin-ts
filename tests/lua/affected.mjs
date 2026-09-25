@@ -12,7 +12,11 @@ const base = path.resolve('.tmp/lua-affected')
 fs.mkdirSync(base, { recursive: true })
 for (const typeCheck of [false, true]) {
   const root = fs.mkdtempSync(path.join(base, 'run-'))
-  const write = (name, text) => fs.writeFileSync(path.join(root, name), text)
+  const changes = new Set()
+  const write = (name, text) => {
+    fs.writeFileSync(path.join(root, name), text)
+    changes.add(path.join(root, name))
+  }
   const cache = createLuaCompileCache()
   const input = {
     entries: ['a.ts', 'b.ts'].map((n) => path.join(root, n)),
@@ -34,7 +38,7 @@ for (const typeCheck of [false, true]) {
   write('raw.d.ts', 'import type {Fn} from "./types";export const read:Fn')
   write('raw.lua', 'return {read=function() return 4 end}')
   function check(label, expected, error = false) {
-    const warm = compileLua(input, cache),
+    const warm = compileLua({ ...input, changedFiles: [...changes] }, cache),
       cold = compileLua(input)
     assert.equal(
       warm.diagnostics.some((d) => d.category === 1),
@@ -57,12 +61,16 @@ for (const typeCheck of [false, true]) {
     )
     if (expected !== undefined && !error)
       assert.equal(warm.profile.stats.transpiledFiles, expected, label + ' affected file count')
+    changes.clear()
     return warm
   }
   check('initial', 5)
   check('unchanged', 0)
   write('b.ts', b.replace('lua.print(2)', 'lua.print(3)'))
-  check('isolated entry', 1)
+  const isolated = check('isolated entry', 1)
+  assert.equal(isolated.profile.stats.sourceReads, 1)
+  assert.equal(isolated.profile.stats.resolvedDependencyFiles, 1)
+  assert.equal(isolated.profile.stats.cycleChecks, 0)
   write('base.ts', 'export let value=8')
   check('transitive re-export', 3)
   write('types.ts', 'export type Fn=(this:unknown)=>number')
@@ -85,6 +93,7 @@ for (const typeCheck of [false, true]) {
   write('next.ts', 'export let value=9')
   write('bridge.ts', 'export {value} from "./next"')
   fs.unlinkSync(path.join(root, 'base.ts'))
+  changes.add(path.join(root, 'base.ts'))
   check('rename dependency', 3)
   write('next.ts', 'export let value = ;')
   check('syntax failure', undefined, true)

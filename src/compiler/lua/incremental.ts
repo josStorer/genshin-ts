@@ -12,20 +12,24 @@ export interface LuaDependencyState {
   sources: Map<string, ts.SourceFile>
   imports: Map<string, string[]>
   dependencies: Map<string, Set<string>>
+  reverse: Map<string, Set<string>>
 }
-/** Lua 专用影响分析；包含类型导入和原生模块声明，不改变节点图的依赖规则。 */
+/** Lua 专用影响分析；普通编辑只更新变化文件的依赖边，不改变节点图的规则。 */
 export function planLuaModules(
   sources: readonly ts.SourceFile[],
   resolve: (name: string, from: string) => ts.ResolvedModuleFull | undefined,
-  previous?: LuaDependencyState
+  previous?: LuaDependencyState,
+  resolveAll = true
 ) {
   const current: LuaDependencyState = {
-    sources: new Map(),
-    imports: new Map(),
-    dependencies: new Map()
+    sources: new Map(sources.map((source) => [luaFileKey(source.fileName), source])),
+    imports: new Map(previous?.imports),
+    dependencies: new Map(previous?.dependencies),
+    reverse: new Map(previous?.reverse)
   }
   const changed = new Set<string>()
   let full = !previous
+  let resolvedFiles = 0
   const affectsGlobals = (source: ts.SourceFile) =>
     source.isDeclarationFile ||
     !ts.isExternalModule(source) ||
@@ -35,20 +39,18 @@ export function planLuaModules(
         (ts.isStringLiteral(statement.name) ||
           !!(statement.flags & ts.NodeFlags.GlobalAugmentation))
     )
-  for (const source of sources) {
-    const key = luaFileKey(source.fileName)
-    current.sources.set(key, source)
-    if (source !== previous?.sources.get(key)) {
+  const replaced = new Set<string>()
+  for (const [key, source] of current.sources) {
+    const oldSource = previous?.sources.get(key)
+    if (source !== oldSource) {
       changed.add(key)
-      if (
-        affectsGlobals(source) ||
-        (previous?.sources.has(key) && affectsGlobals(previous.sources.get(key)!))
-      )
-        full = true
+      if (affectsGlobals(source) || (oldSource && affectsGlobals(oldSource))) full = true
     }
+    if (!resolveAll && source === oldSource) continue
+    resolvedFiles++
     const specs =
-      previous?.sources.get(key) === source
-        ? previous.imports.get(key)!
+      source === oldSource
+        ? previous!.imports.get(key)!
         : ts.preProcessFile(source.text, true, true).importedFiles.map((file) => file.fileName)
     current.imports.set(key, specs)
     const dependencies = new Set<string>()
@@ -56,30 +58,49 @@ export function planLuaModules(
       const target = resolve(spec, source.fileName)?.resolvedFileName
       if (target) dependencies.add(luaFileKey(target))
     }
-    current.dependencies.set(key, dependencies)
     const old = previous?.dependencies.get(key)
-    if (!old || old.size !== dependencies.size || [...dependencies].some((file) => !old.has(file)))
+    if (
+      !old ||
+      old.size !== dependencies.size ||
+      [...dependencies].some((file) => !old.has(file))
+    ) {
       changed.add(key)
+      replaced.add(key)
+      current.dependencies.set(key, dependencies)
+    }
   }
   for (const [key, source] of previous?.sources ?? []) {
     if (!current.sources.has(key)) {
       changed.add(key)
+      replaced.add(key)
+      current.imports.delete(key)
+      current.dependencies.delete(key)
       if (affectsGlobals(source)) full = true
     }
   }
-  const reverse = new Map<string, Set<string>>()
-  // 旧边处理删除和重命名，新边处理新增及解析目标变化。
-  for (const dependencies of [previous?.dependencies, current.dependencies]) {
-    for (const [file, imports] of dependencies ?? []) {
-      for (const imported of imports) {
-        let users = reverse.get(imported)
-        if (!users) reverse.set(imported, (users = new Set()))
-        users.add(file)
+  // 先沿旧边找受影响的使用者，再替换变化边；失败时不改坏上次成功的依赖表。
+  const affected = collectDependents(previous?.reverse ?? new Map(), changed)
+  const edited = new Set<string>()
+  for (const file of replaced) {
+    const old = previous?.dependencies.get(file) ?? new Set<string>()
+    const next = current.dependencies.get(file) ?? new Set<string>()
+    for (const target of new Set([...old, ...next])) {
+      if (old.has(target) === next.has(target)) continue
+      if (!edited.has(target)) {
+        current.reverse.set(target, new Set(current.reverse.get(target)))
+        edited.add(target)
       }
+      const users = current.reverse.get(target)!
+      if (next.has(target)) users.add(file)
+      else users.delete(file)
     }
   }
+  for (const target of edited)
+    if (!current.reverse.get(target)!.size) current.reverse.delete(target)
+  for (const file of collectDependents(current.reverse, changed)) affected.add(file)
   return {
     state: current,
-    affected: full ? new Set(current.sources.keys()) : collectDependents(reverse, changed)
+    resolvedFiles,
+    affected: full ? new Set(current.sources.keys()) : affected
   }
 }

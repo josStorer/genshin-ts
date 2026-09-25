@@ -42,9 +42,11 @@ export interface LuaParseCache {
   files: Map<string, { text: string; requires: ReturnType<typeof luaRequires> }>
   used: Set<string>
   parsed: number
+  cycleChecks: number
+  edges?: Map<string, string[]>
 }
 export function createLuaParseCache(): LuaParseCache {
-  return { files: new Map(), used: new Set(), parsed: 0 }
+  return { files: new Map(), used: new Set(), parsed: 0, cycleChecks: 0 }
 }
 function cachedRequires(name: string, text: string, cache?: LuaParseCache) {
   if (!cache) return luaRequires(text)
@@ -122,6 +124,17 @@ export function checkLuaModuleCycles(files: ReadonlyMap<string, string>, cache?:
     }
     edges.set(name, targets)
   }
+  // Lua 文本仍逐个确认语法；顶层依赖边没变时，无需再次遍历整张图。
+  if (
+    cache?.edges &&
+    edges.size === cache.edges.size &&
+    [...edges].every(([name, targets]) => {
+      const old = cache.edges!.get(name)
+      return old && old.length === targets.length && old.every((target, i) => target === targets[i])
+    })
+  )
+    return
+  if (cache) cache.cycleChecks++
   const active: string[] = [],
     done = new Set<string>()
   const visit = (name: string) => {
@@ -136,4 +149,5 @@ export function checkLuaModuleCycles(files: ReadonlyMap<string, string>, cache?:
     done.add(name)
   }
   for (const name of files.keys()) visit(name)
+  if (cache) cache.edges = edges
 }

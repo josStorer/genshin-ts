@@ -22,6 +22,8 @@ export interface LuaBuildOptions {
   profile?: boolean
   /** 额外检查整个 Lua 项目的 TS 类型；日常编译默认关闭，编辑器提示不受影响。 */
   typeCheck?: boolean
+  /** dev 提供自上次调用以来完整的变化清单；省略时重新检查磁盘。 */
+  changedFiles?: readonly string[]
   additionalFiles?: string[]
   rootDir: string
   outDir: string
@@ -36,6 +38,9 @@ export interface LuaCompileProfile {
     reusedTs: boolean
     parsedLuaFiles: number
     transpiledFiles: number
+    sourceReads: number
+    resolvedDependencyFiles: number
+    cycleChecks: number
   }
 }
 export interface LuaBuildResult {
@@ -50,6 +55,13 @@ export interface LuaCompileCache {
   lua: LuaParseCache
   program?: ts.Program
   sources: Map<string, ts.SourceFile>
+  hostState?: {
+    key: string
+    resolvedModules: Map<string, ts.ResolvedModuleFull | undefined>
+    virtual: Map<string, string>
+    resolutionCache: ts.ModuleResolutionCache
+    knownFiles: Set<string>
+  }
   checked?: {
     key: string
     sources: readonly ts.SourceFile[]
@@ -109,6 +121,7 @@ export function compileLua(
   const luaCache = cache?.lua ?? createLuaParseCache()
   luaCache.used.clear()
   luaCache.parsed = 0
+  luaCache.cycleChecks = 0
   const root = path.resolve(input.rootDir)
   const outDir = path.resolve(input.outDir)
   const sdkRoot = path.join(packageRoot(), 'dist/src/runtime')
@@ -150,23 +163,45 @@ export function compileLua(
       configDiagnostics.push(...parsed.errors.filter((d) => d.code !== 18002 && d.code !== 18003))
     }
   }
+  const additional = input.additionalFiles ?? []
+  const roots = [
+    ...input.entries.map((x) => path.resolve(x)),
+    ...additional.filter((x) => x.endsWith('.ts')),
+    globals
+  ]
+  const hostKey = JSON.stringify([options, roots, additional])
+  const changes = input.changedFiles && new Set(input.changedFiles.map(luaFileKey))
+  const oldHost = cache?.hostState
+  const stableResolution = !!(
+    changes &&
+    oldHost?.key === hostKey &&
+    input.changedFiles!.every(
+      (file) =>
+        oldHost.knownFiles.has(luaFileKey(file)) &&
+        !oldHost.virtual.has(path.resolve(file)) &&
+        !/\.json$/i.test(file) &&
+        fs.existsSync(file)
+    )
+  )
+  let sourceReads = 0
   const host = ts.createCompilerHost(options)
   const runtimeMap: Record<string, string> = {
     'genshin-ts/runtime/core': 'lua-core.d.ts',
     'genshin-ts/runtime/lua': 'lua.d.ts'
   }
-  const virtual = new Map<string, string>()
+  const virtual = new Map<string, string>(stableResolution ? oldHost?.virtual : undefined)
   const originalRead = host.readFile.bind(host),
     originalExists = host.fileExists.bind(host)
   host.readFile = (file) => virtual.get(path.resolve(file)) ?? originalRead(file)
   host.fileExists = (file) => virtual.has(path.resolve(file)) || originalExists(file)
   const nextSources = new Map<string, ts.SourceFile>()
   let refreshSources = new Set<string>()
-  host.getSourceFile = (file, version, onError) => {
-    const text = host.readFile(file)
-    if (text === undefined) return undefined
+  host.getSourceFile = (file, version) => {
     const key = path.resolve(file)
     const previous = nextSources.get(key) ?? cache?.sources.get(key)
+    const canReuse = stableResolution && !changes!.has(luaFileKey(file))
+    const text = previous && canReuse ? previous.text : (sourceReads++, host.readFile(file))
+    if (text === undefined) return undefined
     const source =
       previous?.text === text && !refreshSources.has(luaFileKey(file))
         ? previous
@@ -174,9 +209,11 @@ export function compileLua(
     nextSources.set(key, source)
     return source
   }
-  // 每轮重新解析依赖，避免新增同名 TS/声明文件后仍命中旧的 Lua 路径。
-  host.hasInvalidatedResolutions = () => true
-  const resolutionCache = ts.createModuleResolutionCache(root, host.getCanonicalFileName, options)
+  // 普通编辑沿用解析结果；新增、删除、配置变化或没有变化清单时重新解析。
+  host.hasInvalidatedResolutions = () => !stableResolution
+  const resolutionCache = stableResolution
+    ? oldHost!.resolutionCache
+    : ts.createModuleResolutionCache(root, host.getCanonicalFileName, options)
   const resolveUncached = (name: string, from: string): ts.ResolvedModuleFull | undefined => {
     if (runtimeMap[name])
       return { resolvedFileName: path.join(sdkRoot, runtimeMap[name]), extension: ts.Extension.Dts }
@@ -190,25 +227,20 @@ export function compileLua(
       virtual.set(declaration, 'declare const value: unknown; export = value;')
     return { resolvedFileName: declaration, extension: ts.Extension.Dts }
   }
-  const resolvedModules = new Map<string, ts.ResolvedModuleFull | undefined>()
+  const resolvedModules = new Map<string, ts.ResolvedModuleFull | undefined>(
+    stableResolution ? oldHost?.resolvedModules : undefined
+  )
+  if (changes)
+    for (const key of resolvedModules.keys())
+      if (changes.has(luaFileKey(key.slice(0, key.indexOf('\0'))))) resolvedModules.delete(key)
   const resolve = (name: string, from: string) => {
     const key = `${from}\0${name}`
     if (!resolvedModules.has(key)) resolvedModules.set(key, resolveUncached(name, from))
     return resolvedModules.get(key)
   }
   host.resolveModuleNames = (names, from) => names.map((name) => resolve(name, from))
-  const additional = input.additionalFiles ?? []
   mark('setup')
-  let program = ts.createProgram(
-    [
-      ...input.entries.map((x) => path.resolve(x)),
-      ...additional.filter((x) => x.endsWith('.ts')),
-      globals
-    ],
-    options,
-    host,
-    cache?.program
-  )
+  let program = ts.createProgram(roots, options, host, cache?.program)
   mark('programLoad')
   const cacheKey = JSON.stringify([
     options,
@@ -221,7 +253,8 @@ export function compileLua(
   const plan = planLuaModules(
     sources,
     resolve,
-    oldCheck?.key === cacheKey ? oldCheck.dependencyState : undefined
+    oldCheck?.key === cacheKey ? oldCheck.dependencyState : undefined,
+    !stableResolution
   )
   refreshSources = new Set(
     sources
@@ -240,7 +273,14 @@ export function compileLua(
   }
   if (cache) {
     cache.program = program
-    cache.sources = nextSources
+    cache.sources = new Map(sources.map((source) => [path.resolve(source.fileName), source]))
+    cache.hostState = {
+      key: hostKey,
+      resolvedModules,
+      virtual,
+      resolutionCache,
+      knownFiles: new Set(sources.map((source) => luaFileKey(source.fileName)))
+    }
   }
   mark('affectedFiles')
   onPrepared?.(sources.map((source) => source.fileName))
@@ -523,6 +563,8 @@ export function compileLua(
   }
   for (const name of luaCache.files.keys())
     if (!luaCache.used.has(name)) luaCache.files.delete(name)
+  if (cache?.hostState)
+    for (const file of dependencies) cache.hostState.knownFiles.add(luaFileKey(file))
   mark('package')
   return {
     ...(input.profile
@@ -530,6 +572,9 @@ export function compileLua(
           profile: {
             timingsMs: { ...timingsMs, total: performance.now() - started },
             stats: {
+              sourceReads,
+              resolvedDependencyFiles: plan.resolvedFiles,
+              cycleChecks: luaCache.cycleChecks,
               reusedTs: !!reuse,
               parsedLuaFiles: luaCache.parsed,
               transpiledFiles: reuse ? 0 : targets.length,
