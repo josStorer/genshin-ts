@@ -38,6 +38,24 @@ export function luaRequires(text: string) {
     deferred: functions.some((range) => range[0] <= call.range[0] && range[1] >= call.range[1])
   }))
 }
+export interface LuaParseCache {
+  files: Map<string, { text: string; requires: ReturnType<typeof luaRequires> }>
+  used: Set<string>
+  parsed: number
+}
+export function createLuaParseCache(): LuaParseCache {
+  return { files: new Map(), used: new Set(), parsed: 0 }
+}
+function cachedRequires(name: string, text: string, cache?: LuaParseCache) {
+  if (!cache) return luaRequires(text)
+  cache.used.add(name)
+  const previous = cache.files.get(name)
+  if (previous?.text === text) return previous.requires
+  cache.parsed++
+  const requires = luaRequires(text)
+  cache.files.set(name, { text, requires })
+  return requires
+}
 function moduleName(name: string) {
   const module = name.replace(/\.lua$/, '')
   if (
@@ -55,7 +73,8 @@ export function collectNativeLua(
   files: Map<string, string>,
   dependencies: Set<string>,
   allowDynamic = false,
-  tsModules = new Set<string>()
+  tsModules = new Set<string>(),
+  cache?: LuaParseCache
 ) {
   const absolute = path.resolve(filename)
   const relative = path.relative(root, absolute).replace(/\\/g, '/')
@@ -65,7 +84,7 @@ export function collectNativeLua(
     throw new Error(`原生 Lua 文件名由编译器保留：${relative}`)
   if (files.has(relative)) return
   const text = fs.readFileSync(absolute, 'utf8').replace(/^\uFEFF/, '')
-  const required = luaRequires(text)
+  const required = cachedRequires(`native:${absolute}`, text, cache)
   dependencies.add(absolute)
   files.set(relative, text)
   for (const { name } of required) {
@@ -86,14 +105,14 @@ export function collectNativeLua(
         `原生 Lua ${relative} 的依赖不存在：${name}。如果它是没有被 import 的 TS 模块，请列入 lua.include。`
       )
     }
-    collectNativeLua(target, root, files, dependencies, allowDynamic, tsModules)
+    collectNativeLua(target, root, files, dependencies, allowDynamic, tsModules, cache)
   }
 }
-export function checkLuaModuleCycles(files: ReadonlyMap<string, string>) {
+export function checkLuaModuleCycles(files: ReadonlyMap<string, string>, cache?: LuaParseCache) {
   const edges = new Map<string, string[]>()
   for (const [name, text] of files) {
     const targets: string[] = []
-    for (const call of luaRequires(text)) {
+    for (const call of cachedRequires(`output:${name}`, text, cache)) {
       if (!call.name || call.deferred) continue
       const module = moduleName(call.name)
       const target = files.has(module + '.lua')

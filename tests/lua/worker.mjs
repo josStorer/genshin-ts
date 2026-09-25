@@ -11,7 +11,8 @@ const root = fs.mkdtempSync(path.join(base, 'run-'))
 const input = {
   entries: [path.join(root, 'main.ts')],
   rootDir: root,
-  outDir: path.join(root, 'out')
+  outDir: path.join(root, 'out'),
+  typeCheck: true
 }
 const good = `import {g} from 'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{return {onStart(){lua.print(42)}}})`
 fs.writeFileSync(input.entries[0], good)

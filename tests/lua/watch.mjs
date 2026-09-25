@@ -11,7 +11,7 @@ fs.mkdirSync(source)
 const config = path.join(dir, 'gsts.config.ts')
 fs.writeFileSync(
   config,
-  `export default {compileRoot:'src',entries:['*.ts'],outDir:'src/build',lang:'zh'}`
+  `export default {compileRoot:'src',entries:['*.ts'],outDir:'src/build',lang:'zh',lua:{typeCheck:true}}`
 )
 fs.writeFileSync(
   path.join(source, 'main.ts'),

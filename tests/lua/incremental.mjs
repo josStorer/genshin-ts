@@ -17,7 +17,8 @@ const input = {
   entries: [path.join(root, 'main.ts')],
   rootDir: root,
   outDir: path.join(root, 'out'),
-  profile: true
+  profile: true,
+  typeCheck: true
 }
 write('tsconfig.json', '{}')
 write('raw.d.ts', 'export function value(this:void):number')
@@ -52,10 +53,10 @@ function check(label, error = false) {
 }
 check('first')
 const firstSource = cache.sources.get(input.entries[0])
-check('unchanged')
+assert.equal(check('unchanged').profile.stats.parsedLuaFiles, 0)
 assert.equal(cache.sources.get(input.entries[0]), firstSource)
 write('raw.lua', 'return {value=function() return 2 end}')
-check('native edit')
+assert.equal(check('native edit').profile.stats.parsedLuaFiles, 2)
 write('raw.lua', 'local other=require("other"); return {value=other.value}')
 write('other.lua', 'return {value=function() return 3 end}')
 check('new native dependency')
@@ -91,3 +92,12 @@ check('invalid config', true)
 write('tsconfig.json', '{}')
 check('config recovery')
 console.log('Incremental outputs, diagnostics and dependencies match fresh builds: PASS')
+
+write('main.ts', main.replace('class Counter', 'const mismatch: string = 1; class Counter'))
+input.typeCheck = false
+check('default build skips ordinary type errors')
+input.typeCheck = true
+check('explicit typecheck catches ordinary type errors', true)
+input.typeCheck = false
+write('main.ts', main.replace('class Counter', 'const invalid = ; class Counter'))
+check('syntax errors still block compilation', true)

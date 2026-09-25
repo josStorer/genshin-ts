@@ -18,6 +18,7 @@ function build(sources, entry = 'main.ts', include = []) {
   return {
     dir,
     ...compileLua({
+      typeCheck: true,
       entries: [path.join(dir, entry)],
       rootDir: dir,
       outDir: path.join(dir, 'out'),

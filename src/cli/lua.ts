@@ -143,7 +143,14 @@ export async function buildClientLua(
   }
   const { writeLuaFiles, describeLuaConflicts } = await import('../compiler/lua/output.js')
   mark('loadCompiler')
-  const input = { entries, rootDir, outDir, additionalFiles, profile }
+  const input = {
+    entries,
+    rootDir,
+    outDir,
+    additionalFiles,
+    profile,
+    typeCheck: cfg.lua?.typeCheck
+  }
   const prepared = (dependencies: string[]) => {
     if (profile)
       console.log('[lua-prepared]', JSON.stringify({ dependencies: dependencies.length }))

@@ -7,13 +7,20 @@ import ts from 'typescript'
 import * as tstl from 'typescript-to-lua'
 
 import { getLuaDiagnostics } from './diagnostics.js'
-import { checkLuaModuleCycles, collectNativeLua } from './native.js'
+import {
+  checkLuaModuleCycles,
+  collectNativeLua,
+  createLuaParseCache,
+  type LuaParseCache
+} from './native.js'
 import { createLuaPlugin, diagnostic, entryCall, hooks } from './plugin.js'
 
 export interface LuaBuildOptions {
   entries: string[]
   /** 记录各阶段耗时；默认关闭。 */
   profile?: boolean
+  /** 额外检查整个 Lua 项目的 TS 类型；日常编译默认关闭，编辑器提示不受影响。 */
+  typeCheck?: boolean
   additionalFiles?: string[]
   rootDir: string
   outDir: string
@@ -26,6 +33,7 @@ export interface LuaCompileProfile {
     outputFiles: number
     outputBytes: number
     reusedTs: boolean
+    parsedLuaFiles: number
   }
 }
 export interface LuaBuildResult {
@@ -37,6 +45,7 @@ export interface LuaBuildResult {
 }
 /** 一个 dev 会话一份缓存；不跨项目保存，也不写入磁盘。 */
 export interface LuaCompileCache {
+  lua: LuaParseCache
   program?: ts.Program
   sources: Map<string, ts.SourceFile>
   checked?: {
@@ -48,7 +57,7 @@ export interface LuaCompileCache {
   }
 }
 export function createLuaCompileCache(): LuaCompileCache {
-  return { sources: new Map() }
+  return { sources: new Map(), lua: createLuaParseCache() }
 }
 const posix = (name: string) => name.replace(/\\/g, '/')
 export function formatLuaDiagnostics(diagnostics: readonly ts.Diagnostic[]) {
@@ -88,6 +97,9 @@ export function compileLua(
     timingsMs[name] = now - previous
     previous = now
   }
+  const luaCache = cache?.lua ?? createLuaParseCache()
+  luaCache.used.clear()
+  luaCache.parsed = 0
   const root = path.resolve(input.rootDir)
   const outDir = path.resolve(input.outDir)
   const sdkRoot = path.join(packageRoot(), 'dist/src/runtime')
@@ -193,7 +205,12 @@ export function compileLua(
   onPrepared?.(program.getSourceFiles().map((source) => source.fileName))
   const checker = program.getTypeChecker()
   mark('typeChecker')
-  const cacheKey = JSON.stringify([options, program.getRootFileNames(), additional])
+  const cacheKey = JSON.stringify([
+    options,
+    program.getRootFileNames(),
+    additional,
+    !!input.typeCheck
+  ])
   const oldCheck = cache?.checked
   const sources = program.getSourceFiles()
   const reuse =
@@ -204,8 +221,17 @@ export function compileLua(
       : undefined
   const diagnostics: ts.Diagnostic[] = reuse
     ? [...configDiagnostics, ...reuse.diagnostics]
-    : [...configDiagnostics, ...ts.getPreEmitDiagnostics(program)]
-  mark('typeCheck')
+    : [
+        ...configDiagnostics,
+        ...(input.typeCheck
+          ? ts.getPreEmitDiagnostics(program)
+          : [
+              ...program.getOptionsDiagnostics(),
+              ...program.getGlobalDiagnostics(),
+              ...program.getSyntacticDiagnostics()
+            ])
+      ]
+  mark(input.typeCheck ? 'typeCheck' : 'syntaxCheck')
   const files = new Map<string, string>()
   const dependencies = new Set<string>(
     program
@@ -235,7 +261,15 @@ export function compileLua(
   const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))
   const collectNative = (file: string) => {
     nativeRoots.add(file)
-    collectNativeLua(file, root, files, dependencies, additional.length > 0, availableModules)
+    collectNativeLua(
+      file,
+      root,
+      files,
+      dependencies,
+      additional.length > 0,
+      availableModules,
+      luaCache
+    )
   }
   const resolveLua = (name: string, from: string) => {
     if (name === 'genshin-ts/runtime/lua' || name === 'genshin-ts/runtime/core')
@@ -355,7 +389,7 @@ export function compileLua(
         diagnostics.push(...result.diagnostics)
       }
       mark('transpile')
-      checkLuaModuleCycles(files)
+      checkLuaModuleCycles(files, luaCache)
       mark('luaValidate')
     } catch (error) {
       diagnostics.push({
@@ -400,6 +434,8 @@ export function compileLua(
       )
     }
   }
+  for (const name of luaCache.files.keys())
+    if (!luaCache.used.has(name)) luaCache.files.delete(name)
   mark('package')
   return {
     ...(input.profile
@@ -408,6 +444,7 @@ export function compileLua(
             timingsMs: { ...timingsMs, total: performance.now() - started },
             stats: {
               reusedTs: !!reuse,
+              parsedLuaFiles: luaCache.parsed,
               sourceFiles: modules.length,
               programFiles: program.getSourceFiles().length,
               outputFiles: files.size,
