@@ -18,6 +18,12 @@ export interface ClientLuaSession {
   localOutput?: LuaOutputCache
   injectedOutput?: LuaOutputCache
   graphFiles?: Set<string>
+  discovery?: {
+    key: string
+    candidates: Map<string, { file: string; entry: boolean }>
+    additionalFiles: string[]
+    knownFiles: Set<string>
+  }
   last?: { key: string; dependencies: string[]; entries: string[]; candidates: string[] }
 }
 const normalize = (file: string) => {
@@ -46,44 +52,90 @@ export async function buildClientLua(
     previous = now
   }
   const rootDir = path.resolve(cfgDir, cfg.compileRoot)
-  const patterns = cfg.entries.map((raw) => {
-    const neg = raw.startsWith('!'),
-      entry = neg ? raw.slice(1) : raw
-    const absolute = path.resolve(rootDir, entry)
-    return (
-      (neg ? '!' : '') +
-      (fs.existsSync(absolute) && fs.statSync(absolute).isDirectory()
-        ? entry.replace(/\\/g, '/') + '/**/*.ts'
-        : entry.replace(/\\/g, '/'))
+  const discoveryKey = JSON.stringify([rootDir, cfg.entries, cfg.lua?.include])
+  const priorDiscovery = session?.discovery?.key === discoveryKey ? session.discovery : undefined
+  const changed = changedFiles && new Set(changedFiles.map(normalize))
+  const reuseFileList = !!(
+    changedFiles &&
+    priorDiscovery &&
+    changedFiles.every(
+      (file) =>
+        priorDiscovery.knownFiles.has(normalize(file)) &&
+        fs.existsSync(file) &&
+        !/\.json$|\.d\.ts$/i.test(file)
     )
-  })
-  const candidates = await fg(patterns, {
-    cwd: rootDir,
-    absolute: true,
-    ignore: ['**/node_modules/**', '**/*.d.ts', '**/*.gs.ts'],
-    onlyFiles: true
-  })
+  )
+  let discoveryReads = 0
+  let candidates: string[]
+  if (reuseFileList) candidates = [...priorDiscovery!.candidates.values()].map((item) => item.file)
+  else {
+    const patterns = cfg.entries.map((raw) => {
+      const neg = raw.startsWith('!'),
+        entry = neg ? raw.slice(1) : raw
+      const absolute = path.resolve(rootDir, entry)
+      return (
+        (neg ? '!' : '') +
+        (fs.existsSync(absolute) && fs.statSync(absolute).isDirectory()
+          ? entry.replace(/\\/g, '/') + '/**/*.ts'
+          : entry.replace(/\\/g, '/'))
+      )
+    })
+    candidates = await fg(patterns, {
+      cwd: rootDir,
+      absolute: true,
+      ignore: ['**/node_modules/**', '**/*.d.ts', '**/*.gs.ts'],
+      onlyFiles: true
+    })
+  }
+  const classified = new Map<string, { file: string; entry: boolean }>()
   const entries = candidates.filter((file) => {
+    const key = normalize(file)
+    const prior = changed && !changed.has(key) ? priorDiscovery?.candidates.get(key) : undefined
+    if (prior) {
+      classified.set(key, prior)
+      return prior.entry
+    }
+    discoveryReads++
     const text = fs.readFileSync(file, 'utf8')
-    if (!text.includes('clientControlScript')) return false
-    const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
-    return source.statements.some(
-      (s) =>
-        ts.isExportAssignment(s) &&
-        ts.isCallExpression(s.expression) &&
-        ts.isPropertyAccessExpression(s.expression.expression) &&
-        s.expression.expression.name.text === 'clientControlScript'
-    )
+    let entry = false
+    if (text.includes('clientControlScript')) {
+      const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
+      entry = source.statements.some(
+        (s) =>
+          ts.isExportAssignment(s) &&
+          ts.isCallExpression(s.expression) &&
+          ts.isPropertyAccessExpression(s.expression.expression) &&
+          s.expression.expression.name.text === 'clientControlScript'
+      )
+    }
+    classified.set(key, { file, entry })
+    return entry
   })
   mark('discover')
-  const additionalFiles = cfg.lua?.include?.length
-    ? await fg(cfg.lua.include, {
-        cwd: rootDir,
-        absolute: true,
-        onlyFiles: true,
-        ignore: ['**/node_modules/**']
-      })
-    : []
+  const additionalFiles = reuseFileList
+    ? priorDiscovery!.additionalFiles
+    : cfg.lua?.include?.length
+      ? await fg(cfg.lua.include, {
+          cwd: rootDir,
+          absolute: true,
+          onlyFiles: true,
+          ignore: ['**/node_modules/**']
+        })
+      : []
+  const discovery = {
+    key: discoveryKey,
+    candidates: classified,
+    additionalFiles,
+    knownFiles: new Set(
+      [
+        ...candidates,
+        ...additionalFiles,
+        ...(session?.last?.dependencies ?? []),
+        ...(session?.graphFiles ?? [])
+      ].map(normalize)
+    )
+  }
+  if (session) session.discovery = discovery
   mark('additionalFiles')
   const key = JSON.stringify([
     cfgDir,
@@ -116,6 +168,8 @@ export async function buildClientLua(
           kind: 'gsts-lua-profile',
           skipped: true,
           reason: 'unrelated-change',
+          discoveryReads,
+          discoveryRescanned: !reuseFileList,
           timingsMs: { total: performance.now() - started }
         })
       )
@@ -139,10 +193,14 @@ export async function buildClientLua(
           kind: 'gsts-lua-profile',
           skipped: true,
           candidates: candidates.length,
+          discoveryReads,
+          discoveryRescanned: !reuseFileList,
           timingsMs: { ...timingsMs, total: performance.now() - started }
         })
       )
-    return { dependencies: [] as string[], entries: [] as string[] }
+    const summary = { key, dependencies: [] as string[], entries: [] as string[], candidates }
+    if (session) session.last = summary
+    return summary
   }
   const { writeLuaFiles, describeLuaConflicts } = await import('../compiler/lua/output.js')
   mark('loadCompiler')
@@ -223,6 +281,8 @@ export async function buildClientLua(
       JSON.stringify({
         kind: 'gsts-lua-profile',
         execution: session?.worker ? 'worker' : 'main',
+        discoveryReads,
+        discoveryRescanned: !reuseFileList,
         candidates: candidates.length,
         entries: entries.length,
         timingsMs: { ...timingsMs, total: performance.now() - started },
@@ -231,6 +291,11 @@ export async function buildClientLua(
     )
   const summary = { key, dependencies: result.dependencies, entries: result.entries, candidates }
   if (session) session.last = summary
+  discovery.knownFiles = new Set(
+    [...candidates, ...additionalFiles, ...result.dependencies, ...(session?.graphFiles ?? [])].map(
+      normalize
+    )
+  )
   return summary
 }
 
