@@ -1331,6 +1331,44 @@ async function runDev(opts: GlobalOptions) {
   const removed = new Set<string>()
   let runtimeDependencyWatcher: ReturnType<typeof chokidar.watch> | undefined
 
+  let luaDependencyWatcher: ReturnType<typeof chokidar.watch> | undefined
+  const watchedLuaSources = new Map<string, string>()
+  // Lua 已有自己的依赖表；这里仅增删监听，不再交给节点图重新解析。
+  const watchLuaSources = async (sources: string[], prune = false) => {
+    const next = new Map<string, string>()
+    for (const source of sources) {
+      const rel = path.relative(compileRoot, source)
+      if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) continue
+      next.set(normForMap(source), toPosixPath(rel))
+    }
+    const added: string[] = [],
+      removed: string[] = []
+    for (const [key, rel] of next) {
+      if (!watchedLuaSources.has(key)) {
+        watchedLuaSources.set(key, rel)
+        added.push(rel)
+      }
+    }
+    if (prune)
+      for (const [key, rel] of watchedLuaSources) {
+        if (!next.has(key)) {
+          watchedLuaSources.delete(key)
+          removed.push(rel)
+        }
+      }
+    if (added.length) luaDependencyWatcher?.add(added)
+    if (removed.length) await luaDependencyWatcher?.unwatch(removed)
+    if (injectProfileEnabled(opts) && (added.length || removed.length))
+      console.log(
+        '[lua-watch-profile]',
+        JSON.stringify({
+          added: added.length,
+          removed: removed.length,
+          dependencies: watchedLuaSources.size
+        })
+      )
+  }
+
   const registerRuntimeSources = (sourceFiles: string[]) => {
     const rels: string[] = []
     for (const source of sourceFiles) {
@@ -1353,6 +1391,7 @@ async function runDev(opts: GlobalOptions) {
     currentSources.forEach((source) => updateDepsForFile(depGraph, source, compilerOptions))
     await refreshEntryMapping()
     registerRuntimeSources(runtimeSources)
+    await watchLuaSources(luaSession.last?.dependencies ?? [], true)
   }
 
   const deleteIfExists = (p: string) => {
@@ -1382,6 +1421,7 @@ async function runDev(opts: GlobalOptions) {
       }
       return
     }
+    const previousLuaSources = new Set(luaSession.last?.dependencies.map(normForMap))
     const luaTask = startClientLua(
       cfgDir,
       cfg,
@@ -1392,6 +1432,16 @@ async function runDev(opts: GlobalOptions) {
     )
     try {
       const luaSources = await luaTask.prepared
+      // 失败时先保留旧监听，同时补上已解析的新 TS 依赖，修复后仍能触发编译。
+      await watchLuaSources(luaSources.dependencies)
+      const currentLuaSources = new Set(luaSources.dependencies.map(normForMap))
+      const isLuaOnly = (rel: string, removed = false) => {
+        const abs = path.resolve(compileRoot, rel),
+          key = normForMap(abs)
+        if (!currentLuaSources.has(key) && !(removed && previousLuaSources.has(key))) return false
+        // 旧节点图入口改成 Lua 时仍需清理旧产物；共享模块仍走节点图原有影响分析。
+        return ![...collectDependents(depGraph, abs)].some((file) => entrySources.has(file))
+      }
       const queuedOutJson = new Map<string, Set<number>>()
       const queueOutJson = (outJson: string, gid: number) => {
         const s = queuedOutJson.get(outJson) ?? new Set<number>()
@@ -1483,8 +1533,10 @@ async function runDev(opts: GlobalOptions) {
         for (const result of merged) queueOutJson(result.outJsonPath, result.graphId)
       }
 
-      const removedRels = removedBatch.filter((rel) => isEligibleInputTsFile(rel))
-      const rels = changedBatch.filter((rel) => isEligibleInputTsFile(rel))
+      const removedRels = removedBatch.filter(
+        (rel) => isEligibleInputTsFile(rel) && !isLuaOnly(rel, true)
+      )
+      const rels = changedBatch.filter((rel) => isEligibleInputTsFile(rel) && !isLuaOnly(rel))
 
       const impactedEntryNorms = new Set<string>()
       for (const rel of removedRels) {
@@ -1563,7 +1615,7 @@ async function runDev(opts: GlobalOptions) {
       }
 
       const luaResult = await luaTask.result
-      registerRuntimeSources(luaResult.dependencies)
+      await watchLuaSources(luaResult.dependencies, true)
       await processEntryOutputs([...pendingEntryGs].filter((p) => fs.existsSync(p)))
 
       const entries = [...queuedOutJson.entries()]
@@ -1754,6 +1806,18 @@ async function runDev(opts: GlobalOptions) {
     .on('change', onSourceAddOrChange)
     .on('unlink', onSourceUnlink)
     .on('error', onSourceWatchError)
+
+  luaDependencyWatcher = chokidar
+    .watch([], {
+      cwd,
+      ignoreInitial: true,
+      ignored: ignored.filter((pattern) => pattern !== '**/*.d.ts')
+    })
+    .on('add', onSourceAddOrChange)
+    .on('change', onSourceAddOrChange)
+    .on('unlink', onSourceUnlink)
+    .on('error', onSourceWatchError)
+  await watchLuaSources(luaSession.last?.dependencies ?? [], true)
 
   if (reinjectOnMapChange && gilPath) {
     // eslint-disable-next-line

@@ -107,8 +107,8 @@
     "tool:computer-control": "python ./scripts/tools/computer_control_server.py",
     "example": "npm run build && node ./bin/gsts.mjs",
     "dev": "npm run build && node ./bin/gsts.mjs dev",
-    "test:lua": "tsx tests/lua/run.mjs && tsx tests/lua/incremental.mjs && tsx tests/lua/affected.mjs && tsx tests/lua/output-incremental.mjs && node tests/lua/editor.mjs && node tests/lua/cli.mjs && node tests/lua/worker.mjs && tsx tests/lua/injection.mjs",
-    "test:lua:watch": "node tests/lua/watch.mjs",
+    "test:lua": "tsx tests/lua/run.mjs && tsx tests/lua/incremental.mjs && tsx tests/lua/affected.mjs && tsx tests/lua/output-incremental.mjs && tsx tests/lua/discovery.mjs && node tests/lua/editor.mjs && node tests/lua/cli.mjs && node tests/lua/worker.mjs && tsx tests/lua/injection.mjs",
+    "test:lua:watch": "node tests/lua/watch.mjs && node tests/lua/watch-routing.mjs",
     "test:lua:sdk": "python scripts/lua/generate-sdk.py --check"
   },
   "peerDependencies": {
