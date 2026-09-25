@@ -46,11 +46,13 @@ function safePath(root: string, relative: string) {
     throw new Error(`Lua 输出越过目标目录：${relative}`)
   return absolute
 }
-function checkLinks(target: string) {
+function checkLinks(target: string, checkedParents?: Set<string>) {
   let current = target
   for (;;) {
+    if (current !== target && checkedParents?.has(current)) break
     if (fs.lstatSync(current, { throwIfNoEntry: false })?.isSymbolicLink())
       throw new Error(`Lua 输出路径不能经过链接或 junction：${current}`)
+    checkedParents?.add(current)
     const parent = path.dirname(current)
     if (parent === current) break
     current = parent
@@ -85,13 +87,15 @@ export function writeLuaFiles(
   complete = false,
   owner = 'default'
 ): LuaWriteResult {
+  // 只在本批预检中复用父目录检查；真正写入、删除前仍逐级重新检查。
+  const checkedParents = new Set<string>()
   const root = path.resolve(rootDir)
-  checkLinks(root)
+  checkLinks(root, checkedParents)
   const result: LuaWriteResult = { written: [], unchanged: [], removed: [], conflicts: [] }
   const manifestPath = path.join(root, luaManifestName(owner))
-  checkLinks(manifestPath)
+  checkLinks(manifestPath, checkedParents)
   const readManifest = (filename: string): string[] => {
-    checkLinks(filename)
+    checkLinks(filename, checkedParents)
     if (!fs.existsSync(filename)) return []
     const manifest: unknown = JSON.parse(fs.readFileSync(filename, 'utf8'))
     if (
@@ -131,7 +135,7 @@ export function writeLuaFiles(
     if (names.has(name.toLowerCase())) throw new Error(`Lua 输出文件名大小写冲突：${name}`)
     names.add(name.toLowerCase())
     const target = safePath(root, name)
-    checkLinks(target)
+    checkLinks(target, checkedParents)
     if (fs.existsSync(target)) {
       if (!fs.statSync(target).isFile()) throw new Error(`Lua 输出目标不是文件：${name}`)
       const old = fs.readFileSync(target, 'utf8')
@@ -144,7 +148,7 @@ export function writeLuaFiles(
   if (complete)
     for (const name of previous) {
       const target = safePath(root, name)
-      checkLinks(target)
+      checkLinks(target, checkedParents)
       if (
         !names.has(name.toLowerCase()) &&
         !usedElsewhere.has(name.toLowerCase()) &&

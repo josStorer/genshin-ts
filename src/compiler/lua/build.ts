@@ -143,7 +143,7 @@ export function compileLua(input: LuaBuildOptions, cache?: LuaCompileCache): Lua
   // 每轮重新解析依赖，避免新增同名 TS/声明文件后仍命中旧的 Lua 路径。
   host.hasInvalidatedResolutions = () => true
   const resolutionCache = ts.createModuleResolutionCache(root, host.getCanonicalFileName, options)
-  const resolve = (name: string, from: string): ts.ResolvedModuleFull | undefined => {
+  const resolveUncached = (name: string, from: string): ts.ResolvedModuleFull | undefined => {
     if (runtimeMap[name])
       return { resolvedFileName: path.join(sdkRoot, runtimeMap[name]), extension: ts.Extension.Dts }
     const resolved = ts.resolveModuleName(name, from, options, host, resolutionCache).resolvedModule
@@ -155,6 +155,12 @@ export function compileLua(input: LuaBuildOptions, cache?: LuaCompileCache): Lua
     if (!fs.existsSync(declaration))
       virtual.set(declaration, 'declare const value: unknown; export = value;')
     return { resolvedFileName: declaration, extension: ts.Extension.Dts }
+  }
+  const resolvedModules = new Map<string, ts.ResolvedModuleFull | undefined>()
+  const resolve = (name: string, from: string) => {
+    const key = `${from}\0${name}`
+    if (!resolvedModules.has(key)) resolvedModules.set(key, resolveUncached(name, from))
+    return resolvedModules.get(key)
   }
   host.resolveModuleNames = (names, from) => names.map((name) => resolve(name, from))
   const additional = input.additionalFiles ?? []
@@ -201,7 +207,10 @@ export function compileLua(input: LuaBuildOptions, cache?: LuaCompileCache): Lua
   const emitted = new Map<string, string>()
   const modules = program.getSourceFiles().filter((x) => !x.isDeclarationFile)
   const entryFiles = new Set(modules.filter((x) => entryCall(x)).map((x) => x.fileName))
+  const modulePaths = new Map<string, string>()
   const modulePath = (filename: string) => {
+    const cached = modulePaths.get(filename)
+    if (cached !== undefined) return cached
     const relative = posix(path.relative(root, filename))
       .replace(/(?:\.d)?\.[cm]?[tj]s$/, '')
       .replace(/\.lua$/, '')
@@ -209,6 +218,7 @@ export function compileLua(input: LuaBuildOptions, cache?: LuaCompileCache): Lua
       throw new Error(`Lua 依赖必须位于 compileRoot 内：${filename}`)
     if (relative.startsWith('__gsts') || relative === 'lualib_bundle')
       throw new Error(`文件名 ${relative} 为编译器保留，请换一个名称。`)
+    modulePaths.set(filename, relative)
     return relative
   }
   const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))
