@@ -12,7 +12,16 @@ import type { LuaOutputCache } from '../compiler/lua/output.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker-client.js'
 import { resolveGilTarget } from './gil_paths.js'
 
+export interface ClientLuaReport {
+  active: boolean
+  compilation: string
+  injection: string
+  log: (...values: unknown[]) => void
+}
+
 export interface ClientLuaSession {
+  /** 最近发现的依赖；编译失败也保留，以便修复依赖时能再次触发。 */
+  dependencies?: string[]
   compiler?: LuaCompileCache
   worker?: LuaWorker
   localOutput?: LuaOutputCache
@@ -40,8 +49,16 @@ export async function buildClientLua(
   profile = process.env.GSTS_INJECT_PROFILE === '1',
   session?: ClientLuaSession,
   changedFiles?: readonly string[],
-  onPrepared?: (dependencies: string[]) => void
+  onPrepared?: (dependencies: string[]) => void,
+  reporting?: ClientLuaReport
 ) {
+  const report = reporting ?? {
+    active: false,
+    compilation: '失败',
+    injection: '未执行（编译或写出失败）',
+    log: (...values: unknown[]) => console.log(...values)
+  }
+  const log = report.log
   const started = profile ? performance.now() : 0
   let previous = started
   const timingsMs: Record<string, number> = {}
@@ -111,6 +128,7 @@ export async function buildClientLua(
     classified.set(key, { file, entry })
     return entry
   })
+  report.active = entries.length > 0
   mark('discover')
   const additionalFiles = reuseFileList
     ? priorDiscovery!.additionalFiles
@@ -162,7 +180,7 @@ export async function buildClientLua(
     )
   ) {
     if (profile)
-      console.log(
+      log(
         '[lua-profile]',
         JSON.stringify({
           kind: 'gsts-lua-profile',
@@ -173,6 +191,8 @@ export async function buildClientLua(
           timingsMs: { total: performance.now() - started }
         })
       )
+    report.compilation = '无改动（沿用上次成功产物）'
+    report.injection = '无需更新'
     return last
   }
   // 失败后下一轮必须重试，不能把上次成功当成本次成功。
@@ -187,7 +207,7 @@ export async function buildClientLua(
     (!complete || !fs.existsSync(path.join(outDir, `.gsts-lua-${owner}.json`)))
   ) {
     if (profile)
-      console.log(
+      log(
         '[lua-profile]',
         JSON.stringify({
           kind: 'gsts-lua-profile',
@@ -199,9 +219,13 @@ export async function buildClientLua(
         })
       )
     const summary = { key, dependencies: [] as string[], entries: [] as string[], candidates }
-    if (session) session.last = summary
+    if (session) {
+      session.last = summary
+      session.dependencies = []
+    }
     return summary
   }
+  report.active = true
   const { writeLuaFiles, describeLuaConflicts } = await import('../compiler/lua/output.js')
   mark('loadCompiler')
   const input = {
@@ -214,6 +238,8 @@ export async function buildClientLua(
     changedFiles: last?.key === key ? changedFiles : undefined
   }
   const prepared = (dependencies: string[]) => {
+    if (session) session.dependencies = dependencies
+    // 性能探针保留真实发生时机；普通诊断和结果仍在末尾集中显示。
     if (profile)
       console.log('[lua-prepared]', JSON.stringify({ dependencies: dependencies.length }))
     onPrepared?.(dependencies)
@@ -240,20 +266,25 @@ export async function buildClientLua(
         diagnosticsText: '',
         hasErrors: false
       }
+  if (session) session.dependencies = result.dependencies
   mark('compile')
-  if (result.diagnosticsText) console.log(result.diagnosticsText)
+  if (result.diagnosticsText) log(result.diagnosticsText)
   if (result.hasErrors) throw new Error('Lua 编译失败；未更新本地产物和游戏文件。')
   if (session && (!changedFiles || last?.key !== key)) {
     session.localOutput = {}
     session.injectedOutput = {}
   }
+  report.compilation = '成功，但本地写出失败'
   const local = writeLuaFiles(outDir, result.files, complete, owner, session?.localOutput)
   if (local.conflicts.length) throw new Error(describeLuaConflicts(local, false))
+  report.compilation = `成功；本地产物 ${result.files.size} 个，更新 ${local.written.length}，未改动 ${local.unchanged.length}，移除 ${local.removed.length}`
+  report.injection = noinject ? '已关闭（--noinject）' : '未配置地图'
   mark('localWrite')
-  console.log(
+  log(
     `[Lua] 本地产物 ${result.files.size} 个；更新 ${local.written.length}，未改动 ${local.unchanged.length}，移除 ${local.removed.length}。`
   )
   if (cfg.inject?.mapId !== undefined && !noinject) {
+    report.injection = '失败'
     try {
       const target = resolveGilTarget(cfg.inject)
       const destination = path.join(target.saveLevelDir, String(target.mapId), 'external_lua_file')
@@ -265,7 +296,8 @@ export async function buildClientLua(
         session?.injectedOutput
       )
       if (injected.conflicts.length) throw new Error(describeLuaConflicts(injected, true))
-      console.log(
+      report.injection = `成功；更新 ${injected.written.length}，未改动 ${injected.unchanged.length}，移除 ${injected.removed.length}`
+      log(
         `[Lua] 注入完成：地图 ${target.mapId}；更新 ${injected.written.length}，未改动 ${injected.unchanged.length}，移除 ${injected.removed.length}。`
       )
     } catch (error) {
@@ -276,7 +308,7 @@ export async function buildClientLua(
   }
   mark('injectionAndReport')
   if (profile)
-    console.log(
+    log(
       '[lua-profile]',
       JSON.stringify({
         kind: 'gsts-lua-profile',
@@ -306,25 +338,32 @@ export function startClientLua(
   noinject: boolean,
   profile: boolean,
   session?: ClientLuaSession,
-  changedFiles?: readonly string[]
+  changedFiles?: readonly string[],
+  complete = true
 ) {
   const state = session ?? {}
   state.worker ??= createLuaWorker()
   let ready!: (value: { dependencies: string[] }) => void
-  let failed!: (error: unknown) => void
-  const prepared = new Promise<{ dependencies: string[] }>((resolve, reject) => {
+  const prepared = new Promise<{ dependencies: string[] }>((resolve) => {
     ready = resolve
-    failed = reject
   })
+  const logs: unknown[][] = []
+  const report: ClientLuaReport = {
+    active: false,
+    compilation: '失败',
+    injection: '未执行（编译或写出失败）',
+    log: (...values) => logs.push(values)
+  }
   const result = buildClientLua(
     cfgDir,
     cfg,
     noinject,
-    true,
+    complete,
     profile,
     state,
     changedFiles,
-    (dependencies) => ready({ dependencies })
+    (dependencies) => ready({ dependencies }),
+    report
   )
     .then(
       (result) => {
@@ -332,7 +371,17 @@ export function startClientLua(
         return result
       },
       (error) => {
-        failed(error)
+        // Lua 失败也不能阻止节点图。至少排除已识别的 Lua 入口，避免作为 JS 执行。
+        ready({
+          dependencies: [
+            ...new Set([
+              ...(state.dependencies ?? []),
+              ...[...(state.discovery?.candidates.values() ?? [])]
+                .filter((item) => item.entry)
+                .map((item) => item.file)
+            ])
+          ]
+        })
         throw error
       }
     )
@@ -341,5 +390,25 @@ export function startClientLua(
     })
   // 调用方可能先等待依赖分组；错误仍由返回的 Promise 交给调用方处理。
   void result.catch(() => {})
-  return { prepared, result }
+  return {
+    prepared,
+    result,
+    report,
+    // 编译和写出可以并行；普通日志与总结留到节点图输出结束后统一显示。
+    async finish() {
+      let value: Awaited<typeof result> | undefined
+      let failure: string | undefined
+      try {
+        value = await result
+      } catch (error) {
+        process.exitCode = 1
+        failure = error instanceof Error ? error.message : String(error)
+      }
+      for (const values of logs.splice(0)) console.log(...values)
+      if (failure) console.log(`[Lua] ${failure}`)
+      if (report.active || failure)
+        console.log(`[TS→Lua] 编译：${report.compilation}；注入：${report.injection}。`)
+      return value
+    }
+  }
 }

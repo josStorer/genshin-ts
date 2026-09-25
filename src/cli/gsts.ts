@@ -50,7 +50,7 @@ import {
   runInjectionAttempt,
   type InjectionAttemptHooks
 } from './injection_lifecycle.js'
-import { buildClientLua, startClientLua, type ClientLuaSession } from './lua.js'
+import { startClientLua, type ClientLuaSession } from './lua.js'
 import { getMapKey, loadState, saveState } from './state.js'
 import { createUi } from './ui.js'
 import { openAndSelect, openDir } from './windows_open.js'
@@ -947,16 +947,20 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
   const luaStart = profiling ? performance.now() : 0
   const luaTask = startClientLua(cfgDir, cfg, !!opts.noinject, profiling, hooks?.luaSession)
   let luaMs = 0
-  const luaDone = luaTask.result.then((result) => {
-    luaMs = profiling ? performance.now() - luaStart : 0
-    return result
-  })
-  void luaDone.catch(() => {})
+  const luaDone = luaTask.result
+    .finally(() => {
+      luaMs = profiling ? performance.now() - luaStart : 0
+    })
+    .catch(() => undefined)
   const luaSources = await luaTask.prepared
-  const compileStart = profiling ? performance.now() : 0
-  let compileMs = 0
-  const [graphOutcome, luaOutcome] = await Promise.allSettled([
-    compileTsToGs({
+  const summary = { compilation: '失败', injection: '未执行（编译失败）' }
+  const report = async () => {
+    console.log(`[TS→节点图] 编译：${summary.compilation}；注入：${summary.injection}。`)
+    await luaTask.finish()
+  }
+  try {
+    const compileStart = profiling ? performance.now() : 0
+    const compileResult = await compileTsToGs({
       excludeFiles: luaSources.dependencies,
       cfgDir,
       cfg,
@@ -964,165 +968,179 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
       programCache: hooks?.programCache,
       invalidatedFiles: hooks?.invalidatedFiles,
       onWriteGs: (outFile) => ui.ok(outFile)
-    }).then((result) => {
-      compileMs = profiling ? performance.now() - compileStart : 0
-      return result
-    }),
-    luaDone
-  ])
-  if (luaOutcome.status === 'rejected') throw luaOutcome.reason
-  if (graphOutcome.status === 'rejected') throw graphOutcome.reason
-  const luaResult = luaOutcome.value
-  const compileResult = graphOutcome.value
-  if (hooks?.luaSession) hooks.luaSession.graphFiles = new Set(compileResult.runtimeSourceFiles)
-  const { entryOutFiles } = compileResult
-
-  let outDirAbs: string | undefined
-  let lastMergeResults: MergeResult[] | undefined
-  let gsToIrProfile: GsToIrBatchProfile | undefined
-  let irToGiaProfile: IrToGiaBatchProfile | undefined
-  let emitIrMs = 0
-  let mergeIrMs = 0
-  let reportJsonMs = 0
-  let planGiaMs = 0
-  let generateGiaMs = 0
-  let jsonFileCount = 0
-
-  const giaAll: GiaInjectionItem[] = []
-  let parsedGil: ParsedGilCache | undefined
-
-  if (entryOutFiles.length) {
-    console.log('')
-    ui.info(t('startGia'))
-    const emitIrStart = profiling ? performance.now() : 0
-    await emitIrJsonForEntries(entryOutFiles, {
-      cwd: cfgDir,
-      lang,
-      moduleFiles: compileResult.moduleOutFiles,
-      moduleRoot: compileResult.outDir,
-      profile: profiling,
-      onProfile: (profile) => (gsToIrProfile = profile),
-      runtimeOptions: {
-        precompileExpression: cfg.options?.optimize?.precompileExpression ?? true,
-        removeUnusedNodes: cfg.options?.optimize?.removeUnusedNodes ?? true
-      }
     })
-    emitIrMs = profiling ? performance.now() - emitIrStart : 0
-    outDirAbs = path.resolve(cfgDir, cfg.outDir)
-    const irPaths = entryOutFiles.map((gsEntry) => resolveIrOutputPath(gsEntry))
+    const compileMs = profiling ? performance.now() - compileStart : 0
+    if (hooks?.luaSession) hooks.luaSession.graphFiles = new Set(compileResult.runtimeSourceFiles)
+    const { entryOutFiles } = compileResult
 
-    // 合并：同 graph.id 的 IR 输出合并成一个 JSON（用于更好的 DSL 拆分/工程化）
-    const mergeIrStart = profiling ? performance.now() : 0
-    const merged = await mergeIrJsonFilesByGraphIdAsync({ outDirAbs, irJsonPaths: irPaths })
-    mergeIrMs = profiling ? performance.now() - mergeIrStart : 0
-    lastMergeResults = merged.map((m) => ({
-      graphId: m.graphId,
-      outJsonPath: m.outJsonPath,
-      sourceJsonPaths: m.sourceJsonPaths,
-      sourceIndex: m.sourceIndex ?? null,
-      mergedOutput: m.mergedOutput === true
-    }))
-    const uniqueJsonPaths = [...new Set(merged.map((m) => m.outJsonPath))]
-    jsonFileCount = uniqueJsonPaths.length
-    const reportJsonStart = profiling ? performance.now() : 0
-    uniqueJsonPaths.forEach((p) => ui.ok(p))
-    reportJsonMs = profiling ? performance.now() - reportJsonStart : 0
+    let outDirAbs: string | undefined
+    let lastMergeResults: MergeResult[] | undefined
+    let gsToIrProfile: GsToIrBatchProfile | undefined
+    let irToGiaProfile: IrToGiaBatchProfile | undefined
+    let emitIrMs = 0
+    let mergeIrMs = 0
+    let reportJsonMs = 0
+    let planGiaMs = 0
+    let generateGiaMs = 0
+    let jsonFileCount = 0
 
-    const planGiaStart = profiling ? performance.now() : 0
-    const tasks = planGiaTasksFromMergeResults(lastMergeResults)
-    planGiaMs = profiling ? performance.now() - planGiaStart : 0
-    const generateGiaStart = profiling ? performance.now() : 0
-    const detailed = await writeGiaFromIrJsonFiles(tasks, {
-      cwd: cfgDir,
-      profile: profiling,
-      onProfile: (profile) => (irToGiaProfile = profile),
-      onOkLine: (msg) => ui.ok(msg)
-    })
-    generateGiaMs = profiling ? performance.now() - generateGiaStart : 0
-    // GIA 输出由 runner 实时打印，这里避免重复输出
-    giaAll.push(...detailed.map((x) => ({ giaPath: x.giaPath, targetId: x.graphId })))
+    const giaAll: GiaInjectionItem[] = []
+    let parsedGil: ParsedGilCache | undefined
 
-    ui.info(t('giaAllDone', { count: giaAll.length }))
-  }
-
-  hooks?.onPrepared?.({
-    giaPaths: giaAll.map((item) => item.giaPath),
-    giaItems: giaAll,
-    mergeResults: lastMergeResults
-  })
-
-  let injectMs = 0
-  // 批量模式：忽略 config.inject.nodeGraphId，使用 GIA 内的 graph id 推断
-  if (entryOutFiles.length && !opts.noinject && cfg.inject) {
-    const injectStart = profiling ? performance.now() : 0
-    const stat = runInjectionAttempt(
-      () =>
-        injectMany({
-          giaItems: giaAll,
-          opts,
-          gilCfg: cfg.inject,
-          useConfiguredTargetId: false,
-          lang,
-          t
-        }),
-      hooks
-    )
-    injectMs = profiling ? performance.now() - injectStart : 0
-    parsedGil = stat.parsedGil
-    ui.info(
-      t('injectAllDone', {
-        ok: stat.ok,
-        skipped: stat.skipped,
-        fail: stat.fail,
-        count: stat.count,
-        ms: roundMs(stat.totalMs)
-      })
-    )
-  }
-
-  if (opts.noinject) {
-    ui.warn(t('warnNoInject'))
-  }
-
-  return {
-    cfgDir,
-    cfg,
-    lang,
-    sourceFiles: [...new Set([...compileResult.runtimeSourceFiles, ...luaResult.dependencies])],
-    moduleFiles: compileResult.moduleOutFiles,
-    outDirAbs,
-    mergeResults: lastMergeResults,
-    giaPaths: giaAll.map((item) => item.giaPath),
-    parsedGil,
-    ...(profiling
-      ? {
-          profile: {
-            stats: {
-              sourceFiles: compileResult.outFiles.length,
-              entryFiles: entryOutFiles.length,
-              jsonFiles: jsonFileCount,
-              giaFiles: giaAll.length
-            },
-            timingsMs: {
-              loadConfig: loadConfigMs,
-              checks: checksMs,
-              lua: luaMs,
-              compile: compileMs,
-              emitIr: emitIrMs,
-              mergeIr: mergeIrMs,
-              reportJson: reportJsonMs,
-              planGia: planGiaMs,
-              generateGia: generateGiaMs,
-              inject: injectMs,
-              total: performance.now() - totalStart
-            },
-            checks: checksProfile,
-            compile: compileResult.profile,
-            gsToIr: gsToIrProfile,
-            irToGia: irToGiaProfile
-          } satisfies RunBatchProfile
+    if (entryOutFiles.length) {
+      console.log('')
+      ui.info(t('startGia'))
+      const emitIrStart = profiling ? performance.now() : 0
+      await emitIrJsonForEntries(entryOutFiles, {
+        cwd: cfgDir,
+        lang,
+        moduleFiles: compileResult.moduleOutFiles,
+        moduleRoot: compileResult.outDir,
+        profile: profiling,
+        onProfile: (profile) => (gsToIrProfile = profile),
+        runtimeOptions: {
+          precompileExpression: cfg.options?.optimize?.precompileExpression ?? true,
+          removeUnusedNodes: cfg.options?.optimize?.removeUnusedNodes ?? true
         }
-      : {})
+      })
+      emitIrMs = profiling ? performance.now() - emitIrStart : 0
+      outDirAbs = path.resolve(cfgDir, cfg.outDir)
+      const irPaths = entryOutFiles.map((gsEntry) => resolveIrOutputPath(gsEntry))
+
+      // 合并：同 graph.id 的 IR 输出合并成一个 JSON（用于更好的 DSL 拆分/工程化）
+      const mergeIrStart = profiling ? performance.now() : 0
+      const merged = await mergeIrJsonFilesByGraphIdAsync({ outDirAbs, irJsonPaths: irPaths })
+      mergeIrMs = profiling ? performance.now() - mergeIrStart : 0
+      lastMergeResults = merged.map((m) => ({
+        graphId: m.graphId,
+        outJsonPath: m.outJsonPath,
+        sourceJsonPaths: m.sourceJsonPaths,
+        sourceIndex: m.sourceIndex ?? null,
+        mergedOutput: m.mergedOutput === true
+      }))
+      const uniqueJsonPaths = [...new Set(merged.map((m) => m.outJsonPath))]
+      jsonFileCount = uniqueJsonPaths.length
+      const reportJsonStart = profiling ? performance.now() : 0
+      uniqueJsonPaths.forEach((p) => ui.ok(p))
+      reportJsonMs = profiling ? performance.now() - reportJsonStart : 0
+
+      const planGiaStart = profiling ? performance.now() : 0
+      const tasks = planGiaTasksFromMergeResults(lastMergeResults)
+      planGiaMs = profiling ? performance.now() - planGiaStart : 0
+      const generateGiaStart = profiling ? performance.now() : 0
+      const detailed = await writeGiaFromIrJsonFiles(tasks, {
+        cwd: cfgDir,
+        profile: profiling,
+        onProfile: (profile) => (irToGiaProfile = profile),
+        onOkLine: (msg) => ui.ok(msg)
+      })
+      generateGiaMs = profiling ? performance.now() - generateGiaStart : 0
+      // GIA 输出由 runner 实时打印，这里避免重复输出
+      giaAll.push(...detailed.map((x) => ({ giaPath: x.giaPath, targetId: x.graphId })))
+
+      ui.info(t('giaAllDone', { count: giaAll.length }))
+    }
+
+    hooks?.onPrepared?.({
+      giaPaths: giaAll.map((item) => item.giaPath),
+      giaItems: giaAll,
+      mergeResults: lastMergeResults
+    })
+
+    summary.compilation = entryOutFiles.length ? `成功；生成 ${giaAll.length} 个 GIA` : '无入口'
+    summary.injection = opts.noinject
+      ? '已关闭（--noinject）'
+      : cfg.inject
+        ? '无需注入'
+        : '未配置地图'
+    let injectMs = 0
+    // 批量模式：忽略 config.inject.nodeGraphId，使用 GIA 内的 graph id 推断
+    if (entryOutFiles.length && !opts.noinject && cfg.inject) {
+      summary.injection = '失败'
+      const injectStart = profiling ? performance.now() : 0
+      const stat = runInjectionAttempt(
+        () =>
+          injectMany({
+            giaItems: giaAll,
+            opts,
+            gilCfg: cfg.inject,
+            useConfiguredTargetId: false,
+            lang,
+            t
+          }),
+        hooks
+      )
+      injectMs = profiling ? performance.now() - injectStart : 0
+      summary.injection = `成功 ${stat.ok}，跳过 ${stat.skipped}，失败 ${stat.fail}`
+      if (stat.fail) process.exitCode = 1
+      parsedGil = stat.parsedGil
+      ui.info(
+        t('injectAllDone', {
+          ok: stat.ok,
+          skipped: stat.skipped,
+          fail: stat.fail,
+          count: stat.count,
+          ms: roundMs(stat.totalMs)
+        })
+      )
+    }
+
+    if (opts.noinject) {
+      ui.warn(t('warnNoInject'))
+    }
+
+    const luaResult = await luaDone
+    return {
+      report,
+      cfgDir,
+      cfg,
+      lang,
+      sourceFiles: [
+        ...new Set([
+          ...compileResult.runtimeSourceFiles,
+          ...(luaResult?.dependencies ?? hooks?.luaSession?.dependencies ?? luaSources.dependencies)
+        ])
+      ],
+      moduleFiles: compileResult.moduleOutFiles,
+      outDirAbs,
+      mergeResults: lastMergeResults,
+      giaPaths: giaAll.map((item) => item.giaPath),
+      parsedGil,
+      ...(profiling
+        ? {
+            profile: {
+              stats: {
+                sourceFiles: compileResult.outFiles.length,
+                entryFiles: entryOutFiles.length,
+                jsonFiles: jsonFileCount,
+                giaFiles: giaAll.length
+              },
+              timingsMs: {
+                loadConfig: loadConfigMs,
+                checks: checksMs,
+                lua: luaMs,
+                compile: compileMs,
+                emitIr: emitIrMs,
+                mergeIr: mergeIrMs,
+                reportJson: reportJsonMs,
+                planGia: planGiaMs,
+                generateGia: generateGiaMs,
+                inject: injectMs,
+                total: performance.now() - totalStart
+              },
+              checks: checksProfile,
+              compile: compileResult.profile,
+              gsToIr: gsToIrProfile,
+              irToGia: irToGiaProfile
+            } satisfies RunBatchProfile
+          }
+        : {})
+    }
+  } catch (error) {
+    ui.error(errorText(error))
+    process.exitCode = 1
+    await report()
+    return undefined
   }
 }
 
@@ -1260,14 +1278,18 @@ async function runDev(opts: GlobalOptions) {
 
   const initial = await safeRunBatch()
   if (initial) {
-    maybeExtractResources({
-      cfgDir,
-      injectCfg: initial.cfg.inject,
-      opts,
-      lang: initial.lang,
-      gilPath,
-      parsedGil: initial.parsedGil
-    })
+    try {
+      maybeExtractResources({
+        cfgDir,
+        injectCfg: initial.cfg.inject,
+        opts,
+        lang: initial.lang,
+        gilPath,
+        parsedGil: initial.parsedGil
+      })
+    } finally {
+      await initial.report()
+    }
   }
 
   const compilerOptions = loadTsCompilerOptions(cfgDir)
@@ -1393,7 +1415,7 @@ async function runDev(opts: GlobalOptions) {
     currentSources.forEach((source) => updateDepsForFile(depGraph, source, compilerOptions))
     await refreshEntryMapping()
     registerRuntimeSources(runtimeSources)
-    await watchLuaSources(luaSession.last?.dependencies ?? [], true)
+    await watchLuaSources(luaSession.dependencies ?? [], true)
   }
 
   const deleteIfExists = (p: string) => {
@@ -1416,14 +1438,21 @@ async function runDev(opts: GlobalOptions) {
       const result = await safeRunBatch(
         [...removedBatch, ...changedBatch].map((rel) => path.resolve(compileRoot, rel))
       )
-      if (result) await refreshCompilerState(result.sourceFiles)
-      else {
+      if (result) {
+        try {
+          await refreshCompilerState(result.sourceFiles)
+        } finally {
+          await result.report()
+        }
+      } else {
         for (const rel of removedBatch) removed.add(rel)
         for (const rel of changedBatch) changed.add(rel)
+        // 节点图失败也可能已有新的 Lua 依赖，仍需登记监听。
+        await watchLuaSources(luaSession.dependencies ?? [])
       }
       return
     }
-    const previousLuaSources = new Set(luaSession.last?.dependencies.map(normForMap))
+    const previousLuaSources = new Set(luaSession.dependencies?.map(normForMap))
     const luaTask = startClientLua(
       cfgDir,
       cfg,
@@ -1432,6 +1461,7 @@ async function runDev(opts: GlobalOptions) {
       luaSession,
       [...removedBatch, ...changedBatch].map((rel) => path.resolve(compileRoot, rel))
     )
+    const summary = { compilation: '无改动', injection: '无需注入' }
     try {
       const luaSources = await luaTask.prepared
       // 失败时先保留旧监听，同时补上已解析的新 TS 依赖，修复后仍能触发编译。
@@ -1587,6 +1617,8 @@ async function runDev(opts: GlobalOptions) {
 
       const compileRels = [...new Set([...rels, ...impactedEntryRels])]
       if (compileRels.length) {
+        summary.compilation = '失败'
+        summary.injection = '未执行（编译失败）'
         ui.info(t('startCompile'))
         const compileResult = await compileTsToGs({
           cfgDir,
@@ -1616,8 +1648,10 @@ async function runDev(opts: GlobalOptions) {
         entryOutFiles.forEach((p) => pendingEntryGs.add(p))
       }
 
-      const luaResult = await luaTask.result
-      await watchLuaSources(luaResult.dependencies, true)
+      if (pendingEntryGs.size || retiredSources.size) {
+        summary.compilation = '失败'
+        summary.injection = '未执行（编译失败）'
+      }
       await processEntryOutputs([...pendingEntryGs].filter((p) => fs.existsSync(p)))
 
       const entries = [...queuedOutJson.entries()]
@@ -1640,8 +1674,18 @@ async function runDev(opts: GlobalOptions) {
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e)
           ui.error(msg.replace('[error]', '').trim())
+          process.exitCode = 1
           all = []
         }
+      }
+      if (!tasks.length || all.length) {
+        summary.compilation =
+          compileRels.length || retiredSources.size ? `成功；生成 ${all.length} 个 GIA` : '无改动'
+        summary.injection = opts.noinject
+          ? '已关闭（--noinject）'
+          : cfg.inject
+            ? '无需注入'
+            : '未配置地图'
       }
       if (all.length) {
         for (const item of all) pendingGiaGraphIds.delete(item.graphId)
@@ -1654,6 +1698,7 @@ async function runDev(opts: GlobalOptions) {
       }
 
       if (all.length && !opts.noinject && cfg.inject) {
+        summary.injection = '失败'
         const stat = runInjectionAttempt(
           () =>
             injectMany({
@@ -1666,6 +1711,8 @@ async function runDev(opts: GlobalOptions) {
             }),
           injectionHooks
         )
+        summary.injection = `成功 ${stat.ok}，跳过 ${stat.skipped}，失败 ${stat.fail}`
+        if (stat.fail) process.exitCode = 1
         ui.info(
           t('injectAllDone', {
             ok: stat.ok,
@@ -1677,10 +1724,15 @@ async function runDev(opts: GlobalOptions) {
         )
       }
     } catch (error) {
-      await luaTask.result.catch(() => {})
       for (const rel of removedBatch) removed.add(rel)
       for (const rel of changedBatch) changed.add(rel)
-      throw error
+      ui.error(errorText(error))
+      process.exitCode = 1
+    } finally {
+      const luaResult = await luaTask.result.catch(() => undefined)
+      await watchLuaSources(luaSession.dependencies ?? [], !!luaResult)
+      console.log(`[TS→节点图] 编译：${summary.compilation}；注入：${summary.injection}。`)
+      await luaTask.finish()
     }
   }
 
@@ -1814,7 +1866,7 @@ async function runDev(opts: GlobalOptions) {
     .on('change', onSourceAddOrChange)
     .on('unlink', onSourceUnlink)
     .on('error', onSourceWatchError)
-  await watchLuaSources(luaSession.last?.dependencies ?? [], true)
+  await watchLuaSources(luaSession.dependencies ?? [], true)
 
   if (reinjectOnMapChange && gilPath) {
     // eslint-disable-next-line
@@ -2090,112 +2142,128 @@ async function runSingle(file: string, opts: GlobalOptions) {
   await runCliChecks(lang)
   applyIrToGiaOptimizeEnv(loadedForChecks?.cfg)
   const injectCfg = loadedForChecks?.cfg.inject
-
-  if (isGiaPath(abs)) {
-    // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    maybeInjectGias([{ giaPath: abs }], opts, injectCfg, true, lang)
-    return
+  const summary = { compilation: '失败', injection: '未执行（编译失败）' }
+  let luaTask: ReturnType<typeof startClientLua> | undefined
+  const inject = (items: GiaInjectionItem[]) => {
+    summary.injection = opts.noinject ? '已关闭（--noinject）' : injectCfg ? '失败' : '未配置地图'
+    const stat = maybeInjectGias(items, opts, injectCfg, true, lang)
+    if (stat) {
+      summary.injection = `成功 ${stat.ok}，跳过 ${stat.skipped}，失败 ${stat.fail}`
+      if (stat.fail) process.exitCode = 1
+    }
   }
-
-  if (isJsonPath(abs)) {
-    ui.info(t('startGia'))
-    const out = writeGiaFromOutJson(abs, undefined, (x) => ui.ok(`${x.giaPath} (id=${x.graphId})`))
-    // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    maybeInjectGias(
-      out.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })),
-      opts,
-      injectCfg,
-      true,
-      lang
-    )
-    return
-  }
-
-  const text = fs.readFileSync(abs, 'utf8')
   try {
-    JSON.parse(text)
-    ui.info(t('startGia'))
-    const out = writeGiaFromOutJson(abs, undefined, (x) => ui.ok(`${x.giaPath} (id=${x.graphId})`))
-    // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    maybeInjectGias(
-      out.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })),
-      opts,
-      injectCfg,
-      true,
-      lang
-    )
-    return
-  } catch {
-    // not json
-  }
+    if (isGiaPath(abs)) {
+      // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
+      summary.compilation = '无需编译（直接使用 GIA）'
+      inject([{ giaPath: abs }])
+      return
+    }
 
-  const loaded = loadedForChecks
-  const cfgDir = loaded?.cfgDir ?? path.dirname(abs)
-  const cfg = loaded?.cfg ?? {
-    compileRoot: '.',
-    entries: [path.basename(abs)],
-    outDir: '.'
-  }
-
-  // 单文件：复用批量编译函数（通过 entries 仅匹配该文件路径）
-  const singleCfg = (() => {
-    if (!loaded) return cfg
-    const compileRoot = path.resolve(cfgDir, cfg.compileRoot)
-    const rel = path.relative(compileRoot, abs).replace(/\\/g, '/')
-    if (rel.startsWith('..') || path.isAbsolute(rel)) {
-      throw new Error(
-        `[error] file is outside compileRoot: ${abs} (compileRoot=${compileRoot}) (try use -c or adjust compileRoot)`
+    if (isJsonPath(abs)) {
+      ui.info(t('startGia'))
+      const out = writeGiaFromOutJson(abs, undefined, (x) =>
+        ui.ok(`${x.giaPath} (id=${x.graphId})`)
       )
+      // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
+      summary.compilation = `成功；生成 ${out.length} 个 GIA`
+      inject(out.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })))
+      return
     }
-    return { ...cfg, entries: [rel] }
-  })()
-  const luaCfg = loaded ? singleCfg : { ...singleCfg, outDir: 'dist' }
-  const luaResult = await buildClientLua(
-    cfgDir,
-    luaCfg,
-    !!opts.noinject,
-    false,
-    injectProfileEnabled(opts)
-  )
-  if (luaResult.entries.length) return
-  ui.info(t('startCompile'))
-  const compileResult = await compileTsToGs({
-    cfgDir,
-    cfg: singleCfg,
-    onWriteGs: (p) => ui.ok(p)
-  })
-  const { entryOutFiles } = compileResult
 
-  const gsFile = entryOutFiles[0]
-  if (!gsFile) {
-    ui.warn(t('warnNotEntry'))
-    return
+    const text = fs.readFileSync(abs, 'utf8')
+    try {
+      JSON.parse(text)
+      ui.info(t('startGia'))
+      const out = writeGiaFromOutJson(abs, undefined, (x) =>
+        ui.ok(`${x.giaPath} (id=${x.graphId})`)
+      )
+      // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
+      summary.compilation = `成功；生成 ${out.length} 个 GIA`
+      inject(out.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })))
+      return
+    } catch {
+      // not json
+    }
+
+    const loaded = loadedForChecks
+    const cfgDir = loaded?.cfgDir ?? path.dirname(abs)
+    const cfg = loaded?.cfg ?? {
+      compileRoot: '.',
+      entries: [path.basename(abs)],
+      outDir: '.'
+    }
+
+    // 单文件：复用批量编译函数（通过 entries 仅匹配该文件路径）
+    const singleCfg = (() => {
+      if (!loaded) return cfg
+      const compileRoot = path.resolve(cfgDir, cfg.compileRoot)
+      const rel = path.relative(compileRoot, abs).replace(/\\/g, '/')
+      if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        throw new Error(
+          `[error] file is outside compileRoot: ${abs} (compileRoot=${compileRoot}) (try use -c or adjust compileRoot)`
+        )
+      }
+      return { ...cfg, entries: [rel] }
+    })()
+    const luaCfg = loaded ? singleCfg : { ...singleCfg, outDir: 'dist' }
+    luaTask = startClientLua(
+      cfgDir,
+      luaCfg,
+      !!opts.noinject,
+      injectProfileEnabled(opts),
+      undefined,
+      undefined,
+      false
+    )
+    await luaTask.prepared
+    if (luaTask.report.active) {
+      summary.compilation = '无入口'
+      summary.injection = '无需注入'
+      return
+    }
+    ui.info(t('startCompile'))
+    const compileResult = await compileTsToGs({
+      cfgDir,
+      cfg: singleCfg,
+      onWriteGs: (p) => ui.ok(p)
+    })
+    const { entryOutFiles } = compileResult
+
+    const gsFile = entryOutFiles[0]
+    if (!gsFile) {
+      summary.compilation = '无入口'
+      summary.injection = '无需注入'
+      ui.warn(t('warnNotEntry'))
+      return
+    }
+
+    console.log('')
+    ui.info(t('startGia'))
+    await emitIrJsonForEntries([gsFile], {
+      cwd: cfgDir,
+      lang,
+      moduleFiles: compileResult.moduleOutFiles,
+      moduleRoot: compileResult.outDir,
+      runtimeOptions: {
+        precompileExpression: singleCfg.options?.optimize?.precompileExpression ?? true,
+        removeUnusedNodes: singleCfg.options?.optimize?.removeUnusedNodes ?? true
+      }
+    })
+    const irPath = resolveIrOutputPath(gsFile)
+    const giaOut = writeGiaFromOutJson(irPath, undefined, (x) =>
+      ui.ok(`${x.giaPath} (id=${x.graphId})`)
+    )
+    // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
+    summary.compilation = `成功；生成 ${giaOut.length} 个 GIA`
+    inject(giaOut.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })))
+  } catch (error) {
+    ui.error(errorText(error))
+    process.exitCode = 1
+  } finally {
+    console.log(`[TS→节点图] 编译：${summary.compilation}；注入：${summary.injection}。`)
+    await luaTask?.finish()
   }
-
-  console.log('')
-  ui.info(t('startGia'))
-  await emitIrJsonForEntries([gsFile], {
-    cwd: cfgDir,
-    lang,
-    moduleFiles: compileResult.moduleOutFiles,
-    moduleRoot: compileResult.outDir,
-    runtimeOptions: {
-      precompileExpression: singleCfg.options?.optimize?.precompileExpression ?? true,
-      removeUnusedNodes: singleCfg.options?.optimize?.removeUnusedNodes ?? true
-    }
-  })
-  const irPath = resolveIrOutputPath(gsFile)
-  const giaOut = writeGiaFromOutJson(irPath, undefined, (x) =>
-    ui.ok(`${x.giaPath} (id=${x.graphId})`)
-  )
-  // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-  maybeInjectGias(
-    giaOut.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })),
-    opts,
-    injectCfg,
-    true,
-    lang
-  )
 }
 
 async function main() {
@@ -2225,35 +2293,40 @@ async function main() {
       else {
         const actionStart = injectProfileEnabled(opts) ? performance.now() : 0
         const res = await runBatch(opts)
-        const extractStart = injectProfileEnabled(opts) ? performance.now() : 0
-        const extracted = maybeExtractResources({
-          cfgDir: res.cfgDir,
-          injectCfg: res.cfg.inject,
-          opts,
-          lang: res.lang,
-          parsedGil: res.parsedGil
-        })
-        if (injectProfileEnabled(opts)) {
-          const extractMs = performance.now() - extractStart
-          console.log(
-            '[pipeline-profile]',
-            JSON.stringify({
-              kind: 'gsts-pipeline-profile',
-              version: 1,
-              mode: 'batch',
-              configFile: path.basename(resolveConfigPath(opts)),
-              stats: res.profile?.stats,
-              timingsMs: {
-                initialConfigLoad: roundMs(initialConfigLoadMs),
-                startupBeforeAction: roundMs(actionStart - mainStart),
-                batch: roundMs(res.profile?.timingsMs.total ?? 0),
-                extraction: roundMs(extractMs),
-                total: roundMs(performance.now() - mainStart)
-              },
-              batch: res.profile,
-              extraction: extracted?.profile
-            })
-          )
+        if (!res) return
+        try {
+          const extractStart = injectProfileEnabled(opts) ? performance.now() : 0
+          const extracted = maybeExtractResources({
+            cfgDir: res.cfgDir,
+            injectCfg: res.cfg.inject,
+            opts,
+            lang: res.lang,
+            parsedGil: res.parsedGil
+          })
+          if (injectProfileEnabled(opts)) {
+            const extractMs = performance.now() - extractStart
+            console.log(
+              '[pipeline-profile]',
+              JSON.stringify({
+                kind: 'gsts-pipeline-profile',
+                version: 1,
+                mode: 'batch',
+                configFile: path.basename(resolveConfigPath(opts)),
+                stats: res.profile?.stats,
+                timingsMs: {
+                  initialConfigLoad: roundMs(initialConfigLoadMs),
+                  startupBeforeAction: roundMs(actionStart - mainStart),
+                  batch: roundMs(res.profile?.timingsMs.total ?? 0),
+                  extraction: roundMs(extractMs),
+                  total: roundMs(performance.now() - mainStart)
+                },
+                batch: res.profile,
+                extraction: extracted?.profile
+              })
+            )
+          }
+        } finally {
+          await res.report()
         }
       }
     })

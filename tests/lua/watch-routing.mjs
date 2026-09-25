@@ -116,11 +116,11 @@ try {
   write('main.ts', lua)
   await wait(() => !has('lua/private/bad.lua') && !has('lua/private/dep.lua'))
   await sleep(400)
-  const builds = (log.match(/本地产物/g) ?? []).length
+  const builds = (log.match(/\[Lua\] 本地产物/g) ?? []).length
   write('private/dep.ts', `export const extra='no-longer-used'`)
   await sleep(450)
   assert.equal(
-    (log.match(/本地产物/g) ?? []).length,
+    (log.match(/\[Lua\] 本地产物/g) ?? []).length,
     builds,
     'removed private dependency is no longer watched'
   )
