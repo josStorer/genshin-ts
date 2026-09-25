@@ -46,11 +46,13 @@ if (process.argv[2] === '--case') {
   const count = Number(process.argv[3])
   const { root, entries } = fixture(count)
   const importStart = performance.now()
-  const [{ compileLua, formatLuaDiagnostics }, { writeLuaFiles }] = await Promise.all([
-    import('../../dist/src/compiler/lua/build.js'),
-    import('../../dist/src/compiler/lua/output.js')
-  ])
+  const [{ compileLua, formatLuaDiagnostics, createLuaCompileCache }, { writeLuaFiles }] =
+    await Promise.all([
+      import('../../dist/src/compiler/lua/build.js'),
+      import('../../dist/src/compiler/lua/output.js')
+    ])
   const loadCompilerMs = performance.now() - importStart
+  const cache = createLuaCompileCache()
   const runs = []
   const entrySource = fs.readFileSync(entries[0], 'utf8')
   for (const mode of [
@@ -77,12 +79,15 @@ if (process.argv[2] === '--case') {
       )
     const started = performance.now(),
       cpu = process.cpuUsage()
-    const result = compileLua({
-      entries,
-      rootDir: root,
-      outDir: path.join(root, 'out'),
-      profile: true
-    })
+    const result = compileLua(
+      {
+        entries,
+        rootDir: root,
+        outDir: path.join(root, 'out'),
+        profile: true
+      },
+      cache
+    )
     assert.ok(
       !result.diagnostics.some((d) => d.category === 1),
       formatLuaDiagnostics(result.diagnostics)

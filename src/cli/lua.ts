@@ -7,9 +7,11 @@ import fg from 'fast-glob'
 import ts from 'typescript'
 
 import type { GstsConfig } from '../compiler/gsts_config.js'
+import type { LuaCompileCache } from '../compiler/lua/build.js'
 import { resolveGilTarget } from './gil_paths.js'
 
 export interface ClientLuaSession {
+  compiler?: LuaCompileCache
   last?: { key: string; dependencies: string[]; entries: string[] }
 }
 const normalize = (file: string) => {
@@ -112,8 +114,10 @@ export async function buildClientLua(
       )
     return { dependencies: [] as string[], entries: [] as string[] }
   }
-  const [{ compileLua, formatLuaDiagnostics }, { writeLuaFiles, describeLuaConflicts }] =
-    await Promise.all([import('../compiler/lua/build.js'), import('../compiler/lua/output.js')])
+  const [
+    { compileLua, formatLuaDiagnostics, createLuaCompileCache },
+    { writeLuaFiles, describeLuaConflicts }
+  ] = await Promise.all([import('../compiler/lua/build.js'), import('../compiler/lua/output.js')])
   mark('loadCompiler')
   const additionalFiles = cfg.lua?.include?.length
     ? await fg(cfg.lua.include, {
@@ -124,8 +128,9 @@ export async function buildClientLua(
       })
     : []
   mark('additionalFiles')
+  if (session && !session.compiler) session.compiler = createLuaCompileCache()
   const result = entries.length
-    ? compileLua({ entries, rootDir, outDir, additionalFiles, profile })
+    ? compileLua({ entries, rootDir, outDir, additionalFiles, profile }, session?.compiler)
     : { files: new Map<string, string>(), entries: [], dependencies: [], diagnostics: [] }
   mark('compile')
   if (result.diagnostics.length) console.log(formatLuaDiagnostics(result.diagnostics))

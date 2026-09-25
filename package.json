@@ -107,7 +107,7 @@
     "tool:computer-control": "python ./scripts/tools/computer_control_server.py",
     "example": "npm run build && node ./bin/gsts.mjs",
     "dev": "npm run build && node ./bin/gsts.mjs dev",
-    "test:lua": "tsx tests/lua/run.mjs && node tests/lua/editor.mjs && node tests/lua/cli.mjs && tsx tests/lua/injection.mjs",
+    "test:lua": "tsx tests/lua/run.mjs && tsx tests/lua/incremental.mjs && node tests/lua/editor.mjs && node tests/lua/cli.mjs && tsx tests/lua/injection.mjs",
     "test:lua:watch": "node tests/lua/watch.mjs",
     "test:lua:sdk": "python scripts/lua/generate-sdk.py --check"
   },

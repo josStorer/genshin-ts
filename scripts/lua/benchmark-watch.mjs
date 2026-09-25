@@ -119,7 +119,7 @@ try {
         luaReadyMs: Math.round(r.luaReadyMs),
         completionMs: Math.round(r.completionMs),
         luaWorkMs: Math.round(r.profile.timingsMs.total),
-        tsFiles: r.profile.compiler.stats.sourceFiles
+        tsFiles: r.profile.compiler?.stats.sourceFiles ?? 0
       }))
     )
   )
