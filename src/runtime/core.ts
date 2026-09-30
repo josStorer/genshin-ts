@@ -46,6 +46,7 @@ import {
 } from './client_graph_support.js'
 import { installScopedClientGlobals } from './client_scoped_globals.js'
 import type { ExecContext, ExecTailEndpoint, ExecutionFlow } from './execution_flow_types.js'
+import { foldLiteralBranches } from './fold_literal_branches.js'
 import {
   CLIENT_FILTER_DEFAULT_EVALUATION_INTERVAL,
   resolveGraphIdForGraph
@@ -2130,6 +2131,7 @@ function removeUnusedNodesFromFlow(flow: ExecutionFlow): ExecutionFlow | null {
 
 export function buildServerGraphRegistriesIRDocuments(opts: IRBuildOptions = {}) {
   const removeUnusedNodes = getRuntimeOptions().optimize.removeUnusedNodes
+  const foldConstants = getRuntimeOptions().optimize.precompileExpression
   const prefixName = (raw: string, enable: boolean) => {
     if (!enable) return raw
     if (raw.startsWith('_GSTS')) return raw
@@ -2148,7 +2150,11 @@ export function buildServerGraphRegistriesIRDocuments(opts: IRBuildOptions = {})
     registry.finalizeServerFlows()
     const flows = registry.getFlows()
     const optimizedFlows = removeUnusedNodes
-      ? flows.map(removeUnusedNodesFromFlow).filter((flow) => flow !== null)
+      ? flows
+          .map((flow) =>
+            removeUnusedNodesFromFlow(foldConstants ? foldLiteralBranches(flow) : flow)
+          )
+          .filter((flow) => flow !== null)
       : flows
     return buildIRDocument({
       flows: optimizedFlows,

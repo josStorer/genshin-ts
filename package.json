@@ -69,6 +69,7 @@
     "test:eslint": "tsx tests/eslint/node-graph-rules.test.ts",
     "test:injector": "tsx tests/injector/gil-paths.test.ts && tsx tests/injector/client-graph-injection.test.ts && tsx tests/injector/batch-injection.test.ts && tsx tests/injector/gil-file-transaction.test.ts && tsx tests/injector/gil-artifacts.test.ts && tsx tests/injector/prefab-extraction-equivalence.test.ts",
     "test:gia-pipeline": "tsx scripts/assert-gia-worker-and-graph-index.ts",
+    "test:graph-output": "npm run build && tsx scripts/assert-graph-output.ts && node scripts/assert-graph-output-compile.mjs",
     "test:merge-gia-memory": "npm run build && node scripts/assert-merge-gia-memory.mjs",
     "test:dev-injection": "npm run build && node scripts/assert-dev-injection.mjs",
     "test:prefab-equivalence": "tsx tests/injector/prefab-extraction-equivalence.test.ts",
