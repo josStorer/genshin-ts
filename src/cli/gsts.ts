@@ -2131,6 +2131,19 @@ async function main() {
     })
 
   program
+    .command('analyze <file>')
+    .description(
+      lang === 'zh-CN'
+        ? '分析节点图 IR JSON 的静态节点与连线数量（不编译或注入）'
+        : 'Report static node and connection counts from IR JSON (no compilation or injection)'
+    )
+    .action(async (file: string) => {
+      const { analyzeGraphDocuments } = await import('../compiler/graph_analysis.js')
+      const raw: unknown = JSON.parse(fs.readFileSync(path.resolve(file), 'utf8'))
+      console.log(JSON.stringify(analyzeGraphDocuments(raw), null, 2))
+    })
+
+  program
     .command('dev')
     .description(t('cmdDev'))
     .action(async () => {
