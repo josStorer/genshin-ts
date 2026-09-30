@@ -114,9 +114,11 @@ function createLayoutState(irNodes: IRNode[]) {
   const unplacedNodes = new Map<NodeId, IRNode>()
   irNodes.forEach((n) => unplacedNodes.set(n.id, n))
 
-  return {
-    // 网格占位：避免执行节点坐标碰撞
-    occupied: new Set<string>(),
+  const state = {
+    // Conservative IR-space footprints, shared by execution, data and detached nodes.
+    occupied: [] as Array<{ x: number; y: number; width: number; height: number }>,
+    nodesById: new Map(irNodes.map((node) => [node.id, node])),
+    visitedExec: new Set<NodeId>(),
     // 节点ID -> [x, y] 坐标位置（最终布局结果）
     positions: new Map<NodeId, Position>(),
     // 节点ID -> 事件索引（用于区分不同的执行流，控制垂直分组）
@@ -128,23 +130,44 @@ function createLayoutState(irNodes: IRNode[]) {
     // 事件索引 -> 该事件中所有节点的最大Y坐标（用于计算下一个事件的基础位置）
     eventMaxYCoord: new Map<number, number>()
   }
+  // Reserve explicit positions before auto placement, rather than moving nodes over them later.
+  for (const node of irNodes) {
+    if (!node.position) continue
+    state.positions.set(node.id, node.position)
+    state.unplacedNodes.delete(node.id)
+    state.occupied.push({ x: node.position[0], y: node.position[1], ...nodeFootprint(node) })
+  }
+  return state
+}
+
+function nodeFootprint(node: IRNode) {
+  // IR does not contain rendered dimensions. Allow extra height for dynamic input pins.
+  return { width: 300, height: 200 + (node.args?.length ?? 0) * 40 }
 }
 
 function occupyNextFreeY(
   state: ReturnType<typeof createLayoutState>,
+  nodeId: NodeId,
   x: number,
   y: number,
   stepY: number
 ): number {
   let yy = y
-  // 极端情况下避免死循环
-  for (let i = 0; i < 2000; i++) {
-    const key = `${x},${yy}`
-    if (!state.occupied.has(key)) {
-      state.occupied.add(key)
+  const size = nodeFootprint(state.nodesById.get(nodeId)!)
+  // Each collision moves below at least one occupied rectangle; no fixed graph-size limit.
+  for (let i = 0; i <= state.occupied.length; i++) {
+    const collisions = state.occupied.filter(
+      (box) =>
+        x < box.x + box.width + 40 &&
+        x + size.width + 40 > box.x &&
+        yy < box.y + box.height + 40 &&
+        yy + size.height + 40 > box.y
+    )
+    if (!collisions.length) {
+      state.occupied.push({ x, y: yy, ...size })
       return yy
     }
-    yy += stepY
+    yy = Math.max(yy + stepY, ...collisions.map((box) => box.y + box.height + 40))
   }
   throw new Error(`[error] layout collision overflow at x=${x}, y=${y}`)
 }
@@ -170,19 +193,21 @@ function layoutExecutionChain(
   state: ReturnType<typeof createLayoutState>,
   config: LayoutConfig
 ) {
-  if (state.positions.has(nodeId)) return
+  if (state.visitedExec.has(nodeId)) return
+  state.visitedExec.add(nodeId)
 
   const row = Math.floor(depth / config.maxColumns)
   const column = depth % config.maxColumns
-  const x = column * config.columnWidth
+  const pinned = state.positions.get(nodeId)
+  const x = pinned?.[0] ?? column * config.columnWidth
   const y0 = baseY + row * config.wrapHeight + laneOffset
   // 若同位置有节点碰撞，自动下移一行，并把偏移传递给后续节点保持对齐
-  const y = occupyNextFreeY(state, x, y0, config.rowHeight)
+  const y = pinned?.[1] ?? occupyNextFreeY(state, nodeId, x, y0, config.rowHeight)
   const actualLaneOffset = y - (baseY + row * config.wrapHeight)
 
   state.positions.set(nodeId, [x, y])
   state.nodeToEventIndex.set(nodeId, eventIndex)
-  updateEventHeight(state, eventIndex, y)
+  updateEventHeight(state, eventIndex, y + nodeFootprint(state.nodesById.get(nodeId)!).height)
 
   state.unplacedNodes.delete(nodeId)
 
@@ -222,14 +247,16 @@ function placeDataNearConsumers(
     const [cx, cy] = position
     const stackCount = state.consumerStackCount.get(placedConsumer) ?? 0
     const isExecConsumer = execNodes.has(placedConsumer)
-    const y = isExecConsumer ? cy + (stackCount + 1) * 250 : cy + stackCount * 250
+    const desiredY = isExecConsumer ? cy + (stackCount + 1) * 250 : cy + stackCount * 250
+    const x = cx - 400
+    const y = occupyNextFreeY(state, nodeId, x, desiredY, 250)
 
-    state.positions.set(nodeId, [cx - 300, y])
+    state.positions.set(nodeId, [x, y])
     state.consumerStackCount.set(placedConsumer, stackCount + 1)
 
     const eventIndex = state.nodeToEventIndex.get(placedConsumer) ?? 0
     state.nodeToEventIndex.set(nodeId, eventIndex)
-    updateEventHeight(state, eventIndex, y)
+    updateEventHeight(state, eventIndex, y + nodeFootprint(state.nodesById.get(nodeId)!).height)
 
     toDelete.push(nodeId)
     placedAny = true
@@ -256,7 +283,7 @@ function placeDetachedGrid(state: ReturnType<typeof createLayoutState>, config: 
     const col = idx % cols
     const row = Math.floor(idx / cols)
     const x = left + col * config.columnWidth
-    const y = top + row * config.rowHeight
+    const y = occupyNextFreeY(state, nodeId, x, top + row * config.rowHeight, config.rowHeight)
 
     state.positions.set(nodeId, [x, y])
     idx += 1
