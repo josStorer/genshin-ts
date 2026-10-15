@@ -5,7 +5,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { compileLua } from '../../dist/src/compiler/lua/build.js'
-import { createLuaWorker } from '../../dist/src/compiler/lua/worker-client.js'
+import { createLuaWorker } from '../../dist/src/compiler/lua/worker_client.js'
 
 const base = path.resolve('.tmp/lua-worker')
 fs.mkdirSync(base, { recursive: true })

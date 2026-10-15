@@ -81,7 +81,7 @@ fs.writeFileSync(
 )
 
 const { build } = await import('esbuild')
-const { generateLuaDataModules } = await import('../dist/src/compiler/lua/data-modules.js')
+const { generateLuaDataModules } = await import('../dist/src/compiler/lua/data_modules.js')
 generateLuaDataModules(repoRoot)
 // CommonJS has no import.meta. The only user in this bundle is src/i18n/index.ts, which loads
 // its locale JSON through createRequire, so point it at the compiled i18n module's location.

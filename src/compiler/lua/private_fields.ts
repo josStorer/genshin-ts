@@ -4,7 +4,7 @@ import path from 'node:path'
 import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
-import { LocatedLuaError } from './tstl-compat.js'
+import { LocatedLuaError } from './tstl_compat.js'
 
 /** Lua 不做访问控制；按声明身份改名，避免不同类的 #value 与普通字段互相覆盖。 */
 export function lowerPrivateFields(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {

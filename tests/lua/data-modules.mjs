@@ -7,7 +7,7 @@ import {
   createLuaCompileCache,
   formatLuaDiagnostics
 } from '../../src/compiler/lua/build.ts'
-import { generateLuaDataModules, luaDataModules } from '../../src/compiler/lua/data-modules.ts'
+import { generateLuaDataModules, luaDataModules } from '../../src/compiler/lua/data_modules.ts'
 import { buildFixture, execute, successful } from './support.mjs'
 
 const result = successful(

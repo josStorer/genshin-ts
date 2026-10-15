@@ -2,7 +2,7 @@ import ts from 'typescript'
 
 import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
-import { standardLibraryDiagnostic } from './standard-library.js'
+import { standardLibraryDiagnostic } from './standard_library.js'
 import { diagnostic, entryCall, hooks, nodeGraphCalls, publicMethodFunction } from './syntax.js'
 
 const ruleByMessage = {

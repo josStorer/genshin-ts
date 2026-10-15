@@ -10,9 +10,9 @@ import type { LuaCompileCache, LuaPrepared } from '../compiler/lua/build.js'
 import type { LuaOutputCache } from '../compiler/lua/output.js'
 import { createBuildTimer } from '../compiler/lua/profile.js'
 import { entryCall } from '../compiler/lua/syntax.js'
-import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker-client.js'
+import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker_client.js'
 import { t } from '../i18n/index.js'
-import { formatBuildSummary } from './build-summary.js'
+import { formatBuildSummary } from './build_summary.js'
 import { resolveGilTarget } from './gil_paths.js'
 
 export interface ClientLuaReport {

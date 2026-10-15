@@ -7,7 +7,7 @@ import * as tstl from 'typescript-to-lua'
 
 import { initCliI18n, t, type Lang } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
-import { luaDataModule, luaDataModules } from './data-modules.js'
+import { luaDataModule, luaDataModules } from './data_modules.js'
 import { getLuaDiagnostics } from './diagnostics.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
 import {
@@ -20,7 +20,7 @@ import { createLuaPlugin, diagnostic, entryCall } from './plugin.js'
 import { lowerPrivateFields } from './private_fields.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
 import { isNodeGraphEntry } from './syntax.js'
-import { LocatedLuaError, withLuaErrorLocations } from './tstl-compat.js'
+import { LocatedLuaError, withLuaErrorLocations } from './tstl_compat.js'
 
 export interface LuaBuildOptions {
   lang?: Lang

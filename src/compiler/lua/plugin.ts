@@ -4,9 +4,9 @@ import * as lua from 'typescript-to-lua'
 import { t } from '../../i18n/index.js'
 import { luaSignalWriters } from '../../runtime/lua_signals.js'
 import { getLuaBuiltins, numberConstants } from './builtins.js'
-import { luaDataConstant, luaDataModule } from './data-modules.js'
+import { luaDataConstant, luaDataModule } from './data_modules.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
-import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl-compat.js'
+import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl_compat.js'
 
 export { entryCall, diagnostic, hooks } from './syntax.js'
 const id = lua.createIdentifier

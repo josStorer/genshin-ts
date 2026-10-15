@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { luaStandardLibrary, unavailableLuaGlobals } from './standard-library.js'
+import { luaStandardLibrary, unavailableLuaGlobals } from './standard_library.js'
 
 const tables = new WeakMap<ts.Program, LuaBuiltins>()
 

@@ -6,7 +6,7 @@ import ts from 'typescript'
 import * as tstl from 'typescript-to-lua'
 
 import { formatLuaDiagnostics } from '../../src/compiler/lua/build.ts'
-import { LocatedLuaError, withLuaErrorLocations } from '../../src/compiler/lua/tstl-compat.ts'
+import { LocatedLuaError, withLuaErrorLocations } from '../../src/compiler/lua/tstl_compat.ts'
 import { buildFixture, execute, successful } from './support.mjs'
 
 const result = successful(
