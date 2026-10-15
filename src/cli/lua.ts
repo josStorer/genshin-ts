@@ -66,6 +66,21 @@ export interface ClientLuaOptions {
   reporting?: ClientLuaReport
 }
 
+type ClientLuaBuildContext = Omit<
+  ClientLuaOptions,
+  'noinject' | 'complete' | 'profile' | 'reporting'
+> & {
+  noinject: boolean
+  complete: boolean
+  profile: boolean
+  rootDir: string
+  report: ClientLuaReport
+  timer: ReturnType<typeof createBuildTimer>
+}
+type DiscoveredClientLua = Awaited<ReturnType<typeof discoverClientLua>>
+type ClientLuaCompilePlan = Extract<ReturnType<typeof planClientLua>, { kind: 'compile' }>
+type CompiledClientLua = Awaited<ReturnType<typeof compilePlannedLua>>
+
 /** Lua 独立编译与注入；没有 Lua 入口时不加载 TSTL。 */
 export async function buildClientLua({
   cfgDir,
@@ -84,10 +99,43 @@ export async function buildClientLua({
     injection: t('summary_compileOrWriteFailed'),
     log: (...values: unknown[]) => console.log(...values)
   }
-  const log = report.log
   const timer = createBuildTimer(profile)
-  const { mark } = timer
   const rootDir = path.resolve(cfgDir, cfg.compileRoot)
+  const context: ClientLuaBuildContext = {
+    cfgDir,
+    cfg,
+    noinject,
+    complete,
+    profile,
+    session,
+    changedFiles,
+    onPrepared,
+    report,
+    timer,
+    rootDir
+  }
+  const discovered = await discoverClientLua(context)
+  const plan = planClientLua(context, discovered)
+  if (plan.kind !== 'compile') {
+    timer.report(plan.metrics, report.log)
+    return plan.summary
+  }
+  const compiled = await compilePlannedLua(context, discovered, plan)
+  writeClientLua(context, compiled)
+  const mountedGil = injectClientLua(context, compiled)
+  return reportClientLua(context, discovered, compiled, mountedGil)
+}
+
+/** 发现候选及额外文件；缓存只复用确认未改动的文件。 */
+async function discoverClientLua({
+  cfg,
+  rootDir,
+  changedFiles,
+  session,
+  report,
+  timer
+}: ClientLuaBuildContext) {
+  const { mark } = timer
   const discoveryKey = JSON.stringify([rootDir, cfg.entries, cfg.lua?.include])
   const priorDiscovery = session?.discovery?.key === discoveryKey ? session.discovery : undefined
   const changed = changedFiles && new Set(changedFiles.map(normalize))
@@ -214,6 +262,41 @@ export async function buildClientLua({
         [...graphImports].sort()
       ])
     : undefined
+  return {
+    entries,
+    candidates,
+    additionalFiles,
+    discoveryReads,
+    sharedDependencyReads,
+    reuseFileList,
+    discovery,
+    sharedProjectKey
+  }
+}
+
+/** 计划复用、无入口跳过或编译；失败后的会话仍必须重试。 */
+function planClientLua(
+  {
+    cfgDir,
+    cfg,
+    noinject,
+    complete,
+    changedFiles,
+    session,
+    rootDir,
+    report
+  }: ClientLuaBuildContext,
+  discovered: DiscoveredClientLua
+) {
+  const {
+    entries,
+    candidates,
+    additionalFiles,
+    sharedProjectKey,
+    discoveryReads,
+    sharedDependencyReads,
+    reuseFileList
+  } = discovered
   const key = JSON.stringify([
     sharedProjectKey,
     cfgDir,
@@ -239,19 +322,19 @@ export async function buildClientLua({
         !/\.(lua|json)$|\.d\.ts$/i.test(file)
     )
   ) {
-    timer.report(
-      {
+    report.compilation = t('summary_reused')
+    report.injection = t('summary_noUpdate')
+    return {
+      kind: 'reused' as const,
+      summary: last,
+      metrics: {
         skipped: true,
         reason: 'unrelated-change',
         discoveryReads,
         sharedDependencyReads,
         discoveryRescanned: !reuseFileList
-      },
-      log
-    )
-    report.compilation = t('summary_reused')
-    report.injection = t('summary_noUpdate')
-    return last
+      }
+    }
   }
   // 失败后下一轮必须重试，不能把上次成功当成本次成功。
   if (session) session.last = undefined
@@ -264,26 +347,48 @@ export async function buildClientLua({
     !entries.length &&
     (!complete || !fs.existsSync(path.join(outDir, `.gsts-lua-${owner}.json`)))
   ) {
-    timer.report(
-      {
-        skipped: true,
-        candidates: candidates.length,
-        discoveryReads,
-        discoveryRescanned: !reuseFileList
-      },
-      log
-    )
     const summary = { key, dependencies: [] as string[], entries: [] as string[], candidates }
     if (session) {
       session.last = summary
       session.dependencies = []
       session.graphEntries = []
     }
-    return summary
+    return {
+      kind: 'empty' as const,
+      summary,
+      metrics: {
+        skipped: true,
+        candidates: candidates.length,
+        discoveryReads,
+        discoveryRescanned: !reuseFileList
+      }
+    }
   }
   report.active = true
   if (session) session.active = true
-  const { writeLuaFiles, describeLuaConflicts } = await import('../compiler/lua/output.js')
+  return { kind: 'compile' as const, key, last, outDir, owner }
+}
+
+/** 只有需要编译时才加载编译器；依赖就绪通知仍可提前放行节点图。 */
+async function compilePlannedLua(
+  {
+    session,
+    profile,
+    cfg,
+    rootDir,
+    changedFiles,
+    onPrepared,
+    report,
+    timer
+  }: ClientLuaBuildContext,
+  discovered: DiscoveredClientLua,
+  plan: ClientLuaCompilePlan
+) {
+  const { entries, candidates, additionalFiles, sharedProjectKey } = discovered
+  const { outDir, key, last } = plan
+  const { mark } = timer
+  const log = report.log
+  const writer = await import('../compiler/lua/output.js')
   mark('loadCompiler')
   const input = {
     sharedProjectFiles: candidates,
@@ -336,6 +441,18 @@ export async function buildClientLua({
     session.localOutput = {}
     session.injectedOutput = {}
   }
+  return { plan, result, writer }
+}
+
+/** 本地写出通过后才进入注入；冲突文件不会被覆盖。 */
+function writeClientLua(
+  { session, complete, noinject, report, timer }: ClientLuaBuildContext,
+  { plan, result, writer }: CompiledClientLua
+) {
+  const { outDir, owner } = plan
+  const { writeLuaFiles, describeLuaConflicts } = writer
+  const { mark } = timer
+  const log = report.log
   report.compilation = t('summary_writeFailed')
   const local = writeLuaFiles(outDir, result.files, complete, owner, session?.localOutput)
   if (local.conflicts.length) throw new Error(describeLuaConflicts(local, false))
@@ -355,6 +472,16 @@ export async function buildClientLua({
       arg3: local.removed.length
     })
   )
+}
+
+/** 注入只复制 Lua 文件，保持既有的标记保护和错误状态。 */
+function injectClientLua(
+  { cfg, noinject, complete, session, report }: ClientLuaBuildContext,
+  { plan, result, writer }: CompiledClientLua
+) {
+  const { owner } = plan
+  const { writeLuaFiles, describeLuaConflicts } = writer
+  const log = report.log
   let mountedGil: string | undefined
   if (cfg.inject?.mapId !== undefined && !noinject) {
     report.injection = t('summary_failed')
@@ -390,6 +517,28 @@ export async function buildClientLua({
       )
     }
   }
+  return mountedGil
+}
+
+/** 挂载提示、性能信息和会话结果统一在写出/注入之后收尾。 */
+async function reportClientLua(
+  { session, report, timer }: ClientLuaBuildContext,
+  discovered: DiscoveredClientLua,
+  { plan, result }: CompiledClientLua,
+  mountedGil: string | undefined
+) {
+  const {
+    entries,
+    candidates,
+    additionalFiles,
+    discoveryReads,
+    sharedDependencyReads,
+    reuseFileList,
+    discovery
+  } = discovered
+  const { key } = plan
+  const { mark } = timer
+  const log = report.log
   const mountKey = JSON.stringify([
     result.entries,
     mountedGil,
