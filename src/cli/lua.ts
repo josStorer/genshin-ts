@@ -168,6 +168,8 @@ export async function buildClientLua({
         })
       : []
   const graphImports = new Map<string, string>()
+  // 节点图依赖在首轮节点图编译后才就绪，首次读取单独统计，不混入入口发现。
+  let sharedDependencyReads = 0
   if (entries.length)
     for (const file of session?.graphFiles ?? []) {
       const normalized = normalize(file)
@@ -178,7 +180,7 @@ export async function buildClientLua({
           : undefined
       if (prior !== undefined) graphImports.set(normalized, prior)
       else {
-        discoveryReads++
+        sharedDependencyReads++
         graphImports.set(
           normalized,
           ts
@@ -242,6 +244,7 @@ export async function buildClientLua({
         skipped: true,
         reason: 'unrelated-change',
         discoveryReads,
+        sharedDependencyReads,
         discoveryRescanned: !reuseFileList
       },
       log
@@ -402,6 +405,7 @@ export async function buildClientLua({
     {
       execution: session?.worker ? 'worker' : 'main',
       discoveryReads,
+      sharedDependencyReads,
       discoveryRescanned: !reuseFileList,
       candidates: candidates.length,
       entries: entries.length,

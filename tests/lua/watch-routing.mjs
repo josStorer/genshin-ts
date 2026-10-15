@@ -86,6 +86,26 @@ try {
   await wait(() => read('lua/private/dep.lua').includes('extra-two'))
   await sleep(250)
   assert(!log.slice(offset).includes('开始编译'), log.slice(offset))
+  // 仅修改节点图的 import，也必须重新判断原 Lua 专用模块是否变成共享模块。
+  write('private/shared-check.ts', `export const extra='extra-two'; export const readHost=()=>self`)
+  write('main.ts', withDep.replace('./private/dep', './private/shared-check'))
+  await wait(() => has('lua/private/shared-check.lua'))
+  await sleep(250)
+  offset = log.length
+  write(
+    'server.ts',
+    `import{extra}from'./private/shared-check';${server.replace('f.printString(message)', 'f.printString(message);f.printString(extra)')}`
+  )
+  await wait(() => log.slice(offset).includes('Lua 编译失败'))
+  assert(
+    read('lua/private/shared-check.lua').includes('readHost'),
+    'failed build preserves prior output'
+  )
+  write('private/shared-check.ts', `export const extra='shared-fixed'`)
+  await wait(() => read('lua/private/shared-check.lua').includes('shared-fixed'))
+  write('server.ts', server)
+  write('main.ts', withDep)
+  await sleep(700)
   // 负向入口规则不能阻止原生 Lua 和声明依赖的更新。
   write('private/native.d.ts', 'export function value(this:void):number')
   write('private/native.lua', 'return {value=function() return 41 end}')
