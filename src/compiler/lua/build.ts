@@ -646,7 +646,6 @@ function packageLua({
   prepared,
   checked
 }: LuaBuildContext): LuaBuildResult {
-  const { root } = resolved
   const { sources, cacheKey, plan, program } = prepared
   const {
     diagnostics,
@@ -679,24 +678,9 @@ function packageLua({
       }
     const helpers = path.join(packageRoot(), 'dist/src/runtime/lua-assets/helpers.lua')
     files.set('__gsts_helpers.lua', fs.readFileSync(helpers, 'utf8'))
-    const origins = new Map(
-      modules.map((source) => [
-        modulePath(source.fileName) + '.lua',
-        posix(path.relative(root, source.fileName))
-      ])
-    )
     for (const [name, text] of files) {
       if (!name.endsWith('.lua')) continue
-      const origin =
-        name === '__gsts_helpers.lua'
-          ? 'genshin-ts/runtime/lua'
-          : name === 'lualib_bundle.lua'
-            ? 'typescript-to-lua@1.34.0 (lualib)'
-            : (origins.get(name) ?? name)
-      files.set(
-        name,
-        `-- @gsts:lua\n-- 此文件由 GSTS 生成，请修改源文件后重新编译。\n-- 来源：${origin.replace(/[\r\n]/g, ' ')}\n${text.replace(/^-- @gsts:lua\r?\n/, '')}`
-      )
+      files.set(name, `-- @gsts:lua\n${text.replace(/^-- @gsts:lua\r?\n/, '')}`)
     }
   }
   for (const name of luaCache.files.keys())

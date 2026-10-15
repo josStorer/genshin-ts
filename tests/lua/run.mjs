@@ -295,6 +295,17 @@ assert.throws(
 )
 assert.equal(hasLuaMarker('\uFEFF\n-- @gsts:lua\nprint(1)'), true)
 assert.equal(hasLuaMarker('-- user\n-- @gsts:lua'), false)
+const oldHeader =
+  '-- @gsts:lua\n-- 此文件由 GSTS 生成，请修改源文件后重新编译。\n-- 来源：old.ts\nreturn 0'
+assert.equal(hasLuaMarker(oldHeader), true)
+fs.writeFileSync(path.join(target, 'main.lua'), oldHeader)
+assert.deepEqual(writeLuaFiles(target, files).written, ['main.lua'])
+assert.equal(fs.readFileSync(path.join(target, 'main.lua'), 'utf8'), files.get('main.lua'))
+for (const text of result.files.values()) {
+  assert.equal(text.split('\n')[0], '-- @gsts:lua')
+  assert.equal(text.includes('-- 此文件由 GSTS 生成'), false)
+  assert.equal(text.includes('-- 来源：'), false)
+}
 assert.deepEqual(writeLuaFiles(target, new Map(), true).removed, ['main.lua'])
 assert.equal(fs.existsSync(path.join(target, 'user.lua')), true)
 console.log('Lua compiler, native module, live bindings, class, hooks and safe output: PASS')
