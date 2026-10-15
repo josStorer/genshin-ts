@@ -71,13 +71,54 @@ function M.listenKey(control, event, callback)
 end
 function M.defineSignal(name, params) return {__gstsSignal = true, name = name, params = params} end
 -- @gsts:signal-writers
+local function validSignalValue(kind, value)
+    if kind:sub(-5) == "_list" then
+        if type(value) ~= "table" then return false end
+        local count = 0
+        for key, item in pairs(value) do
+            if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > #value then return false end
+            if not validSignalValue(kind:sub(1, -6), item) then return false end
+            count = count + 1
+        end
+        return count == #value
+    end
+    if kind == "str" then return type(value) == "string" end
+    if kind == "bool" then return type(value) == "boolean" end
+    if kind == "vec3" then
+        return type(value) == "table" and validSignalValue("float", value.x)
+            and validSignalValue("float", value.y) and validSignalValue("float", value.z)
+    end
+    if not writers[kind] or type(value) ~= "number" or value ~= value or math.abs(value) == math.huge then return false end
+    return kind == "float" or (value % 1 == 0 and math.abs(value) <= 9007199254740991)
+end
+
+-- The send and receive boundaries reject the same count, index and value errors.
+local function signalValueError(signal, values, count)
+    if type(values) ~= "table" or (count or #values) ~= #signal.params then
+        return "Invalid signal payload: " .. signal.name .. " (parameter count)"
+    end
+    local actual = 0
+    for key in pairs(values) do
+        if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > #signal.params then
+            return "Invalid signal payload: " .. signal.name .. " (parameter index)"
+        end
+        actual = actual + 1
+    end
+    for i, param in ipairs(signal.params) do
+        if not validSignalValue(param[2], values[i]) then
+            return "Invalid signal payload: " .. signal.name .. "." .. param[1]
+        end
+    end
+    if actual ~= #signal.params then return "Invalid signal payload: " .. signal.name .. " (parameter count)" end
+end
+-- Validate the entire payload before creating a host signal or writing any fields.
 function M.send(signal, ...)
+    local values = {...}
+    local message = signalValueError(signal, values, select('#', ...))
+    if message then error(message, 2) end
     local instance = game.ServerSignal(signal.name)
     for i, param in ipairs(signal.params) do
-        local method = writers[param[2]]
-        if not method then error("Unsupported signal parameter type: " .. tostring(param[2])) end
-        local value = select(i, ...)
-        instance[method](instance, value)
+        instance[writers[param[2]]](instance, values[i])
     end
     instance:SendSignal()
 end
@@ -102,27 +143,6 @@ function M.readParams(script, schema)
     end
     return values
 end
-local function validSignalValue(kind, value)
-    if kind:sub(-5) == "_list" then
-        if type(value) ~= "table" then return false end
-        local count = 0
-        for key, item in pairs(value) do
-            if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > #value then return false end
-            if not validSignalValue(kind:sub(1, -6), item) then return false end
-            count = count + 1
-        end
-        return count == #value
-    end
-    if kind == "str" then return type(value) == "string" end
-    if kind == "bool" then return type(value) == "boolean" end
-    if kind == "vec3" then
-        return type(value) == "table" and validSignalValue("float", value.x)
-            and validSignalValue("float", value.y) and validSignalValue("float", value.z)
-    end
-    if not writers[kind] or type(value) ~= "number" or value ~= value or math.abs(value) == math.huge then return false end
-    return kind == "float" or (value % 1 == 0 and math.abs(value) <= 9007199254740991)
-end
-
 -- Pending in-game confirmation: assume EnableUpdate also gates OnLevelUpdate.
 -- Keeping it enabled for level timers is correct under either known host interpretation.
 local LEVEL_CLOCK_NEEDS_UPDATE = true
@@ -270,24 +290,11 @@ function M.createScope(env, clock)
             -- Validate before invoking users, and isolate failures between listeners.
             function group.dispatch(name, values)
                 if state ~= "active" then return end
-                if name ~= signal.name or type(values) ~= "table" or #values ~= #signal.params then
-                    report("Invalid signal payload: " .. signal.name .. " (parameter count)"); return
-                end
-                local count = 0
-                for key in pairs(values) do
-                    if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > #signal.params then
-                        report("Invalid signal payload: " .. signal.name .. " (parameter index)"); return
-                    end
-                    count = count + 1
-                end
-                if count ~= #signal.params then report("Invalid signal payload: " .. signal.name); return end
+                local message = name ~= signal.name and ("Unexpected signal name: " .. tostring(name) .. " (expected " .. signal.name .. ")")
+                    or signalValueError(signal, values)
+                if message then report(message); return end
                 local params = {}
-                for i, param in ipairs(signal.params) do
-                    if not validSignalValue(param[2], values[i]) then
-                        report("Invalid signal payload: " .. signal.name .. "." .. param[1]); return
-                    end
-                    params[param[1]] = values[i]
-                end
+                for i, param in ipairs(signal.params) do params[param[1]] = values[i] end
                 local snapshot = {}
                 for i, listener in ipairs(group.listeners) do snapshot[i] = listener end
                 for _, listener in ipairs(snapshot) do

@@ -12,6 +12,7 @@ const suites = {
     'signals',
     'scope-lifecycle',
     'signal-kinds',
+    'signal-validation',
     'timers',
     'update-ownership',
     'source-maps',

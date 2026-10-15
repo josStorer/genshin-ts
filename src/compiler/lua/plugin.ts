@@ -1,7 +1,6 @@
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
-import { luaSignalWriters } from '../../runtime/lua_signals.js'
 import { getLuaBuiltins, numberConstants } from './builtins.js'
 import { luaDataConstant, luaDataModule } from './data_modules.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
@@ -552,57 +551,11 @@ export function createLuaPlugin(
               )
         }
         if (builtins.global(callee) === 'send') {
-          const signalType = node.arguments[0] && ctx.checker.getTypeAtLocation(node.arguments[0])
-          const paramsSymbol = signalType?.getProperty('params')
-          const paramsType =
-            paramsSymbol && ctx.checker.getTypeOfSymbolAtLocation(paramsSymbol, node.arguments[0])
-          const methods: Readonly<Record<string, string>> = luaSignalWriters
-          const writers =
-            paramsType && ctx.checker.isTupleType(paramsType)
-              ? ctx.checker.getTypeArguments(paramsType as ts.TypeReference).map((param) => {
-                  if (!ctx.checker.isTupleType(param)) return undefined
-                  const type = ctx.checker.getTypeArguments(param as ts.TypeReference)[1]
-                  if (!type?.isStringLiteral()) return undefined
-                  const list = type.value.endsWith('_list'),
-                    name = list ? type.value.slice(0, -5) : type.value
-                  return methods[name] ? methods[name] + (list ? 'List' : '') : undefined
-                })
-              : undefined
-          const args = transformOrderedExpressions(ctx, node.arguments)
-          if (
-            writers &&
-            writers.every((writer): writer is string => !!writer) &&
-            args.length === writers.length + 1
-          ) {
-            const params = args.map((_, i) => id(`arg${i}`)),
-              builder = id('signal')
-            const body: lua.Statement[] = [
-              lua.createVariableDeclarationStatement(
-                builder,
-                lua.createCallExpression(field(field(id('_ENV'), 'game'), 'ServerSignal'), [
-                  field(params[0], 'name')
-                ])
-              )
-            ]
-            writers.forEach((writer, i) =>
-              body.push(
-                lua.createExpressionStatement(
-                  lua.createMethodCallExpression(builder, id(writer), [params[i + 1]])
-                )
-              )
-            )
-            body.push(
-              lua.createExpressionStatement(
-                lua.createMethodCallExpression(builder, id('SendSignal'), [])
-              )
-            )
-            return lua.createCallExpression(
-              lua.createFunctionExpression(lua.createBlock(body), params),
-              args,
-              node
-            )
-          }
-          return lua.createCallExpression(field(helpers(ctx), 'send'), args, node)
+          return lua.createCallExpression(
+            field(helpers(ctx), 'send'),
+            transformOrderedExpressions(ctx, node.arguments),
+            node
+          )
         }
         if (
           ts.isPropertyAccessExpression(callee) &&
