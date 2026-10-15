@@ -90,6 +90,8 @@ Use utilities via `lua.helper` or import them from `genshin-ts/runtime/lua`. Bot
 
 findControl returns undefined when missing and throws for ambiguous names or the wrong type. requireControl also throws when missing. Entry-owned listenKey and onSignal subscriptions activate on Start/Enable, unregister on Disable, and restore uncancelled subscriptions on Enable. Destroy releases them permanently. Calling the returned cancellation function repeatedly is safe. Raw host listeners remain your responsibility; borrowed controls are never automatically destroyed.
 
+The scope has four states: `idle`, `active`, `inactive`, and `destroyed`. Start/Enable activates it before user code. Disable/Destroy runs user code first, then cleans up subscriptions and timers, including when user code throws. A timer created during onDisable is accepted and then cleared by that cleanup. Repeating a transition is harmless. State changes after destruction are ignored; adding a new subscription or timer after destruction throws. The generated Lua shows these lifecycle calls explicitly.
+
 ```ts
 const params = lua.helper.readParams(lua.script, {
   Speed: { type: 'number', default: 20 },

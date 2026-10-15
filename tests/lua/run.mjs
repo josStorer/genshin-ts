@@ -10,6 +10,7 @@ const suites = {
     'methods',
     'sdk-paths',
     'signals',
+    'scope-lifecycle',
     'signal-kinds',
     'timers',
     'source-maps',

@@ -5,6 +5,7 @@ import { luaSignalWriters } from '../../runtime/lua_signals.js'
 import { getLuaBuiltins, numberConstants } from './builtins.js'
 import { luaDataConstant, luaDataModule } from './data_modules.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
+import { generateScopeHooks } from './scope_hooks.js'
 import { luaTimerGlobals } from './standard_library.js'
 import { hooks } from './syntax.js'
 import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl_compat.js'
@@ -291,9 +292,7 @@ export function createLuaPlugin(
               lua.createCallExpression(field(helpers(ctx), 'createScope'), [id('_ENV'), clock])
             )
           )
-          result.statements.push(
-            lua.createExpressionStatement(lua.createCallExpression(field(instance, 'install'), []))
-          )
+          generateScopeHooks(result.statements, instance, entry!, ctx)
         }
         result.statements.unshift(...prelude)
         return result

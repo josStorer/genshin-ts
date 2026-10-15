@@ -123,41 +123,86 @@ local function validSignalValue(kind, value)
     return kind == "float" or (value % 1 == 0 and math.abs(value) <= 9007199254740991)
 end
 
--- One scope per mounted script, never per shared require module.
+-- One scope belongs to one mount. The ordered list owns every external subscription.
 function M.createScope(env, clock)
-    local scope, groups, keys = {}, {}, {}
-    local active, destroyed = false, false
-    local disabled, ticking = false, false
-    local now, tasks, order = 0, {}, {}
+    local scope, groups, subscriptions = {}, {}, {}
+    -- Legal: idle -> active/inactive/destroyed; active <-> inactive; either -> destroyed.
+    -- Repeating a state change and activating a destroyed scope are ignored.
+    local state = "idle"
+    local now, tasks, order, ticking = 0, {}, {}, false
+
+    -- Reporting a callback failure does not abort the remaining subscribers.
     local function report(message) env.printerr("[GSTS] " .. tostring(message)) end
+    -- Cleanup is best-effort for each subscription, so one host error cannot skip the others.
     local function safe(fn, ...)
         local ok, message = pcall(fn, ...)
         if not ok then report(message) end
     end
+    -- Every subscription provides activate/deactivate/dispose, and is disposed at most once.
+    local function subscribe(subscription)
+        subscriptions[#subscriptions + 1] = subscription
+        if state == "active" then subscription.activate() end
+        return function()
+            if subscription.disposed then return end
+            subscription.disposed = true
+            safe(subscription.dispose)
+            for i, item in ipairs(subscriptions) do
+                if item == subscription then table.remove(subscriptions, i); break end
+            end
+        end
+    end
+    -- Iteration uses a snapshot: host callbacks may cancel another subscription synchronously.
+    local function visitSubscriptions(operation)
+        local snapshot = {}
+        for i, item in ipairs(subscriptions) do snapshot[i] = item end
+        for _, item in ipairs(snapshot) do
+            if operation == "activate" and state ~= "active" then break end
+            if not item.disposed then
+                if operation == "dispose" then item.disposed = true end
+                safe(item[operation])
+            end
+        end
+    end
+
+    -- The timer queue is one subscription; disabling it drops every pending task.
+    local timers = {}
+    function timers.activate()
+        if #order > 0 then env.script:EnableUpdate(true) end
+    end
+    -- Clock position survives a disable; pending callbacks do not.
+    function timers.deactivate() tasks, order = {}, {} end
+    timers.dispose = timers.deactivate
+    if clock then subscribe(timers) end
+
+    -- Setup may schedule before activation; inactive/destroyed instances cannot add timers.
     local function schedule(callback, delay, repeated, ...)
-        if destroyed or disabled then error("Cannot schedule a timer on a disabled or destroyed script") end
+        if state == "inactive" or state == "destroyed" then error("Cannot schedule a timer on a disabled or destroyed script") end
         delay = delay or 0
         if type(callback) ~= "function" or type(delay) ~= "number" or delay ~= delay or math.abs(delay) == math.huge then error("Invalid timer callback or delay") end
         delay = math.max(0, delay)
         local handle = {}
         tasks[handle] = {callback=callback, delay=delay, due=now+delay, repeated=repeated, args={n=select('#',...),...}}
         order[#order+1] = handle
-        if active and #order == 1 then env.script:EnableUpdate(true) end
+        if state == "active" and #order == 1 then timers.activate() end
         return handle
     end
+    -- Timer handles are opaque identities and belong only to this mount.
     function scope.setTimeout(callback, delay, ...) return schedule(callback, delay, false, ...) end
+    -- Missed intervals run once per tick, rather than replaying an unbounded backlog.
     function scope.setInterval(callback, delay, ...) return schedule(callback, delay, true, ...) end
+    -- Cancelling an unknown or already cancelled handle is harmless.
     function scope.clearTimeout(handle) if handle ~= nil then tasks[handle] = nil end end
     scope.clearInterval = scope.clearTimeout
+    -- A tick cannot re-enter itself; tasks created during it run on a later tick.
     function scope.tick(dt)
-        if not active or destroyed or ticking then return end
+        if state ~= "active" or ticking then return end
         if type(dt) ~= "number" or dt < 0 or dt ~= dt or dt == math.huge then report("Invalid timer delta"); return end
         ticking = true
         now = now + dt * 1000
         local snapshot = {}
         for i, handle in ipairs(order) do snapshot[i] = handle end
         for _, handle in ipairs(snapshot) do
-            if not active or destroyed then break end
+            if state ~= "active" then break end
             local task = tasks[handle]
             if task and task.due <= now then
                 if task.repeated then
@@ -172,24 +217,35 @@ function M.createScope(env, clock)
         order = remaining
         ticking = false
     end
-    local function register(group)
-        if group.registered or #group.listeners == 0 then return end
-        env.script:RegisterServerSignalHandler(group.signal.name, group.dispatch)
-        group.registered = true
-    end
-    local function unregister(group)
-        if not group.registered then return end
-        group.registered = false
-        safe(function() env.script:UnregisterServerSignalHandler(group.signal.name) end)
-    end
+
+    -- A signal name has one host registration; all listeners share its validated payload.
     function scope.onSignal(signal, callback)
-        if destroyed then error("Cannot subscribe after script destruction") end
+        if state == "destroyed" then error("Cannot subscribe after script destruction") end
         local group = groups[signal.name]
         if not group then
             group = {signal=signal, listeners={}, registered=false}
             groups[signal.name] = group
+            -- Activation is idempotent, including when a listener is added while already active.
+            function group.activate()
+                if group.registered or #group.listeners == 0 then return end
+                env.script:RegisterServerSignalHandler(signal.name, group.dispatch)
+                group.registered = true
+            end
+            -- The exact name registered by this group is the only registration it removes.
+            function group.deactivate()
+                if not group.registered then return end
+                group.registered = false
+                env.script:UnregisterServerSignalHandler(signal.name)
+            end
+            -- Old cancellation handles become no-ops after destruction.
+            function group.dispose()
+                for _, listener in ipairs(group.listeners) do listener.enabled = false end
+                group.listeners = {}
+                group.deactivate()
+            end
+            -- Validate before invoking users, and isolate failures between listeners.
             function group.dispatch(name, values)
-                if not active or destroyed then return end
+                if state ~= "active" then return end
                 if name ~= signal.name or type(values) ~= "table" or #values ~= #signal.params then
                     report("Invalid signal payload: " .. signal.name .. " (parameter count)"); return
                 end
@@ -211,9 +267,10 @@ function M.createScope(env, clock)
                 local snapshot = {}
                 for i, listener in ipairs(group.listeners) do snapshot[i] = listener end
                 for _, listener in ipairs(snapshot) do
-                    if listener.enabled and active and not destroyed then safe(listener.callback, {name=name, params=params}) end
+                    if listener.enabled and state == "active" then safe(listener.callback, {name=name, params=params}) end
                 end
             end
+            subscribe(group)
         else
             if #group.signal.params ~= #signal.params then error("Conflicting signal contract: " .. signal.name) end
             for i, param in ipairs(signal.params) do
@@ -223,56 +280,48 @@ function M.createScope(env, clock)
         end
         local listener = {callback=callback, enabled=true}
         group.listeners[#group.listeners + 1] = listener
-        if active then register(group) end
+        if state == "active" then group.activate() end
+        -- Cancelling one listener leaves the others registered; repeated cancellation is harmless.
         return function()
             if not listener.enabled then return end
             listener.enabled = false
             for i, item in ipairs(group.listeners) do if item == listener then table.remove(group.listeners, i); break end end
-            if #group.listeners == 0 then unregister(group) end
+            if #group.listeners == 0 then safe(group.deactivate) end
         end
     end
+    -- Key listeners use the same activation and disposal list as signals and the timer queue.
     function scope.listenKey(control, event, callback)
-        if destroyed then error("Cannot listen after script destruction") end
-        local key = {control=control, event=event, callback=callback, enabled=true}
-        keys[#keys+1] = key
-        if active then key.off = M.listenKey(control, event, callback) end
-        return function()
-            if not key.enabled then return end
-            key.enabled = false
-            if key.off then key.off(); key.off = nil end
-            for i, item in ipairs(keys) do if item == key then table.remove(keys, i); break end end
+        if state == "destroyed" then error("Cannot listen after script destruction") end
+        local key = {}
+        -- There is never more than one host callback for this subscription.
+        function key.activate() if not key.off then key.off = M.listenKey(control, event, callback) end end
+        -- Removal uses the original callback identity, then clears the active handle.
+        function key.deactivate()
+            local off = key.off
+            key.off = nil
+            if off then off() end
         end
+        key.dispose = key.deactivate
+        return subscribe(key)
     end
+    -- Start/Enable share one transition; repeat calls cannot register twice.
     function scope.activate()
-        if active or destroyed then return end
-        active = true
-        disabled = false
-        for _, group in pairs(groups) do register(group) end
-        for _, key in ipairs(keys) do if key.enabled then key.off = M.listenKey(key.control, key.event, key.callback) end end
-        if clock and #order > 0 then env.script:EnableUpdate(true) end
+        if state == "active" or state == "destroyed" then return end
+        state = "active"
+        visitSubscriptions("activate")
     end
-    function scope.deactivate(destroy)
-        active = false
-        disabled = true
-        tasks, order = {}, {}
-        for _, group in pairs(groups) do unregister(group) end
-        for _, key in ipairs(keys) do if key.off then safe(key.off); key.off = nil end end
-        if destroy then destroyed = true; groups = {}; keys = {} end
+    -- Disable retains subscriptions for reactivation but always clears pending timers.
+    function scope.deactivate()
+        if state == "inactive" or state == "destroyed" then return end
+        state = "inactive"
+        visitSubscriptions("deactivate")
     end
-    function scope.install()
-        if clock then
-            local name = clock == 'real' and 'OnUpdate' or 'OnLevelUpdate'
-            local hook = env[name]
-            env[name] = function(dt) scope.tick(dt); if hook then return hook(dt) end end
-        end
-        for _, name in ipairs({"OnStart", "OnEnable"}) do
-            local hook = env[name]
-            env[name] = function(...) scope.activate(); if hook then return hook(...) end end
-        end
-        for _, name in ipairs({"OnDisable", "OnDestroy"}) do
-            local hook = env[name]
-            env[name] = function(...) scope.deactivate(name == "OnDestroy"); if hook then return hook(...) end end
-        end
+    -- Destruction is terminal and drops every resource owned by this mount.
+    function scope.dispose()
+        if state == "destroyed" then return end
+        state = "destroyed"
+        visitSubscriptions("dispose")
+        subscriptions, groups = {}, {}
     end
     return scope
 end
