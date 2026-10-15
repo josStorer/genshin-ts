@@ -34,6 +34,7 @@ export interface ClientLuaSession {
   localOutput?: LuaOutputCache
   injectedOutput?: LuaOutputCache
   graphFiles?: Set<string>
+  mountReportKey?: string
   discovery?: {
     key: string
     candidates: Map<string, { file: string; entry: boolean; imports: string; graph: boolean }>
@@ -351,10 +352,12 @@ export async function buildClientLua({
       arg3: local.removed.length
     })
   )
+  let mountedGil: string | undefined
   if (cfg.inject?.mapId !== undefined && !noinject) {
     report.injection = t('summary_failed')
     try {
       const target = resolveGilTarget(cfg.inject)
+      mountedGil = target.gilPath
       const destination = path.join(target.saveLevelDir, String(target.mapId), 'external_lua_file')
       const injected = writeLuaFiles(
         destination,
@@ -383,6 +386,16 @@ export async function buildClientLua({
         { cause: error }
       )
     }
+  }
+  const mountKey = JSON.stringify([
+    result.entries,
+    mountedGil,
+    mountedGil ? fs.statSync(mountedGil).mtimeMs : undefined
+  ])
+  if (!session || session.mountReportKey !== mountKey) {
+    const { luaMountMessages } = await import('./lua_mounts.js')
+    for (const message of luaMountMessages(result.entries, mountedGil)) log(message)
+    if (session) session.mountReportKey = mountKey
   }
   mark('injectionAndReport')
   timer.report(

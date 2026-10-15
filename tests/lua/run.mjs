@@ -11,6 +11,7 @@ const suites = {
     'signals',
     'timers',
     'source-maps',
+    'mounts',
     'shared-modules',
     'standard-library',
     'data-modules',

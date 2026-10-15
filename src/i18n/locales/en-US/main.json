@@ -1,4 +1,8 @@
 {
+  "lua_mountManual": "[Lua] Injection only copies files to external_lua_file. Mount entries in the editor; dependency modules need no mount.",
+  "lua_mountReadFailed": "[Lua] Could not inspect mount records; check in the editor: {{arg0}}",
+  "lua_mountCandidate": "[Lua] {{arg0}}: found mount record {{arg1}}. Confirm it in the editor; this is not an in-game validation.",
+  "lua_mountUnconfirmed": "[Lua] {{arg0}}: mount not confirmed. Select the target container and add script {{arg0}} in the editor.",
   "lua_command": "Lua tools",
   "lua_locateCommand": "Map a Lua error line back to source",
   "lua_locateColumn": "Lua column, starting at 1",

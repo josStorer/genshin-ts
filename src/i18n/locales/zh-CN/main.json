@@ -1,4 +1,8 @@
 {
+  "lua_mountManual": "[Lua] 注入只把文件复制到 external_lua_file；挂载仍需在编辑器中完成，依赖模块无需挂载。",
+  "lua_mountReadFailed": "[Lua] 无法核对挂载记录，请在编辑器确认：{{arg0}}",
+  "lua_mountCandidate": "[Lua] {{arg0}}：发现挂载记录 {{arg1}}，请在编辑器确认；这不是游戏运行验证。",
+  "lua_mountUnconfirmed": "[Lua] {{arg0}}：挂载尚未确认。请选中目标容器，添加脚本 {{arg0}}。",
   "lua_command": "Lua 工具",
   "lua_locateCommand": "将 Lua 报错行号定位到源码",
   "lua_locateColumn": "Lua 列号，从 1 开始",
