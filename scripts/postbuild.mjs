@@ -64,11 +64,17 @@ fs.cpSync(
 )
 
 const { build } = await import('esbuild')
+// CommonJS has no import.meta. The only user in this bundle is src/i18n/index.ts, which loads
+// its locale JSON through createRequire, so point it at the compiled i18n module's location.
 await build({
   entryPoints: [path.join(repoRoot, 'src/compiler/lua/diagnostics.ts')],
   outfile: path.join(repoRoot, 'dist/src/compiler/lua/editor.cjs'),
   bundle: true,
   platform: 'node',
   format: 'cjs',
-  external: ['typescript']
+  external: ['typescript'],
+  define: { 'import.meta.url': '__gstsI18nModuleUrl' },
+  banner: {
+    js: "'use strict';\nconst __gstsI18nModuleUrl = require('node:url').pathToFileURL(require('node:path').join(__dirname, '../../i18n/index.js')).href;"
+  }
 })

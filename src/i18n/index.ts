@@ -1,10 +1,12 @@
+import { createRequire } from 'node:module'
+
 import { match } from '@formatjs/intl-localematcher'
 import i18next from 'i18next'
 import { osLocaleSync } from 'os-locale'
 
-// Static JSON imports also allow the Lua editor rules to be bundled as CommonJS.
-import enUS from './locales/en-US/main.json' with { type: 'json' }
-import zhCN from './locales/zh-CN/main.json' with { type: 'json' }
+const requireFn = createRequire(import.meta.url)
+const enUS = requireFn('./locales/en-US/main.json') as Record<string, string>
+const zhCN = requireFn('./locales/zh-CN/main.json') as Record<string, string>
 
 export type Lang = 'zh-CN' | 'en-US'
 
