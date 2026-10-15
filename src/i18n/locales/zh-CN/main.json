@@ -148,5 +148,6 @@
   "lua_unavailableGlobal": "Lua 客户端没有 {{arg0}}。定时任务请先用 onUpdate/onLevelUpdate 累计 dt，动画可用 lua.game.Tween；其他宿主能力请查 lua.game/lua.script。",
   "lua_booleanObject": "Lua 不支持 new Boolean() 包装对象；请使用 Boolean(value) 得到布尔值。",
   "lua_unsupportedMember": "Lua 尚不支持标准库成员 {{arg0}}；请使用 Lua 支持清单中的成员，或 lua 下的原生 API。",
-  "lua_builtinMethodValue": "Lua 标准库方法需要在对象上直接调用；传回调时写成 value => Math.abs(value) 这样的函数。"
+  "lua_builtinMethodValue": "Lua 标准库方法需要在对象上直接调用；传回调时写成 value => Math.abs(value) 这样的函数。",
+  "lua_packageUnavailable": "Lua 不能加载 {{arg0}} 的 JavaScript 实现。仅支持包内纯数据白名单、项目内 TS 和带 Lua 实现的原生模块；节点图 enum 是运行时类，宿主枚举请使用 lua.Enum。"
 }

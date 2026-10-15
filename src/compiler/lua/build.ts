@@ -7,6 +7,7 @@ import * as tstl from 'typescript-to-lua'
 
 import { initCliI18n, t, type Lang } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
+import { luaDataModule, luaDataModules } from './data-modules.js'
 import { getLuaDiagnostics } from './diagnostics.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
 import {
@@ -505,7 +506,14 @@ function collectNativeInputs({ resolved, checked, luaCache, timer }: LuaBuildCon
   const resolveLua = (name: string, from: string) => {
     if (name === 'genshin-ts/runtime/lua' || name === 'genshin-ts/runtime/core')
       return '__gsts_helpers'
+    const dataModule = luaDataModule(name)
+    if (dataModule) return `__gsts_data.${dataModule}`
     const resolved = resolve(name, from)
+    if (
+      name.startsWith('genshin-ts/') ||
+      resolved?.resolvedFileName.replaceAll('\\', '/').includes('/node_modules/')
+    )
+      throw new Error(t('lua_packageUnavailable', { arg0: name }))
     if (!resolved)
       throw new Error(
         t('lua_unresolvedDependency', { arg0: name, arg1: posix(path.relative(root, from)) })
@@ -625,6 +633,17 @@ function transpileLua(
     diagnostics.push(...checked.transpileDiagnostics)
   }
   timer.mark('transpile')
+  // 增量编译会复用未改动模块的文本；从最终引用集合收集数据模块，类型导入不产生文件。
+  for (const name of luaDataModules) {
+    if ([...files.values()].some((text) => text.includes(`"__gsts_data.${name}"`)))
+      files.set(
+        `__gsts_data/${name}.lua`,
+        fs.readFileSync(
+          path.join(packageRoot(), 'dist/src/runtime/lua-assets/data_modules', name + '.lua'),
+          'utf8'
+        )
+      )
+  }
 }
 
 function packageLua({

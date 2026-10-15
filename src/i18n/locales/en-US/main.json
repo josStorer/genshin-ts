@@ -148,5 +148,6 @@
   "lua_unavailableGlobal": "Client Lua has no {{arg0}}. For timers, accumulate dt in onUpdate/onLevelUpdate; use lua.game.Tween for animations. See lua.game/lua.script for host APIs.",
   "lua_booleanObject": "Lua does not support new Boolean() wrapper objects. Use Boolean(value) to get a boolean.",
   "lua_unsupportedMember": "Lua does not support standard library member {{arg0}}. Use a member from the Lua support list or a native API under lua.",
-  "lua_builtinMethodValue": "Call Lua standard library methods directly on their object. For callbacks, use a function such as value => Math.abs(value)."
+  "lua_builtinMethodValue": "Call Lua standard library methods directly on their object. For callbacks, use a function such as value => Math.abs(value).",
+  "lua_packageUnavailable": "Lua cannot load the JavaScript implementation of {{arg0}}. Use an allowlisted package data module, project TypeScript, or a native module with a Lua implementation. Node graph enum exports are runtime classes; use lua.Enum for host enums."
 }
