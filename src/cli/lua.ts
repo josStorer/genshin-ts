@@ -23,6 +23,8 @@ export interface ClientLuaReport {
 }
 
 export interface ClientLuaSession {
+  /** 有 Lua 入口或历史产物清单时，才处理 Lua 和声明文件的监听事件。 */
+  active?: boolean
   /** 最近发现的依赖；编译失败也保留，以便修复依赖时能再次触发。 */
   dependencies?: string[]
   compiler?: LuaCompileCache
@@ -132,6 +134,7 @@ export async function buildClientLua(
     return entry
   })
   report.active = entries.length > 0
+  if (session) session.active = report.active
   mark('discover')
   const additionalFiles = reuseFileList
     ? priorDiscovery!.additionalFiles
@@ -229,6 +232,7 @@ export async function buildClientLua(
     return summary
   }
   report.active = true
+  if (session) session.active = true
   const { writeLuaFiles, describeLuaConflicts } = await import('../compiler/lua/output.js')
   mark('loadCompiler')
   const input = {

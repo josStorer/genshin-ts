@@ -1831,10 +1831,12 @@ async function runDev(opts: GlobalOptions) {
   }
 
   const onSourceAddOrChange = (p: string) => {
+    if (!luaSession.active && /\.lua$|\.d\.ts$/i.test(p)) return
     changed.add(p)
     triggerCodeChange()
   }
   const onSourceUnlink = (p: string) => {
+    if (!luaSession.active && /\.lua$|\.d\.ts$/i.test(p)) return
     removed.add(p)
     triggerCodeChange()
   }
