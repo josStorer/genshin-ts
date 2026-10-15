@@ -19,10 +19,14 @@ import {
 import { createLuaPlugin, diagnostic, entryCall } from './plugin.js'
 import { lowerPrivateFields } from './private_fields.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
+import { setSharedProjectFiles } from './shared_modules.js'
 import { isNodeGraphEntry } from './syntax.js'
 import { LocatedLuaError, withLuaErrorLocations } from './tstl_compat.js'
 
 export interface LuaBuildOptions {
+  /** 两侧共享关系的入口候选与 import 签名；普通函数体编辑不改变它。 */
+  sharedProjectFiles?: string[]
+  sharedProjectKey?: string
   lang?: Lang
   entries: string[]
   /** 记录各阶段耗时；默认关闭。 */
@@ -131,6 +135,7 @@ export function compileLua(
   const resolved = resolveLuaHost(input, cache)
   timer.mark('setup')
   const prepared = prepareLuaProgram(input, resolved, timer, cache)
+  if (input.sharedProjectFiles) setSharedProjectFiles(prepared.program, input.sharedProjectFiles)
   onPrepared?.({
     dependencies: prepared.sources.map((source) => source.fileName),
     graphEntries: prepared.sources
@@ -329,7 +334,8 @@ function prepareLuaProgram(
     options,
     program.getRootFileNames(),
     additional,
-    !!input.typeCheck
+    !!input.typeCheck,
+    input.sharedProjectKey
   ])
   const oldCheck = cache?.checked
   let sources = program.getSourceFiles()

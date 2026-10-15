@@ -132,6 +132,7 @@ export const configs = {
     plugins: ['gsts'],
     rules: {
       'gsts/no-undefined-array-return': 'warn',
+      'gsts/lua-shared-module': 'error',
       'gsts/no-object-static': 'warn',
       'gsts/no-plain-object': 'warn',
       'gsts/require-boolean-condition': 'warn',

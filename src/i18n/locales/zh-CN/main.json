@@ -1,4 +1,8 @@
 {
+  "lua_listenerOwnership": "同一个脚本的同名信号不能同时使用 onSignal 和原始 RegisterServerSignalHandler；请选择一种监听方式，避免互相覆盖或取消。",
+  "lua_sharedBigint": "节点图和 Lua 共用的常量请写 number；在节点图使用处调用 int() 转换。共享模块不能使用 bigint。",
+  "lua_sharedApi": "这个模块同时被节点图和 Lua 使用，只能包含中立的类型、常量、纯函数和 defineSignal。请把宿主操作移到对应入口或显式传入回调。",
+  "lua_instanceScope": "此操作需要当前挂载实例，请在 clientControlScript 回调中使用，或向普通模块显式传入回调函数。",
   "desc": "Genshin TS 工具链：TS -> .gs.ts -> IR JSON -> .gia -> 注入 .gil",
   "optConfig": "配置文件路径（默认：./gsts.config.ts）",
   "optNoInject": "强制禁用注入（忽略配置）",

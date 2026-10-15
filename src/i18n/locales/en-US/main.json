@@ -1,4 +1,8 @@
 {
+  "lua_listenerOwnership": "Do not mix onSignal and raw RegisterServerSignalHandler for the same signal on this script: they would overwrite or cancel each other's listener.",
+  "lua_sharedBigint": "Use number for shared constants and convert with int() at the nodegraph call site. Shared modules cannot use bigint.",
+  "lua_sharedApi": "This module is used by both nodegraph and Lua entries. Keep types, constants, pure functions and defineSignal here; move host operations into an entry or pass callbacks explicitly.",
+  "lua_instanceScope": "This operation needs the mounted instance. Use it in clientControlScript, or explicitly pass a callback to the shared module.",
   "desc": "Genshin TS toolchain: TS -> .gs.ts -> IR JSON -> .gia -> inject .gil",
   "optConfig": "Config file path (default: ./gsts.config.ts)",
   "optNoInject": "Disable injection even if configured",

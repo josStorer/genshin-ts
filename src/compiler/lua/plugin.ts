@@ -25,6 +25,17 @@ export function createLuaPlugin(
   const getters = new Map<ts.SourceFile, lua.TableFieldExpression[]>()
   const helperLocals = new Map<ts.SourceFile, lua.Identifier>()
   const booleanLocals = new Map<ts.SourceFile, lua.Identifier>()
+  const scopeLocals = new Map<ts.SourceFile, lua.Identifier>()
+  function scope(ctx: lua.TransformationContext, node: ts.Node) {
+    if (!entryCall(ctx.sourceFile)) ctx.diagnostics.push(diagnostic(node, t('lua_instanceScope')))
+    let local = scopeLocals.get(ctx.sourceFile)
+    if (!local) {
+      local = id(ctx.createTempName('scope'))
+      scopeLocals.set(ctx.sourceFile, local)
+      helpers(ctx)
+    }
+    return local
+  }
   const dataBindings = new Map<ts.Symbol, { module: string; key?: string }>()
   const dataLocals = new Map<ts.SourceFile, Map<string, lua.Identifier>>()
   function dataReference(
@@ -192,6 +203,11 @@ export function createLuaPlugin(
                 if (item.isTypeOnly || !ctx.resolver.isReferencedAliasDeclaration(item)) continue
                 const name = (item.propertyName ?? item.name).text
                 if (moduleKind === 'core' && name === 'g') continue
+                if (moduleKind === 'helpers' && name === 'listenKey') {
+                  const symbol = ctx.checker.getSymbolAtLocation(item.name)
+                  if (symbol) bindings.set(symbol, field(scope(ctx, item), 'listenKey'))
+                  continue
+                }
                 bind(item.name, name)
               }
           }
@@ -275,6 +291,18 @@ export function createLuaPlugin(
                 value
               ])
             )
+          )
+        }
+        const instance = scopeLocals.get(node)
+        if (instance) {
+          prelude.push(
+            lua.createVariableDeclarationStatement(
+              instance,
+              lua.createCallExpression(field(helpers(ctx), 'createScope'), [id('_ENV')])
+            )
+          )
+          result.statements.push(
+            lua.createExpressionStatement(lua.createCallExpression(field(instance, 'install'), []))
           )
         }
         result.statements.unshift(...prelude)
@@ -504,6 +532,7 @@ export function createLuaPlugin(
         if (data) return data
         const builtins = getLuaBuiltins(ctx.program)
         const member = builtins.member(node.name)
+        if (member === 'onSignal' || member === 'listenKey') return field(scope(ctx, node), member)
         if (member === 'helper') return helpers(ctx)
         if (member === 'self')
           return field(field(ctx.transformExpression(node.expression), 'script'), 'object')

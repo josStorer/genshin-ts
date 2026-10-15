@@ -192,7 +192,8 @@ function init(modules) {
         const { getLuaDiagnostics } = require('../../dist/src/compiler/lua/editor.cjs')
         return filtered.concat(getLuaDiagnostics(sourceFile, program))
       }
-      return filtered
+      const { getSharedModuleDiagnostics } = require('../../dist/src/compiler/lua/editor.cjs')
+      return filtered.concat(getSharedModuleDiagnostics(sourceFile, program))
     }
 
     return proxy

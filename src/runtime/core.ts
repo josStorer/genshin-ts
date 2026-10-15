@@ -1,4 +1,3 @@
-import { clientControlScript } from './lua_entry.js'
 import { CLIENT_GRAPH_ENTRY_SPEC_BY_SUB_TYPE } from '../definitions/client_graph_modes.js'
 import { isClientNodeTypeAvailable } from '../definitions/client_method_modes.js'
 import { registerClientEntityHelperContext } from '../definitions/entity_helpers.js'
@@ -62,9 +61,11 @@ import type {
   ServerGraphSubType,
   Variable
 } from './IR.js'
+import { clientControlScript } from './lua_entry.js'
 import type { MetaCallRecord, MetaCallRecordRef } from './meta_call_types.js'
 import { getRuntimeOptions } from './runtime_config.js'
 import { installScopedServerGlobals, installServerGlobals } from './server_globals.js'
+import type { SignalDefinition, SignalParamEntries, SignalParamType } from './signal_definition.js'
 import {
   bool,
   dict,
@@ -88,40 +89,13 @@ import {
 
 export type { MetaCallRecord, MetaCallRecordRef, MetaCallRecordType } from './meta_call_types.js'
 
-export type SignalParamType =
-  | 'bool'
-  | 'int'
-  | 'float'
-  | 'str'
-  | 'vec3'
-  | 'guid'
-  | 'entity'
-  | 'prefab_id'
-  | 'config_id'
-  | 'faction'
-  | 'bool_list'
-  | 'int_list'
-  | 'float_list'
-  | 'str_list'
-  | 'vec3_list'
-  | 'guid_list'
-  | 'entity_list'
-  | 'prefab_id_list'
-  | 'config_id_list'
-  | 'faction_list'
-  | 'unknown'
-
-export type SignalParamEntry = readonly [name: string, type: SignalParamType]
-export type SignalParamEntries = readonly SignalParamEntry[]
-
-export type SignalDefinition<
-  Name extends string = string,
-  Params extends SignalParamEntries = SignalParamEntries
-> = {
-  readonly __gstsSignal: true
-  readonly name: Name
-  readonly params: Params
-}
+export { defineSignal } from './signal_definition.js'
+export type {
+  SignalParamType,
+  SignalParamEntry,
+  SignalParamEntries,
+  SignalDefinition
+} from './signal_definition.js'
 
 export type SignalParamValue<T extends SignalParamType> =
   T extends keyof RuntimeParameterValueTypeMap ? RuntimeParameterValueTypeMap[T] : unknown
@@ -153,17 +127,6 @@ export type SignalEventPayload<
   S extends SignalDefinition
 > = ServerEventPayloadsByMode<Mode>['monitorSignal'] & {
   params: SignalParamObject<S>
-}
-
-export function defineSignal<const Name extends string, const Params extends SignalParamEntries>(
-  name: Name,
-  params: Params
-): SignalDefinition<Name, Params> {
-  return {
-    __gstsSignal: true,
-    name,
-    params
-  }
 }
 
 export function isSignalDefinition(value: unknown): value is SignalDefinition {

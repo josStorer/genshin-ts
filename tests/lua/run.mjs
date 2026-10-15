@@ -8,6 +8,8 @@ const suites = {
     'private-fields',
     'methods',
     'sdk-paths',
+    'signals',
+    'shared-modules',
     'standard-library',
     'data-modules',
     'lint',

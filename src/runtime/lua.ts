@@ -8,6 +8,7 @@ import type {
 } from './lua_host.js'
 import type { readParams } from './lua_params.js'
 import type { LuaMulti, LuaMultiReturn } from './lua_primitives.js'
+import type { LuaOnSignal } from './lua_signals.js'
 import type { LuaStandardGlobals } from './lua_standard.js'
 
 export type * from './lua_standard.js'
@@ -43,6 +44,8 @@ export interface ClientGlobals extends LuaStandardGlobals {
   readonly Color: HostColor
   /** 常用工具，与 genshin-ts/runtime/lua 的导出相同。 */
   readonly helper: ClientHelpers
+  /** 按信号契约接收具名参数；监听由当前脚本实例管理，取消函数可重复调用。 */
+  readonly onSignal: LuaOnSignal
 }
 export type ClientControlScriptOptions = Record<string, never>
 declare const scriptDefinition: unique symbol

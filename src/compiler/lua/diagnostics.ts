@@ -2,8 +2,11 @@ import ts from 'typescript'
 
 import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
+import { getSharedModuleDiagnostics } from './shared_modules.js'
 import { standardLibraryDiagnostic } from './standard_library.js'
 import { diagnostic, entryCall, hooks, nodeGraphCalls, publicMethodFunction } from './syntax.js'
+
+export { getSharedModuleDiagnostics } from './shared_modules.js'
 
 const ruleByMessage = {
   lua_importGraphEntry: 'lua-no-graph-entry',
@@ -16,6 +19,8 @@ const ruleByMessage = {
   lua_earlyReturn: 'lua-entry-return',
   lua_publicMethodThis: 'lua-public-methods',
   lua_publicMethodName: 'lua-public-methods',
+  lua_listenerOwnership: 'lua-listener-ownership',
+  lua_instanceScope: 'lua-instance-scope',
   lua_entryTopLevel: 'lua-entry-top-level',
   lua_reservedEnv: 'lua-reserved-env',
   lua_asyncFunction: 'lua-no-async',
@@ -36,7 +41,8 @@ export const luaLintRules = [
     )
   ),
   'lua-standard-library',
-  'lua-unavailable-global'
+  'lua-unavailable-global',
+  'lua-shared-module'
 ] as const
 export const luaWarningRules: readonly string[] = [
   'lua-no-undefined-field',
@@ -63,7 +69,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
   if (previous?.lang === lang) return previous.diagnostics
   const checker = program.getTypeChecker()
   const builtins = getLuaBuiltins(program)
-  const diagnostics: ts.Diagnostic[] = []
+  const diagnostics: ts.Diagnostic[] = [...getSharedModuleDiagnostics(source, program)]
   for (const call of nodeGraphCalls(source)) diagnostics.push(issue(call, 'lua_importGraphEntry'))
   const call = entryCall(source)
   if (call) {
@@ -183,7 +189,42 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
       (part) => !!(part.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null))
     )
   }
+  const managedSignals: (string | undefined)[] = []
+  const rawSignals: { name: string | undefined; node: ts.Node }[] = []
   const visit = (node: ts.Node) => {
+    if (ts.isCallExpression(node)) {
+      const member = builtins.member(node.expression)
+      const argument = node.arguments[0]
+      if (member === 'onSignal') {
+        if (!call) diagnostics.push(issue(node, 'lua_instanceScope'))
+        const name = argument && checker.getTypeAtLocation(argument).getProperty('name')
+        const type = name && checker.getTypeOfSymbolAtLocation(name, argument)
+        managedSignals.push(type?.isStringLiteral() ? type.value : undefined)
+      }
+      if (member === 'rawSignalHandler' && ts.isPropertyAccessExpression(node.expression)) {
+        let receiver: ts.Expression = node.expression.expression
+        const seen = new Set<ts.Symbol>()
+        while (ts.isIdentifier(receiver)) {
+          const symbol = checker.getSymbolAtLocation(receiver)
+          const declaration = symbol?.valueDeclaration
+          if (
+            !symbol ||
+            seen.has(symbol) ||
+            !declaration ||
+            !ts.isVariableDeclaration(declaration) ||
+            !declaration.initializer
+          )
+            break
+          seen.add(symbol)
+          receiver = declaration.initializer
+        }
+        if (builtins.member(receiver) === 'script')
+          rawSignals.push({
+            node,
+            name: argument && ts.isStringLiteralLike(argument) ? argument.text : undefined
+          })
+      }
+    }
     const standard = standardLibraryDiagnostic(node, checker, builtins)
     if (standard) diagnostics.push(standard)
     if (ts.isCallExpression(node) && node !== call && builtins.isEntryCall(node))
@@ -285,6 +326,13 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
     ts.forEachChild(node, visit)
   }
   visit(source)
+  for (const raw of rawSignals)
+    if (
+      managedSignals.some(
+        (name) => name === undefined || raw.name === undefined || name === raw.name
+      )
+    )
+      diagnostics.push(issue(raw.node, 'lua_listenerOwnership'))
   cached.set(source, { lang, diagnostics })
   return diagnostics
 }

@@ -9,7 +9,7 @@ import type { GstsConfig } from '../compiler/gsts_config.js'
 import type { LuaCompileCache, LuaPrepared } from '../compiler/lua/build.js'
 import type { LuaOutputCache } from '../compiler/lua/output.js'
 import { createBuildTimer } from '../compiler/lua/profile.js'
-import { entryCall } from '../compiler/lua/syntax.js'
+import { entryCall, isNodeGraphEntry } from '../compiler/lua/syntax.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker_client.js'
 import { t } from '../i18n/index.js'
 import { formatBuildSummary } from './build_summary.js'
@@ -36,9 +36,10 @@ export interface ClientLuaSession {
   graphFiles?: Set<string>
   discovery?: {
     key: string
-    candidates: Map<string, { file: string; entry: boolean }>
+    candidates: Map<string, { file: string; entry: boolean; imports: string; graph: boolean }>
     additionalFiles: string[]
     knownFiles: Set<string>
+    graphImports?: Map<string, string>
   }
   last?: { key: string; dependencies: string[]; entries: string[]; candidates: string[] }
 }
@@ -121,7 +122,10 @@ export async function buildClientLua({
       onlyFiles: true
     })
   }
-  const classified = new Map<string, { file: string; entry: boolean }>()
+  const classified = new Map<
+    string,
+    { file: string; entry: boolean; imports: string; graph: boolean }
+  >()
   const entries = candidates.filter((file) => {
     const key = normalize(file)
     const prior = changed && !changed.has(key) ? priorDiscovery?.candidates.get(key) : undefined
@@ -132,11 +136,21 @@ export async function buildClientLua({
     discoveryReads++
     const text = fs.readFileSync(file, 'utf8')
     let entry = false
-    if (text.includes('clientControlScript')) {
+    let graph = false
+    if (text.includes('clientControlScript') || text.includes('genshin-ts/runtime/core')) {
       const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
       entry = !!entryCall(source)
+      graph = isNodeGraphEntry(source)
     }
-    classified.set(key, { file, entry })
+    classified.set(key, {
+      file,
+      entry,
+      graph,
+      imports: ts
+        .preProcessFile(text, true, true)
+        .importedFiles.map((item) => item.fileName)
+        .join('\n')
+    })
     return entry
   })
   report.active = entries.length > 0
@@ -152,7 +166,29 @@ export async function buildClientLua({
           ignore: ['**/node_modules/**']
         })
       : []
+  const graphImports = new Map<string, string>()
+  if (entries.length)
+    for (const file of session?.graphFiles ?? []) {
+      const normalized = normalize(file)
+      if (classified.has(normalized) || !fs.existsSync(file) || !file.endsWith('.ts')) continue
+      const prior =
+        changed && !changed.has(normalized)
+          ? priorDiscovery?.graphImports?.get(normalized)
+          : undefined
+      if (prior !== undefined) graphImports.set(normalized, prior)
+      else {
+        discoveryReads++
+        graphImports.set(
+          normalized,
+          ts
+            .preProcessFile(fs.readFileSync(file, 'utf8'), true, true)
+            .importedFiles.map((item) => item.fileName)
+            .join('\n')
+        )
+      }
+    }
   const discovery = {
+    graphImports,
     key: discoveryKey,
     candidates: classified,
     additionalFiles,
@@ -167,7 +203,16 @@ export async function buildClientLua({
   }
   if (session) session.discovery = discovery
   mark('additionalFiles')
+  const sharedProjectKey = entries.length
+    ? JSON.stringify([
+        [...classified]
+          .map(([name, value]) => [name, value.entry, value.graph, value.imports])
+          .sort(),
+        [...graphImports].sort()
+      ])
+    : undefined
   const key = JSON.stringify([
+    sharedProjectKey,
     cfgDir,
     cfg,
     noinject,
@@ -237,6 +282,8 @@ export async function buildClientLua({
   const { writeLuaFiles, describeLuaConflicts } = await import('../compiler/lua/output.js')
   mark('loadCompiler')
   const input = {
+    sharedProjectFiles: candidates,
+    sharedProjectKey,
     entries,
     rootDir,
     outDir,

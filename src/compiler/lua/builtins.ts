@@ -86,10 +86,21 @@ function resolveBuiltins(program: ts.Program) {
       if (kind === 'helpers' && symbol.name === 'ClientGlobals') {
         clientGlobals = symbol
         const type = checker.getDeclaredTypeOfSymbol(symbol)
-        for (const name of ['self', 'helper', 'require']) {
+        for (const name of ['self', 'script', 'helper', 'require', 'onSignal']) {
           const member = type.getProperty(name)
           if (member) members.set(member, name)
         }
+        const script = type.getProperty('script')
+        const handler =
+          script &&
+          checker
+            .getTypeOfSymbolAtLocation(script, source)
+            .getProperty('RegisterServerSignalHandler')
+        if (handler) members.set(handler, 'rawSignalHandler')
+      }
+      if (kind === 'helpers' && symbol.name === 'ClientHelpers') {
+        const member = checker.getDeclaredTypeOfSymbol(symbol).getProperty('listenKey')
+        if (member) members.set(member, 'listenKey')
       }
     }
   }

@@ -1,7 +1,7 @@
 import type { Rule } from 'eslint'
 import ts from 'typescript'
 
-import { getLuaDiagnostics } from '../../compiler/lua/diagnostics.js'
+import { getLuaDiagnostics, getSharedModuleDiagnostics } from '../../compiler/lua/diagnostics.js'
 import { entryCall } from '../../compiler/lua/syntax.js'
 import { getParserServices } from '../utils/parser.js'
 
@@ -18,8 +18,12 @@ export function luaRule(name: string): Rule.RuleModule {
           const isolated = services.program
             .getCompilerOptions()
             .types?.includes('genshin-ts/runtime/lua_globals')
-          if (!isolated && !entryCall(source)) return
-          for (const diagnostic of getLuaDiagnostics(source, services.program)) {
+          if (!isolated && !entryCall(source) && name !== 'lua-shared-module') return
+          const diagnostics =
+            !isolated && !entryCall(source)
+              ? getSharedModuleDiagnostics(source, services.program)
+              : getLuaDiagnostics(source, services.program)
+          for (const diagnostic of diagnostics) {
             if (diagnostic.source !== name) continue
             const start = source.getLineAndCharacterOfPosition(diagnostic.start ?? 0)
             const end = source.getLineAndCharacterOfPosition(
