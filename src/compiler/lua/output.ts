@@ -2,9 +2,11 @@ import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { t } from '../../i18n/index.js'
+
 const marker = '-- @gsts:lua'
 export function luaManifestName(owner = 'default') {
-  if (!/^(default|[a-f0-9]{12})$/.test(owner)) throw new Error('Lua 输出清单标识无效。')
+  if (!/^(default|[a-f0-9]{12})$/.test(owner)) throw new Error(t('lua_manifestOwner'))
   return owner === 'default' ? '.gsts-lua-files.json' : `.gsts-lua-${owner}.json`
 }
 export interface LuaWriteResult {
@@ -44,11 +46,11 @@ function safePath(root: string, relative: string) {
       ) ||
     path.isAbsolute(relative)
   )
-    throw new Error(`不安全的 Lua 输出路径：${relative}`)
+    throw new Error(t('lua_unsafePath', { arg0: relative }))
   const absolute = path.resolve(root, relative)
   const rel = path.relative(root, absolute)
   if (!rel || rel.startsWith('..') || path.isAbsolute(rel))
-    throw new Error(`Lua 输出越过目标目录：${relative}`)
+    throw new Error(t('lua_outputOutsideTarget', { arg0: relative }))
   return absolute
 }
 function checkLinks(target: string, checkedParents?: Set<string>) {
@@ -56,7 +58,7 @@ function checkLinks(target: string, checkedParents?: Set<string>) {
   for (;;) {
     if (current !== target && checkedParents?.has(current)) break
     if (fs.lstatSync(current, { throwIfNoEntry: false })?.isSymbolicLink())
-      throw new Error(`Lua 输出路径不能经过链接或 junction：${current}`)
+      throw new Error(t('lua_outputLink', { arg0: current }))
     checkedParents?.add(current)
     const parent = path.dirname(current)
     if (parent === current) break
@@ -69,9 +71,7 @@ function checkOwnedFile(target: string) {
     fs.existsSync(target) &&
     (!fs.statSync(target).isFile() || !hasLuaMarker(fs.readFileSync(target, 'utf8')))
   )
-    throw new Error(
-      `文件已变更，停止覆盖或清理：${target}。确认允许覆盖后，请在文件头第一条非空行添加 -- @gsts:lua。`
-    )
+    throw new Error(t('lua_fileChanged', { arg0: target }))
 }
 function atomicWrite(target: string, content: string, owned = false) {
   fs.mkdirSync(path.dirname(target), { recursive: true })
@@ -121,10 +121,10 @@ export function writeLuaFiles(
         (name: unknown): name is string => typeof name === 'string' && name.endsWith('.lua')
       )
     )
-      throw new Error(`Lua 输出清单无效，未修改文件：${filename}`)
+      throw new Error(t('lua_invalidManifest', { arg0: filename }))
     for (const name of manifest.files) safePath(root, name)
     if (new Set(manifest.files.map((name) => name.toLowerCase())).size !== manifest.files.length)
-      throw new Error(`Lua 输出清单包含重复路径，未修改文件：${filename}`)
+      throw new Error(t('lua_duplicateManifest', { arg0: filename }))
     return manifest.files
   }
   const previous = readManifest(manifestPath)
@@ -143,8 +143,8 @@ export function writeLuaFiles(
   const writes: [string, string, string][] = []
   for (const [name, text] of files) {
     if (!name.endsWith('.lua') || !hasLuaMarker(text))
-      throw new Error(`生成文件缺少 Lua 标记或扩展名：${name}`)
-    if (names.has(name.toLowerCase())) throw new Error(`Lua 输出文件名大小写冲突：${name}`)
+      throw new Error(t('lua_missingMarker', { arg0: name }))
+    if (names.has(name.toLowerCase())) throw new Error(t('lua_caseCollision', { arg0: name }))
     names.add(name.toLowerCase())
     const target = safePath(root, name)
     if (previousFiles?.get(name) === text) {
@@ -153,7 +153,7 @@ export function writeLuaFiles(
     }
     checkLinks(target, checkedParents)
     if (fs.existsSync(target)) {
-      if (!fs.statSync(target).isFile()) throw new Error(`Lua 输出目标不是文件：${name}`)
+      if (!fs.statSync(target).isFile()) throw new Error(t('lua_targetNotFile', { arg0: name }))
       const old = fs.readFileSync(target, 'utf8')
       if (!hasLuaMarker(old)) result.conflicts.push(name)
       else if (old === text) result.unchanged.push(name)
@@ -190,7 +190,12 @@ export function writeLuaFiles(
   } catch (error) {
     const pending = writes.slice(result.written.length).map(([name]) => name)
     throw new Error(
-      `Lua 写入未完成：${error instanceof Error ? error.message : String(error)}\n已更新：${result.written.join(', ') || '无'}；已移除：${result.removed.join(', ') || '无'}；尚未更新：${pending.join(', ') || '无'}。生成清单可能尚未更新，请修复原因后重新运行。`
+      t('lua_writeIncomplete', {
+        arg0: error instanceof Error ? error.message : String(error),
+        arg1: result.written.join(', ') || t('summary_none'),
+        arg2: result.removed.join(', ') || t('summary_none'),
+        arg3: pending.join(', ') || t('summary_none')
+      })
     )
   }
   if (cache) {
@@ -200,5 +205,8 @@ export function writeLuaFiles(
   return result
 }
 export function describeLuaConflicts(result: LuaWriteResult, injection: boolean) {
-  return `${injection ? 'Lua 注入未完成' : 'Lua 输出未完成'}：以下文件没有允许覆盖的文件头，已保留原文件，本批次未写入。\n${result.conflicts.map((x) => `  ${x}`).join('\n')}\n确认允许覆盖后，请在各文件头的第一条非空行添加 -- @gsts:lua，再重新运行。`
+  return t('lua_outputConflicts', {
+    arg0: injection ? t('lua_injectionIncomplete') : t('lua_outputIncomplete'),
+    arg1: result.conflicts.map((x) => `  ${x}`).join('\n')
+  })
 }

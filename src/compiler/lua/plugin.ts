@@ -6,6 +6,7 @@ import {
 } from 'typescript-to-lua/dist/transformation/utils/function-context.js'
 import { transformOrderedExpressions } from 'typescript-to-lua/dist/transformation/visitors/expression-list.js'
 
+import { t } from '../../i18n/index.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
 
 export { entryCall, diagnostic, hooks } from './syntax.js'
@@ -92,7 +93,7 @@ export function createLuaPlugin(
             for (const item of clause.namedBindings.elements) {
               const name = (item.propertyName ?? item.name).text
               if (name !== 'g' && name !== 'defineSignal' && !item.isTypeOnly)
-                ctx.diagnostics.push(diagnostic(item, `Lua 脚本不能使用节点图 API ${name}。`))
+                ctx.diagnostics.push(diagnostic(item, t('lua_graphApi', { arg0: name })))
             }
           }
           const table = id(ctx.createTempName('module'))
@@ -242,9 +243,7 @@ export function createLuaPlugin(
         const last = body.pop()
         const value = last && lua.isReturnStatement(last) ? last.expressions[0] : undefined
         if (!value || !lua.isTableExpression(value)) {
-          ctx.diagnostics.push(
-            diagnostic(setup, '请在回调最后直接 return { onStart() { … }, onUpdate(dt) { … } }。')
-          )
+          ctx.diagnostics.push(diagnostic(setup, t('lua_literalHooks')))
           return []
         }
         if (transformed.params?.length)
@@ -295,7 +294,7 @@ export function createLuaPlugin(
           }
           const globalName = hooks.get(name)
           if (!globalName || !lua.isFunctionExpression(member.value)) {
-            ctx.diagnostics.push(diagnostic(setup, `生命周期 ${name} 必须直接声明为函数。`))
+            ctx.diagnostics.push(diagnostic(setup, t('lua_hookFunction', { arg0: name })))
             continue
           }
           member.value.flags |= lua.NodeFlags.Declaration

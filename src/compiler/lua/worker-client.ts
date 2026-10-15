@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import { Worker } from 'node:worker_threads'
 
+import { getCliLanguage, t } from '../../i18n/index.js'
 import type { LuaBuildOptions, LuaBuildResult } from './build.js'
 
 export type LuaWorkerResult = Omit<LuaBuildResult, 'diagnostics'> & {
@@ -28,7 +29,7 @@ export function createLuaWorker() {
   }
   return {
     compile(input: LuaBuildOptions, onPrepared?: (dependencies: string[]) => void) {
-      if (pending) return Promise.reject(new Error('Lua 编译线程已有任务，请等待本轮完成。'))
+      if (pending) return Promise.reject(new Error(t('lua_workerBusy')))
       if (!worker) {
         let url = new URL('./worker.js', import.meta.url)
         // 仓库测试从 TS 源码导入时仍运行正式构建的 worker。
@@ -56,7 +57,7 @@ export function createLuaWorker() {
         })
         current.on('exit', (code) => {
           if (worker !== current) return
-          fail(new Error(`Lua 编译线程提前退出（${code}）；下次改动会重新启动。`))
+          fail(new Error(t('lua_workerExited', { arg0: code })))
           worker = undefined
         })
       }
@@ -64,7 +65,7 @@ export function createLuaWorker() {
       return new Promise<LuaWorkerResult>((resolve, reject) => {
         pending = { resolve, reject, onPrepared }
         try {
-          worker!.postMessage(input)
+          worker!.postMessage({ ...input, lang: input.lang ?? getCliLanguage() })
         } catch (error) {
           fail(error instanceof Error ? error : new Error(String(error)))
           worker!.unref()
@@ -74,7 +75,7 @@ export function createLuaWorker() {
     async close() {
       const current = worker
       worker = undefined
-      fail(new Error('Lua 编译已取消。'))
+      fail(new Error(t('lua_cancelled')))
       if (current) await current.terminate()
     }
   }

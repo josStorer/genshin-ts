@@ -1,12 +1,10 @@
-import { createRequire } from 'node:module'
-
 import { match } from '@formatjs/intl-localematcher'
 import i18next from 'i18next'
 import { osLocaleSync } from 'os-locale'
 
-const requireFn = createRequire(import.meta.url)
-const enUS = requireFn('./locales/en-US/main.json') as Record<string, string>
-const zhCN = requireFn('./locales/zh-CN/main.json') as Record<string, string>
+// Static JSON imports also allow the Lua editor rules to be bundled as CommonJS.
+import enUS from './locales/en-US/main.json' with { type: 'json' }
+import zhCN from './locales/zh-CN/main.json' with { type: 'json' }
 
 export type Lang = 'zh-CN' | 'en-US'
 
@@ -80,7 +78,18 @@ export function initCliI18n(lang: Lang) {
  */
 export function t(key: string, options?: Record<string, unknown>) {
   if (!i18next.isInitialized) {
-    initCliI18n(detectLang())
+    initCliI18n(getCliLanguage())
   }
   return i18next.t(key, options)
+}
+
+/** 当前命令选择的语言；工作线程也使用这一语言。 */
+export function getCliLanguage(): Lang {
+  if (i18next.resolvedLanguage) return i18next.resolvedLanguage as Lang
+  // 编辑器直接使用规则时没有 CLI 初始化；C 等系统 locale 无法匹配时使用英文。
+  try {
+    return detectLang()
+  } catch {
+    return 'en-US'
+  }
 }

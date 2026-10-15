@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import * as tstl from 'typescript-to-lua'
 
+import { initCliI18n, t, type Lang } from '../../i18n/index.js'
 import { getLuaDiagnostics } from './diagnostics.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
 import {
@@ -17,6 +18,7 @@ import {
 import { createLuaPlugin, diagnostic, entryCall, hooks } from './plugin.js'
 
 export interface LuaBuildOptions {
+  lang?: Lang
   entries: string[]
   /** 记录各阶段耗时；默认关闭。 */
   profile?: boolean
@@ -98,7 +100,7 @@ function packageRoot() {
   let current = path.dirname(fileURLToPath(import.meta.url))
   while (!fs.existsSync(path.join(current, 'package.json'))) {
     const parent = path.dirname(current)
-    if (parent === current) throw new Error('找不到 genshin-ts 安装目录。')
+    if (parent === current) throw new Error(t('lua_installationMissing'))
     current = parent
   }
   return current
@@ -109,6 +111,7 @@ export function compileLua(
   cache?: LuaCompileCache,
   onPrepared?: (dependencies: string[]) => void
 ): LuaBuildResult {
+  if (input.lang) initCliI18n(input.lang)
   const started = input.profile ? performance.now() : 0
   let previous = started
   const timingsMs: Record<string, number> = {}
@@ -126,7 +129,7 @@ export function compileLua(
   const outDir = path.resolve(input.outDir)
   const sdkRoot = path.join(packageRoot(), 'dist/src/runtime')
   const globals = path.join(sdkRoot, 'lua-globals.d.ts')
-  if (!fs.existsSync(globals)) throw new Error('Lua 类型文件尚未生成，请先运行 npm run build。')
+  if (!fs.existsSync(globals)) throw new Error(t('lua_typesMissing'))
   const options: tstl.CompilerOptions = {
     target: ts.ScriptTarget.ES2022,
     module: ts.ModuleKind.ESNext,
@@ -339,9 +342,9 @@ export function compileLua(
       .replace(/(?:\.d)?\.[cm]?[tj]s$/, '')
       .replace(/\.lua$/, '')
     if (relative === '..' || relative.startsWith('../') || path.isAbsolute(relative))
-      throw new Error(`Lua 依赖必须位于 compileRoot 内：${filename}`)
+      throw new Error(t('lua_dependencyOutsideRoot', { arg0: filename }))
     if (relative.startsWith('__gsts') || relative === 'lualib_bundle')
-      throw new Error(`文件名 ${relative} 为编译器保留，请换一个名称。`)
+      throw new Error(t('lua_reservedFilename', { arg0: relative }))
     modulePaths.set(filename, relative)
     return relative
   }
@@ -362,16 +365,15 @@ export function compileLua(
       return '__gsts_helpers'
     const resolved = resolve(name, from)
     if (!resolved)
-      throw new Error(`无法解析 Lua 依赖 ${name}（来自 ${posix(path.relative(root, from))}）。`)
+      throw new Error(
+        t('lua_unresolvedDependency', { arg0: name, arg1: posix(path.relative(root, from)) })
+      )
     const target = resolved.resolvedFileName
-    if (entryFiles.has(target))
-      throw new Error('挂载入口不能作为模块导入；请把共享函数移到普通 TS 模块。')
+    if (entryFiles.has(target)) throw new Error(t('lua_importEntry'))
     if (target.endsWith('.d.ts')) {
       const native = target.slice(0, -5) + '.lua'
       if (!fs.existsSync(native))
-        throw new Error(
-          `带类型的 Lua 模块缺少同名 .lua 文件：${posix(path.relative(root, native))}`
-        )
+        throw new Error(t('lua_nativeModuleMissing', { arg0: posix(path.relative(root, native)) }))
       const key = luaFileKey(from)
       let imports = nativeImports.get(key)
       if (!imports) nativeImports.set(key, (imports = new Set()))
@@ -389,9 +391,7 @@ export function compileLua(
       const localDiagnostics = getLuaDiagnostics(source, checker)
       const fromOutput = path.relative(outDir, source.fileName)
       if (!fromOutput.startsWith('..') && !path.isAbsolute(fromOutput))
-        localDiagnostics.push(
-          diagnostic(source, 'Lua 源文件不能放在生成的 outDir/lua 目录中，请分开源码和产物。')
-        )
+        localDiagnostics.push(diagnostic(source, t('lua_sourceInOutput')))
       const calls: ts.CallExpression[] = []
       const visit = (node: ts.Node) => {
         if (ts.isCallExpression(node)) {
@@ -421,13 +421,7 @@ export function compileLua(
       for (const call of rawRequires) {
         const argument = call.arguments[0]
         if (!argument || !ts.isStringLiteralLike(argument)) {
-          if (!additional.length)
-            diagnostics.push(
-              diagnostic(
-                call,
-                '动态 require 需要在 gsts.config.ts 的 lua.include 中列出可能加载的文件。'
-              )
-            )
+          if (!additional.length) diagnostics.push(diagnostic(call, t('lua_dynamicRequire')))
           continue
         }
         const name = argument.text.replace(/\.lua$/, '')
@@ -437,7 +431,7 @@ export function compileLua(
           name.includes('\\') ||
           name.split('/').includes('..')
         )
-          throw new Error(`require 请使用从 compileRoot 开始的路径，不加 ./：${name}`)
+          throw new Error(t('lua_requireRootPath', { arg0: name }))
         if (availableModules.has(name) || availableModules.has(name.replace(/\./g, '/'))) continue
         const literal = path.resolve(root, name + '.lua')
         collectNative(
@@ -448,7 +442,7 @@ export function compileLua(
       mark('nativeInputs')
       if (reuse) {
         for (const [name, text] of reuse.emitted) {
-          if (files.has(name)) throw new Error(`TS 与原生 Lua 的输出路径重复：${name}`)
+          if (files.has(name)) throw new Error(t('lua_outputCollision', { arg0: name }))
           files.set(name, text)
           emitted.set(name, text)
         }
@@ -479,7 +473,8 @@ export function compileLua(
                   results.length,
                   ...modules.map((source) => {
                     const result = printed.get(luaFileKey(source.fileName))
-                    if (!result) throw new Error(`缺少 Lua 模块转译结果：${source.fileName}`)
+                    if (!result)
+                      throw new Error(t('lua_transpileResultMissing', { arg0: source.fileName }))
                     return { ...result, sourceFiles: [source] }
                   })
                 )
@@ -489,7 +484,7 @@ export function compileLua(
           writeFile: (filename, data) => {
             const relative = posix(path.relative(outDir, filename))
             if (relative.startsWith('../') || path.isAbsolute(relative))
-              throw new Error(`Lua 输出越过 outDir：${relative}`)
+              throw new Error(t('lua_outputOutsideOutDir', { arg0: relative }))
             // The official sandbox exposes traceback but not debug.getinfo. Keep Error usable.
             if (relative === 'lualib_bundle.lua')
               data = data
@@ -498,7 +493,7 @@ export function compileLua(
                   '(debug.getinfo and debug.getinfo(level, "f"))'
                 )
                 .replaceAll('debug.getinfo(3, "f")', '(debug.getinfo and debug.getinfo(3, "f"))')
-            if (files.has(relative)) throw new Error(`TS 与原生 Lua 的输出路径重复：${relative}`)
+            if (files.has(relative)) throw new Error(t('lua_outputCollision', { arg0: relative }))
             files.set(relative, data)
             emitted.set(relative, data)
           }

@@ -11,6 +11,8 @@ import type { LuaCompileCache } from '../compiler/lua/build.js'
 import type { LuaOutputCache } from '../compiler/lua/output.js'
 import { nodeGraphCalls } from '../compiler/lua/syntax.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker-client.js'
+import { t } from '../i18n/index.js'
+import { formatBuildSummary } from './build-summary.js'
 import { resolveGilTarget } from './gil_paths.js'
 
 export interface ClientLuaReport {
@@ -55,8 +57,8 @@ export async function buildClientLua(
 ) {
   const report = reporting ?? {
     active: false,
-    compilation: '失败',
-    injection: '未执行（编译或写出失败）',
+    compilation: t('summary_failed'),
+    injection: t('summary_compileOrWriteFailed'),
     log: (...values: unknown[]) => console.log(...values)
   }
   const log = report.log
@@ -192,8 +194,8 @@ export async function buildClientLua(
           timingsMs: { total: performance.now() - started }
         })
       )
-    report.compilation = '无改动（沿用上次成功产物）'
-    report.injection = '无需更新'
+    report.compilation = t('summary_reused')
+    report.injection = t('summary_noUpdate')
     return last
   }
   // 失败后下一轮必须重试，不能把上次成功当成本次成功。
@@ -270,22 +272,32 @@ export async function buildClientLua(
   if (session) session.dependencies = result.dependencies
   mark('compile')
   if (result.diagnosticsText) log(result.diagnosticsText)
-  if (result.hasErrors) throw new Error('Lua 编译失败；未更新本地产物和游戏文件。')
+  if (result.hasErrors) throw new Error(t('lua_compileFailed'))
   if (session && (!changedFiles || last?.key !== key)) {
     session.localOutput = {}
     session.injectedOutput = {}
   }
-  report.compilation = '成功，但本地写出失败'
+  report.compilation = t('summary_writeFailed')
   const local = writeLuaFiles(outDir, result.files, complete, owner, session?.localOutput)
   if (local.conflicts.length) throw new Error(describeLuaConflicts(local, false))
-  report.compilation = `成功；本地产物 ${result.files.size} 个，更新 ${local.written.length}，未改动 ${local.unchanged.length}，移除 ${local.removed.length}`
-  report.injection = noinject ? '已关闭（--noinject）' : '未配置地图'
+  report.compilation = t('lua_outputSummary', {
+    arg0: result.files.size,
+    arg1: local.written.length,
+    arg2: local.unchanged.length,
+    arg3: local.removed.length
+  })
+  report.injection = noinject ? t('summary_disabled') : t('summary_noMap')
   mark('localWrite')
   log(
-    `[Lua] 本地产物 ${result.files.size} 个；更新 ${local.written.length}，未改动 ${local.unchanged.length}，移除 ${local.removed.length}。`
+    t('lua_outputWritten', {
+      arg0: result.files.size,
+      arg1: local.written.length,
+      arg2: local.unchanged.length,
+      arg3: local.removed.length
+    })
   )
   if (cfg.inject?.mapId !== undefined && !noinject) {
-    report.injection = '失败'
+    report.injection = t('summary_failed')
     try {
       const target = resolveGilTarget(cfg.inject)
       const destination = path.join(target.saveLevelDir, String(target.mapId), 'external_lua_file')
@@ -297,13 +309,22 @@ export async function buildClientLua(
         session?.injectedOutput
       )
       if (injected.conflicts.length) throw new Error(describeLuaConflicts(injected, true))
-      report.injection = `成功；更新 ${injected.written.length}，未改动 ${injected.unchanged.length}，移除 ${injected.removed.length}`
+      report.injection = t('lua_injectionSummary', {
+        arg0: injected.written.length,
+        arg1: injected.unchanged.length,
+        arg2: injected.removed.length
+      })
       log(
-        `[Lua] 注入完成：地图 ${target.mapId}；更新 ${injected.written.length}，未改动 ${injected.unchanged.length}，移除 ${injected.removed.length}。`
+        t('lua_injectionWritten', {
+          arg0: target.mapId,
+          arg1: injected.written.length,
+          arg2: injected.unchanged.length,
+          arg3: injected.removed.length
+        })
       )
     } catch (error) {
       throw new Error(
-        `Lua 本地编译成功，但注入未完成。${error instanceof Error ? error.message : String(error)}`
+        t('lua_injectionFailed', { arg0: error instanceof Error ? error.message : String(error) })
       )
     }
   }
@@ -369,8 +390,8 @@ export function startClientLua(
   const logs: unknown[][] = []
   const report: ClientLuaReport = {
     active: false,
-    compilation: '失败',
-    injection: '未执行（编译或写出失败）',
+    compilation: t('summary_failed'),
+    injection: t('summary_compileOrWriteFailed'),
     log: (...values) => logs.push(values)
   }
   const result = buildClientLua(
@@ -425,8 +446,7 @@ export function startClientLua(
       }
       for (const values of logs.splice(0)) console.log(...values)
       if (failure) console.log(`[Lua] ${failure}`)
-      if (report.active || failure)
-        console.log(`[TS→Lua] 编译：${report.compilation}；注入：${report.injection}。`)
+      if (report.active || failure) console.log(formatBuildSummary('lua', report))
       return value
     }
   }

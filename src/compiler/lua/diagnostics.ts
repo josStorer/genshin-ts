@@ -1,21 +1,18 @@
 import ts from 'typescript'
 
+import { t } from '../../i18n/index.js'
 import { diagnostic, entryCall, hooks, nodeGraphCalls } from './syntax.js'
 
 /** 编译器、ESLint 和编辑器共用的 Lua 规则，不加载 TSTL。 */
 export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker): ts.Diagnostic[] {
   const diagnostics: ts.Diagnostic[] = []
   for (const call of nodeGraphCalls(source))
-    diagnostics.push(
-      diagnostic(call, '节点图入口不能作为 Lua 模块导入；请把共享常量或函数移到普通 TS 模块。')
-    )
+    diagnostics.push(diagnostic(call, t('lua_importGraphEntry')))
   const call = entryCall(source)
   if (call) {
     const declaration = checker.getResolvedSignature(call)?.declaration
     if (!declaration?.getSourceFile().fileName.endsWith('lua-entry.d.ts'))
-      diagnostics.push(
-        diagnostic(call, '入口必须调用 genshin-ts/runtime/core 导出的 g.clientControlScript。')
-      )
+      diagnostics.push(diagnostic(call, t('lua_invalidEntry')))
     const setup = call.arguments[call.arguments.length - 1]
     if (
       call.arguments.length < 1 ||
@@ -23,7 +20,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
       (call.arguments.length === 2 &&
         (!ts.isObjectLiteralExpression(call.arguments[0]) || call.arguments[0].properties.length))
     )
-      diagnostics.push(diagnostic(call, '目前配置只支持空对象 {}，也可以只传回调。'))
+      diagnostics.push(diagnostic(call, t('lua_optionsEmpty')))
     if (
       !setup ||
       !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup)) ||
@@ -31,7 +28,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
       setup.parameters.length > 1 ||
       (setup.parameters[0] && !ts.isIdentifier(setup.parameters[0].name))
     )
-      diagnostics.push(diagnostic(call, '请使用 (lua) => { …; return { … } } 形式声明脚本。'))
+      diagnostics.push(diagnostic(call, t('lua_invalidCallback')))
     else {
       const last = setup.body.statements.at(-1)
       if (
@@ -40,7 +37,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
         !last.expression ||
         !ts.isObjectLiteralExpression(last.expression)
       )
-        diagnostics.push(diagnostic(setup, '回调最后必须直接返回生命周期对象。'))
+        diagnostics.push(diagnostic(setup, t('lua_returnHooks')))
       else
         for (const member of last.expression.properties) {
           if (
@@ -61,12 +58,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
                 )
                   return
                 if (node.kind === ts.SyntaxKind.ThisKeyword)
-                  diagnostics.push(
-                    diagnostic(
-                      node,
-                      '公开方法由官方作为普通函数调用，请通过闭包访问脚本状态；class 方法仍可正常使用 this。'
-                    )
-                  )
+                  diagnostics.push(diagnostic(node, t('lua_publicMethodThis')))
                 ts.forEachChild(node, checkThis)
               }
               checkThis(fn)
@@ -98,12 +90,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
                       ts.isFunctionExpression(method.initializer)))
                 )
               )
-                diagnostics.push(
-                  diagnostic(
-                    method,
-                    '公开方法请直接声明普通函数，名称不能覆盖官方生命周期或全局 API。'
-                  )
-                )
+                diagnostics.push(diagnostic(method, t('lua_publicMethodName')))
             }
           } else if (
             !member.name ||
@@ -116,17 +103,12 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
                   ts.isFunctionExpression(member.initializer)))
             )
           )
-            diagnostics.push(
-              diagnostic(
-                member,
-                '请直接声明 onStart、onUpdate 等生命周期函数，不支持展开或动态生成生命周期。'
-              )
-            )
+            diagnostics.push(diagnostic(member, t('lua_dynamicHooks')))
         }
       const checkReturn = (node: ts.Node) => {
         if (node !== setup.body && ts.isFunctionLike(node)) return
         if (ts.isReturnStatement(node) && node !== last)
-          diagnostics.push(diagnostic(node, '入口回调只能在结尾返回生命周期对象。'))
+          diagnostics.push(diagnostic(node, t('lua_earlyReturn')))
         ts.forEachChild(node, checkReturn)
       }
       checkReturn(setup.body)
@@ -142,12 +124,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
           ts.getModifiers(statement)?.some((m) => m.kind === ts.SyntaxKind.DeclareKeyword))
       )
         continue
-      diagnostics.push(
-        diagnostic(
-          statement,
-          '入口的运行代码请放进 clientControlScript 回调；共享代码请移到普通模块。'
-        )
-      )
+      diagnostics.push(diagnostic(statement, t('lua_entryTopLevel')))
     }
   }
   const visit = (node: ts.Node) => {
@@ -159,12 +136,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
         ?.declaration?.getSourceFile()
         .fileName.endsWith('lua-entry.d.ts')
     )
-      diagnostics.push(
-        diagnostic(
-          node,
-          'clientControlScript 只能在入口中使用 export default g.clientControlScript(...)，不能在函数或普通模块里创建脚本实例。'
-        )
-      )
+      diagnostics.push(diagnostic(node, t('lua_nestedEntry')))
     if (
       ts.isIdentifier(node) &&
       node.text === '_ENV' &&
@@ -173,7 +145,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
         ts.isFunctionDeclaration(node.parent)) &&
       node.parent.name === node
     )
-      diagnostics.push(diagnostic(node, '_ENV 是 Lua 运行环境的保留名称，请换一个变量名。'))
+      diagnostics.push(diagnostic(node, t('lua_reservedEnv')))
     if (
       (ts.isFunctionDeclaration(node) ||
         ts.isFunctionExpression(node) ||
@@ -182,9 +154,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
       (('asteriskToken' in node && node.asteriskToken) ||
         ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword))
     )
-      diagnostics.push(
-        diagnostic(node, '客户端 Lua 不支持异步函数或生成器，请使用普通函数和生命周期。')
-      )
+      diagnostics.push(diagnostic(node, t('lua_asyncFunction')))
     if (
       ts.isVariableDeclaration(node) &&
       ts.isObjectBindingPattern(node.name) &&
@@ -192,9 +162,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
       checker.getTypeAtLocation(node.initializer).getSymbol()?.name === 'ClientGlobals' &&
       (node.name.elements.some((e) => e.dotDotDotToken) || !ts.isIdentifier(node.initializer))
     )
-      diagnostics.push(
-        diagnostic(node, '请从 lua 或其局部别名做命名解构，不要展开整个 Lua 运行环境。')
-      )
+      diagnostics.push(diagnostic(node, t('lua_spreadEnvironment')))
     if (
       ts.isIdentifier(node) &&
       ['Promise', 'WeakMap', 'WeakSet', 'Date', 'RegExp', 'JSON'].includes(node.text) &&
@@ -202,24 +170,14 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
         .getSymbolAtLocation(node)
         ?.declarations?.some((d) => d.getSourceFile().hasNoDefaultLib)
     )
-      diagnostics.push(
-        diagnostic(
-          node,
-          `官方客户端 Lua 环境不提供 ${node.text}；请使用受支持的原生 API 或普通同步代码。`
-        )
-      )
+      diagnostics.push(diagnostic(node, t('lua_hostUnavailable', { arg0: node.text })))
     if (
       ts.isAwaitExpression(node) ||
       ts.isYieldExpression(node) ||
       ts.isBigIntLiteral(node) ||
       (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword)
     )
-      diagnostics.push(
-        diagnostic(
-          node,
-          '客户端 Lua 暂不支持异步调度、生成器、动态 import 或 bigint；请使用生命周期和普通 number。'
-        )
-      )
+      diagnostics.push(diagnostic(node, t('lua_unsupportedSyntax')))
     let condition: ts.Expression | undefined
     if (ts.isIfStatement(node) || ts.isWhileStatement(node) || ts.isDoStatement(node))
       condition = node.expression
@@ -242,13 +200,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
           return !!(t.flags & (ts.TypeFlags.NumberLike | ts.TypeFlags.StringLike))
         })
       )
-        diagnostics.push(
-          diagnostic(
-            condition,
-            'Lua 中 0 和空字符串也是真值。建议明确比较数值或字符串，避免依赖 JS 真值。',
-            true
-          )
-        )
+        diagnostics.push(diagnostic(condition, t('lua_truthiness'), true))
     }
     if (
       ts.isBinaryExpression(node) &&
@@ -258,13 +210,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
       const type = checker.getTypeAtLocation(node.right)
       const parts = type.isUnion() ? type.types : [type]
       if (parts.some((t) => t.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null)))
-        diagnostics.push(
-          diagnostic(
-            node,
-            'Lua 的 nil 会删除 table 中的字段；用于数组时可能形成空洞，影响长度与遍历。',
-            true
-          )
-        )
+        diagnostics.push(diagnostic(node, t('lua_nil'), true))
     }
     ts.forEachChild(node, visit)
   }

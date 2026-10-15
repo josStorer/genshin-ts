@@ -3,6 +3,8 @@ import path from 'node:path'
 
 import { parse } from 'luaparse'
 
+import { t } from '../../i18n/index.js'
+
 /** 同时用于复制原生依赖和检查最终 Lua 的顶层加载环；不执行脚本。 */
 export function luaRequires(text: string) {
   const functions: [number, number][] = []
@@ -28,7 +30,7 @@ export function luaRequires(text: string) {
         const raw = argument.raw
         const long = /^\[(=*)\[([\s\S]*)\]\1\]$/.exec(raw)
         name = long ? long[2].replace(/^\r?\n/, '') : raw.slice(1, -1)
-        if (name.includes('\\')) throw new Error('require 路径请使用 /，不使用转义字符。')
+        if (name.includes('\\')) throw new Error(t('lua_requireSeparator'))
       }
       calls.push({ name, range })
     }
@@ -66,7 +68,7 @@ function moduleName(name: string) {
     module.includes(':') ||
     module.split('/').includes('..')
   )
-    throw new Error(`require 使用相对 compileRoot 的模块路径，不加 ./：${name}`)
+    throw new Error(t('lua_requireRelative', { arg0: name }))
   return module
 }
 export function collectNativeLua(
@@ -81,9 +83,9 @@ export function collectNativeLua(
   const absolute = path.resolve(filename)
   const relative = path.relative(root, absolute).replace(/\\/g, '/')
   if (relative.startsWith('../') || path.isAbsolute(relative))
-    throw new Error(`原生 Lua 依赖越过 compileRoot：${relative}`)
+    throw new Error(t('lua_nativeOutsideRoot', { arg0: relative }))
   if (relative.startsWith('__gsts') || relative === 'lualib_bundle.lua')
-    throw new Error(`原生 Lua 文件名由编译器保留：${relative}`)
+    throw new Error(t('lua_nativeReserved', { arg0: relative }))
   if (files.has(relative)) return
   const text = fs.readFileSync(absolute, 'utf8').replace(/^\uFEFF/, '')
   const required = cachedRequires(`native:${absolute}`, text, cache)
@@ -92,9 +94,7 @@ export function collectNativeLua(
   for (const { name } of required) {
     if (name === undefined) {
       if (allowDynamic) continue
-      throw new Error(
-        `原生 Lua ${relative} 使用动态 require；请在 gsts.config.ts 的 lua.include 中列出可能加载的文件。`
-      )
+      throw new Error(t('lua_nativeDynamic', { arg0: relative }))
     }
     const module = moduleName(name)
     const literal = path.resolve(root, module + '.lua')
@@ -103,9 +103,7 @@ export function collectNativeLua(
       : path.resolve(root, module.replace(/\./g, '/') + '.lua')
     if (!fs.existsSync(target)) {
       if (tsModules.has(module) || tsModules.has(module.replace(/\./g, '/'))) continue
-      throw new Error(
-        `原生 Lua ${relative} 的依赖不存在：${name}。如果它是没有被 import 的 TS 模块，请列入 lua.include。`
-      )
+      throw new Error(t('lua_nativeDependencyMissing', { arg0: relative, arg1: name }))
     }
     collectNativeLua(target, root, files, dependencies, allowDynamic, tsModules, cache)
   }
@@ -141,7 +139,7 @@ export function checkLuaModuleCycles(files: ReadonlyMap<string, string>, cache?:
     if (done.has(name)) return
     if (active.includes(name))
       throw new Error(
-        `Lua 存在顶层循环 require：${[...active.slice(active.indexOf(name)), name].join(' → ')}`
+        t('lua_requireCycle', { arg0: [...active.slice(active.indexOf(name)), name].join(' → ') })
       )
     active.push(name)
     for (const target of edges.get(name) ?? []) visit(target)
