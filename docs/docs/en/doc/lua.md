@@ -288,12 +288,14 @@ Signal contracts and writer metadata now share one neutral source; each target m
 ## Timers
 
 ```ts
-export default g.clientControlScript({ timerClock: 'level' }, (lua) => ({
-  onEnable() {
-    const repeat = setInterval(() => console.log(self.name), 1000)
-    setTimeout(() => clearInterval(repeat), 5000)
+export default g.clientControlScript({ timerClock: 'level' }, () => {
+  return {
+    onEnable() {
+      const repeat = setInterval(() => console.log(self.name), 1000)
+      setTimeout(() => clearInterval(repeat), 5000)
+    }
   }
-}))
+})
 ```
 
 Delays are milliseconds. The default level clock accumulates OnLevelUpdate dt; real accumulates OnUpdate dt. Neither is a wall clock: host scheduling controls progress. For entries with managed subscriptions or timers, calls to the current script’s EnableUpdate record whether user OnUpdate should run. Pending timers keep the host update switch enabled independently; turning off user updates does not stop the countdown. Calls to other script instances remain raw host calls.

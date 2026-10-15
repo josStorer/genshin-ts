@@ -343,15 +343,17 @@ const score = int(INITIAL_SCORE)
 ## 定时器
 
 ```ts
-export default g.clientControlScript({ timerClock: 'level' }, (lua) => ({
-  onEnable() {
-    const repeat = setInterval(() => console.log(self.name), 1000)
-    setTimeout(() => clearInterval(repeat), 5000)
+export default g.clientControlScript({ timerClock: 'level' }, () => {
+  return {
+    onEnable() {
+      const repeat = setInterval(() => console.log(self.name), 1000)
+      setTimeout(() => clearInterval(repeat), 5000)
+    }
   }
-}))
+})
 ```
 
-延迟单位为毫秒；默认 level 累加 OnLevelUpdate 的 dt，real 累加 OnUpdate 的 dt。它们都由宿主派发更新驱动，不是系统墙钟；暂停关系以宿主提供的 dt 为准。有待执行任务时框架启用更新；手动 EnableUpdate(false) 会暂停依赖该更新流的计时。
+延迟单位为毫秒；默认 level 累加 OnLevelUpdate 的 dt，real 累加 OnUpdate 的 dt。它们都由宿主派发更新驱动，不是系统墙钟；暂停关系以宿主提供的 dt 为准。在使用框架监听或定时器的入口中，当前脚本的 EnableUpdate 记录用户是否需要执行 onUpdate。待执行的定时器会独立保持宿主更新开关开启；用户关闭更新只停止自己的 onUpdate，不会暂停倒计时。对其他脚本实例的调用仍直接使用官方方法。
 
 停用和销毁自动清空所有任务，再启用不会恢复旧任务。需要每次启用重新计时，就像上例放在 onEnable 中。clearTimeout/clearInterval 可重复调用；0 或负延迟最早下次更新执行，interval 卡顿后每次更新最多补一次，不连续补发积压。回调抛错会记录并移除该任务，其余任务继续。回调内新建任务从下次更新开始。
 
