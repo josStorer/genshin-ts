@@ -17,8 +17,10 @@ import {
   type LuaParseCache
 } from './native.js'
 import { createLuaPlugin, diagnostic, entryCall } from './plugin.js'
+import { lowerPrivateFields } from './private_fields.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
 import { isNodeGraphEntry } from './syntax.js'
+import { LocatedLuaError, withLuaErrorLocations } from './tstl-compat.js'
 
 export interface LuaBuildOptions {
   lang?: Lang
@@ -144,14 +146,18 @@ export function compileLua(
       checkLuaModuleCycles(checked.files, luaCache)
       timer.mark('luaValidate')
     } catch (error) {
-      checked.diagnostics.push({
-        category: ts.DiagnosticCategory.Error,
-        code: 97002,
-        file: undefined,
-        start: undefined,
-        length: undefined,
-        messageText: error instanceof Error ? error.message : String(error)
-      })
+      checked.diagnostics.push(
+        error instanceof LocatedLuaError
+          ? { ...diagnostic(error.node, error.message), code: 97002 }
+          : {
+              category: ts.DiagnosticCategory.Error,
+              code: 97002,
+              file: undefined,
+              start: undefined,
+              length: undefined,
+              messageText: error instanceof Error ? error.message : String(error)
+            }
+      )
     }
   }
   return packageLua(context)
@@ -587,19 +593,22 @@ function transpileLua(
       emitted.set(name, text)
     }
   } else {
+    const plugin = createLuaPlugin(resolveLua, (name, from) => {
+      const target = resolve(name, from)?.resolvedFileName
+      return (
+        !!target &&
+        !!program
+          .getSourceFile(target)
+          ?.statements.some((s) => ts.isExportAssignment(s) && s.isExportEquals)
+      )
+    })
     const result = new tstl.Transpiler().emit({
       program,
       sourceFiles: targets,
+      customTransformers: { before: [lowerPrivateFields(program)] },
       plugins: [
-        createLuaPlugin(resolveLua, (name, from) => {
-          const target = resolve(name, from)?.resolvedFileName
-          return (
-            !!target &&
-            !!program
-              .getSourceFile(target)
-              ?.statements.some((s) => ts.isExportAssignment(s) && s.isExportEquals)
-          )
-        }),
+        plugin,
+        withLuaErrorLocations(plugin),
         {
           afterPrint(_program, _options, _host, results) {
             // 保存 require 路径改写前的文本；TSTL 后续仍处理完整集合并重建最小 lualib。

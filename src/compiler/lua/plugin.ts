@@ -262,6 +262,20 @@ export function createLuaPlugin(
           ctx
         )
       },
+      [ts.SyntaxKind.SuperKeyword]: (node, ctx) => {
+        const value = ctx.superTransformExpression(node)
+        // TSTL 的 super 优化直接生成基类标识符；这里同样接回导入绑定。
+        const target = lua.isTableIndexExpression(value) ? value.table : value
+        if (lua.isIdentifier(target) && target.symbolId !== undefined) {
+          const symbol = ctx.symbolInfoMap.get(target.symbolId)?.symbol
+          const imported = symbol && bindings.get(symbol)
+          if (imported) {
+            if (lua.isTableIndexExpression(value)) value.table = imported
+            else return imported
+          }
+        }
+        return value
+      },
       [ts.SyntaxKind.ShorthandPropertyAssignment]: (node, ctx) => {
         const symbol = ctx.checker.getShorthandAssignmentValueSymbol(node)
         const value = symbol && bindings.get(symbol)
@@ -270,8 +284,7 @@ export function createLuaPlugin(
           : ctx.superTransformNode(node)
       },
       [ts.SyntaxKind.ExportAssignment]: (node, ctx) => {
-        if (node.expression !== entryCall(node.getSourceFile()))
-          return ctx.superTransformStatements(node)
+        if (node.expression !== entryCall(ctx.sourceFile)) return ctx.superTransformStatements(node)
         const call = node.expression as ts.CallExpression
         const setup = call.arguments[call.arguments.length - 1]
         if (!setup || !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup))) return []
@@ -348,18 +361,18 @@ export function createLuaPlugin(
         if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
           const table = id(ctx.createTempName('reexport'))
           imports
-            .get(node.getSourceFile())!
+            .get(ctx.sourceFile)!
             .push(
               lua.createVariableDeclarationStatement(
                 table,
-                requireModule(resolve(node.moduleSpecifier.text, node.getSourceFile().fileName))
+                requireModule(resolve(node.moduleSpecifier.text, ctx.sourceFile.fileName))
               )
             )
           module = table
         }
         const add = (name: string, value: lua.Expression) =>
           getters
-            .get(node.getSourceFile())!
+            .get(ctx.sourceFile)!
             .push(
               lua.createTableFieldExpression(
                 lua.createFunctionExpression(
@@ -383,7 +396,9 @@ export function createLuaPlugin(
             for (const item of ctx.checker.getExportsOfModule(symbol)) {
               const target =
                 item.flags & ts.SymbolFlags.Alias ? ctx.checker.getAliasedSymbol(item) : item
-              const sourceSymbol = ctx.checker.getSymbolAtLocation(node.getSourceFile())
+              const sourceSymbol = ctx.checker.getSymbolAtLocation(
+                ts.getOriginalNode(ctx.sourceFile)
+              )
               const visible =
                 sourceSymbol &&
                 ctx.checker.getExportsOfModule(sourceSymbol).find((x) => x.name === item.name)

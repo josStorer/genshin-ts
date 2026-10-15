@@ -222,6 +222,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
     if (
       ts.isAwaitExpression(node) ||
       ts.isYieldExpression(node) ||
+      (ts.isPrivateIdentifier(node) && ts.isBinaryExpression(node.parent)) ||
       (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword)
     )
       diagnostics.push(issue(node, 'lua_unsupportedSyntax'))
