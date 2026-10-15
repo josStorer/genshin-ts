@@ -2,6 +2,7 @@
   { "type": "dir", "name": "overview", "label": "概览" },
   { "type": "dir", "name": "quick-start", "label": "快速开始" },
   { "type": "dir", "name": "writing", "label": "编写规范" },
+  { "type": "file", "name": "lua", "label": "客户端 Lua" },
   { "type": "dir", "name": "globals", "label": "全局函数与类型" },
   { "type": "dir", "name": "events", "label": "事件与入口" },
   { "type": "dir", "name": "timers", "label": "定时器与闭包" },

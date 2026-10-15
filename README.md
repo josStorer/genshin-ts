@@ -128,4 +128,4 @@ See the template guide for the full list and best practices.
 
 ### 客户端控件 Lua 脚本
 
-已增加独立的 TS → Lua 编译目标，使用 `g.clientControlScript`，沿用现有构建与注入配置。参见 [使用说明](docs/lua.md)。
+已增加独立的 TS → Lua 编译目标，使用 `g.clientControlScript`，沿用现有构建与注入配置。参见 [使用说明](https://gsts.moe/doc/lua)。

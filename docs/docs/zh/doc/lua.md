@@ -62,6 +62,7 @@ Lua 环境不引入 `GameObject`、`stage`、`level`、节点图的 `f`、Node �
 ESLint 可以对 Lua 目录单独使用：
 
 ```js
+import tseslint from '@typescript-eslint/eslint-plugin'
 import parser from '@typescript-eslint/parser'
 import gsts from 'genshin-ts/eslint'
 
@@ -72,13 +73,13 @@ export default [
       parser,
       parserOptions: { project: './src/lua/tsconfig.json' }
     },
-    plugins: { gsts },
+    plugins: { gsts, '@typescript-eslint': tseslint },
     rules: gsts.configs.lua.rules
   }
 ]
 ```
 
-这个预设关闭节点图语法子集规则，开启 Lua 语法检查和真值/nil 提醒。真值提醒覆盖条件、循环、`!`、`&&` 和 `||`；`??` 与明确的布尔比较不因此报警。TS 插件也复用这些诊断。官方 API 签名、只读属性、枚举、回调参数和普通 TS 语法由 TypeScript 检查；TSTL 专有语法限制仍以构建诊断为准。
+这个预设关闭节点图语法子集规则，开启可单独配置的 `gsts/lua-*` 规则。`eqeqeq` 要求严格相等；`@typescript-eslint/strict-boolean-expressions` 禁止数字、字符串直接作条件；`no-restricted-syntax` 提醒用 undefined 代替 null。Lua 专有的 `lua-no-undefined-field`、`lua-no-array-hole`、`lua-no-array-delete` 提醒 nil 风险，`lua-no-bigint` 拒绝 bigint。真值提醒覆盖条件、循环、`!`、`&&` 和 `||`；`??` 与明确的布尔比较不因此报警。TS 插件也复用这些诊断。官方 API 签名、只读属性、枚举、回调参数和普通 TS 语法由 TypeScript 检查；TSTL 专有语法限制仍以构建诊断为准。
 
 ## 模块和原生 Lua
 
@@ -154,7 +155,7 @@ const params = lua.helper.readParams(lua.script, {
 console.log(params.Speed, params.Caption)
 ```
 
-schema 不会自动创建编辑器变量。基础值未填写可使用默认值；无默认值或类型错误会报出变量名。原始 `GetParam` 返回 unknown，仍可直接使用。控件参数的自动转换在此前实测中未观察到，因此不会根据数字猜控件对象；推荐显式使用名称路径查找。`type: 'control'` 仅接受实际返回的对应控件对象，填索引不会自动转换。
+schema 不会自动创建编辑器变量。基础值未填写可使用默认值；无默认值或类型错误会报出变量名。原始 `GetParam` 返回 unknown，仍可直接使用。框架不会根据参数中的数字猜控件对象；推荐显式使用名称路径查找。`type: 'control'` 仅接受实际返回的对应控件对象，填索引不会自动转换。
 
 信号继续使用现有提取的 `Signal` 定义：
 
@@ -195,11 +196,48 @@ if (other) {
 
 `methods` 中的函数生成 Lua 全局函数，官方 `Invoke` 可以调用。方法参数和返回值有类型提示；多返回值用 `multi`。由你确认取得的句柄确实对应所声明入口；目前不读取编辑器挂载映射来验证。公开函数访问闭包状态，class 方法才使用 class 的 `this`。
 
+## 标准库支持清单
+
+下面列出的 128 个成员都有 fengari 执行用例。它们说明已覆盖的常用操作，不承诺完整 ECMAScript 行为或所有重载。新成员先加执行测试，再加入同一份支持表；不在表中的标准库成员会收到说明性诊断。官方宿主 API 与这份标准库清单是两回事，宿主行为仍需游戏验收。
+
+| 类型（Constructor 表示静态成员） | 已覆盖成员                                                                                                                                                                                                                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Math                             | `E`, `LN10`, `LN2`, `LOG10E`, `LOG2E`, `PI`, `SQRT1_2`, `SQRT2`, `abs`, `acos`, `asin`, `atan`, `atan2`, `ceil`, `cos`, `exp`, `floor`, `log`, `log10`, `log2`, `log1p`, `max`, `min`, `pow`, `random`, `round`, `sign`, `sin`, `sqrt`, `tan`, `trunc`                                           |
+| NumberConstructor                | `MAX_SAFE_INTEGER`, `MIN_SAFE_INTEGER`, `MAX_VALUE`, `MIN_VALUE`, `EPSILON`, `POSITIVE_INFINITY`, `NEGATIVE_INFINITY`, `NaN`, `isInteger`, `isNaN`, `isFinite`, `parseInt`, `parseFloat`                                                                                                         |
+| Number                           | `toString`, `toFixed`                                                                                                                                                                                                                                                                            |
+| StringConstructor                | `fromCharCode`                                                                                                                                                                                                                                                                                   |
+| String                           | `length`, `replace`, `replaceAll`, `concat`, `indexOf`, `substr`, `substring`, `slice`, `toLowerCase`, `toUpperCase`, `trim`, `trimEnd`, `trimRight`, `trimStart`, `trimLeft`, `split`, `charAt`, `charCodeAt`, `startsWith`, `endsWith`, `includes`, `repeat`, `padStart`, `padEnd`, `toString` |
+| ArrayConstructor                 | `from`, `isArray`, `of`                                                                                                                                                                                                                                                                          |
+| Array                            | `length`, `at`, `concat`, `entries`, `fill`, `push`, `reverse`, `shift`, `unshift`, `sort`, `pop`, `forEach`, `find`, `findIndex`, `includes`, `indexOf`, `map`, `filter`, `reduce`, `reduceRight`, `some`, `every`, `slice`, `splice`, `join`, `flat`, `flatMap`                                |
+| ObjectConstructor                | `assign`, `defineProperty`, `entries`, `fromEntries`, `keys`, `values`                                                                                                                                                                                                                           |
+| Object                           | `hasOwnProperty`                                                                                                                                                                                                                                                                                 |
+| Map                              | `size`, `clear`, `delete`, `entries`, `forEach`, `get`, `has`, `keys`, `set`, `values`                                                                                                                                                                                                           |
+| Set                              | `size`, `add`, `clear`, `delete`, `entries`, `forEach`, `has`, `keys`, `values`                                                                                                                                                                                                                  |
+
+可使用普通数组、对象、class、Map、Set、Number/String 转换，以及 Error/throw/try/catch。不要把标准库方法当作值传递或解构；如需回调，用 `values.map(value => Math.abs(value))`。方法名动态索引不支持；数组/字符串的数字索引不受此限制。
+
+`Boolean(value)` 支持显式 JS 真值转换，参数只求值一次：0、空字符串、NaN、undefined（Lua nil）和 false 为 false；对象和数组为 true。无参调用为 false，支持函数别名和 `filter(Boolean)`。`new Boolean()` 不支持。直接在条件中使用数字/字符串仍应改成明确比较；这与显式 Boolean 转换不同。
+
+`setTimeout`、`setInterval`、对应 clear 函数、requestAnimationFrame、queueMicrotask 暂不可用；用生命周期 dt 累加计时，停用/销毁时自己清理。Promise、Date、RegExp、JSON、WeakMap/WeakSet、浏览器与 Node 全局不可用。编译器、编辑器插件和 ESLint 共用说明性诊断；用户自己定义的同名局部函数不受影响。
+
+### 包内数据
+
+`genshin-ts/definitions/` 下可导入 prefabs、zh_aliases、node_modes、node_graph_entries、server_node_metadata、client_scoped_globals。这些文件只有字面量数据，构建时从原 TS 数据生成配套 Lua；按需输出，中文名、英文名和动态键访问均保留。
+
+`import { CharacterPrefab } from 'genshin-ts/definitions/prefabs'` 可直接使用。节点图 enum/client_enums 包含运行时类，不属于纯数据；Lua 宿主枚举用 `lua.Enum`。其他包内 JS 和 npm 模块不能自动在 Lua 中运行，构建时会解释拒绝原因。
+
+### 需要注意的语义
+
+- TS 数组仍写 0 起始索引；编译器处理 Lua table 的 1 起始索引。调用原生 Lua API 则遵循其声明。
+- `{ a: undefined }` 在 Lua 中没有 a 字段；数组中的 undefined 或空项可能截断遍历，`delete items[i]` 会留下空洞。需要移除元素时用 splice。
+- 负数取模不同：JS 的 `-5 % 3` 为 -2，Lua 为 1。需要非负循环索引时显式使用 `((n % size) + size) % size`；需要 JS 余数时按向零截断的商计算。
+- 对象赋值共享引用；展开或 Object.assign 是浅复制，嵌套对象仍共享。这与 JS 一致，框架不会隐式深复制。
+
 ## 输出与安全注入
 
 沿用现有 `gsts` 单文件、批量和 `gsts dev` 命令。输出在 `<outDir>/lua/`；单文件无配置时默认 `dist/lua/`。包含挂载入口、依赖模块、原生 Lua、辅助库及按需 lualib。
 
-配置 `inject.mapId` 且没有 `--noinject` 时，同步到该地图的 `external_lua_file`。继续使用现有区服/玩家/地图定位，不需要 nodeGraphId；本地 dist 产物也保留。Lua 不会修改 gil 中的脚本挂载映射。
+配置 `inject.mapId` 且没有 `--noinject` 时，同步到该地图的 `external_lua_file`。继续使用现有区服/玩家/地图定位，不需要 nodeGraphId；本地 dist 产物也保留。**Lua 的“注入”只是把文件复制到 `external_lua_file`，挂载仍需在编辑器中手动完成。** Lua 不会修改 gil 中的脚本挂载映射。
 
 生成文件第一条非空行为 `-- @gsts:lua`。写入前检查本轮待更新的目标批次：目标文件没有这个标记就不覆盖，本批次不写入，并明确报告冲突路径和“Lua 注入未完成”。确认允许覆盖后，由用户在文件头第一条非空行添加标记再运行。`skipSafeCheck` 不会关闭 Lua 的保护。
 
@@ -207,7 +245,7 @@ if (other) {
 
 `dev` 监听 TS、原生 Lua 和声明文件；构建失败保留上一版输出。修改构建配置后重启 dev，与现有监听配置的使用方式一致。编辑器批量添加生成文件夹并挂载入口后，修改 Lua、重新运行游戏即可生效，没有额外“刷新脚本”步骤。
 
-## 已验证与边界
+## 自动测试与待验收边界
 
 - 自动执行生成的 Lua：生命周期、class、导入实时绑定、双挂载私有状态、共享模块、原生依赖、多返回值、参数、公开方法、信号参数顺序、console 和 Error 沙箱兼容。
 - 使用 TypeScript Language Service 验证全局对象、生命周期、dt、收窄控件的补全，以及节点图专用全局的隔离。
