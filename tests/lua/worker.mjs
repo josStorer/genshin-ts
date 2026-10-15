@@ -22,8 +22,9 @@ const worker = createLuaWorker()
 try {
   let prepared = false,
     settled = false
-  const compiling = worker.compile(input, (deps) => {
+  const compiling = worker.compile(input, ({ dependencies: deps, graphEntries }) => {
     assert.equal(settled, false, 'dependencies must arrive before completion')
+    assert.deepEqual(graphEntries, [], 'a plain Lua entry is not a node graph entry')
     assert.ok(
       deps.includes(input.entries[0].replaceAll('\\', '/')) || deps.includes(input.entries[0])
     )

@@ -6,10 +6,10 @@ import fg from 'fast-glob'
 import ts from 'typescript'
 
 import type { GstsConfig } from '../compiler/gsts_config.js'
-import type { LuaCompileCache } from '../compiler/lua/build.js'
+import type { LuaCompileCache, LuaPrepared } from '../compiler/lua/build.js'
 import type { LuaOutputCache } from '../compiler/lua/output.js'
 import { createBuildTimer } from '../compiler/lua/profile.js'
-import { entryCall, nodeGraphCalls } from '../compiler/lua/syntax.js'
+import { entryCall } from '../compiler/lua/syntax.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker-client.js'
 import { t } from '../i18n/index.js'
 import { formatBuildSummary } from './build-summary.js'
@@ -27,6 +27,8 @@ export interface ClientLuaSession {
   active?: boolean
   /** 最近发现的依赖；编译失败也保留，以便修复依赖时能再次触发。 */
   dependencies?: string[]
+  /** 最近一次 Lua 依赖中的节点图入口；它们不能从节点图编译中排除。 */
+  graphEntries?: string[]
   compiler?: LuaCompileCache
   worker?: LuaWorker
   localOutput?: LuaOutputCache
@@ -58,7 +60,7 @@ export interface ClientLuaOptions {
   profile?: boolean
   session?: ClientLuaSession
   changedFiles?: readonly string[]
-  onPrepared?: (dependencies: string[]) => void
+  onPrepared?: (prepared: LuaPrepared) => void
   reporting?: ClientLuaReport
 }
 
@@ -226,6 +228,7 @@ export async function buildClientLua({
     if (session) {
       session.last = summary
       session.dependencies = []
+      session.graphEntries = []
     }
     return summary
   }
@@ -242,11 +245,14 @@ export async function buildClientLua({
     typeCheck: cfg.lua?.typeCheck,
     changedFiles: last?.key === key ? changedFiles : undefined
   }
-  const prepared = (dependencies: string[]) => {
-    if (session) session.dependencies = dependencies
+  const prepared = (value: LuaPrepared) => {
+    if (session) {
+      session.dependencies = value.dependencies
+      session.graphEntries = value.graphEntries
+    }
     // 性能探针保留真实发生时机；普通诊断和结果仍在末尾集中显示。
-    timer.prepared(dependencies.length)
-    onPrepared?.(dependencies)
+    timer.prepared(value.dependencies.length)
+    onPrepared?.(value)
   }
   const compile = async () => {
     if (session?.worker) return session.worker.compile(input, prepared)
@@ -369,21 +375,13 @@ export function startClientLua({
     resolvePrepared = resolve
   })
   let isPrepared = false
-  const ready = (value: { dependencies: string[] }) => {
+  const ready = (dependencies: string[], graphEntries = state.graphEntries ?? []) => {
     if (isPrepared) return
     isPrepared = true
     // Lua 依赖里可能包含节点图入口。保留该入口给节点图编译；Lua 自身会报告错误。
-    const excludeFiles = value.dependencies.filter((file) => {
-      if (!file.endsWith('.ts') || file.endsWith('.d.ts') || !fs.existsSync(file)) return true
-      const source = ts.createSourceFile(
-        file,
-        fs.readFileSync(file, 'utf8'),
-        ts.ScriptTarget.Latest,
-        true
-      )
-      return nodeGraphCalls(source).length === 0
-    })
-    resolvePrepared({ dependencies: value.dependencies, excludeFiles })
+    const keep = new Set(graphEntries.map(normalize))
+    const excludeFiles = dependencies.filter((file) => !keep.has(normalize(file)))
+    resolvePrepared({ dependencies, excludeFiles })
   }
   const logs: unknown[][] = []
   const report: ClientLuaReport = {
@@ -400,26 +398,24 @@ export function startClientLua({
     profile,
     session: state,
     changedFiles,
-    onPrepared: (dependencies) => ready({ dependencies }),
+    onPrepared: (value) => ready(value.dependencies, value.graphEntries),
     reporting: report
   })
     .then(
       (result) => {
-        ready(result)
+        ready(result.dependencies)
         return result
       },
       (error) => {
         // Lua 失败也不能阻止节点图。至少排除已识别的 Lua 入口，避免作为 JS 执行。
-        ready({
-          dependencies: [
-            ...new Set([
-              ...(state.dependencies ?? []),
-              ...[...(state.discovery?.candidates.values() ?? [])]
-                .filter((item) => item.entry)
-                .map((item) => item.file)
-            ])
-          ]
-        })
+        ready([
+          ...new Set([
+            ...(state.dependencies ?? []),
+            ...[...(state.discovery?.candidates.values() ?? [])]
+              .filter((item) => item.entry)
+              .map((item) => item.file)
+          ])
+        ])
         throw error
       }
     )

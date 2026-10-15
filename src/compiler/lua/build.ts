@@ -16,6 +16,7 @@ import {
 } from './native.js'
 import { createLuaPlugin, diagnostic, entryCall, hooks } from './plugin.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
+import { isNodeGraphEntry } from './syntax.js'
 
 export interface LuaBuildOptions {
   lang?: Lang
@@ -29,6 +30,12 @@ export interface LuaBuildOptions {
   additionalFiles?: string[]
   rootDir: string
   outDir: string
+}
+/** Program 建好后即可交给节点图：Lua 依赖的源文件，以及其中误作模块导入的节点图入口。 */
+export interface LuaPrepared {
+  dependencies: string[]
+  /** 节点图仍需编译这些入口；Lua 侧会对导入它们报错。 */
+  graphEntries: string[]
 }
 export interface LuaCompileProfile {
   timingsMs: Record<string, number>
@@ -103,7 +110,7 @@ function packageRoot() {
 export function compileLua(
   input: LuaBuildOptions,
   cache?: LuaCompileCache,
-  onPrepared?: (dependencies: string[]) => void
+  onPrepared?: (prepared: LuaPrepared) => void
 ): LuaBuildResult {
   if (input.lang) initCliI18n(input.lang)
   const timer = createBuildTimer(!!input.profile)
@@ -114,7 +121,12 @@ export function compileLua(
   const resolved = resolveLuaHost(input, cache)
   timer.mark('setup')
   const prepared = prepareLuaProgram(input, resolved, timer, cache)
-  onPrepared?.(prepared.sources.map((source) => source.fileName))
+  onPrepared?.({
+    dependencies: prepared.sources.map((source) => source.fileName),
+    graphEntries: prepared.sources
+      .filter((source) => !source.isDeclarationFile && isNodeGraphEntry(source))
+      .map((source) => source.fileName)
+  })
   const checked = diagnoseLua(input, resolved, prepared, timer)
   const context = { input, cache, timer, luaCache, resolved, prepared, checked }
   if (!checked.diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)) {

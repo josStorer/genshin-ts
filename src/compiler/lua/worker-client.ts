@@ -2,14 +2,14 @@ import fs from 'node:fs'
 import { Worker } from 'node:worker_threads'
 
 import { getCliLanguage, t } from '../../i18n/index.js'
-import type { LuaBuildOptions, LuaBuildResult } from './build.js'
+import type { LuaBuildOptions, LuaBuildResult, LuaPrepared } from './build.js'
 
 export type LuaWorkerResult = Omit<LuaBuildResult, 'diagnostics'> & {
   diagnosticsText: string
   hasErrors: boolean
 }
 type Reply =
-  | { kind: 'prepared'; dependencies: string[] }
+  | { kind: 'prepared'; prepared: LuaPrepared }
   | { kind: 'result'; result: LuaWorkerResult }
   | { kind: 'error'; message: string }
 
@@ -20,7 +20,7 @@ export function createLuaWorker() {
     | {
         resolve: (result: LuaWorkerResult) => void
         reject: (error: Error) => void
-        onPrepared?: (dependencies: string[]) => void
+        onPrepared?: (prepared: LuaPrepared) => void
       }
     | undefined
   const fail = (error: Error) => {
@@ -28,7 +28,7 @@ export function createLuaWorker() {
     pending = undefined
   }
   return {
-    compile(input: LuaBuildOptions, onPrepared?: (dependencies: string[]) => void) {
+    compile(input: LuaBuildOptions, onPrepared?: (prepared: LuaPrepared) => void) {
       if (pending) return Promise.reject(new Error(t('lua_workerBusy')))
       if (!worker) {
         let url = new URL('./worker.js', import.meta.url)
@@ -40,7 +40,7 @@ export function createLuaWorker() {
         current.on('message', (message: Reply) => {
           if (worker !== current || !pending) return
           if (message.kind === 'prepared') {
-            pending.onPrepared?.(message.dependencies)
+            pending.onPrepared?.(message.prepared)
             return
           }
           if (message.kind === 'result') pending.resolve(message.result)

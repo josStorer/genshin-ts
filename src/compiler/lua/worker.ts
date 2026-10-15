@@ -11,8 +11,8 @@ const port = parentPort!
 const cache = createLuaCompileCache()
 port.on('message', (input: LuaBuildOptions) => {
   try {
-    const { diagnostics, ...result } = compileLua(input, cache, (dependencies) => {
-      port.postMessage({ kind: 'prepared', dependencies })
+    const { diagnostics, ...result } = compileLua(input, cache, (prepared) => {
+      port.postMessage({ kind: 'prepared', prepared })
     })
     port.postMessage({
       kind: 'result',

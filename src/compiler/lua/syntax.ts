@@ -33,7 +33,7 @@ export function diagnostic(node: ts.Node, messageText: string, warning = false):
   }
 }
 
-/** Ö»Ê¶±ğ´Ó GSTS µ¼ÈëµÄ½ÚµãÍ¼¹¤³§£¬±ÜÃâ°ÑÆÕÍ¨¶ÔÏóµÄ server() µ±³É½ÚµãÍ¼¡£ */
+/** åªè¯†åˆ«ä» GSTS å¯¼å…¥çš„èŠ‚ç‚¹å›¾å·¥å‚ï¼Œé¿å…æŠŠæ™®é€šå¯¹è±¡çš„ server() å½“æˆèŠ‚ç‚¹å›¾ã€‚ */
 export function nodeGraphCalls(source: ts.SourceFile): ts.CallExpression[] {
   const imports = new Set<string>()
   const namespaces = new Set<string>()
@@ -75,4 +75,15 @@ export function nodeGraphCalls(source: ts.SourceFile): ts.CallExpression[] {
   }
   visit(source)
   return calls
+}
+
+const nodeGraphEntryCache = new WeakMap<ts.SourceFile, boolean>()
+/** æŒ‰ SourceFile ç¼“å­˜ï¼›å¢é‡ç¼–è¯‘å¤ç”¨æœªæ”¹åŠ¨çš„è¯­æ³•æ ‘æ—¶ä¸å†é‡å¤éå†ã€‚ */
+export function isNodeGraphEntry(source: ts.SourceFile): boolean {
+  let cached = nodeGraphEntryCache.get(source)
+  if (cached === undefined) {
+    cached = nodeGraphCalls(source).length > 0
+    nodeGraphEntryCache.set(source, cached)
+  }
+  return cached
 }
