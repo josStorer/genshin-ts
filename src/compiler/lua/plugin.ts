@@ -20,6 +20,15 @@ export function createLuaPlugin(
   const bindings = new Map<ts.Symbol, lua.Expression>()
   const imports = new Map<ts.SourceFile, lua.Statement[]>()
   const getters = new Map<ts.SourceFile, lua.TableFieldExpression[]>()
+  const helperLocals = new Map<ts.SourceFile, lua.Identifier>()
+  function helpers(ctx: lua.TransformationContext) {
+    let local = helperLocals.get(ctx.sourceFile)
+    if (!local) {
+      local = id(ctx.createTempName('helpers'))
+      helperLocals.set(ctx.sourceFile, local)
+    }
+    return local
+  }
   const envSymbols = new Set<ts.Symbol>()
   const adaptedCallbacks = new Set<number>()
   // TSTL's standard array helpers pass a receiver slot even when the TS function does not use one.
@@ -92,6 +101,8 @@ export function createLuaPlugin(
                 ctx.diagnostics.push(diagnostic(item, t('lua_graphApi', { arg0: name })))
             }
           }
+          const helperImport =
+            moduleName === 'genshin-ts/runtime/lua' || moduleName === 'genshin-ts/runtime/core'
           const table = id(ctx.createTempName('module'))
           let used = !clause
           const bind = (name: ts.Identifier, key?: string) => {
@@ -113,7 +124,13 @@ export function createLuaPlugin(
                 bind(item.name, name)
               }
           }
-          if (used)
+          if (used && helperImport) {
+            const existing = helperLocals.get(node)
+            if (existing) {
+              prelude.push(lua.createVariableDeclarationStatement(table, existing, statement))
+            } else helperLocals.set(node, table)
+          }
+          if (used && !helperImport)
             prelude.push(
               lua.createVariableDeclarationStatement(
                 table,
@@ -142,7 +159,7 @@ export function createLuaPlugin(
             0,
             lua.createVariableDeclarationStatement(table, lua.createTableExpression(reexports)),
             lua.createExpressionStatement(
-              lua.createCallExpression(field(requireModule('__gsts_helpers'), 'liveExports'), [
+              lua.createCallExpression(field(helpers(ctx), 'liveExports'), [
                 id('____exports'),
                 table
               ])
@@ -158,6 +175,11 @@ export function createLuaPlugin(
           )
             ctx.diagnostics.splice(i, 1)
         }
+        const helper = helperLocals.get(node)
+        if (helper)
+          prelude.unshift(
+            lua.createVariableDeclarationStatement(helper, requireModule('__gsts_helpers'))
+          )
         result.statements.unshift(...prelude)
         return result
       },
@@ -196,7 +218,7 @@ export function createLuaPlugin(
             globals.has(ast.table.text) &&
             lua.isStringLiteral(ast.index)
           ) {
-            if (ast.index.value === 'helper') return requireModule('__gsts_helpers')
+            if (ast.index.value === 'helper') return helpers(ctx)
             if (ast.index.value === 'self') return field(field(ast.table, 'script'), 'object')
           }
           const record = value as Record<string, unknown>
@@ -211,8 +233,7 @@ export function createLuaPlugin(
           symbol?.declarations?.some((d) => d.getSourceFile().fileName.endsWith('lua-globals.d.ts'))
         ) {
           if (node.text === 'self') return field(field(id('_ENV'), 'script'), 'object')
-          if (node.text === 'send' || node.text === 'console')
-            return field(requireModule('__gsts_helpers'), node.text)
+          if (node.text === 'send' || node.text === 'console') return field(helpers(ctx), node.text)
         }
         return adaptBuiltinCallback(
           node,
@@ -373,7 +394,7 @@ export function createLuaPlugin(
                 d.name.text === 'ClientGlobals' &&
                 d.getSourceFile().fileName.endsWith('lua.d.ts')
             )
-        if (globalObject && node.name.text === 'helper') return requireModule('__gsts_helpers')
+        if (globalObject && node.name.text === 'helper') return helpers(ctx)
         if (globalObject && node.name.text === 'self')
           return field(field(ctx.transformExpression(node.expression), 'script'), 'object')
         if (
@@ -487,11 +508,7 @@ export function createLuaPlugin(
               node
             )
           }
-          return lua.createCallExpression(
-            field(requireModule('__gsts_helpers'), 'send'),
-            args,
-            node
-          )
+          return lua.createCallExpression(field(helpers(ctx), 'send'), args, node)
         }
         if (
           ts.isPropertyAccessExpression(callee) &&
@@ -502,7 +519,7 @@ export function createLuaPlugin(
             ?.declarations?.some((d) => d.getSourceFile().fileName.endsWith('lua-globals.d.ts'))
         ) {
           return lua.createCallExpression(
-            field(field(requireModule('__gsts_helpers'), 'console'), callee.name.text),
+            field(field(helpers(ctx), 'console'), callee.name.text),
             transformOrderedExpressions(ctx, node.arguments),
             node
           )

@@ -70,6 +70,15 @@ const result = success(
   })
 )
 fs.writeFileSync(path.join(root, 'main.lua'), result.files.get('main.lua'))
+assert.equal((result.files.get('main.lua').match(/require\("__gsts_helpers"\)/g) ?? []).length, 1)
+assert.match(result.files.get('main.lua'), /local \w+ = require\("__gsts_helpers"\)/)
+const noHelpers = success(
+  build({
+    'main.ts':
+      "import {g} from 'genshin-ts/runtime/core'; export default g.clientControlScript(lua=>{return {onUpdate(dt){lua.print(dt)}}})"
+  })
+)
+assert.equal(noHelpers.files.get('main.lua').includes('require("__gsts_helpers")'), false)
 execute(
   result.files,
   `local calls={}; print=function(...) calls[#calls+1]=table.pack(...) end
