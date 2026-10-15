@@ -103,7 +103,7 @@
   "lua_invalidCallback": "Declare the script as (lua) => { ...; return { ... } }.",
   "lua_returnHooks": "Return the lifecycle object directly at the end of the callback.",
   "lua_publicMethodThis": "The engine calls public methods as plain functions. Access script state through closures; class methods can still use this.",
-  "lua_publicMethodName": "Declare public methods as plain functions. Their names must not overwrite engine lifecycle hooks or global APIs.",
+  "lua_publicMethodName": "Use an inline function or a function declared in the entry callback for public methods, not class methods or non-function values. Names must not overwrite engine lifecycle hooks or global APIs.",
   "lua_dynamicHooks": "Declare lifecycle hooks such as onStart and onUpdate directly. Spreads and dynamically generated hooks are not supported.",
   "lua_earlyReturn": "The entry callback can only return its lifecycle object at the end.",
   "lua_entryTopLevel": "Put entry runtime code inside the clientControlScript callback. Move shared code into a regular module.",

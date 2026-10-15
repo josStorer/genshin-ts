@@ -6,6 +6,7 @@ const suites = {
     'compiler',
     'names',
     'private-fields',
+    'methods',
     'standard-library',
     'data-modules',
     'lint',

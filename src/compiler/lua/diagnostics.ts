@@ -3,7 +3,7 @@ import ts from 'typescript'
 import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
 import { standardLibraryDiagnostic } from './standard-library.js'
-import { diagnostic, entryCall, hooks, nodeGraphCalls } from './syntax.js'
+import { diagnostic, entryCall, hooks, nodeGraphCalls, publicMethodFunction } from './syntax.js'
 
 const ruleByMessage = {
   lua_importGraphEntry: 'lua-no-graph-entry',
@@ -103,7 +103,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
             ts.isObjectLiteralExpression(member.initializer)
           ) {
             for (const method of member.initializer.properties) {
-              const fn = ts.isPropertyAssignment(method) ? method.initializer : method
+              const fn = publicMethodFunction(method, checker, setup.body)
               const checkThis = (node: ts.Node) => {
                 if (
                   node !== fn &&
@@ -116,7 +116,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
                   diagnostics.push(issue(node, 'lua_publicMethodThis'))
                 ts.forEachChild(node, checkThis)
               }
-              checkThis(fn)
+              if (fn) checkThis(fn)
               if (
                 !method.name ||
                 !ts.isIdentifier(method.name) ||
@@ -138,12 +138,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
                   'os',
                   'debug'
                 ].includes(method.name.text) ||
-                !(
-                  ts.isMethodDeclaration(method) ||
-                  (ts.isPropertyAssignment(method) &&
-                    (ts.isArrowFunction(method.initializer) ||
-                      ts.isFunctionExpression(method.initializer)))
-                )
+                !fn
               )
                 diagnostics.push(issue(method, 'lua_publicMethodName'))
             }

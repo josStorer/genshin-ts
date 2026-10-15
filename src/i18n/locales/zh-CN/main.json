@@ -103,7 +103,7 @@
   "lua_invalidCallback": "请使用 (lua) => { …; return { … } } 形式声明脚本。",
   "lua_returnHooks": "回调最后必须直接返回生命周期对象。",
   "lua_publicMethodThis": "公开方法由官方作为普通函数调用，请通过闭包访问脚本状态；class 方法仍可正常使用 this。",
-  "lua_publicMethodName": "公开方法请直接声明普通函数，名称不能覆盖官方生命周期或全局 API。",
+  "lua_publicMethodName": "公开方法请使用内联函数或当前入口回调内声明的函数，不能引用类方法或非函数值；名称不能覆盖官方生命周期或全局 API。",
   "lua_dynamicHooks": "请直接声明 onStart、onUpdate 等生命周期函数，不支持展开或动态生成生命周期。",
   "lua_earlyReturn": "入口回调只能在结尾返回生命周期对象。",
   "lua_entryTopLevel": "入口的运行代码请放进 clientControlScript 回调；共享代码请移到普通模块。",

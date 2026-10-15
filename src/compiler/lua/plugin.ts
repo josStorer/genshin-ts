@@ -325,19 +325,17 @@ export function createLuaPlugin(
           const name = member.key && lua.isStringLiteral(member.key) ? member.key.value : ''
           if (name === 'methods' && lua.isTableExpression(member.value)) {
             for (const method of member.value.fields) {
-              if (
-                method.key &&
-                lua.isStringLiteral(method.key) &&
-                lua.isFunctionExpression(method.value)
-              ) {
+              if (method.key && lua.isStringLiteral(method.key)) {
                 const original = members.get(method.key.value)
                 if (
+                  lua.isFunctionExpression(method.value) &&
                   original &&
                   getFunctionContextType(ctx, ctx.checker.getTypeAtLocation(original)) ===
                     ContextType.NonVoid
                 )
                   method.value.params?.shift()
-                method.value.flags |= lua.NodeFlags.Declaration
+                if (lua.isFunctionExpression(method.value))
+                  method.value.flags |= lua.NodeFlags.Declaration
                 body.push(
                   lua.createAssignmentStatement(field(id('_ENV'), method.key.value), method.value)
                 )
