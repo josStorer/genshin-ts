@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { URL } from 'node:url'
 import { Worker } from 'node:worker_threads'
 
 import { getCliLanguage, t } from '../../i18n/index.js'

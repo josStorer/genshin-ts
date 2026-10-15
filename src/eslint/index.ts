@@ -1,3 +1,4 @@
+import { luaLintRules, luaWarningRules } from '../compiler/lua/diagnostics.js'
 import assignmentRestrictions from './rules/assignment-restrictions.js'
 import builtinConsoleLogArity from './rules/builtin-console-log-arity.js'
 import builtinMathSupport from './rules/builtin-math-support.js'
@@ -48,8 +49,7 @@ import timerOuterCapture from './rules/timer-outer-capture.js'
 import unsupportedBinaryOperator from './rules/unsupported-binary-operator.js'
 
 export const rules = {
-  'lua-syntax': luaRule(false),
-  'lua-semantics': luaRule(true),
+  ...Object.fromEntries(luaLintRules.map((name) => [name, luaRule(name)])),
   'assignment-restrictions': assignmentRestrictions,
   'builtin-console-log-arity': builtinConsoleLogArity,
   'builtin-math-support': builtinMathSupport,
@@ -103,8 +103,29 @@ export const configs = {
   lua: {
     rules: {
       ...Object.fromEntries(Object.keys(rules).map((name) => [`gsts/${name}`, 'off' as const])),
-      'gsts/lua-syntax': 'error' as const,
-      'gsts/lua-semantics': 'warn' as const
+      ...Object.fromEntries(
+        luaLintRules.map((name) => [
+          `gsts/${name}`,
+          luaWarningRules.includes(name) ? ('warn' as const) : ('error' as const)
+        ])
+      ),
+      eqeqeq: ['error', 'always'] as const,
+      '@typescript-eslint/strict-boolean-expressions': [
+        'warn',
+        {
+          allowString: false,
+          allowNumber: false,
+          allowNullableString: false,
+          allowNullableNumber: false
+        }
+      ] as const,
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'Literal[value=null]',
+          message: 'Use undefined in Lua code; null and undefined both become nil.'
+        }
+      ] as const
     }
   },
   recommended: {

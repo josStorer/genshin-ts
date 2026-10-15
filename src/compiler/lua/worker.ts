@@ -1,5 +1,7 @@
 import { parentPort } from 'node:worker_threads'
 
+import ts from 'typescript'
+
 import {
   compileLua,
   createLuaCompileCache,
@@ -19,7 +21,7 @@ port.on('message', (input: LuaBuildOptions) => {
       result: {
         ...result,
         diagnosticsText: formatLuaDiagnostics(diagnostics),
-        hasErrors: diagnostics.some((d) => d.category === 1)
+        hasErrors: diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)
       }
     })
   } catch (error) {

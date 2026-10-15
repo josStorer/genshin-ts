@@ -7,7 +7,7 @@ export function createBuildTimer(enabled: boolean) {
   const timingsMs: Record<string, number> = {}
   const snapshot = () => ({ ...timingsMs, total: enabled ? performance.now() - started : 0 })
   return {
-    mark(name: string) {
+    mark(this: void, name: string) {
       if (!enabled) return
       const now = performance.now()
       timingsMs[name] = now - previous

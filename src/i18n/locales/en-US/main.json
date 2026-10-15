@@ -149,5 +149,9 @@
   "lua_booleanObject": "Lua does not support new Boolean() wrapper objects. Use Boolean(value) to get a boolean.",
   "lua_unsupportedMember": "Lua does not support standard library member {{arg0}}. Use a member from the Lua support list or a native API under lua.",
   "lua_builtinMethodValue": "Call Lua standard library methods directly on their object. For callbacks, use a function such as value => Math.abs(value).",
-  "lua_packageUnavailable": "Lua cannot load the JavaScript implementation of {{arg0}}. Use an allowlisted package data module, project TypeScript, or a native module with a Lua implementation. Node graph enum exports are runtime classes; use lua.Enum for host enums."
+  "lua_packageUnavailable": "Lua cannot load the JavaScript implementation of {{arg0}}. Use an allowlisted package data module, project TypeScript, or a native module with a Lua implementation. Node graph enum exports are runtime classes; use lua.Enum for host enums.",
+  "lua_undefinedField": "An undefined object field is absent in Lua. Use an explicit state value if the field must remain present.",
+  "lua_arrayHole": "Empty Lua array elements create holes or shorten the array. Keep array elements contiguous.",
+  "lua_deleteArray": "Do not delete array elements. Use splice to remove elements and keep the array contiguous.",
+  "lua_bigint": "Client Lua does not support bigint/BigInt. Use number and stay within the safe integer range."
 }

@@ -16,7 +16,7 @@ import {
   createLuaParseCache,
   type LuaParseCache
 } from './native.js'
-import { createLuaPlugin, diagnostic, entryCall, hooks } from './plugin.js'
+import { createLuaPlugin, diagnostic, entryCall } from './plugin.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
 import { isNodeGraphEntry } from './syntax.js'
 
@@ -175,10 +175,10 @@ function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
   const configDiagnostics: ts.Diagnostic[] = []
   const configPath = ts.findConfigFile(
     path.dirname(path.resolve(input.entries[0] ?? root)),
-    ts.sys.fileExists
+    (file) => ts.sys.fileExists(file)
   )
   if (configPath) {
-    const read = ts.readConfigFile(configPath, ts.sys.readFile)
+    const read = ts.readConfigFile(configPath, (file) => ts.sys.readFile(file))
     if (read.error) configDiagnostics.push(read.error)
     else {
       const parsed = ts.parseJsonConfigFileContent(
@@ -229,7 +229,7 @@ function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
   host.getSourceFile = (file, version) => {
     const key = path.resolve(file)
     const previous = nextSources.get(key) ?? cache?.sources.get(key)
-    const canReuse = stableResolution && !changes!.has(luaFileKey(file))
+    const canReuse = stableResolution && !changes.has(luaFileKey(file))
     const text = previous && canReuse ? previous.text : (sourceReads++, host.readFile(file))
     if (text === undefined) return undefined
     const source =
@@ -242,8 +242,8 @@ function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
   // 普通编辑沿用解析结果；新增、删除、配置变化或没有变化清单时重新解析。
   host.hasInvalidatedResolutions = () => !stableResolution
   const resolutionCache = stableResolution
-    ? oldHost!.resolutionCache
-    : ts.createModuleResolutionCache(root, host.getCanonicalFileName, options)
+    ? oldHost.resolutionCache
+    : ts.createModuleResolutionCache(root, (file) => host.getCanonicalFileName(file), options)
   const resolveUncached = (name: string, from: string): ts.ResolvedModuleFull | undefined => {
     if (runtimeMap[name])
       return { resolvedFileName: path.join(sdkRoot, runtimeMap[name]), extension: ts.Extension.Dts }

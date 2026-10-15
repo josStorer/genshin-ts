@@ -87,6 +87,12 @@ export default [
     }
   },
 
+  // Lua 全局声明有独立类型环境，不能为了 lint 混进节点图工程。
+  {
+    files: ['src/runtime/lua_globals.d.ts'],
+    languageOptions: { parserOptions: { project: './tests/lua/tsconfig.sdk.json' } }
+  },
+
   // JavaScript 文件配置（如配置文件等）
   {
     files: ['**/*.js', '**/*.mjs'],

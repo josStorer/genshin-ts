@@ -101,7 +101,7 @@ export async function buildClientLua({
   )
   let discoveryReads = 0
   let candidates: string[]
-  if (reuseFileList) candidates = [...priorDiscovery!.candidates.values()].map((item) => item.file)
+  if (reuseFileList) candidates = [...priorDiscovery.candidates.values()].map((item) => item.file)
   else {
     const patterns = cfg.entries.map((raw) => {
       const neg = raw.startsWith('!'),
@@ -143,7 +143,7 @@ export async function buildClientLua({
   if (session) session.active = report.active
   mark('discover')
   const additionalFiles = reuseFileList
-    ? priorDiscovery!.additionalFiles
+    ? priorDiscovery.additionalFiles
     : cfg.lua?.include?.length
       ? await fg(cfg.lua.include, {
           cwd: rootDir,
@@ -331,7 +331,8 @@ export async function buildClientLua({
       )
     } catch (error) {
       throw new Error(
-        t('lua_injectionFailed', { arg0: error instanceof Error ? error.message : String(error) })
+        t('lua_injectionFailed', { arg0: error instanceof Error ? error.message : String(error) }),
+        { cause: error }
       )
     }
   }

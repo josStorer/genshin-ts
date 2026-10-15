@@ -21,6 +21,7 @@ function resolveBuiltins(program: ts.Program) {
     'console',
     'Number',
     'Boolean',
+    'BigInt',
     'Math',
     'String',
     'Array',

@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "types": [], "noEmit": true },
+  "include": ["../../src/runtime/lua_globals.d.ts"],
+  "exclude": []
+}

@@ -32,7 +32,8 @@ export function hasLuaMarker(text: string) {
 function safePath(root: string, relative: string) {
   if (
     !relative ||
-    /[\x00-\x1f:<>"|?*]/.test(relative) ||
+    [...relative].some((character) => character.charCodeAt(0) < 32) ||
+    /[:<>"|?*]/.test(relative) ||
     relative.includes('\\') ||
     relative
       .split('/')
@@ -195,7 +196,8 @@ export function writeLuaFiles(
         arg1: result.written.join(', ') || t('summary_none'),
         arg2: result.removed.join(', ') || t('summary_none'),
         arg3: pending.join(', ') || t('summary_none')
-      })
+      }),
+      { cause: error }
     )
   }
   if (cache) {

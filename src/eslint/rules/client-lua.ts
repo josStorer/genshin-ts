@@ -5,7 +5,7 @@ import { getLuaDiagnostics } from '../../compiler/lua/diagnostics.js'
 import { entryCall } from '../../compiler/lua/syntax.js'
 import { getParserServices } from '../utils/parser.js'
 
-export function luaRule(warnings: boolean): Rule.RuleModule {
+export function luaRule(name: string): Rule.RuleModule {
   return {
     meta: { type: 'problem', schema: [] },
     create(context) {
@@ -20,7 +20,7 @@ export function luaRule(warnings: boolean): Rule.RuleModule {
             .types?.includes('genshin-ts/runtime/lua_globals')
           if (!isolated && !entryCall(source)) return
           for (const diagnostic of getLuaDiagnostics(source, services.program)) {
-            if ((diagnostic.category === ts.DiagnosticCategory.Warning) !== warnings) continue
+            if (diagnostic.source !== name) continue
             const start = source.getLineAndCharacterOfPosition(diagnostic.start ?? 0)
             const end = source.getLineAndCharacterOfPosition(
               (diagnostic.start ?? 0) + (diagnostic.length ?? 1)

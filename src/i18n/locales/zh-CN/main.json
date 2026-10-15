@@ -149,5 +149,9 @@
   "lua_booleanObject": "Lua 不支持 new Boolean() 包装对象；请使用 Boolean(value) 得到布尔值。",
   "lua_unsupportedMember": "Lua 尚不支持标准库成员 {{arg0}}；请使用 Lua 支持清单中的成员，或 lua 下的原生 API。",
   "lua_builtinMethodValue": "Lua 标准库方法需要在对象上直接调用；传回调时写成 value => Math.abs(value) 这样的函数。",
-  "lua_packageUnavailable": "Lua 不能加载 {{arg0}} 的 JavaScript 实现。仅支持包内纯数据白名单、项目内 TS 和带 Lua 实现的原生模块；节点图 enum 是运行时类，宿主枚举请使用 lua.Enum。"
+  "lua_packageUnavailable": "Lua 不能加载 {{arg0}} 的 JavaScript 实现。仅支持包内纯数据白名单、项目内 TS 和带 Lua 实现的原生模块；节点图 enum 是运行时类，宿主枚举请使用 lua.Enum。",
+  "lua_undefinedField": "对象字段为 undefined 时，Lua 会删除这个字段；需要保留字段时请用明确的状态值。",
+  "lua_arrayHole": "Lua 数组中的空值会形成空洞或缩短长度；请使用连续的有效元素。",
+  "lua_deleteArray": "不要 delete 数组元素；请用 splice 移除并保持数组连续。",
+  "lua_bigint": "客户端 Lua 不支持 bigint/BigInt；请使用 number，并注意安全整数范围。"
 }

@@ -1,20 +1,73 @@
 import ts from 'typescript'
 
-import { t } from '../../i18n/index.js'
+import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
 import { standardLibraryDiagnostic } from './standard-library.js'
 import { diagnostic, entryCall, hooks, nodeGraphCalls } from './syntax.js'
 
+const ruleByMessage = {
+  lua_importGraphEntry: 'lua-no-graph-entry',
+  lua_invalidEntry: 'lua-entry-declaration',
+  lua_nestedEntry: 'lua-entry-declaration',
+  lua_optionsEmpty: 'lua-entry-options',
+  lua_invalidCallback: 'lua-entry-callback',
+  lua_returnHooks: 'lua-entry-return',
+  lua_dynamicHooks: 'lua-entry-return',
+  lua_earlyReturn: 'lua-entry-return',
+  lua_publicMethodThis: 'lua-public-methods',
+  lua_publicMethodName: 'lua-public-methods',
+  lua_entryTopLevel: 'lua-entry-top-level',
+  lua_reservedEnv: 'lua-reserved-env',
+  lua_asyncFunction: 'lua-no-async',
+  lua_spreadEnvironment: 'lua-environment-destructuring',
+  lua_unsupportedSyntax: 'lua-unsupported-syntax',
+  lua_truthiness: 'lua-truthiness',
+  lua_nil: 'lua-nil-assignment',
+  lua_undefinedField: 'lua-no-undefined-field',
+  lua_arrayHole: 'lua-no-array-hole',
+  lua_deleteArray: 'lua-no-array-delete',
+  lua_bigint: 'lua-no-bigint'
+} as const
+
+export const luaLintRules = [
+  ...new Set(
+    Object.values(ruleByMessage).filter(
+      (name) => name !== 'lua-truthiness' && name !== 'lua-nil-assignment'
+    )
+  ),
+  'lua-standard-library',
+  'lua-unavailable-global'
+] as const
+export const luaWarningRules: readonly string[] = [
+  'lua-no-undefined-field',
+  'lua-no-array-hole',
+  'lua-no-array-delete'
+]
+const diagnosticCache = new WeakMap<
+  ts.Program,
+  WeakMap<ts.SourceFile, { lang: string; diagnostics: ts.Diagnostic[] }>
+>()
+function issue(node: ts.Node, key: keyof typeof ruleByMessage, warning = false) {
+  return { ...diagnostic(node, t(key), warning), source: ruleByMessage[key] }
+}
+
 /** 编译器、ESLint 和编辑器共用的 Lua 规则，不加载 TSTL。 */
 export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): ts.Diagnostic[] {
+  const lang = getCliLanguage()
+  let cached = diagnosticCache.get(program)
+  if (!cached) {
+    cached = new WeakMap()
+    diagnosticCache.set(program, cached)
+  }
+  const previous = cached.get(source)
+  if (previous?.lang === lang) return previous.diagnostics
   const checker = program.getTypeChecker()
   const builtins = getLuaBuiltins(program)
   const diagnostics: ts.Diagnostic[] = []
-  for (const call of nodeGraphCalls(source))
-    diagnostics.push(diagnostic(call, t('lua_importGraphEntry')))
+  for (const call of nodeGraphCalls(source)) diagnostics.push(issue(call, 'lua_importGraphEntry'))
   const call = entryCall(source)
   if (call) {
-    if (!builtins.isEntryCall(call)) diagnostics.push(diagnostic(call, t('lua_invalidEntry')))
+    if (!builtins.isEntryCall(call)) diagnostics.push(issue(call, 'lua_invalidEntry'))
     const setup = call.arguments[call.arguments.length - 1]
     if (
       call.arguments.length < 1 ||
@@ -22,7 +75,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
       (call.arguments.length === 2 &&
         (!ts.isObjectLiteralExpression(call.arguments[0]) || call.arguments[0].properties.length))
     )
-      diagnostics.push(diagnostic(call, t('lua_optionsEmpty')))
+      diagnostics.push(issue(call, 'lua_optionsEmpty'))
     if (
       !setup ||
       !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup)) ||
@@ -30,7 +83,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
       setup.parameters.length > 1 ||
       (setup.parameters[0] && !ts.isIdentifier(setup.parameters[0].name))
     )
-      diagnostics.push(diagnostic(call, t('lua_invalidCallback')))
+      diagnostics.push(issue(call, 'lua_invalidCallback'))
     else {
       const last = setup.body.statements.at(-1)
       if (
@@ -39,7 +92,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
         !last.expression ||
         !ts.isObjectLiteralExpression(last.expression)
       )
-        diagnostics.push(diagnostic(setup, t('lua_returnHooks')))
+        diagnostics.push(issue(setup, 'lua_returnHooks'))
       else
         for (const member of last.expression.properties) {
           if (
@@ -60,7 +113,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
                 )
                   return
                 if (node.kind === ts.SyntaxKind.ThisKeyword)
-                  diagnostics.push(diagnostic(node, t('lua_publicMethodThis')))
+                  diagnostics.push(issue(node, 'lua_publicMethodThis'))
                 ts.forEachChild(node, checkThis)
               }
               checkThis(fn)
@@ -92,7 +145,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
                       ts.isFunctionExpression(method.initializer)))
                 )
               )
-                diagnostics.push(diagnostic(method, t('lua_publicMethodName')))
+                diagnostics.push(issue(method, 'lua_publicMethodName'))
             }
           } else if (
             !member.name ||
@@ -105,12 +158,12 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
                   ts.isFunctionExpression(member.initializer)))
             )
           )
-            diagnostics.push(diagnostic(member, t('lua_dynamicHooks')))
+            diagnostics.push(issue(member, 'lua_dynamicHooks'))
         }
       const checkReturn = (node: ts.Node) => {
         if (node !== setup.body && ts.isFunctionLike(node)) return
         if (ts.isReturnStatement(node) && node !== last)
-          diagnostics.push(diagnostic(node, t('lua_earlyReturn')))
+          diagnostics.push(issue(node, 'lua_earlyReturn'))
         ts.forEachChild(node, checkReturn)
       }
       checkReturn(setup.body)
@@ -126,14 +179,20 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
           ts.getModifiers(statement)?.some((m) => m.kind === ts.SyntaxKind.DeclareKeyword))
       )
         continue
-      diagnostics.push(diagnostic(statement, t('lua_entryTopLevel')))
+      diagnostics.push(issue(statement, 'lua_entryTopLevel'))
     }
+  }
+  const includesNil = (expression: ts.Expression) => {
+    const type = checker.getTypeAtLocation(expression)
+    return (type.isUnion() ? type.types : [type]).some(
+      (part) => !!(part.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null))
+    )
   }
   const visit = (node: ts.Node) => {
     const standard = standardLibraryDiagnostic(node, checker, builtins)
     if (standard) diagnostics.push(standard)
     if (ts.isCallExpression(node) && node !== call && builtins.isEntryCall(node))
-      diagnostics.push(diagnostic(node, t('lua_nestedEntry')))
+      diagnostics.push(issue(node, 'lua_nestedEntry'))
     if (
       ts.isIdentifier(node) &&
       node.text === '_ENV' &&
@@ -142,7 +201,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
         ts.isFunctionDeclaration(node.parent)) &&
       node.parent.name === node
     )
-      diagnostics.push(diagnostic(node, t('lua_reservedEnv')))
+      diagnostics.push(issue(node, 'lua_reservedEnv'))
     if (
       (ts.isFunctionDeclaration(node) ||
         ts.isFunctionExpression(node) ||
@@ -151,7 +210,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
       (('asteriskToken' in node && node.asteriskToken) ||
         ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword))
     )
-      diagnostics.push(diagnostic(node, t('lua_asyncFunction')))
+      diagnostics.push(issue(node, 'lua_asyncFunction'))
     if (
       ts.isVariableDeclaration(node) &&
       ts.isObjectBindingPattern(node.name) &&
@@ -159,14 +218,40 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
       checker.getTypeAtLocation(node.initializer).getSymbol() === builtins.clientGlobals &&
       (node.name.elements.some((e) => e.dotDotDotToken) || !ts.isIdentifier(node.initializer))
     )
-      diagnostics.push(diagnostic(node, t('lua_spreadEnvironment')))
+      diagnostics.push(issue(node, 'lua_spreadEnvironment'))
     if (
       ts.isAwaitExpression(node) ||
       ts.isYieldExpression(node) ||
-      ts.isBigIntLiteral(node) ||
       (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword)
     )
-      diagnostics.push(diagnostic(node, t('lua_unsupportedSyntax')))
+      diagnostics.push(issue(node, 'lua_unsupportedSyntax'))
+
+    if (
+      ts.isPropertyAssignment(node) &&
+      ts.isObjectLiteralExpression(node.parent) &&
+      includesNil(node.initializer)
+    )
+      diagnostics.push(issue(node.initializer, 'lua_undefinedField', true))
+    if (ts.isShorthandPropertyAssignment(node) && includesNil(node.name))
+      diagnostics.push(issue(node.name, 'lua_undefinedField', true))
+    if (ts.isArrayLiteralExpression(node))
+      for (const element of node.elements)
+        if (
+          ts.isOmittedExpression(element) ||
+          (!ts.isSpreadElement(element) && includesNil(element))
+        )
+          diagnostics.push(issue(element, 'lua_arrayHole', true))
+    if (ts.isDeleteExpression(node) && ts.isElementAccessExpression(node.expression)) {
+      const type = checker.getTypeAtLocation(node.expression.expression)
+      if (checker.isArrayType(type) || checker.isTupleType(type))
+        diagnostics.push(issue(node, 'lua_deleteArray', true))
+    }
+    if (
+      ts.isBigIntLiteral(node) ||
+      node.kind === ts.SyntaxKind.BigIntKeyword ||
+      (ts.isIdentifier(node) && builtins.global(node) === 'BigInt')
+    )
+      diagnostics.push(issue(node, 'lua_bigint'))
     let condition: ts.Expression | undefined
     if (ts.isIfStatement(node) || ts.isWhileStatement(node) || ts.isDoStatement(node))
       condition = node.expression
@@ -189,7 +274,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
           return !!(t.flags & (ts.TypeFlags.NumberLike | ts.TypeFlags.StringLike))
         })
       )
-        diagnostics.push(diagnostic(condition, t('lua_truthiness'), true))
+        diagnostics.push(issue(condition, 'lua_truthiness', true))
     }
     if (
       ts.isBinaryExpression(node) &&
@@ -199,10 +284,11 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
       const type = checker.getTypeAtLocation(node.right)
       const parts = type.isUnion() ? type.types : [type]
       if (parts.some((t) => t.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null)))
-        diagnostics.push(diagnostic(node, t('lua_nil'), true))
+        diagnostics.push(issue(node, 'lua_nil', true))
     }
     ts.forEachChild(node, visit)
   }
   visit(source)
+  cached.set(source, { lang, diagnostics })
   return diagnostics
 }
