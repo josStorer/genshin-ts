@@ -1,13 +1,9 @@
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
-import {
-  ContextType,
-  getFunctionContextType
-} from 'typescript-to-lua/dist/transformation/utils/function-context.js'
-import { transformOrderedExpressions } from 'typescript-to-lua/dist/transformation/visitors/expression-list.js'
 
 import { t } from '../../i18n/index.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
+import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl-compat.js'
 
 export { entryCall, diagnostic, hooks } from './syntax.js'
 const id = lua.createIdentifier

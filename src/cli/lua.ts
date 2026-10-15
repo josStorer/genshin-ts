@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { performance } from 'node:perf_hooks'
 
 import fg from 'fast-glob'
 import ts from 'typescript'
@@ -9,7 +8,8 @@ import ts from 'typescript'
 import type { GstsConfig } from '../compiler/gsts_config.js'
 import type { LuaCompileCache } from '../compiler/lua/build.js'
 import type { LuaOutputCache } from '../compiler/lua/output.js'
-import { nodeGraphCalls } from '../compiler/lua/syntax.js'
+import { createBuildTimer } from '../compiler/lua/profile.js'
+import { entryCall, nodeGraphCalls } from '../compiler/lua/syntax.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker-client.js'
 import { t } from '../i18n/index.js'
 import { formatBuildSummary } from './build-summary.js'
@@ -45,18 +45,35 @@ const normalize = (file: string) => {
   return process.platform === 'win32' ? absolute.toLowerCase() : absolute
 }
 
+/** Lua 输出始终放在节点图输出目录下，监听排除也使用同一个名称。 */
+export const LUA_OUTPUT_DIRECTORY = 'lua'
+/** 单文件且没有配置时，Lua 使用 dist/lua，避免输出覆盖源码。 */
+export const DEFAULT_LUA_OUT_DIR = 'dist'
+
+export interface ClientLuaOptions {
+  cfgDir: string
+  cfg: GstsConfig
+  noinject?: boolean
+  complete?: boolean
+  profile?: boolean
+  session?: ClientLuaSession
+  changedFiles?: readonly string[]
+  onPrepared?: (dependencies: string[]) => void
+  reporting?: ClientLuaReport
+}
+
 /** Lua 独立编译与注入；没有 Lua 入口时不加载 TSTL。 */
-export async function buildClientLua(
-  cfgDir: string,
-  cfg: GstsConfig,
+export async function buildClientLua({
+  cfgDir,
+  cfg,
   noinject = false,
   complete = true,
   profile = process.env.GSTS_INJECT_PROFILE === '1',
-  session?: ClientLuaSession,
-  changedFiles?: readonly string[],
-  onPrepared?: (dependencies: string[]) => void,
-  reporting?: ClientLuaReport
-) {
+  session,
+  changedFiles,
+  onPrepared,
+  reporting
+}: ClientLuaOptions) {
   const report = reporting ?? {
     active: false,
     compilation: t('summary_failed'),
@@ -64,15 +81,8 @@ export async function buildClientLua(
     log: (...values: unknown[]) => console.log(...values)
   }
   const log = report.log
-  const started = profile ? performance.now() : 0
-  let previous = started
-  const timingsMs: Record<string, number> = {}
-  const mark = (name: string) => {
-    if (!profile) return
-    const now = performance.now()
-    timingsMs[name] = now - previous
-    previous = now
-  }
+  const timer = createBuildTimer(profile)
+  const { mark } = timer
   const rootDir = path.resolve(cfgDir, cfg.compileRoot)
   const discoveryKey = JSON.stringify([rootDir, cfg.entries, cfg.lua?.include])
   const priorDiscovery = session?.discovery?.key === discoveryKey ? session.discovery : undefined
@@ -122,13 +132,7 @@ export async function buildClientLua(
     let entry = false
     if (text.includes('clientControlScript')) {
       const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
-      entry = source.statements.some(
-        (s) =>
-          ts.isExportAssignment(s) &&
-          ts.isCallExpression(s.expression) &&
-          ts.isPropertyAccessExpression(s.expression.expression) &&
-          s.expression.expression.name.text === 'clientControlScript'
-      )
+      entry = !!entryCall(source)
     }
     classified.set(key, { file, entry })
     return entry
@@ -185,25 +189,22 @@ export async function buildClientLua(
         !/\.(lua|json)$|\.d\.ts$/i.test(file)
     )
   ) {
-    if (profile)
-      log(
-        '[lua-profile]',
-        JSON.stringify({
-          kind: 'gsts-lua-profile',
-          skipped: true,
-          reason: 'unrelated-change',
-          discoveryReads,
-          discoveryRescanned: !reuseFileList,
-          timingsMs: { total: performance.now() - started }
-        })
-      )
+    timer.report(
+      {
+        skipped: true,
+        reason: 'unrelated-change',
+        discoveryReads,
+        discoveryRescanned: !reuseFileList
+      },
+      log
+    )
     report.compilation = t('summary_reused')
     report.injection = t('summary_noUpdate')
     return last
   }
   // 失败后下一轮必须重试，不能把上次成功当成本次成功。
   if (session) session.last = undefined
-  const outDir = path.resolve(cfgDir, cfg.outDir, 'lua')
+  const outDir = path.resolve(cfgDir, cfg.outDir, LUA_OUTPUT_DIRECTORY)
   const owner = createHash('sha256')
     .update(process.platform === 'win32' ? rootDir.toLowerCase() : rootDir)
     .digest('hex')
@@ -212,18 +213,15 @@ export async function buildClientLua(
     !entries.length &&
     (!complete || !fs.existsSync(path.join(outDir, `.gsts-lua-${owner}.json`)))
   ) {
-    if (profile)
-      log(
-        '[lua-profile]',
-        JSON.stringify({
-          kind: 'gsts-lua-profile',
-          skipped: true,
-          candidates: candidates.length,
-          discoveryReads,
-          discoveryRescanned: !reuseFileList,
-          timingsMs: { ...timingsMs, total: performance.now() - started }
-        })
-      )
+    timer.report(
+      {
+        skipped: true,
+        candidates: candidates.length,
+        discoveryReads,
+        discoveryRescanned: !reuseFileList
+      },
+      log
+    )
     const summary = { key, dependencies: [] as string[], entries: [] as string[], candidates }
     if (session) {
       session.last = summary
@@ -247,8 +245,7 @@ export async function buildClientLua(
   const prepared = (dependencies: string[]) => {
     if (session) session.dependencies = dependencies
     // 性能探针保留真实发生时机；普通诊断和结果仍在末尾集中显示。
-    if (profile)
-      console.log('[lua-prepared]', JSON.stringify({ dependencies: dependencies.length }))
+    timer.prepared(dependencies.length)
     onPrepared?.(dependencies)
   }
   const compile = async () => {
@@ -333,20 +330,17 @@ export async function buildClientLua(
     }
   }
   mark('injectionAndReport')
-  if (profile)
-    log(
-      '[lua-profile]',
-      JSON.stringify({
-        kind: 'gsts-lua-profile',
-        execution: session?.worker ? 'worker' : 'main',
-        discoveryReads,
-        discoveryRescanned: !reuseFileList,
-        candidates: candidates.length,
-        entries: entries.length,
-        timingsMs: { ...timingsMs, total: performance.now() - started },
-        compiler: 'profile' in result ? result.profile : undefined
-      })
-    )
+  timer.report(
+    {
+      execution: session?.worker ? 'worker' : 'main',
+      discoveryReads,
+      discoveryRescanned: !reuseFileList,
+      candidates: candidates.length,
+      entries: entries.length,
+      compiler: 'profile' in result ? result.profile : undefined
+    },
+    log
+  )
   const summary = { key, dependencies: result.dependencies, entries: result.entries, candidates }
   if (session) session.last = summary
   discovery.knownFiles = new Set(
@@ -358,15 +352,15 @@ export async function buildClientLua(
 }
 
 /** 依赖分组完成后即可开始节点图编译；两种目标各用自己的类型环境。 */
-export function startClientLua(
-  cfgDir: string,
-  cfg: GstsConfig,
-  noinject: boolean,
-  profile: boolean,
-  session?: ClientLuaSession,
-  changedFiles?: readonly string[],
+export function startClientLua({
+  cfgDir,
+  cfg,
+  noinject = false,
+  profile = process.env.GSTS_INJECT_PROFILE === '1',
+  session,
+  changedFiles,
   complete = true
-) {
+}: Omit<ClientLuaOptions, 'onPrepared' | 'reporting'>) {
   const state = session ?? {}
   state.worker ??= createLuaWorker()
   type Prepared = { dependencies: string[]; excludeFiles: string[] }
@@ -398,17 +392,17 @@ export function startClientLua(
     injection: t('summary_compileOrWriteFailed'),
     log: (...values) => logs.push(values)
   }
-  const result = buildClientLua(
+  const result = buildClientLua({
     cfgDir,
     cfg,
     noinject,
     complete,
     profile,
-    state,
+    session: state,
     changedFiles,
-    (dependencies) => ready({ dependencies }),
-    report
-  )
+    onPrepared: (dependencies) => ready({ dependencies }),
+    reporting: report
+  })
     .then(
       (result) => {
         ready(result)

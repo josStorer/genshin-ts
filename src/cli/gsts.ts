@@ -50,7 +50,12 @@ import {
   runInjectionAttempt,
   type InjectionAttemptHooks
 } from './injection_lifecycle.js'
-import { startClientLua, type ClientLuaSession } from './lua.js'
+import {
+  DEFAULT_LUA_OUT_DIR,
+  LUA_OUTPUT_DIRECTORY,
+  startClientLua,
+  type ClientLuaSession
+} from './lua.js'
 import { getMapKey, loadState, saveState } from './state.js'
 import { createUi } from './ui.js'
 import { openAndSelect, openDir } from './windows_open.js'
@@ -918,7 +923,7 @@ function buildDevWatchGlobs(
   const relativeOut = path.relative(compileRoot, path.resolve(cfgDir, cfg.outDir))
   if (relativeOut && !relativeOut.startsWith('..') && !path.isAbsolute(relativeOut))
     dependencyIgnored.push(`${toPosixPath(relativeOut)}/**`)
-  else if (!relativeOut) dependencyIgnored.push('lua/**')
+  else if (!relativeOut) dependencyIgnored.push(`${LUA_OUTPUT_DIRECTORY}/**`)
 
   return { cwd: compileRoot, watch, ignored: [...ignored, ...dependencyIgnored], dependencyIgnored }
 }
@@ -945,7 +950,13 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
 
   ui.info(t('startCompile'))
   const luaStart = profiling ? performance.now() : 0
-  const luaTask = startClientLua(cfgDir, cfg, !!opts.noinject, profiling, hooks?.luaSession)
+  const luaTask = startClientLua({
+    cfgDir,
+    cfg,
+    noinject: !!opts.noinject,
+    profile: profiling,
+    session: hooks?.luaSession
+  })
   let luaMs = 0
   const luaDone = luaTask.result
     .finally(() => {
@@ -1719,14 +1730,14 @@ async function runDev(opts: GlobalOptions) {
       return
     }
     const previousLuaSources = new Set(luaSession.dependencies?.map(normForMap))
-    const luaTask = startClientLua(
+    const luaTask = startClientLua({
       cfgDir,
       cfg,
-      !!opts.noinject,
-      injectProfileEnabled(opts),
-      luaSession,
-      [...removedBatch, ...changedBatch].map((rel) => path.resolve(compileRoot, rel))
-    )
+      noinject: !!opts.noinject,
+      profile: injectProfileEnabled(opts),
+      session: luaSession,
+      changedFiles: [...removedBatch, ...changedBatch].map((rel) => path.resolve(compileRoot, rel))
+    })
     graphResult.summary = {
       compilation: t('summary_unchanged'),
       injection: t('summary_noInjection')
@@ -2243,16 +2254,14 @@ async function runSingle(file: string, opts: GlobalOptions) {
       }
       return { ...cfg, entries: [rel] }
     })()
-    const luaCfg = loaded ? singleCfg : { ...singleCfg, outDir: 'dist' }
-    luaTask = startClientLua(
+    const luaCfg = loaded ? singleCfg : { ...singleCfg, outDir: DEFAULT_LUA_OUT_DIR }
+    luaTask = startClientLua({
       cfgDir,
-      luaCfg,
-      !!opts.noinject,
-      injectProfileEnabled(opts),
-      undefined,
-      undefined,
-      false
-    )
+      cfg: luaCfg,
+      noinject: !!opts.noinject,
+      profile: injectProfileEnabled(opts),
+      complete: false
+    })
     await luaTask.prepared
     if (luaTask.report.active) {
       summary.compilation = t('summary_noEntry')

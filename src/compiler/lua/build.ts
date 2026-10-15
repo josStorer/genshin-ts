@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { performance } from 'node:perf_hooks'
 import { fileURLToPath } from 'node:url'
 
 import ts from 'typescript'
@@ -16,6 +15,7 @@ import {
   type LuaParseCache
 } from './native.js'
 import { createLuaPlugin, diagnostic, entryCall, hooks } from './plugin.js'
+import { createBuildTimer, type BuildTimer } from './profile.js'
 
 export interface LuaBuildOptions {
   lang?: Lang
@@ -90,12 +90,6 @@ export function formatLuaDiagnostics(diagnostics: readonly ts.Diagnostic[]) {
     getNewLine: () => '\n'
   })
 }
-export function hasLuaEntry(file: string) {
-  if (!file.endsWith('.ts') || file.endsWith('.d.ts')) return false
-  const text = fs.readFileSync(file, 'utf8')
-  if (!text.includes('clientControlScript')) return false
-  return !!entryCall(ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true))
-}
 function packageRoot() {
   let current = path.dirname(fileURLToPath(import.meta.url))
   while (!fs.existsSync(path.join(current, 'package.json'))) {
@@ -112,19 +106,38 @@ export function compileLua(
   onPrepared?: (dependencies: string[]) => void
 ): LuaBuildResult {
   if (input.lang) initCliI18n(input.lang)
-  const started = input.profile ? performance.now() : 0
-  let previous = started
-  const timingsMs: Record<string, number> = {}
-  const mark = (name: string) => {
-    if (!input.profile) return
-    const now = performance.now()
-    timingsMs[name] = now - previous
-    previous = now
-  }
+  const timer = createBuildTimer(!!input.profile)
   const luaCache = cache?.lua ?? createLuaParseCache()
   luaCache.used.clear()
   luaCache.parsed = 0
   luaCache.cycleChecks = 0
+  const resolved = resolveLuaHost(input, cache)
+  timer.mark('setup')
+  const prepared = prepareLuaProgram(input, resolved, timer, cache)
+  onPrepared?.(prepared.sources.map((source) => source.fileName))
+  const checked = diagnoseLua(input, resolved, prepared, timer)
+  const context = { input, cache, timer, luaCache, resolved, prepared, checked }
+  if (!checked.diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)) {
+    try {
+      const resolveLua = collectNativeInputs(context)
+      transpileLua(context, resolveLua)
+      checkLuaModuleCycles(checked.files, luaCache)
+      timer.mark('luaValidate')
+    } catch (error) {
+      checked.diagnostics.push({
+        category: ts.DiagnosticCategory.Error,
+        code: 97002,
+        file: undefined,
+        start: undefined,
+        length: undefined,
+        messageText: error instanceof Error ? error.message : String(error)
+      })
+    }
+  }
+  return packageLua(context)
+}
+
+function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
   const root = path.resolve(input.rootDir)
   const outDir = path.resolve(input.outDir)
   const sdkRoot = path.join(packageRoot(), 'dist/src/runtime')
@@ -198,7 +211,7 @@ export function compileLua(
   host.readFile = (file) => virtual.get(path.resolve(file)) ?? originalRead(file)
   host.fileExists = (file) => virtual.has(path.resolve(file)) || originalExists(file)
   const nextSources = new Map<string, ts.SourceFile>()
-  let refreshSources = new Set<string>()
+  const refreshSources = new Set<string>()
   host.getSourceFile = (file, version) => {
     const key = path.resolve(file)
     const previous = nextSources.get(key) ?? cache?.sources.get(key)
@@ -242,7 +255,48 @@ export function compileLua(
     return resolvedModules.get(key)
   }
   host.resolveModuleNames = (names, from) => names.map((name) => resolve(name, from))
-  mark('setup')
+  return {
+    root,
+    outDir,
+    options,
+    roots,
+    additional,
+    configPath,
+    configDiagnostics,
+    host,
+    hostKey,
+    stableResolution,
+    resolve,
+    resolvedModules,
+    virtual,
+    resolutionCache,
+    refreshSources,
+    get sourceReads() {
+      return sourceReads
+    }
+  }
+}
+
+function prepareLuaProgram(
+  input: LuaBuildOptions,
+  resolved: ReturnType<typeof resolveLuaHost>,
+  timer: BuildTimer,
+  cache?: LuaCompileCache
+) {
+  const {
+    host,
+    roots,
+    options,
+    additional,
+    stableResolution,
+    resolve,
+    refreshSources,
+    hostKey,
+    resolvedModules,
+    virtual,
+    resolutionCache
+  } = resolved
+  const { mark } = timer
   let program = ts.createProgram(roots, options, host, cache?.program)
   mark('programLoad')
   const cacheKey = JSON.stringify([
@@ -259,7 +313,7 @@ export function compileLua(
     oldCheck?.key === cacheKey ? oldCheck.dependencyState : undefined,
     !stableResolution
   )
-  refreshSources = new Set(
+  const affectedSources = new Set(
     sources
       .filter(
         (source) =>
@@ -268,6 +322,7 @@ export function compileLua(
       )
       .map((source) => luaFileKey(source.fileName))
   )
+  for (const key of affectedSources) refreshSources.add(key)
   if (refreshSources.size) {
     // TSTL 按 AST 节点缓存 self 调用方式；依赖类型变化时，受影响的使用者也要换新节点。
     program = ts.createProgram(program.getRootFileNames(), options, host, program)
@@ -286,7 +341,18 @@ export function compileLua(
     }
   }
   mark('affectedFiles')
-  onPrepared?.(sources.map((source) => source.fileName))
+  return { program, sources, cacheKey, oldCheck, plan }
+}
+
+function diagnoseLua(
+  input: LuaBuildOptions,
+  resolved: ReturnType<typeof resolveLuaHost>,
+  prepared: ReturnType<typeof prepareLuaProgram>,
+  timer: BuildTimer
+) {
+  const { root, outDir, configPath, configDiagnostics } = resolved
+  const { program, sources, oldCheck, cacheKey, plan } = prepared
+  const { mark } = timer
   const checker = program.getTypeChecker()
   mark('typeChecker')
   const reuse =
@@ -326,7 +392,7 @@ export function compileLua(
   >()
   const printed = new Map<string, { fileName: string; code: string }>()
   const nativeImports = new Map<string, Set<string>>()
-  let transpileDiagnostics: readonly ts.Diagnostic[] = reuse?.transpileDiagnostics ?? []
+  const transpileDiagnostics: readonly ts.Diagnostic[] = reuse?.transpileDiagnostics ?? []
   for (const source of modules) {
     const key = luaFileKey(source.fileName)
     if (plan.affected.has(key)) continue
@@ -349,6 +415,80 @@ export function compileLua(
     return relative
   }
   const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))
+  const rawRequires: ts.CallExpression[] = []
+  for (const source of modules) {
+    const key = luaFileKey(source.fileName)
+    let checks = plan.affected.has(key) ? undefined : oldCheck?.sourceChecks.get(key)
+    if (!checks) {
+      const localDiagnostics = getLuaDiagnostics(source, checker)
+      const fromOutput = path.relative(outDir, source.fileName)
+      if (!fromOutput.startsWith('..') && !path.isAbsolute(fromOutput))
+        localDiagnostics.push(diagnostic(source, t('lua_sourceInOutput')))
+      const calls: ts.CallExpression[] = []
+      const visit = (node: ts.Node) => {
+        if (ts.isCallExpression(node)) {
+          const declaration = checker.getResolvedSignature(node)?.declaration
+          if (
+            declaration &&
+            ts.isMethodSignature(declaration) &&
+            ts.isIdentifier(declaration.name) &&
+            declaration.name.text === 'require' &&
+            declaration.getSourceFile().fileName.endsWith('lua-standard.d.ts')
+          )
+            calls.push(node)
+        }
+        ts.forEachChild(node, visit)
+      }
+      visit(source)
+      checks = { diagnostics: localDiagnostics, rawRequires: calls }
+    }
+    sourceChecks.set(key, checks)
+    if (!reuse) diagnostics.push(...checks.diagnostics)
+    rawRequires.push(...checks.rawRequires)
+  }
+  mark('gstsCheck')
+  return {
+    checker,
+    reuse,
+    diagnostics,
+    files,
+    dependencies,
+    emitted,
+    modules,
+    entryFiles,
+    targets,
+    sourceChecks,
+    printed,
+    nativeImports,
+    transpileDiagnostics,
+    modulePath,
+    availableModules,
+    rawRequires
+  }
+}
+
+type LuaBuildContext = {
+  input: LuaBuildOptions
+  cache?: LuaCompileCache
+  timer: BuildTimer
+  luaCache: LuaParseCache
+  resolved: ReturnType<typeof resolveLuaHost>
+  prepared: ReturnType<typeof prepareLuaProgram>
+  checked: ReturnType<typeof diagnoseLua>
+}
+
+function collectNativeInputs({ resolved, checked, luaCache, timer }: LuaBuildContext) {
+  const { root, resolve, additional } = resolved
+  const {
+    files,
+    dependencies,
+    availableModules,
+    entryFiles,
+    nativeImports,
+    modulePath,
+    diagnostics,
+    rawRequires
+  } = checked
   const collectNative = (file: string) => {
     collectNativeLua(
       file,
@@ -383,143 +523,134 @@ export function compileLua(
     }
     return modulePath(target)
   }
-  const rawRequires: ts.CallExpression[] = []
-  for (const source of modules) {
-    const key = luaFileKey(source.fileName)
-    let checks = plan.affected.has(key) ? undefined : oldCheck?.sourceChecks.get(key)
-    if (!checks) {
-      const localDiagnostics = getLuaDiagnostics(source, checker)
-      const fromOutput = path.relative(outDir, source.fileName)
-      if (!fromOutput.startsWith('..') && !path.isAbsolute(fromOutput))
-        localDiagnostics.push(diagnostic(source, t('lua_sourceInOutput')))
-      const calls: ts.CallExpression[] = []
-      const visit = (node: ts.Node) => {
-        if (ts.isCallExpression(node)) {
-          const declaration = checker.getResolvedSignature(node)?.declaration
-          if (
-            declaration &&
-            ts.isMethodSignature(declaration) &&
-            ts.isIdentifier(declaration.name) &&
-            declaration.name.text === 'require' &&
-            declaration.getSourceFile().fileName.endsWith('lua-standard.d.ts')
+  for (const imports of nativeImports.values()) for (const file of imports) collectNative(file)
+  for (const call of rawRequires) {
+    const argument = call.arguments[0]
+    if (!argument || !ts.isStringLiteralLike(argument)) {
+      if (!additional.length) diagnostics.push(diagnostic(call, t('lua_dynamicRequire')))
+      continue
+    }
+    const name = argument.text.replace(/\.lua$/, '')
+    if (
+      name.startsWith('.') ||
+      name.includes(':') ||
+      name.includes('\\') ||
+      name.split('/').includes('..')
+    )
+      throw new Error(t('lua_requireRootPath', { arg0: name }))
+    if (availableModules.has(name) || availableModules.has(name.replace(/\./g, '/'))) continue
+    const literal = path.resolve(root, name + '.lua')
+    collectNative(
+      fs.existsSync(literal) ? literal : path.resolve(root, name.replace(/\./g, '/') + '.lua')
+    )
+  }
+  for (const file of additional.filter((x) => x.endsWith('.lua'))) collectNative(file)
+  timer.mark('nativeInputs')
+  return resolveLua
+}
+
+function transpileLua(
+  { resolved, prepared, checked, timer }: LuaBuildContext,
+  resolveLua: ReturnType<typeof collectNativeInputs>
+) {
+  const { outDir, resolve } = resolved
+  const { program, oldCheck, plan } = prepared
+  const { reuse, files, emitted, targets, printed, modules, diagnostics } = checked
+  if (reuse) {
+    for (const [name, text] of reuse.emitted) {
+      if (files.has(name)) throw new Error(t('lua_outputCollision', { arg0: name }))
+      files.set(name, text)
+      emitted.set(name, text)
+    }
+  } else {
+    const result = new tstl.Transpiler().emit({
+      program,
+      sourceFiles: targets,
+      plugins: [
+        createLuaPlugin(resolveLua, (name, from) => {
+          const target = resolve(name, from)?.resolvedFileName
+          return (
+            !!target &&
+            !!program
+              .getSourceFile(target)
+              ?.statements.some((s) => ts.isExportAssignment(s) && s.isExportEquals)
           )
-            calls.push(node)
-        }
-        ts.forEachChild(node, visit)
-      }
-      visit(source)
-      checks = { diagnostics: localDiagnostics, rawRequires: calls }
-    }
-    sourceChecks.set(key, checks)
-    if (!reuse) diagnostics.push(...checks.diagnostics)
-    rawRequires.push(...checks.rawRequires)
-  }
-  mark('gstsCheck')
-  if (!diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)) {
-    try {
-      for (const imports of nativeImports.values()) for (const file of imports) collectNative(file)
-      for (const call of rawRequires) {
-        const argument = call.arguments[0]
-        if (!argument || !ts.isStringLiteralLike(argument)) {
-          if (!additional.length) diagnostics.push(diagnostic(call, t('lua_dynamicRequire')))
-          continue
-        }
-        const name = argument.text.replace(/\.lua$/, '')
-        if (
-          name.startsWith('.') ||
-          name.includes(':') ||
-          name.includes('\\') ||
-          name.split('/').includes('..')
-        )
-          throw new Error(t('lua_requireRootPath', { arg0: name }))
-        if (availableModules.has(name) || availableModules.has(name.replace(/\./g, '/'))) continue
-        const literal = path.resolve(root, name + '.lua')
-        collectNative(
-          fs.existsSync(literal) ? literal : path.resolve(root, name.replace(/\./g, '/') + '.lua')
-        )
-      }
-      for (const file of additional.filter((x) => x.endsWith('.lua'))) collectNative(file)
-      mark('nativeInputs')
-      if (reuse) {
-        for (const [name, text] of reuse.emitted) {
-          if (files.has(name)) throw new Error(t('lua_outputCollision', { arg0: name }))
-          files.set(name, text)
-          emitted.set(name, text)
-        }
-      } else {
-        const result = new tstl.Transpiler().emit({
-          program,
-          sourceFiles: targets,
-          plugins: [
-            createLuaPlugin(resolveLua, (name, from) => {
-              const target = resolve(name, from)?.resolvedFileName
-              return (
-                !!target &&
-                !!program
-                  .getSourceFile(target)
-                  ?.statements.some((s) => ts.isExportAssignment(s) && s.isExportEquals)
-              )
-            }),
-            {
-              afterPrint(_program, _options, _host, results) {
-                // 保存 require 路径改写前的文本；TSTL 后续仍处理完整集合并重建最小 lualib。
-                for (const result of results)
-                  printed.set(luaFileKey(result.fileName), {
-                    fileName: result.fileName,
-                    code: result.code
-                  })
-                results.splice(
-                  0,
-                  results.length,
-                  ...modules.map((source) => {
-                    const result = printed.get(luaFileKey(source.fileName))
-                    if (!result)
-                      throw new Error(t('lua_transpileResultMissing', { arg0: source.fileName }))
-                    return { ...result, sourceFiles: [source] }
-                  })
-                )
-              }
-            }
-          ],
-          writeFile: (filename, data) => {
-            const relative = posix(path.relative(outDir, filename))
-            if (relative.startsWith('../') || path.isAbsolute(relative))
-              throw new Error(t('lua_outputOutsideOutDir', { arg0: relative }))
-            // The official sandbox exposes traceback but not debug.getinfo. Keep Error usable.
-            if (relative === 'lualib_bundle.lua')
-              data = data
-                .replaceAll(
-                  'debug.getinfo(level, "f")',
-                  '(debug.getinfo and debug.getinfo(level, "f"))'
-                )
-                .replaceAll('debug.getinfo(3, "f")', '(debug.getinfo and debug.getinfo(3, "f"))')
-            if (files.has(relative)) throw new Error(t('lua_outputCollision', { arg0: relative }))
-            files.set(relative, data)
-            emitted.set(relative, data)
+        }),
+        {
+          afterPrint(_program, _options, _host, results) {
+            // 保存 require 路径改写前的文本；TSTL 后续仍处理完整集合并重建最小 lualib。
+            for (const result of results)
+              printed.set(luaFileKey(result.fileName), {
+                fileName: result.fileName,
+                code: result.code
+              })
+            results.splice(
+              0,
+              results.length,
+              ...modules.map((source) => {
+                const result = printed.get(luaFileKey(source.fileName))
+                if (!result)
+                  throw new Error(t('lua_transpileResultMissing', { arg0: source.fileName }))
+                return { ...result, sourceFiles: [source] }
+              })
+            )
           }
-        })
-        transpileDiagnostics = [
-          ...(oldCheck?.transpileDiagnostics.filter(
-            (d) => d.file && !plan.affected.has(luaFileKey(d.file.fileName))
-          ) ?? []),
-          ...result.diagnostics
-        ]
-        diagnostics.push(...transpileDiagnostics)
+        }
+      ],
+      writeFile: (filename, data) => {
+        const relative = posix(path.relative(outDir, filename))
+        if (relative.startsWith('../') || path.isAbsolute(relative))
+          throw new Error(t('lua_outputOutsideOutDir', { arg0: relative }))
+        // The official sandbox exposes traceback but not debug.getinfo. Keep Error usable.
+        if (relative === 'lualib_bundle.lua')
+          data = data
+            .replaceAll(
+              'debug.getinfo(level, "f")',
+              '(debug.getinfo and debug.getinfo(level, "f"))'
+            )
+            .replaceAll('debug.getinfo(3, "f")', '(debug.getinfo and debug.getinfo(3, "f"))')
+        if (files.has(relative)) throw new Error(t('lua_outputCollision', { arg0: relative }))
+        files.set(relative, data)
+        emitted.set(relative, data)
       }
-      mark('transpile')
-      checkLuaModuleCycles(files, luaCache)
-      mark('luaValidate')
-    } catch (error) {
-      diagnostics.push({
-        category: ts.DiagnosticCategory.Error,
-        code: 97002,
-        file: undefined,
-        start: undefined,
-        length: undefined,
-        messageText: error instanceof Error ? error.message : String(error)
-      })
-    }
+    })
+    checked.transpileDiagnostics = [
+      ...(oldCheck?.transpileDiagnostics.filter(
+        (d) => d.file && !plan.affected.has(luaFileKey(d.file.fileName))
+      ) ?? []),
+      ...result.diagnostics
+    ]
+    diagnostics.push(...checked.transpileDiagnostics)
   }
+  timer.mark('transpile')
+}
+
+function packageLua({
+  input,
+  cache,
+  timer,
+  luaCache,
+  resolved,
+  prepared,
+  checked
+}: LuaBuildContext): LuaBuildResult {
+  const { root } = resolved
+  const { sources, cacheKey, plan, program } = prepared
+  const {
+    diagnostics,
+    files,
+    dependencies,
+    emitted,
+    sourceChecks,
+    printed,
+    nativeImports,
+    transpileDiagnostics,
+    modules,
+    modulePath,
+    entryFiles,
+    reuse,
+    targets
+  } = checked
   if (diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)) files.clear()
   else {
     if (cache)
@@ -560,14 +691,14 @@ export function compileLua(
     if (!luaCache.used.has(name)) luaCache.files.delete(name)
   if (cache?.hostState)
     for (const file of dependencies) cache.hostState.knownFiles.add(luaFileKey(file))
-  mark('package')
+  timer.mark('package')
   return {
     ...(input.profile
       ? {
           profile: {
-            timingsMs: { ...timingsMs, total: performance.now() - started },
+            timingsMs: timer.snapshot(),
             stats: {
-              sourceReads,
+              sourceReads: resolved.sourceReads,
               resolvedDependencyFiles: plan.resolvedFiles,
               cycleChecks: luaCache.cycleChecks,
               reusedTs: !!reuse,

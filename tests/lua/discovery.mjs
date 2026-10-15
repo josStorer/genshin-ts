@@ -29,15 +29,15 @@ console.log = (...args) => {
   if (args[0] === '[lua-profile]') logs.push(JSON.parse(args[1]))
 }
 async function build(names) {
-  await buildClientLua(
-    root,
+  await buildClientLua({
+    cfgDir: root,
     cfg,
-    true,
-    true,
-    true,
+    noinject: true,
+    complete: true,
+    profile: true,
     session,
-    names?.map((n) => path.join(root, n))
-  )
+    changedFiles: names?.map((n) => path.join(root, n))
+  })
   return logs.at(-1)
 }
 try {

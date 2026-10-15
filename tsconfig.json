@@ -3,19 +3,14 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "lib": [
-      "ES2022"
-    ],
-    "types": [
-      "gsts",
-      "node"
-    ],
-    "typeRoots": [
-      "./types-local",
-      "./node_modules/@types"
-    ],
+
+    "lib": ["ES2022"],
+    "types": ["gsts", "node"],
+    "typeRoots": ["./types-local", "./node_modules/@types"],
+
     "rootDir": ".",
     "outDir": "dist",
+
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -23,6 +18,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "composite": true,
+
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": true,
