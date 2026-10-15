@@ -220,9 +220,9 @@ JS 与 Lua 不是完全相同的运行时：nil 会删除字段、造成数组�
 
 后续待办：提取编辑器脚本变量、控件树与挂载映射，用户补充详细编辑器操作说明；不继续追究时停切换瞬间的严格 OnLevelUpdate 次序。
 
-生成文件头记录源码相对路径；目前运行时报错仍使用 Lua 行号，没有 TS sourcemap。
+生成文件头只保留 `-- @gsts:lua`；目前运行时报错仍使用 Lua 行号，没有 TS sourcemap。
 
-编译耗时、当前并行方式和基准运行方法见 [性能实测](design/client-lua-performance.md)。
+需要排查耗时时，设置 `GSTS_INJECT_PROFILE=1`（或 `--inject-profile`）。统一的 `[pipeline-profile]` JSON 中，`lua` 字段记录入口发现、Program、转译、写出和监听阶段；普通构建不会打印这些细节。dev 中 Lua 使用独立 worker，与节点图并行；只重编受修改影响的依赖。
 
 ### 编译时的类型检查
 

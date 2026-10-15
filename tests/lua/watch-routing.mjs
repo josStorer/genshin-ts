@@ -49,8 +49,9 @@ const has = (name) => fs.existsSync(output(name))
 const profile = () =>
   log
     .split(/\r?\n/)
-    .filter((x) => x.startsWith('[lua-profile] '))
-    .map((x) => JSON.parse(x.slice(14)))
+    .filter((x) => x.startsWith('[pipeline-profile] '))
+    .map((x) => JSON.parse(x.slice('[pipeline-profile] '.length)).lua)
+    .filter((x) => x?.phase === 'build')
     .at(-1)
 try {
   await wait(() => has('server.gia'))

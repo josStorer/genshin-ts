@@ -26,7 +26,10 @@ fs.mkdirSync(path.join(root, 'extra'))
 const logs = [],
   log = console.log
 console.log = (...args) => {
-  if (args[0] === '[lua-profile]') logs.push(JSON.parse(args[1]))
+  if (args[0] === '[pipeline-profile]') {
+    const profile = JSON.parse(args[1]).lua
+    if (profile?.phase === 'build') logs.push(profile)
+  }
 }
 async function build(names) {
   await buildClientLua({

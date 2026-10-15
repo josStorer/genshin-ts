@@ -87,9 +87,9 @@ try {
   const runsBefore = (log.match(/\[Lua\] 本地产物/g) ?? []).length
   const main = path.join(source, 'main.ts')
   const text = fs.readFileSync(main, 'utf8')
-  const preparedCount = (log.match(/\[lua-prepared\]/g) ?? []).length
+  const preparedCount = (log.match(/"phase":"prepared"/g) ?? []).length
   fs.writeFileSync(main, text.replace('double(2)', 'double(21)'))
-  await wait(() => (log.match(/\[lua-prepared\]/g) ?? []).length > preparedCount)
+  await wait(() => (log.match(/"phase":"prepared"/g) ?? []).length > preparedCount)
   fs.writeFileSync(main, text.replace('double(2)', 'double(22)'))
   await wait(() =>
     fs.readFileSync(path.join(source, 'build/lua/main.lua'), 'utf8').includes('(22)')

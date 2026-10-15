@@ -414,10 +414,7 @@ function diagnoseLua(
     if (text) printed.set(key, text)
     nativeImports.set(key, oldCheck?.nativeImports.get(key) ?? new Set())
   }
-  const modulePaths = new Map<string, string>()
   const modulePath = (filename: string) => {
-    const cached = modulePaths.get(filename)
-    if (cached !== undefined) return cached
     const relative = posix(path.relative(root, filename))
       .replace(/(?:\.d)?\.[cm]?[tj]s$/, '')
       .replace(/\.lua$/, '')
@@ -425,7 +422,6 @@ function diagnoseLua(
       throw new Error(t('lua_dependencyOutsideRoot', { arg0: filename }))
     if (relative.startsWith('__gsts') || relative === 'lualib_bundle')
       throw new Error(t('lua_reservedFilename', { arg0: relative }))
-    modulePaths.set(filename, relative)
     return relative
   }
   const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))

@@ -17,12 +17,24 @@ export function createBuildTimer(enabled: boolean) {
     report(details: Record<string, unknown>, write: (...values: unknown[]) => void) {
       if (enabled)
         write(
-          '[lua-profile]',
-          JSON.stringify({ kind: 'gsts-lua-profile', ...details, timingsMs: snapshot() })
+          '[pipeline-profile]',
+          JSON.stringify({
+            kind: 'gsts-pipeline-profile',
+            version: 1,
+            lua: { phase: 'build', ...details, timingsMs: snapshot() }
+          })
         )
     },
     prepared(dependencies: number) {
-      if (enabled) console.log('[lua-prepared]', JSON.stringify({ dependencies }))
+      if (enabled)
+        console.log(
+          '[pipeline-profile]',
+          JSON.stringify({
+            kind: 'gsts-pipeline-profile',
+            version: 1,
+            lua: { phase: 'prepared', dependencies }
+          })
+        )
     }
   }
 }

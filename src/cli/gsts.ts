@@ -1420,11 +1420,16 @@ async function runDev(opts: GlobalOptions) {
     if (removed.length) await luaDependencyWatcher?.unwatch(removed)
     if (injectProfileEnabled(opts) && (added.length || removed.length))
       console.log(
-        '[lua-watch-profile]',
+        '[pipeline-profile]',
         JSON.stringify({
-          added: added.length,
-          removed: removed.length,
-          dependencies: watchedLuaSources.size
+          kind: 'gsts-pipeline-profile',
+          version: 1,
+          lua: {
+            phase: 'watch',
+            added: added.length,
+            removed: removed.length,
+            dependencies: watchedLuaSources.size
+          }
         })
       )
   }
