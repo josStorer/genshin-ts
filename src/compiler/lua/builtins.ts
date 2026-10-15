@@ -19,6 +19,7 @@ const sdkFiles = new Map(
     ['lua_entry.d.ts', 'entry']
   ].map(([file, kind]) => [realFile(path.join(packageRoot, 'dist/src/runtime', file)), kind])
 )
+const sdkFileNames = new Set(['lua.d.ts', 'lua_core.d.ts', 'lua_entry.d.ts'])
 
 export const numberConstants: Readonly<Record<string, number>> = {
   MAX_SAFE_INTEGER: Number.MAX_SAFE_INTEGER,
@@ -77,6 +78,8 @@ function resolveBuiltins(program: ts.Program) {
   let entry: ts.Symbol | undefined
   // SDK 文件只在建表时定位一次；访问器比较 symbol，不依赖用户变量名或接口同名。
   for (const source of program.getSourceFiles()) {
+    // 名称仅用于快速排除；候选仍必须通过下方的包内真实路径核验。
+    if (!source.isDeclarationFile || !sdkFileNames.has(path.basename(source.fileName))) continue
     const kind = sdkFiles.get(realFile(source.fileName))
     if (!kind) continue
     const module = checker.getSymbolAtLocation(source)
