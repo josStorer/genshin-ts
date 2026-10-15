@@ -20,10 +20,12 @@ import { createLuaPlugin, diagnostic, entryCall } from './plugin.js'
 import { lowerPrivateFields } from './private_fields.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
 import { setSharedProjectFiles } from './shared_modules.js'
+import { packageLuaMaps } from './source_maps.js'
 import { isNodeGraphEntry } from './syntax.js'
 import { LocatedLuaError, withLuaErrorLocations } from './tstl_compat.js'
 
 export interface LuaBuildOptions {
+  sourceMap?: boolean
   /** 两侧共享关系的入口候选与 import 签名；普通函数体编辑不改变它。 */
   sharedProjectFiles?: string[]
   sharedProjectKey?: string
@@ -90,7 +92,7 @@ export interface LuaCompileCache {
       string,
       { diagnostics: readonly ts.Diagnostic[]; rawRequires: ts.CallExpression[] }
     >
-    printed: Map<string, { fileName: string; code: string }>
+    printed: Map<string, { fileName: string; code: string; sourceMap?: string }>
     nativeImports: Map<string, Set<string>>
     transpileDiagnostics: readonly ts.Diagnostic[]
   }
@@ -187,7 +189,8 @@ function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
     luaTarget: tstl.LuaTarget.Lua53,
     luaLibImport: tstl.LuaLibImportKind.RequireMinimal,
     noHeader: true,
-    noImplicitSelf: true
+    noImplicitSelf: true,
+    sourceMap: input.sourceMap ?? false
   }
   const configDiagnostics: ts.Diagnostic[] = []
   const configPath = ts.findConfigFile(
@@ -423,7 +426,7 @@ function diagnoseLua(
     string,
     { diagnostics: readonly ts.Diagnostic[]; rawRequires: ts.CallExpression[] }
   >()
-  const printed = new Map<string, { fileName: string; code: string }>()
+  const printed = new Map<string, { fileName: string; code: string; sourceMap?: string }>()
   const nativeImports = new Map<string, Set<string>>()
   const transpileDiagnostics: readonly ts.Diagnostic[] = reuse?.transpileDiagnostics ?? []
   for (const source of modules) {
@@ -621,7 +624,8 @@ function transpileLua(
             for (const result of results)
               printed.set(luaFileKey(result.fileName), {
                 fileName: result.fileName,
-                code: result.code
+                code: result.code,
+                sourceMap: result.sourceMap
               })
             results.splice(
               0,
@@ -724,6 +728,7 @@ function packageLua({
       if (!name.endsWith('.lua')) continue
       files.set(name, `-- @gsts:lua\n${text.replace(/^-- @gsts:lua\r?\n/, '')}`)
     }
+    if (input.sourceMap) packageLuaMaps(files, input.rootDir, input.outDir)
   }
   for (const name of luaCache.files.keys())
     if (!luaCache.used.has(name)) luaCache.files.delete(name)

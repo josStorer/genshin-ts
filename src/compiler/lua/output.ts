@@ -3,8 +3,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { t } from '../../i18n/index.js'
+import { hasLuaMapMarker } from './source_maps.js'
 
 const marker = '-- @gsts:lua'
+const isArtifact = (name: string) => name.endsWith('.lua') || name.endsWith('.lua.map')
+const owned = (name: string, text: string) =>
+  name.endsWith('.lua.map') ? hasLuaMapMarker(text) : hasLuaMarker(text)
 export function luaManifestName(owner = 'default') {
   if (!/^(default|[a-f0-9]{12})$/.test(owner)) throw new Error(t('lua_manifestOwner'))
   return owner === 'default' ? '.gsts-lua-files.json' : `.gsts-lua-${owner}.json`
@@ -70,7 +74,7 @@ function checkOwnedFile(target: string) {
   checkLinks(target)
   if (
     fs.existsSync(target) &&
-    (!fs.statSync(target).isFile() || !hasLuaMarker(fs.readFileSync(target, 'utf8')))
+    (!fs.statSync(target).isFile() || !owned(target, fs.readFileSync(target, 'utf8')))
   )
     throw new Error(t('lua_fileChanged', { arg0: target }))
 }
@@ -119,7 +123,7 @@ export function writeLuaFiles(
       !('files' in manifest) ||
       !Array.isArray(manifest.files) ||
       !manifest.files.every(
-        (name: unknown): name is string => typeof name === 'string' && name.endsWith('.lua')
+        (name: unknown): name is string => typeof name === 'string' && isArtifact(name)
       )
     )
       throw new Error(t('lua_invalidManifest', { arg0: filename }))
@@ -143,7 +147,7 @@ export function writeLuaFiles(
   const names = new Set<string>()
   const writes: [string, string, string][] = []
   for (const [name, text] of files) {
-    if (!name.endsWith('.lua') || !hasLuaMarker(text))
+    if (!isArtifact(name) || !owned(name, text))
       throw new Error(t('lua_missingMarker', { arg0: name }))
     if (names.has(name.toLowerCase())) throw new Error(t('lua_caseCollision', { arg0: name }))
     names.add(name.toLowerCase())
@@ -156,7 +160,7 @@ export function writeLuaFiles(
     if (fs.existsSync(target)) {
       if (!fs.statSync(target).isFile()) throw new Error(t('lua_targetNotFile', { arg0: name }))
       const old = fs.readFileSync(target, 'utf8')
-      if (!hasLuaMarker(old)) result.conflicts.push(name)
+      if (!owned(name, old)) result.conflicts.push(name)
       else if (old === text) result.unchanged.push(name)
       else writes.push([name, target, text])
     } else writes.push([name, target, text])
@@ -168,7 +172,7 @@ export function writeLuaFiles(
       const target = safePath(root, name)
       checkLinks(target, checkedParents)
       if (fs.existsSync(target)) {
-        if (!fs.statSync(target).isFile() || !hasLuaMarker(fs.readFileSync(target, 'utf8')))
+        if (!fs.statSync(target).isFile() || !owned(name, fs.readFileSync(target, 'utf8')))
           result.conflicts.push(name)
         else stale.push([name, target])
       }

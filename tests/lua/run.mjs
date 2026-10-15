@@ -10,6 +10,7 @@ const suites = {
     'sdk-paths',
     'signals',
     'timers',
+    'source-maps',
     'shared-modules',
     'standard-library',
     'data-modules',

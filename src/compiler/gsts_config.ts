@@ -202,6 +202,8 @@ export type GstsConfig = {
     include?: string[]
     /** 编译时额外检查完整 TS 类型。默认关闭；编辑器仍正常提示类型错误。 */
     typeCheck?: boolean
+    /** 输出本地 .lua.map，供 gsts lua locate 定位；默认关闭，不复制到游戏目录。 */
+    sourceMap?: boolean
   }
   /**
    * [ZH] 源码根目录（entries 相对该目录解析）

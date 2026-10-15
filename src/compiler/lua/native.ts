@@ -111,6 +111,7 @@ export function collectNativeLua(
 export function checkLuaModuleCycles(files: ReadonlyMap<string, string>, cache?: LuaParseCache) {
   const edges = new Map<string, string[]>()
   for (const [name, text] of files) {
+    if (!name.endsWith('.lua')) continue
     const targets: string[] = []
     for (const call of cachedRequires(`output:${name}`, text, cache)) {
       if (!call.name || call.deferred) continue

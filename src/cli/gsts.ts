@@ -2403,6 +2403,24 @@ async function main() {
     })
 
   program
+    .command('lua')
+    .description(t('lua_command'))
+    .command('locate [location]')
+    .description(t('lua_locateCommand'))
+    .option('--column <number>', t('lua_locateColumn'))
+    .option('--log <file>', t('lua_locateLog'))
+    .option('--outDir <directory>', t('lua_locateOutDir'))
+    .action(
+      async (
+        location: string | undefined,
+        options: { column?: string; log?: string; outDir?: string }
+      ) => {
+        const { runLuaLocate } = await import('./lua_locate.js')
+        await runLuaLocate(location, options)
+      }
+    )
+
+  program
     .command('maps')
     .description(t('cmdMaps'))
     .action(async () => {

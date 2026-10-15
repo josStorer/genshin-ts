@@ -290,6 +290,7 @@ export async function buildClientLua({
     additionalFiles,
     profile,
     typeCheck: cfg.lua?.typeCheck,
+    sourceMap: cfg.lua?.sourceMap,
     changedFiles: last?.key === key ? changedFiles : undefined
   }
   const prepared = (value: LuaPrepared) => {
@@ -357,7 +358,7 @@ export async function buildClientLua({
       const destination = path.join(target.saveLevelDir, String(target.mapId), 'external_lua_file')
       const injected = writeLuaFiles(
         destination,
-        result.files,
+        new Map([...result.files].filter(([name]) => name.endsWith('.lua'))),
         complete,
         owner,
         session?.injectedOutput
