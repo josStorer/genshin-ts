@@ -1,15 +1,18 @@
 import type { Vector3Value } from './lua-host.js'
 
-export type LuaSignalParamType =
-  | 'int'
-  | 'float'
-  | 'str'
-  | 'bool'
-  | 'vec3'
-  | 'guid'
-  | 'entity'
-  | 'prefab_id'
-  | 'config_id'
+/** 类型声明、静态发送代码及动态发送辅助库共用这张表。 */
+export const luaSignalWriters = {
+  int: 'AddInt',
+  float: 'AddFloat',
+  str: 'AddString',
+  bool: 'AddBool',
+  vec3: 'AddVector3',
+  guid: 'AddGuid',
+  entity: 'AddEntity',
+  prefab_id: 'AddPrefabId',
+  config_id: 'AddConfigId'
+} as const
+export type LuaSignalParamType = keyof typeof luaSignalWriters
 export type LuaSignalType = LuaSignalParamType | `${LuaSignalParamType}_list`
 export type LuaSignalParams = readonly (readonly [name: string, type: LuaSignalType])[]
 export interface LuaSignalDefinition<

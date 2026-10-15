@@ -6,6 +6,7 @@ import ts from 'typescript'
 import * as tstl from 'typescript-to-lua'
 
 import { initCliI18n, t, type Lang } from '../../i18n/index.js'
+import { getLuaBuiltins } from './builtins.js'
 import { getLuaDiagnostics } from './diagnostics.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
 import {
@@ -366,6 +367,7 @@ function diagnoseLua(
   const { program, sources, oldCheck, cacheKey, plan } = prepared
   const { mark } = timer
   const checker = program.getTypeChecker()
+  const builtins = getLuaBuiltins(program)
   mark('typeChecker')
   const reuse =
     oldCheck?.key === cacheKey &&
@@ -432,22 +434,14 @@ function diagnoseLua(
     const key = luaFileKey(source.fileName)
     let checks = plan.affected.has(key) ? undefined : oldCheck?.sourceChecks.get(key)
     if (!checks) {
-      const localDiagnostics = getLuaDiagnostics(source, checker)
+      const localDiagnostics = getLuaDiagnostics(source, program)
       const fromOutput = path.relative(outDir, source.fileName)
       if (!fromOutput.startsWith('..') && !path.isAbsolute(fromOutput))
         localDiagnostics.push(diagnostic(source, t('lua_sourceInOutput')))
       const calls: ts.CallExpression[] = []
       const visit = (node: ts.Node) => {
         if (ts.isCallExpression(node)) {
-          const declaration = checker.getResolvedSignature(node)?.declaration
-          if (
-            declaration &&
-            ts.isMethodSignature(declaration) &&
-            ts.isIdentifier(declaration.name) &&
-            declaration.name.text === 'require' &&
-            declaration.getSourceFile().fileName.endsWith('lua-standard.d.ts')
-          )
-            calls.push(node)
+          if (builtins.member(node.expression) === 'require') calls.push(node)
         }
         ts.forEachChild(node, visit)
       }

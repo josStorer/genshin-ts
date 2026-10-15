@@ -63,6 +63,23 @@ fs.cpSync(
   { recursive: true }
 )
 
+// Keep the runtime writer table and TypeScript signal types on one data source.
+const { luaSignalWriters } = await import('../dist/src/runtime/lua-signals.js')
+const writerTable = (suffix = '') =>
+  Object.entries(luaSignalWriters)
+    .map(([name, method]) => `${name}="${method}${suffix}"`)
+    .join(', ')
+const helperPath = path.join(repoRoot, 'dist/src/runtime/lua-assets/helpers.lua')
+const helperSource = fs.readFileSync(helperPath, 'utf8')
+const helperNewline = helperSource.includes('\r\n') ? '\r\n' : '\n'
+fs.writeFileSync(
+  helperPath,
+  helperSource.replace(
+    '-- @gsts:signal-writers',
+    `local writers = {${writerTable()}}${helperNewline}for name, method in pairs({${writerTable('List')}}) do writers[name .. "_list"] = method end`
+  )
+)
+
 const { build } = await import('esbuild')
 // CommonJS has no import.meta. The only user in this bundle is src/i18n/index.ts, which loads
 // its locale JSON through createRequire, so point it at the compiled i18n module's location.

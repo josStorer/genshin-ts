@@ -2,6 +2,8 @@ import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
 import { t } from '../../i18n/index.js'
+import { luaSignalWriters } from '../../runtime/lua-signals.js'
+import { getLuaBuiltins, numberConstants } from './builtins.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
 import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl-compat.js'
 
@@ -29,7 +31,6 @@ export function createLuaPlugin(
     }
     return local
   }
-  const envSymbols = new Set<ts.Symbol>()
   const adaptedCallbacks = new Set<number>()
   // TSTL's standard array helpers pass a receiver slot even when the TS function does not use one.
   function adaptBuiltinCallback(
@@ -68,21 +69,11 @@ export function createLuaPlugin(
     visitors: {
       [ts.SyntaxKind.SourceFile]: (node, ctx) => {
         adaptedCallbacks.clear()
+        const builtins = getLuaBuiltins(ctx.program)
         const prelude: lua.Statement[] = []
         imports.set(node, prelude)
         getters.set(node, [])
         const entry = entryCall(node)
-        if (entry) {
-          const setup = entry.arguments[entry.arguments.length - 1]
-          if (
-            setup &&
-            (ts.isArrowFunction(setup) || ts.isFunctionExpression(setup)) &&
-            setup.parameters[0]
-          ) {
-            const symbol = ctx.checker.getSymbolAtLocation(setup.parameters[0].name)
-            if (symbol) envSymbols.add(symbol)
-          }
-        }
         // Register every alias before visiting bodies. This also covers uses before import declarations.
         for (const statement of node.statements) {
           if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
@@ -91,7 +82,7 @@ export function createLuaPlugin(
           if (clause?.isTypeOnly) continue
           const moduleName = statement.moduleSpecifier.text
           if (
-            moduleName === 'genshin-ts/runtime/core' &&
+            builtins.modules.get(builtins.symbolAt(statement.moduleSpecifier)!) === 'core' &&
             clause?.namedBindings &&
             ts.isNamedImports(clause.namedBindings)
           ) {
@@ -101,8 +92,8 @@ export function createLuaPlugin(
                 ctx.diagnostics.push(diagnostic(item, t('lua_graphApi', { arg0: name })))
             }
           }
-          const helperImport =
-            moduleName === 'genshin-ts/runtime/lua' || moduleName === 'genshin-ts/runtime/core'
+          const moduleKind = builtins.modules.get(builtins.symbolAt(statement.moduleSpecifier)!)
+          const helperImport = moduleKind === 'helpers' || moduleKind === 'core'
           const table = id(ctx.createTempName('module'))
           let used = !clause
           const bind = (name: ts.Identifier, key?: string) => {
@@ -120,7 +111,7 @@ export function createLuaPlugin(
               for (const item of clause.namedBindings.elements) {
                 if (item.isTypeOnly || !ctx.resolver.isReferencedAliasDeclaration(item)) continue
                 const name = (item.propertyName ?? item.name).text
-                if (moduleName === 'genshin-ts/runtime/core' && name === 'g') continue
+                if (moduleKind === 'core' && name === 'g') continue
                 bind(item.name, name)
               }
           }
@@ -191,8 +182,8 @@ export function createLuaPlugin(
             ts.isObjectBindingPattern(declaration.name) &&
             declaration.initializer &&
             ts.isIdentifier(declaration.initializer) &&
-            ctx.checker.getTypeAtLocation(declaration.initializer).getSymbol()?.name ===
-              'ClientGlobals'
+            ctx.checker.getTypeAtLocation(declaration.initializer).getSymbol() ===
+              getLuaBuiltins(ctx.program).clientGlobals
           ) {
             const value = ctx.transformExpression(declaration.initializer)
             if (lua.isIdentifier(value)) globals.add(value.text)
@@ -200,41 +191,36 @@ export function createLuaPlugin(
         }
         const statements = ctx.superTransformStatements(node)
         if (!globals.size) return statements
-        const rewrite = (value: unknown): unknown => {
-          if (Array.isArray(value)) return value.map(rewrite)
-          if (!value || typeof value !== 'object' || !('kind' in value) || !('flags' in value))
-            return value
-          const ast = value as lua.Node
+        // 解构只生成局部声明/赋值和默认值分支。只改写声明右侧的访问链，
+        // 不反射遍历整个 Lua AST，也不触碰默认值分支中的用户代码。
+        const rewriteAccess = (value: lua.Expression): lua.Expression => {
+          if (!lua.isTableIndexExpression(value)) return value
+          value.table = rewriteAccess(value.table)
           if (
-            lua.isVariableDeclarationStatement(ast) &&
-            ast.right?.[0] &&
-            lua.isIdentifier(ast.right[0]) &&
-            globals.has(ast.right[0].text)
-          )
-            globals.add(ast.left[0].text)
-          if (
-            lua.isTableIndexExpression(ast) &&
-            lua.isIdentifier(ast.table) &&
-            globals.has(ast.table.text) &&
-            lua.isStringLiteral(ast.index)
+            lua.isIdentifier(value.table) &&
+            globals.has(value.table.text) &&
+            lua.isStringLiteral(value.index)
           ) {
-            if (ast.index.value === 'helper') return helpers(ctx)
-            if (ast.index.value === 'self') return field(field(ast.table, 'script'), 'object')
+            if (value.index.value === 'helper') return helpers(ctx)
+            if (value.index.value === 'self') return field(field(value.table, 'script'), 'object')
           }
-          const record = value as Record<string, unknown>
-          for (const key of Object.keys(record)) record[key] = rewrite(record[key])
           return value
         }
-        return statements.map((statement) => rewrite(statement) as lua.Statement)
+        for (const statement of statements) {
+          if (lua.isVariableDeclarationStatement(statement)) {
+            const value = statement.right?.[0]
+            if (value && lua.isIdentifier(value) && globals.has(value.text))
+              globals.add(statement.left[0].text)
+            if (statement.right) statement.right = statement.right.map(rewriteAccess)
+          } else if (lua.isAssignmentStatement(statement))
+            statement.right = statement.right.map(rewriteAccess)
+        }
+        return statements
       },
       [ts.SyntaxKind.Identifier]: (node, ctx) => {
-        const symbol = ctx.checker.getSymbolAtLocation(node)
-        if (
-          symbol?.declarations?.some((d) => d.getSourceFile().fileName.endsWith('lua-globals.d.ts'))
-        ) {
-          if (node.text === 'self') return field(field(id('_ENV'), 'script'), 'object')
-          if (node.text === 'send' || node.text === 'console') return field(helpers(ctx), node.text)
-        }
+        const builtin = getLuaBuiltins(ctx.program).global(node)
+        if (builtin === 'self') return field(field(id('_ENV'), 'script'), 'object')
+        if (builtin === 'send' || builtin === 'console') return field(helpers(ctx), builtin)
         return adaptBuiltinCallback(
           node,
           read(node, ctx) ?? ctx.superTransformExpression(node),
@@ -254,6 +240,28 @@ export function createLuaPlugin(
         const call = node.expression as ts.CallExpression
         const setup = call.arguments[call.arguments.length - 1]
         if (!setup || !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup))) return []
+        const returned = ts.isBlock(setup.body) ? setup.body.statements.at(-1) : undefined
+        const members = new Map<string, ts.ObjectLiteralElementLike>()
+        const hookMembers = new Set<string>()
+        if (
+          returned &&
+          ts.isReturnStatement(returned) &&
+          returned.expression &&
+          ts.isObjectLiteralExpression(returned.expression)
+        ) {
+          for (const hook of returned.expression.properties) {
+            if (!hook.name || !ts.isIdentifier(hook.name)) continue
+            if (
+              hook.name.text === 'methods' &&
+              ts.isPropertyAssignment(hook) &&
+              ts.isObjectLiteralExpression(hook.initializer)
+            ) {
+              for (const method of hook.initializer.properties)
+                if (method.name && ts.isIdentifier(method.name))
+                  members.set(method.name.text, method)
+            } else hookMembers.add(hook.name.text)
+          }
+        }
         const transformed = ctx.transformExpression(setup)
         if (!lua.isFunctionExpression(transformed)) return []
         const body = [...transformed.body.statements]
@@ -274,27 +282,7 @@ export function createLuaPlugin(
                 lua.isStringLiteral(method.key) &&
                 lua.isFunctionExpression(method.value)
               ) {
-                const returned = ts.isBlock(setup.body) ? setup.body.statements.at(-1) : undefined
-                const methods =
-                  returned &&
-                  ts.isReturnStatement(returned) &&
-                  returned.expression &&
-                  ts.isObjectLiteralExpression(returned.expression)
-                    ? returned.expression.properties.find(
-                        (p) => p.name && ts.isIdentifier(p.name) && p.name.text === 'methods'
-                      )
-                    : undefined
-                const original =
-                  methods &&
-                  ts.isPropertyAssignment(methods) &&
-                  ts.isObjectLiteralExpression(methods.initializer)
-                    ? methods.initializer.properties.find(
-                        (p) =>
-                          p.name &&
-                          ts.isIdentifier(p.name) &&
-                          p.name.text === (method.key as lua.StringLiteral).value
-                      )
-                    : undefined
+                const original = members.get(method.key.value)
                 if (
                   original &&
                   getFunctionContextType(ctx, ctx.checker.getTypeAtLocation(original)) ===
@@ -309,7 +297,7 @@ export function createLuaPlugin(
             }
             continue
           }
-          const globalName = hooks.get(name)
+          const globalName = hookMembers.has(name) ? hooks.get(name) : undefined
           if (!globalName || !lua.isFunctionExpression(member.value)) {
             ctx.diagnostics.push(diagnostic(setup, t('lua_hookFunction', { arg0: name })))
             continue
@@ -380,38 +368,13 @@ export function createLuaPlugin(
         return []
       },
       [ts.SyntaxKind.PropertyAccessExpression]: (node, ctx) => {
-        const symbol = ts.isIdentifier(node.expression)
-          ? ctx.checker.getSymbolAtLocation(node.expression)
-          : undefined
-        const globalObject =
-          (!!symbol && envSymbols.has(symbol)) ||
-          ctx.checker
-            .getTypeAtLocation(node.expression)
-            .getSymbol()
-            ?.declarations?.some(
-              (d) =>
-                ts.isInterfaceDeclaration(d) &&
-                d.name.text === 'ClientGlobals' &&
-                d.getSourceFile().fileName.endsWith('lua.d.ts')
-            )
-        if (globalObject && node.name.text === 'helper') return helpers(ctx)
-        if (globalObject && node.name.text === 'self')
+        const builtins = getLuaBuiltins(ctx.program)
+        const member = builtins.member(node.name)
+        if (member === 'helper') return helpers(ctx)
+        if (member === 'self')
           return field(field(ctx.transformExpression(node.expression), 'script'), 'object')
-        if (
-          ts.isIdentifier(node.expression) &&
-          node.expression.text === 'Number' &&
-          symbol?.declarations?.some((d) => d.getSourceFile().hasNoDefaultLib)
-        ) {
-          const constants: Record<string, number> = {
-            MAX_SAFE_INTEGER: 9007199254740991,
-            MIN_SAFE_INTEGER: -9007199254740991,
-            MAX_VALUE: Number.MAX_VALUE,
-            MIN_VALUE: Number.MIN_VALUE,
-            EPSILON: Number.EPSILON
-          }
-          if (node.name.text in constants)
-            return lua.createNumericLiteral(constants[node.name.text], node)
-        }
+        if (builtins.global(node.expression) === 'Number' && node.name.text in numberConstants)
+          return lua.createNumericLiteral(numberConstants[node.name.text], node)
         return adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx)
       },
       [ts.SyntaxKind.ElementAccessExpression]: (node, ctx) =>
@@ -424,14 +387,8 @@ export function createLuaPlugin(
         adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx),
       [ts.SyntaxKind.CallExpression]: (node, ctx) => {
         const callee = node.expression
-        const declaration = ctx.checker.getResolvedSignature(node)?.declaration
-        if (
-          declaration &&
-          ts.isMethodSignature(declaration) &&
-          ts.isIdentifier(declaration.name) &&
-          declaration.name.text === 'require' &&
-          declaration.getSourceFile().fileName.endsWith('lua-standard.d.ts')
-        ) {
+        const builtins = getLuaBuiltins(ctx.program)
+        if (builtins.member(callee) === 'require') {
           const argument = node.arguments[0]
           return argument && ts.isStringLiteralLike(argument)
             ? requireModule(argument.text)
@@ -441,28 +398,12 @@ export function createLuaPlugin(
                 node
               )
         }
-        if (
-          ts.isIdentifier(callee) &&
-          callee.text === 'send' &&
-          ctx.checker
-            .getSymbolAtLocation(callee)
-            ?.declarations?.some((d) => d.getSourceFile().fileName.endsWith('lua-globals.d.ts'))
-        ) {
+        if (builtins.global(callee) === 'send') {
           const signalType = node.arguments[0] && ctx.checker.getTypeAtLocation(node.arguments[0])
           const paramsSymbol = signalType?.getProperty('params')
           const paramsType =
             paramsSymbol && ctx.checker.getTypeOfSymbolAtLocation(paramsSymbol, node.arguments[0])
-          const methods: Record<string, string> = {
-            int: 'AddInt',
-            float: 'AddFloat',
-            str: 'AddString',
-            bool: 'AddBool',
-            vec3: 'AddVector3',
-            guid: 'AddGuid',
-            entity: 'AddEntity',
-            prefab_id: 'AddPrefabId',
-            config_id: 'AddConfigId'
-          }
+          const methods: Readonly<Record<string, string>> = luaSignalWriters
           const writers =
             paramsType && ctx.checker.isTupleType(paramsType)
               ? ctx.checker.getTypeArguments(paramsType as ts.TypeReference).map((param) => {
@@ -512,11 +453,7 @@ export function createLuaPlugin(
         }
         if (
           ts.isPropertyAccessExpression(callee) &&
-          ts.isIdentifier(callee.expression) &&
-          callee.expression.text === 'console' &&
-          ctx.checker
-            .getSymbolAtLocation(callee.expression)
-            ?.declarations?.some((d) => d.getSourceFile().fileName.endsWith('lua-globals.d.ts'))
+          builtins.global(callee.expression) === 'console'
         ) {
           return lua.createCallExpression(
             field(field(helpers(ctx), 'console'), callee.name.text),

@@ -19,7 +19,7 @@ export function luaRule(warnings: boolean): Rule.RuleModule {
             .getCompilerOptions()
             .types?.includes('genshin-ts/runtime/lua-globals')
           if (!isolated && !entryCall(source)) return
-          for (const diagnostic of getLuaDiagnostics(source, services.program.getTypeChecker())) {
+          for (const diagnostic of getLuaDiagnostics(source, services.program)) {
             if ((diagnostic.category === ts.DiagnosticCategory.Warning) !== warnings) continue
             const start = source.getLineAndCharacterOfPosition(diagnostic.start ?? 0)
             const end = source.getLineAndCharacterOfPosition(

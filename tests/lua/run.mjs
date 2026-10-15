@@ -143,6 +143,21 @@ const optional = success(
       "import{g}from'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{let value:{alive:boolean}|undefined;return {onStart(){lua.print(value?.alive);value={alive:true};if(value?.alive)lua.print('alive')}}})"
   })
 )
+const shadowedBuiltins = success(
+  build({
+    'main.ts': `import {g} from 'genshin-ts/runtime/core'; export default g.clientControlScript(lua=>{
+    interface ClientGlobals { self:number; helper:{value:number} }
+    const fake:ClientGlobals={self:7,helper:{value:8}};
+    const send=(n:number)=>n+1; const Number={MAX_SAFE_INTEGER:9};
+    const console={log(n:number){lua.print(n)}};
+    return {onStart(){const {self:own,helper}=fake;console.log(send(own)+helper.value+Number.MAX_SAFE_INTEGER)}}
+  })`
+  })
+)
+execute(
+  shadowedBuiltins.files,
+  "local result;print=function(n) result=n end;require('main');OnStart();assert(result==25)"
+)
 execute(
   optional.files,
   "local n=0;print=function(value)n=n+1;if n==1 then assert(value==nil)else assert(value=='alive')end end;require('main');OnStart();assert(n==2)"

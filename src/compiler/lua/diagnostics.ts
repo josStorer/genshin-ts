@@ -1,17 +1,19 @@
 import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
+import { getLuaBuiltins } from './builtins.js'
 import { diagnostic, entryCall, hooks, nodeGraphCalls } from './syntax.js'
 
 /** 编译器、ESLint 和编辑器共用的 Lua 规则，不加载 TSTL。 */
-export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker): ts.Diagnostic[] {
+export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): ts.Diagnostic[] {
+  const checker = program.getTypeChecker()
+  const builtins = getLuaBuiltins(program)
   const diagnostics: ts.Diagnostic[] = []
   for (const call of nodeGraphCalls(source))
     diagnostics.push(diagnostic(call, t('lua_importGraphEntry')))
   const call = entryCall(source)
   if (call) {
-    const declaration = checker.getResolvedSignature(call)?.declaration
-    if (!declaration?.getSourceFile().fileName.endsWith('lua-entry.d.ts'))
+    if (!builtins.isEntryCall(call))
       diagnostics.push(diagnostic(call, t('lua_invalidEntry')))
     const setup = call.arguments[call.arguments.length - 1]
     if (
@@ -131,10 +133,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
     if (
       ts.isCallExpression(node) &&
       node !== call &&
-      checker
-        .getResolvedSignature(node)
-        ?.declaration?.getSourceFile()
-        .fileName.endsWith('lua-entry.d.ts')
+      builtins.isEntryCall(node)
     )
       diagnostics.push(diagnostic(node, t('lua_nestedEntry')))
     if (
@@ -159,7 +158,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker
       ts.isVariableDeclaration(node) &&
       ts.isObjectBindingPattern(node.name) &&
       node.initializer &&
-      checker.getTypeAtLocation(node.initializer).getSymbol()?.name === 'ClientGlobals' &&
+      checker.getTypeAtLocation(node.initializer).getSymbol() === builtins.clientGlobals &&
       (node.name.elements.some((e) => e.dotDotDotToken) || !ts.isIdentifier(node.initializer))
     )
       diagnostics.push(diagnostic(node, t('lua_spreadEnvironment')))

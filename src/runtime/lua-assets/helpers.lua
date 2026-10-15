@@ -70,8 +70,7 @@ function M.listenKey(control, event, callback)
     end
 end
 function M.defineSignal(name, params) return {__gstsSignal = true, name = name, params = params} end
-local writers = {int="AddInt", float="AddFloat", str="AddString", bool="AddBool", vec3="AddVector3", guid="AddGuid", entity="AddEntity", prefab_id="AddPrefabId", config_id="AddConfigId"}
-for name, method in pairs({int="AddIntList", float="AddFloatList", str="AddStringList", bool="AddBoolList", vec3="AddVector3List", guid="AddGuidList", entity="AddEntityList", prefab_id="AddPrefabIdList", config_id="AddConfigIdList"}) do writers[name .. "_list"] = method end
+-- @gsts:signal-writers
 function M.send(signal, ...)
     local instance = game.ServerSignal(signal.name)
     for i, param in ipairs(signal.params) do
