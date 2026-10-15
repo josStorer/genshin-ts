@@ -10,6 +10,7 @@ const suites = {
     'standard-library',
     'data-modules',
     'lint',
+    'lint-default',
     'incremental',
     'affected',
     'output-incremental',

@@ -6,6 +6,8 @@ import prettier from 'eslint-plugin-prettier'
 import gsts from 'genshin-ts/eslint'
 import { gstsDslGlobals } from 'genshin-ts/eslint.globals.mjs'
 
+import { isLuaProjectFile } from './lua_project.mjs'
+
 export default [
   {
     ignores: ['dist/**', 'out/**', 'node_modules/**']
@@ -83,6 +85,12 @@ export default [
       ...prettierConfig.rules,
       'prettier/prettier': 'error'
     }
+  },
+
+  // Lua 子项目自动使用 Lua 规则；预设同时关闭节点图专用规则。
+  {
+    files: [isLuaProjectFile],
+    rules: gsts.configs.lua.rules
   },
 
   // JavaScript 文件配置（如配置文件等）
