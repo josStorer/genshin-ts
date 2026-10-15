@@ -30,3 +30,55 @@ export function diagnostic(node: ts.Node, messageText: string, warning = false):
     messageText
   }
 }
+
+/** 只识别从 GSTS 导入的节点图工厂，避免把普通对象的 server() 当成节点图。 */
+export function nodeGraphCalls(source: ts.SourceFile): ts.CallExpression[] {
+  const imports = new Set<string>()
+  const namespaces = new Set<string>()
+  for (const statement of source.statements) {
+    if (
+      !ts.isImportDeclaration(statement) ||
+      !ts.isStringLiteral(statement.moduleSpecifier) ||
+      !/^genshin-ts\/runtime\/core(?:\.js)?$/.test(statement.moduleSpecifier.text) ||
+      statement.importClause?.isTypeOnly
+    )
+      continue
+    const bindings = statement.importClause?.namedBindings
+    if (bindings && ts.isNamespaceImport(bindings)) namespaces.add(bindings.name.text)
+    if (bindings && ts.isNamedImports(bindings))
+      for (const item of bindings.elements)
+        if (!item.isTypeOnly && (item.propertyName ?? item.name).text === 'g')
+          imports.add(item.name.text)
+  }
+  const methods = new Set([
+    'server',
+    'characterSkill',
+    'characterControlSkill',
+    'creationSkill',
+    'creationStatus',
+    'creationStatusDecision',
+    'boolFilter',
+    'intFilter'
+  ])
+  const calls: ts.CallExpression[] = []
+  const visit = (node: ts.Node) => {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      methods.has(node.expression.name.text)
+    ) {
+      const receiver = node.expression.expression
+      if (
+        (ts.isIdentifier(receiver) && imports.has(receiver.text)) ||
+        (ts.isPropertyAccessExpression(receiver) &&
+          receiver.name.text === 'g' &&
+          ts.isIdentifier(receiver.expression) &&
+          namespaces.has(receiver.expression.text))
+      )
+        calls.push(node)
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(source)
+  return calls
+}

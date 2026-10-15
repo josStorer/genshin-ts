@@ -1,10 +1,14 @@
 import ts from 'typescript'
 
-import { diagnostic, entryCall, hooks } from './syntax.js'
+import { diagnostic, entryCall, hooks, nodeGraphCalls } from './syntax.js'
 
 /** 编译器、ESLint 和编辑器共用的 Lua 规则，不加载 TSTL。 */
 export function getLuaDiagnostics(source: ts.SourceFile, checker: ts.TypeChecker): ts.Diagnostic[] {
   const diagnostics: ts.Diagnostic[] = []
+  for (const call of nodeGraphCalls(source))
+    diagnostics.push(
+      diagnostic(call, '节点图入口不能作为 Lua 模块导入；请把共享常量或函数移到普通 TS 模块。')
+    )
   const call = entryCall(source)
   if (call) {
     const declaration = checker.getResolvedSignature(call)?.declaration

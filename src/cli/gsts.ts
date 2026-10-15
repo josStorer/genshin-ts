@@ -961,7 +961,7 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
   try {
     const compileStart = profiling ? performance.now() : 0
     const compileResult = await compileTsToGs({
-      excludeFiles: luaSources.dependencies,
+      excludeFiles: luaSources.excludeFiles,
       cfgDir,
       cfg,
       profile: profiling,
@@ -1623,7 +1623,7 @@ async function runDev(opts: GlobalOptions) {
         const compileResult = await compileTsToGs({
           cfgDir,
           cfg,
-          excludeFiles: luaSources.dependencies,
+          excludeFiles: luaSources.excludeFiles,
           emitEntries: compileRels,
           programEntries: cfg.entries,
           programCache,

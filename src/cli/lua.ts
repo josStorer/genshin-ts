@@ -9,6 +9,7 @@ import ts from 'typescript'
 import type { GstsConfig } from '../compiler/gsts_config.js'
 import type { LuaCompileCache } from '../compiler/lua/build.js'
 import type { LuaOutputCache } from '../compiler/lua/output.js'
+import { nodeGraphCalls } from '../compiler/lua/syntax.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker-client.js'
 import { resolveGilTarget } from './gil_paths.js'
 
@@ -343,10 +344,28 @@ export function startClientLua(
 ) {
   const state = session ?? {}
   state.worker ??= createLuaWorker()
-  let ready!: (value: { dependencies: string[] }) => void
-  const prepared = new Promise<{ dependencies: string[] }>((resolve) => {
-    ready = resolve
+  type Prepared = { dependencies: string[]; excludeFiles: string[] }
+  let resolvePrepared!: (value: Prepared) => void
+  const prepared = new Promise<Prepared>((resolve) => {
+    resolvePrepared = resolve
   })
+  let isPrepared = false
+  const ready = (value: { dependencies: string[] }) => {
+    if (isPrepared) return
+    isPrepared = true
+    // Lua 依赖里可能包含节点图入口。保留该入口给节点图编译；Lua 自身会报告错误。
+    const excludeFiles = value.dependencies.filter((file) => {
+      if (!file.endsWith('.ts') || file.endsWith('.d.ts') || !fs.existsSync(file)) return true
+      const source = ts.createSourceFile(
+        file,
+        fs.readFileSync(file, 'utf8'),
+        ts.ScriptTarget.Latest,
+        true
+      )
+      return nodeGraphCalls(source).length === 0
+    })
+    resolvePrepared({ dependencies: value.dependencies, excludeFiles })
+  }
   const logs: unknown[][] = []
   const report: ClientLuaReport = {
     active: false,
