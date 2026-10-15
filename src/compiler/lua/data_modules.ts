@@ -13,7 +13,7 @@ export function luaDataConstant(module: string, name: string, key: string) {
     while (!fs.existsSync(path.join(root, 'package.json'))) root = path.dirname(root)
     data = JSON.parse(
       fs.readFileSync(
-        path.join(root, 'dist/src/runtime/lua-assets/data_modules', module + '.json'),
+        path.join(root, 'dist/src/runtime/lua_assets/data_modules', module + '.json'),
         'utf8'
       )
     ) as Record<string, Data>
@@ -54,7 +54,7 @@ export function luaDataModule(name: string) {
 
 /** 构建包时从 TS 字面量生成，绝不执行被读取模块的 JS。源文件不再是纯数据时直接阻止构建。 */
 export function generateLuaDataModules(root: string) {
-  const destination = path.join(root, 'dist/src/runtime/lua-assets/data_modules')
+  const destination = path.join(root, 'dist/src/runtime/lua_assets/data_modules')
   fs.mkdirSync(destination, { recursive: true })
   for (const name of luaDataModules) {
     const source = ts.createSourceFile(

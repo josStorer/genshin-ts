@@ -679,7 +679,7 @@ function transpileLua(
     files.set(
       `__gsts_data/${name}.lua`,
       fs.readFileSync(
-        path.join(packageRoot(), 'dist/src/runtime/lua-assets/data_modules', name + '.lua'),
+        path.join(packageRoot(), 'dist/src/runtime/lua_assets/data_modules', name + '.lua'),
         'utf8'
       )
     )
@@ -725,7 +725,7 @@ function packageLua({
         nativeImports,
         transpileDiagnostics
       }
-    const helpers = path.join(packageRoot(), 'dist/src/runtime/lua-assets/helpers.lua')
+    const helpers = path.join(packageRoot(), 'dist/src/runtime/lua_assets/helpers.lua')
     files.set('__gsts_helpers.lua', fs.readFileSync(helpers, 'utf8'))
     for (const [name, text] of files) {
       if (!name.endsWith('.lua')) continue

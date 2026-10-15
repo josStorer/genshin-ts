@@ -290,7 +290,7 @@ lines.push(
 const controls = [...interfaces.keys()].filter((n) => n.startsWith('ClientUI'))
 const helperControls = [
   ...fs
-    .readFileSync(path.join(root, 'src/runtime/lua-assets/helpers.lua'), 'utf8')
+    .readFileSync(path.join(root, 'src/runtime/lua_assets/helpers.lua'), 'utf8')
     .matchAll(/(ClientUI\w+Control)=true/g)
 ].map((m) => m[1])
 if (JSON.stringify([...new Set(helperControls)].sort()) !== JSON.stringify([...controls].sort()))

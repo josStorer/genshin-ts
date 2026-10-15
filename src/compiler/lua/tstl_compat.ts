@@ -73,3 +73,27 @@ export function withLuaErrorLocations(plugin: Plugin): Plugin {
     )
   }
 }
+
+/** TSTL 1.34.0 的 Diagnostic 不携带 node，只留下原始文件和范围。
+ * 适配器按原节点身份登记；这里只把诊断的完整范围接回该节点，不能仅凭 start 删除。
+ * 未适配的 this 转换错误继续保留，原节点集合也不会跨文件共享。
+ */
+export function discardAdaptedCallbackDiagnostics(
+  context: TransformationContext,
+  adapted: ReadonlySet<ts.Node>
+) {
+  for (let i = context.diagnostics.length - 1; i >= 0; i--) {
+    const diagnostic = context.diagnostics[i]
+    if (diagnostic.code !== 100016) continue
+    for (const node of adapted) {
+      if (
+        diagnostic.file === node.getSourceFile() &&
+        diagnostic.start === node.getStart() &&
+        diagnostic.length === node.getWidth()
+      ) {
+        context.diagnostics.splice(i, 1)
+        break
+      }
+    }
+  }
+}

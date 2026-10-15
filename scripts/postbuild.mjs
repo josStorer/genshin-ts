@@ -58,8 +58,8 @@ if (fs.existsSync(serverGlobalsSrc)) {
 }
 
 fs.cpSync(
-  path.join(repoRoot, 'src/runtime/lua-assets'),
-  path.join(repoRoot, 'dist/src/runtime/lua-assets'),
+  path.join(repoRoot, 'src/runtime/lua_assets'),
+  path.join(repoRoot, 'dist/src/runtime/lua_assets'),
   { recursive: true }
 )
 
@@ -69,7 +69,7 @@ const writerTable = (suffix = '') =>
   Object.entries(luaSignalWriters)
     .map(([name, method]) => `${name}="${method}${suffix}"`)
     .join(', ')
-const helperPath = path.join(repoRoot, 'dist/src/runtime/lua-assets/helpers.lua')
+const helperPath = path.join(repoRoot, 'dist/src/runtime/lua_assets/helpers.lua')
 const helperSource = fs.readFileSync(helperPath, 'utf8')
 const helperNewline = helperSource.includes('\r\n') ? '\r\n' : '\n'
 fs.writeFileSync(

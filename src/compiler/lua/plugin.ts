@@ -4,10 +4,16 @@ import * as lua from 'typescript-to-lua'
 import { getLuaBuiltins, numberConstants } from './builtins.js'
 import { luaDataConstant, luaDataModule } from './data_modules.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
+import type { LuaEntryModel } from './entry_model.js'
 import { generateScopeHooks } from './scope_hooks.js'
 import { luaTimerGlobals } from './standard_library.js'
 import { hooks } from './syntax.js'
-import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl_compat.js'
+import {
+  ContextType,
+  discardAdaptedCallbackDiagnostics,
+  getFunctionContextType,
+  transformOrderedExpressions
+} from './tstl_compat.js'
 
 export { entryCall, diagnostic, hooks } from './syntax.js'
 const id = lua.createIdentifier
@@ -17,21 +23,31 @@ const field = (target: lua.Expression, name: string) =>
 const requireModule = (name: string) =>
   lua.createCallExpression(id('require'), [str(`@NoResolution:${name}`)])
 
+/** 一个文件的生成状态；导入、前导声明和重导出只在本文件内共享。 */
+interface LuaFileContext {
+  entry?: LuaEntryModel
+  prelude: lua.Statement[]
+  bindings: Map<ts.Symbol, lua.Expression>
+  getters: lua.TableFieldExpression[]
+  helper?: lua.Identifier
+  boolean?: lua.Identifier
+  scope?: lua.Identifier
+  dataBindings: Map<ts.Symbol, { module: string; key?: string }>
+  dataLocals: Map<string, lua.Identifier>
+  adaptedCallbacks: Set<ts.Node>
+}
+
 export function createLuaPlugin(
   resolve: (name: string, source: string) => string,
   nativeDefault: (name: string, source: string) => boolean = () => false
 ): lua.Plugin {
-  const bindings = new Map<ts.Symbol, lua.Expression>()
-  const imports = new Map<ts.SourceFile, lua.Statement[]>()
-  const getters = new Map<ts.SourceFile, lua.TableFieldExpression[]>()
-  const helperLocals = new Map<ts.SourceFile, lua.Identifier>()
-  const booleanLocals = new Map<ts.SourceFile, lua.Identifier>()
-  const scopeLocals = new Map<ts.SourceFile, lua.Identifier>()
+  const files = new WeakMap<ts.SourceFile, LuaFileContext>()
+  const file = (ctx: lua.TransformationContext) => files.get(ctx.sourceFile)!
   function scope(ctx: lua.TransformationContext) {
-    let local = scopeLocals.get(ctx.sourceFile)
+    let local = file(ctx).scope
     if (!local) {
       local = id(ctx.createTempName('scope'))
-      scopeLocals.set(ctx.sourceFile, local)
+      file(ctx).scope = local
       helpers(ctx)
     }
     return local
@@ -41,7 +57,7 @@ export function createLuaPlugin(
     const builtins = getLuaBuiltins(ctx.program)
     if (builtins.member(node) !== 'enableUpdate' || !builtins.isCurrentScript(node.expression))
       return false
-    const model = analyzeLuaEntry(ctx.sourceFile, ctx.program).model
+    const model = file(ctx).entry
     return !!model && (model.scope.signals || model.scope.keys || model.scope.timers)
   }
   // 方法引用仍接收 TSTL 的 self 槽，实际开关归属当前挂载的作用域。
@@ -56,15 +72,13 @@ export function createLuaPlugin(
       [id('_'), enabled]
     )
   }
-  const dataBindings = new Map<ts.Symbol, { module: string; key?: string }>()
-  const dataLocals = new Map<ts.SourceFile, Map<string, lua.Identifier>>()
   function dataReference(
     node: ts.Expression,
     ctx: lua.TransformationContext
   ): { module: string; key?: string } | undefined {
     if (ts.isIdentifier(node)) {
       const symbol = ctx.checker.getSymbolAtLocation(node)
-      return symbol && dataBindings.get(symbol)
+      return symbol && file(ctx).dataBindings.get(symbol)
     }
     if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
       const parent = dataReference(node.expression, ctx)
@@ -79,14 +93,12 @@ export function createLuaPlugin(
   }
   function dataValue(reference: { module: string; key?: string }, ctx: lua.TransformationContext) {
     const module = `__gsts_data.${reference.module}${reference.key ? '.' + reference.key : ''}`
-    const locals = dataLocals.get(ctx.sourceFile)!
+    const locals = file(ctx).dataLocals
     let local = locals.get(module)
     if (!local) {
       local = id(ctx.createTempName('data'))
       locals.set(module, local)
-      imports
-        .get(ctx.sourceFile)!
-        .push(lua.createVariableDeclarationStatement(local, requireModule(module)))
+      file(ctx).prelude.push(lua.createVariableDeclarationStatement(local, requireModule(module)))
     }
     return local
   }
@@ -115,14 +127,13 @@ export function createLuaPlugin(
     return reference ? dataValue(reference, ctx) : undefined
   }
   function helpers(ctx: lua.TransformationContext) {
-    let local = helperLocals.get(ctx.sourceFile)
+    let local = file(ctx).helper
     if (!local) {
       local = id(ctx.createTempName('helpers'))
-      helperLocals.set(ctx.sourceFile, local)
+      file(ctx).helper = local
     }
     return local
   }
-  const adaptedCallbacks = new Set<number>()
   // TSTL's standard array helpers pass a receiver slot even when the TS function does not use one.
   function adaptBuiltinCallback(
     node: ts.Expression,
@@ -143,7 +154,7 @@ export function createLuaPlugin(
       return value
     const callback = id(ctx.createTempName('callback'))
     ctx.addPrecedingStatements(lua.createVariableDeclarationStatement(callback, value, node))
-    adaptedCallbacks.add(node.getStart())
+    file(ctx).adaptedCallbacks.add(ts.getOriginalNode(node))
     return lua.createFunctionExpression(
       lua.createBlock([
         lua.createReturnStatement([lua.createCallExpression(callback, [lua.createDotsLiteral()])])
@@ -154,166 +165,174 @@ export function createLuaPlugin(
   }
   function read(node: ts.Identifier, ctx: lua.TransformationContext) {
     const symbol = ctx.checker.getSymbolAtLocation(node)
-    return symbol && bindings.get(symbol)
+    return symbol && file(ctx).bindings.get(symbol)
+  }
+  // 导入先绑定，保证声明之前的引用也使用同一个模块局部变量。
+  function bindImports(node: ts.SourceFile, ctx: lua.TransformationContext) {
+    const builtins = getLuaBuiltins(ctx.program)
+    const prelude = file(ctx).prelude
+    // Register every alias before visiting bodies. This also covers uses before import declarations.
+    for (const statement of node.statements) {
+      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
+        continue
+      const clause = statement.importClause
+      if (clause?.isTypeOnly) continue
+      const moduleName = statement.moduleSpecifier.text
+      const dataModule = luaDataModule(moduleName)
+      if (dataModule) {
+        const named = clause?.namedBindings
+        if (named && ts.isNamespaceImport(named)) {
+          const symbol = ctx.checker.getSymbolAtLocation(named.name)
+          if (symbol) file(ctx).dataBindings.set(symbol, { module: dataModule })
+        } else if (named) {
+          for (const item of named.elements) {
+            if (item.isTypeOnly) continue
+            const symbol = ctx.checker.getSymbolAtLocation(item.name)
+            if (symbol)
+              file(ctx).dataBindings.set(symbol, {
+                module: dataModule,
+                key: (item.propertyName ?? item.name).text
+              })
+          }
+        }
+        continue
+      }
+      const moduleKind = builtins.modules.get(builtins.symbolAt(statement.moduleSpecifier)!)
+      const helperImport = moduleKind === 'helpers' || moduleKind === 'core'
+      const table = id(ctx.createTempName('module'))
+      let used = !clause
+      const bind = (name: ts.Identifier, key?: string) => {
+        const symbol = ctx.checker.getSymbolAtLocation(name)
+        if (symbol) file(ctx).bindings.set(symbol, key ? field(table, key) : table)
+        used = true
+      }
+      if (clause?.name && ctx.resolver.isReferencedAliasDeclaration(clause))
+        bind(clause.name, nativeDefault(moduleName, node.fileName) ? undefined : 'default')
+      if (clause?.namedBindings) {
+        if (ts.isNamespaceImport(clause.namedBindings)) {
+          if (ctx.resolver.isReferencedAliasDeclaration(clause.namedBindings))
+            bind(clause.namedBindings.name)
+        } else
+          for (const item of clause.namedBindings.elements) {
+            if (item.isTypeOnly || !ctx.resolver.isReferencedAliasDeclaration(item)) continue
+            const name = (item.propertyName ?? item.name).text
+            if (moduleKind === 'core' && name === 'g') continue
+            if (moduleKind === 'helpers' && name === 'listenKey') {
+              const symbol = ctx.checker.getSymbolAtLocation(item.name)
+              if (symbol) file(ctx).bindings.set(symbol, field(scope(ctx), 'listenKey'))
+              continue
+            }
+            bind(item.name, name)
+          }
+      }
+      if (used && helperImport) {
+        const existing = file(ctx).helper
+        if (existing) {
+          prelude.push(lua.createVariableDeclarationStatement(table, existing, statement))
+        } else file(ctx).helper = table
+      }
+      if (used && !helperImport)
+        prelude.push(
+          lua.createVariableDeclarationStatement(
+            table,
+            requireModule(resolve(moduleName, node.fileName)),
+            statement
+          )
+        )
+    }
+  }
+  function finishEntry(result: lua.File, ctx: lua.TransformationContext) {
+    if (file(ctx).entry) {
+      result.statements = result.statements.filter(
+        (s) =>
+          !(lua.isVariableDeclarationStatement(s) && s.left[0]?.text === '____exports') &&
+          !(
+            lua.isReturnStatement(s) &&
+            s.expressions.some((e) => lua.isIdentifier(e) && e.text === '____exports')
+          )
+      )
+    }
+  }
+  function generateReexports(result: lua.File, ctx: lua.TransformationContext) {
+    const reexports = file(ctx).getters
+    if (reexports.length) {
+      const table = id(ctx.createTempName('getters'))
+      result.statements.splice(
+        result.statements.length - 1,
+        0,
+        lua.createVariableDeclarationStatement(table, lua.createTableExpression(reexports)),
+        lua.createExpressionStatement(
+          lua.createCallExpression(field(helpers(ctx), 'liveExports'), [id('____exports'), table])
+        )
+      )
+    }
+  }
+  function generatePrelude(result: lua.File, ctx: lua.TransformationContext) {
+    const { prelude, entry } = file(ctx)
+    const helper = file(ctx).helper
+    if (helper)
+      prelude.unshift(
+        lua.createVariableDeclarationStatement(helper, requireModule('__gsts_helpers'))
+      )
+    const boolean = file(ctx).boolean
+    if (boolean) {
+      const value = id('value')
+      const unequal = (other: lua.Expression) =>
+        lua.createBinaryExpression(value, other, lua.SyntaxKind.InequalityOperator)
+      const comparisons = [
+        unequal(lua.createNilLiteral()),
+        unequal(lua.createBooleanLiteral(false)),
+        unequal(lua.createNumericLiteral(0)),
+        unequal(str('')),
+        lua.createBinaryExpression(value, value, lua.SyntaxKind.EqualityOperator)
+      ]
+      const truth = comparisons.reduce((left, right) =>
+        lua.createBinaryExpression(left, right, lua.SyntaxKind.AndOperator)
+      )
+      // JS 标准库函数的回调带接收者槽；直接调用、别名和 filter(Boolean) 共用同一实现。
+      prelude.push(
+        lua.createVariableDeclarationStatement(
+          boolean,
+          lua.createFunctionExpression(lua.createBlock([lua.createReturnStatement([truth])]), [
+            id('_'),
+            value
+          ])
+        )
+      )
+    }
+    const instance = file(ctx).scope
+    if (instance) {
+      const clock = entry?.scope.timers ? str(entry.options.timerClock) : lua.createNilLiteral()
+      prelude.push(
+        lua.createVariableDeclarationStatement(
+          instance,
+          lua.createCallExpression(field(helpers(ctx), 'createScope'), [id('_ENV'), clock])
+        )
+      )
+      generateScopeHooks(result.statements, instance, entry!, ctx)
+    }
   }
   return {
     visitors: {
       [ts.SyntaxKind.SourceFile]: (node, ctx) => {
-        adaptedCallbacks.clear()
-        const builtins = getLuaBuiltins(ctx.program)
-        const prelude: lua.Statement[] = []
-        imports.set(node, prelude)
-        dataLocals.set(node, new Map())
-        getters.set(node, [])
-        const entry = analyzeLuaEntry(node, ctx.program).model
-        // Register every alias before visiting bodies. This also covers uses before import declarations.
-        for (const statement of node.statements) {
-          if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
-            continue
-          const clause = statement.importClause
-          if (clause?.isTypeOnly) continue
-          const moduleName = statement.moduleSpecifier.text
-          const dataModule = luaDataModule(moduleName)
-          if (dataModule) {
-            const named = clause?.namedBindings
-            if (named && ts.isNamespaceImport(named)) {
-              const symbol = ctx.checker.getSymbolAtLocation(named.name)
-              if (symbol) dataBindings.set(symbol, { module: dataModule })
-            } else if (named) {
-              for (const item of named.elements) {
-                if (item.isTypeOnly) continue
-                const symbol = ctx.checker.getSymbolAtLocation(item.name)
-                if (symbol)
-                  dataBindings.set(symbol, {
-                    module: dataModule,
-                    key: (item.propertyName ?? item.name).text
-                  })
-              }
-            }
-            continue
-          }
-          const moduleKind = builtins.modules.get(builtins.symbolAt(statement.moduleSpecifier)!)
-          const helperImport = moduleKind === 'helpers' || moduleKind === 'core'
-          const table = id(ctx.createTempName('module'))
-          let used = !clause
-          const bind = (name: ts.Identifier, key?: string) => {
-            const symbol = ctx.checker.getSymbolAtLocation(name)
-            if (symbol) bindings.set(symbol, key ? field(table, key) : table)
-            used = true
-          }
-          if (clause?.name && ctx.resolver.isReferencedAliasDeclaration(clause))
-            bind(clause.name, nativeDefault(moduleName, node.fileName) ? undefined : 'default')
-          if (clause?.namedBindings) {
-            if (ts.isNamespaceImport(clause.namedBindings)) {
-              if (ctx.resolver.isReferencedAliasDeclaration(clause.namedBindings))
-                bind(clause.namedBindings.name)
-            } else
-              for (const item of clause.namedBindings.elements) {
-                if (item.isTypeOnly || !ctx.resolver.isReferencedAliasDeclaration(item)) continue
-                const name = (item.propertyName ?? item.name).text
-                if (moduleKind === 'core' && name === 'g') continue
-                if (moduleKind === 'helpers' && name === 'listenKey') {
-                  const symbol = ctx.checker.getSymbolAtLocation(item.name)
-                  if (symbol) bindings.set(symbol, field(scope(ctx), 'listenKey'))
-                  continue
-                }
-                bind(item.name, name)
-              }
-          }
-          if (used && helperImport) {
-            const existing = helperLocals.get(node)
-            if (existing) {
-              prelude.push(lua.createVariableDeclarationStatement(table, existing, statement))
-            } else helperLocals.set(node, table)
-          }
-          if (used && !helperImport)
-            prelude.push(
-              lua.createVariableDeclarationStatement(
-                table,
-                requireModule(resolve(moduleName, node.fileName)),
-                statement
-              )
-            )
+        const state: LuaFileContext = {
+          entry: analyzeLuaEntry(node, ctx.program).model,
+          prelude: [],
+          bindings: new Map(),
+          getters: [],
+          dataBindings: new Map(),
+          dataLocals: new Map(),
+          adaptedCallbacks: new Set()
         }
+        files.set(node, state)
+        bindImports(node, ctx)
         const result = ctx.superTransformNode(node)[0]
         if (!lua.isFile(result)) throw new Error('TSTL did not return a Lua file')
-        if (entry) {
-          result.statements = result.statements.filter(
-            (s) =>
-              !(lua.isVariableDeclarationStatement(s) && s.left[0]?.text === '____exports') &&
-              !(
-                lua.isReturnStatement(s) &&
-                s.expressions.some((e) => lua.isIdentifier(e) && e.text === '____exports')
-              )
-          )
-        }
-        const reexports = getters.get(node)!
-        if (reexports.length) {
-          const table = id(ctx.createTempName('getters'))
-          result.statements.splice(
-            result.statements.length - 1,
-            0,
-            lua.createVariableDeclarationStatement(table, lua.createTableExpression(reexports)),
-            lua.createExpressionStatement(
-              lua.createCallExpression(field(helpers(ctx), 'liveExports'), [
-                id('____exports'),
-                table
-              ])
-            )
-          )
-        }
-        for (let i = ctx.diagnostics.length - 1; i >= 0; i--) {
-          const diagnostic = ctx.diagnostics[i]
-          if (
-            diagnostic.code === 100016 &&
-            diagnostic.file === node &&
-            adaptedCallbacks.has(diagnostic.start ?? -1)
-          )
-            ctx.diagnostics.splice(i, 1)
-        }
-        const helper = helperLocals.get(node)
-        if (helper)
-          prelude.unshift(
-            lua.createVariableDeclarationStatement(helper, requireModule('__gsts_helpers'))
-          )
-        const boolean = booleanLocals.get(node)
-        if (boolean) {
-          const value = id('value')
-          const unequal = (other: lua.Expression) =>
-            lua.createBinaryExpression(value, other, lua.SyntaxKind.InequalityOperator)
-          const comparisons = [
-            unequal(lua.createNilLiteral()),
-            unequal(lua.createBooleanLiteral(false)),
-            unequal(lua.createNumericLiteral(0)),
-            unequal(str('')),
-            lua.createBinaryExpression(value, value, lua.SyntaxKind.EqualityOperator)
-          ]
-          const truth = comparisons.reduce((left, right) =>
-            lua.createBinaryExpression(left, right, lua.SyntaxKind.AndOperator)
-          )
-          // JS 标准库函数的回调带接收者槽；直接调用、别名和 filter(Boolean) 共用同一实现。
-          prelude.push(
-            lua.createVariableDeclarationStatement(
-              boolean,
-              lua.createFunctionExpression(lua.createBlock([lua.createReturnStatement([truth])]), [
-                id('_'),
-                value
-              ])
-            )
-          )
-        }
-        const instance = scopeLocals.get(node)
-        if (instance) {
-          const clock = entry?.scope.timers ? str(entry.options.timerClock) : lua.createNilLiteral()
-          prelude.push(
-            lua.createVariableDeclarationStatement(
-              instance,
-              lua.createCallExpression(field(helpers(ctx), 'createScope'), [id('_ENV'), clock])
-            )
-          )
-          generateScopeHooks(result.statements, instance, entry!, ctx)
-        }
-        result.statements.unshift(...prelude)
+        finishEntry(result, ctx)
+        generateReexports(result, ctx)
+        discardAdaptedCallbackDiagnostics(ctx, state.adaptedCallbacks)
+        generatePrelude(result, ctx)
+        result.statements.unshift(...state.prelude)
         return result
       },
       [ts.SyntaxKind.ImportDeclaration]: () => [],
@@ -367,10 +386,10 @@ export function createLuaPlugin(
           return field(scope(ctx), builtin!)
         }
         if (builtin === 'Boolean') {
-          let local = booleanLocals.get(ctx.sourceFile)
+          let local = file(ctx).boolean
           if (!local) {
             local = id(ctx.createTempName('boolean'))
-            booleanLocals.set(ctx.sourceFile, local)
+            file(ctx).boolean = local
           }
           return local
         }
@@ -388,7 +407,7 @@ export function createLuaPlugin(
         const target = lua.isTableIndexExpression(value) ? value.table : value
         if (lua.isIdentifier(target) && target.symbolId !== undefined) {
           const symbol = ctx.symbolInfoMap.get(target.symbolId)?.symbol
-          const imported = symbol && bindings.get(symbol)
+          const imported = symbol && file(ctx).bindings.get(symbol)
           if (imported) {
             if (lua.isTableIndexExpression(value)) value.table = imported
             else return imported
@@ -398,16 +417,16 @@ export function createLuaPlugin(
       },
       [ts.SyntaxKind.ShorthandPropertyAssignment]: (node, ctx) => {
         const symbol = ctx.checker.getShorthandAssignmentValueSymbol(node)
-        const data = symbol && dataBindings.get(symbol)
+        const data = symbol && file(ctx).dataBindings.get(symbol)
         if (data)
           return lua.createTableFieldExpression(dataValue(data, ctx), str(node.name.text), node)
-        const value = symbol && bindings.get(symbol)
+        const value = symbol && file(ctx).bindings.get(symbol)
         return value
           ? lua.createTableFieldExpression(value, str(node.name.text), node)
           : ctx.superTransformNode(node)
       },
       [ts.SyntaxKind.ExportAssignment]: (node, ctx) => {
-        const model = analyzeLuaEntry(ctx.sourceFile, ctx.program).model
+        const model = file(ctx).entry
         if (!model || node.expression !== model.call) return ctx.superTransformStatements(node)
         const setup = model.setup
         const transformed = ctx.transformExpression(setup)
@@ -449,28 +468,24 @@ export function createLuaPlugin(
         let module: lua.Expression | undefined
         if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
           const table = id(ctx.createTempName('reexport'))
-          imports
-            .get(ctx.sourceFile)!
-            .push(
-              lua.createVariableDeclarationStatement(
-                table,
-                requireModule(resolve(node.moduleSpecifier.text, ctx.sourceFile.fileName))
-              )
+          file(ctx).prelude.push(
+            lua.createVariableDeclarationStatement(
+              table,
+              requireModule(resolve(node.moduleSpecifier.text, ctx.sourceFile.fileName))
             )
+          )
           module = table
         }
         const add = (name: string, value: lua.Expression) =>
-          getters
-            .get(ctx.sourceFile)!
-            .push(
-              lua.createTableFieldExpression(
-                lua.createFunctionExpression(
-                  lua.createBlock([lua.createReturnStatement([value])]),
-                  []
-                ),
-                str(name)
-              )
+          file(ctx).getters.push(
+            lua.createTableFieldExpression(
+              lua.createFunctionExpression(
+                lua.createBlock([lua.createReturnStatement([value])]),
+                []
+              ),
+              str(name)
             )
+          )
         if (node.exportClause && ts.isNamedExports(node.exportClause)) {
           for (const item of node.exportClause.elements) {
             if (item.isTypeOnly || !ctx.resolver.isValueAliasDeclaration(item)) continue
