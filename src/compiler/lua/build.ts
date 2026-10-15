@@ -8,6 +8,7 @@ import * as tstl from 'typescript-to-lua'
 import { initCliI18n, t, type Lang } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
 import { luaDataModule, luaDataModules } from './data_modules.js'
+import { localizeLuaTranspileDiagnostic } from './diagnostic_messages.js'
 import { getLuaDiagnostics } from './diagnostics.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
@@ -664,7 +665,7 @@ function transpileLua(
       ...(oldCheck?.transpileDiagnostics.filter(
         (d) => d.file && !plan.affected.has(luaFileKey(d.file.fileName))
       ) ?? []),
-      ...result.diagnostics
+      ...result.diagnostics.map(localizeLuaTranspileDiagnostic)
     ]
     diagnostics.push(...checked.transpileDiagnostics)
   }

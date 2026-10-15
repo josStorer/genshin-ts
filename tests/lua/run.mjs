@@ -5,6 +5,7 @@ const suites = {
   default: [
     'compiler',
     'entry-model',
+    'diagnostic-messages',
     'callback-diagnostics',
     'names',
     'private-fields',

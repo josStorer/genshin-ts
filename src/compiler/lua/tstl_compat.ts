@@ -7,6 +7,8 @@ import {
   getFunctionContextType
 } from 'typescript-to-lua/dist/transformation/utils/function-context.js'
 
+import { localizeLuaTranspileError } from './diagnostic_messages.js'
+
 /**
  * TSTL 1.34.0 没有公开导出这两个转换工具。
  * 原生 Lua 回调需要用它们保持 self 参数和表达式求值顺序；集中在这里便于升级时核对。
@@ -45,7 +47,9 @@ export class LocatedLuaError extends Error {
     readonly node: ts.Node,
     cause: unknown
   ) {
-    super(cause instanceof Error ? cause.message : String(cause), { cause })
+    super(localizeLuaTranspileError(cause instanceof Error ? cause.message : String(cause), node), {
+      cause
+    })
   }
 }
 

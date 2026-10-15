@@ -3,6 +3,7 @@ import ts from 'typescript'
 import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
 import type { LuaDiagnosticContext } from './diagnostic_context.js'
+import { unsupportedLuaSyntax } from './diagnostic_messages.js'
 import { analyzeLuaEntry, entryDiagnosticRules } from './entry_analysis.js'
 import { getSharedModuleDiagnostics } from './shared_modules.js'
 import { standardLibraryDiagnostic } from './standard_library.js'
@@ -67,6 +68,9 @@ export function getLuaDiagnostics(
   const checker = program.getTypeChecker()
   const builtins = getLuaBuiltins(program)
   const diagnostics: ts.Diagnostic[] = [...getSharedModuleDiagnostics(source, context)]
+  const sharedSites = new Set(
+    diagnostics.filter((d) => d.source === 'lua-shared-module').map((d) => `${d.start}:${d.length}`)
+  )
   for (const call of nodeGraphCalls(source)) diagnostics.push(issue(call, 'lua_importGraphEntry'))
   const analysis = analyzeLuaEntry(source, program)
   diagnostics.push(...analysis.diagnostics)
@@ -80,6 +84,9 @@ export function getLuaDiagnostics(
   const managedSignals: (string | undefined)[] = []
   const rawSignals: { name: string | undefined; node: ts.Node }[] = []
   const visit = (node: ts.Node) => {
+    const unsupported = unsupportedLuaSyntax(node)
+    if (unsupported)
+      diagnostics.push({ ...diagnostic(node, unsupported), source: 'lua-unsupported-syntax' })
     if (ts.isCallExpression(node)) {
       const member = builtins.member(node.expression)
       const argument = node.arguments[0]
@@ -130,8 +137,7 @@ export function getLuaDiagnostics(
         ts.isFunctionExpression(node) ||
         ts.isArrowFunction(node) ||
         ts.isMethodDeclaration(node)) &&
-      (('asteriskToken' in node && node.asteriskToken) ||
-        ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword))
+      ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword)
     )
       diagnostics.push(issue(node, 'lua_asyncFunction'))
     if (
@@ -144,7 +150,6 @@ export function getLuaDiagnostics(
       diagnostics.push(issue(node, 'lua_spreadEnvironment'))
     if (
       ts.isAwaitExpression(node) ||
-      ts.isYieldExpression(node) ||
       (ts.isPrivateIdentifier(node) && ts.isBinaryExpression(node.parent)) ||
       (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword)
     )
@@ -175,7 +180,8 @@ export function getLuaDiagnostics(
       node.kind === ts.SyntaxKind.BigIntKeyword ||
       (ts.isIdentifier(node) && builtins.global(node) === 'BigInt')
     )
-      diagnostics.push(issue(node, 'lua_bigint'))
+      if (!sharedSites.has(`${node.getStart()}:${node.getWidth()}`))
+        diagnostics.push(issue(node, 'lua_bigint'))
     let condition: ts.Expression | undefined
     if (ts.isIfStatement(node) || ts.isWhileStatement(node) || ts.isDoStatement(node))
       condition = node.expression
