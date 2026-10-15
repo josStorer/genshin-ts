@@ -7,6 +7,7 @@ const suites = {
     'names',
     'private-fields',
     'methods',
+    'sdk-paths',
     'standard-library',
     'data-modules',
     'lint',

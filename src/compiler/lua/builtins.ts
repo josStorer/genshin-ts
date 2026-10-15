@@ -1,8 +1,24 @@
+import fs from 'node:fs'
+import { createRequire } from 'node:module'
+import path from 'node:path'
+
 import ts from 'typescript'
 
 import { luaStandardLibrary, unavailableLuaGlobals } from './standard_library.js'
 
 const tables = new WeakMap<ts.Program, LuaBuiltins>()
+const packageRoot = path.dirname(createRequire(import.meta.url).resolve('genshin-ts/package.json'))
+function realFile(file: string) {
+  const resolved = fs.existsSync(file) ? fs.realpathSync.native(file) : path.resolve(file)
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved
+}
+const sdkFiles = new Map(
+  [
+    ['lua.d.ts', 'helpers'],
+    ['lua_core.d.ts', 'core'],
+    ['lua_entry.d.ts', 'entry']
+  ].map(([file, kind]) => [realFile(path.join(packageRoot, 'dist/src/runtime', file)), kind])
+)
 
 export const numberConstants: Readonly<Record<string, number>> = {
   MAX_SAFE_INTEGER: Number.MAX_SAFE_INTEGER,
@@ -59,13 +75,8 @@ function resolveBuiltins(program: ts.Program) {
   let clientGlobals: ts.Symbol | undefined
   let entry: ts.Symbol | undefined
   // SDK 文件只在建表时定位一次；访问器比较 symbol，不依赖用户变量名或接口同名。
-  const sdkFiles: Record<string, string> = {
-    'lua.d.ts': 'helpers',
-    'lua_core.d.ts': 'core',
-    'lua_entry.d.ts': 'entry'
-  }
   for (const source of program.getSourceFiles()) {
-    const kind = sdkFiles[source.fileName.replaceAll('\\', '/').split('/').at(-1)!]
+    const kind = sdkFiles.get(realFile(source.fileName))
     if (!kind) continue
     const module = checker.getSymbolAtLocation(source)
     if (!module) continue
