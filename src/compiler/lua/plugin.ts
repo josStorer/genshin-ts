@@ -30,7 +30,6 @@ interface LuaFileContext {
   bindings: Map<ts.Symbol, lua.Expression>
   getters: lua.TableFieldExpression[]
   helper?: lua.Identifier
-  boolean?: lua.Identifier
   scope?: lua.Identifier
   dataBindings: Map<ts.Symbol, { module: string; key?: string }>
   dataLocals: Map<string, lua.Identifier>
@@ -274,32 +273,6 @@ export function createLuaPlugin(
       prelude.unshift(
         lua.createVariableDeclarationStatement(helper, requireModule('__gsts_helpers'))
       )
-    const boolean = file(ctx).boolean
-    if (boolean) {
-      const value = id('value')
-      const unequal = (other: lua.Expression) =>
-        lua.createBinaryExpression(value, other, lua.SyntaxKind.InequalityOperator)
-      const comparisons = [
-        unequal(lua.createNilLiteral()),
-        unequal(lua.createBooleanLiteral(false)),
-        unequal(lua.createNumericLiteral(0)),
-        unequal(str('')),
-        lua.createBinaryExpression(value, value, lua.SyntaxKind.EqualityOperator)
-      ]
-      const truth = comparisons.reduce((left, right) =>
-        lua.createBinaryExpression(left, right, lua.SyntaxKind.AndOperator)
-      )
-      // JS 标准库函数的回调带接收者槽；直接调用、别名和 filter(Boolean) 共用同一实现。
-      prelude.push(
-        lua.createVariableDeclarationStatement(
-          boolean,
-          lua.createFunctionExpression(lua.createBlock([lua.createReturnStatement([truth])]), [
-            id('_'),
-            value
-          ])
-        )
-      )
-    }
     const instance = file(ctx).scope
     if (instance) {
       const clock = entry?.scope.timers ? str(entry.options.timerClock) : lua.createNilLiteral()
@@ -385,14 +358,7 @@ export function createLuaPlugin(
         if (luaTimerGlobals.some((name) => name === builtin)) {
           return field(scope(ctx), builtin!)
         }
-        if (builtin === 'Boolean') {
-          let local = file(ctx).boolean
-          if (!local) {
-            local = id(ctx.createTempName('boolean'))
-            file(ctx).boolean = local
-          }
-          return local
-        }
+        if (builtin === 'Boolean') return field(helpers(ctx), 'toBoolean')
         if (builtin === 'self') return field(field(id('_ENV'), 'script'), 'object')
         if (builtin === 'send' || builtin === 'console') return field(helpers(ctx), builtin)
         return adaptBuiltinCallback(

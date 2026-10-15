@@ -19,6 +19,10 @@ function M.liveExports(exports, getters)
         end
     })
 end
+-- JavaScript Boolean conversion; the first slot is the standard callback receiver.
+function M.toBoolean(_, value)
+    return value ~= nil and value ~= false and value ~= 0 and value ~= "" and value == value
+end
 function M.multi(...) return ... end
 function M.scriptHandle(script) return script end
 function M.clamp(value, low, high) return math.min(high, math.max(low, value)) end
