@@ -4,6 +4,13 @@ import path from 'node:path'
 
 import ts from 'typescript'
 
+assert(
+  fs
+    .readFileSync('src/runtime/lua_assets/helpers.lua')
+    .equals(fs.readFileSync('dist/src/runtime/lua_assets/helpers.lua')),
+  'postbuild copies helpers without modifying its contents'
+)
+assert(!fs.readFileSync('scripts/postbuild.mjs', 'utf8').includes('@gsts:signal-writers'))
 const definition = path.resolve('src/runtime/signal_definition.ts')
 const values = path.resolve('src/runtime/lua_signals.ts')
 const definitionText = fs.readFileSync(definition, 'utf8')
@@ -51,7 +58,9 @@ for (const incomplete of [
   added.replace("writer: 'AddPretend', ", ''),
   added.replace(", validation: 'integer' },", ' },')
 ])
-  assert(diagnostics(incomplete).some((d) => d.file && path.resolve(d.file.fileName) === definition))
+  assert(
+    diagnostics(incomplete).some((d) => d.file && path.resolve(d.file.fileName) === definition)
+  )
 assert(
   diagnostics(
     definitionText,

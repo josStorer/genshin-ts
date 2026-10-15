@@ -74,26 +74,37 @@ function M.listenKey(control, event, callback)
     end
 end
 function M.defineSignal(name, params) return {__gstsSignal = true, name = name, params = params} end
--- @gsts:signal-writers
+local signalKinds = require("__gsts_signal_kinds")
+local validators = {}
+-- Every numeric category rejects NaN and infinities before narrower checks.
+function validators.float(value)
+    return type(value) == "number" and value == value and math.abs(value) ~= math.huge
+end
+-- Integers preserve the shared contract's exact, safe numeric range.
+function validators.integer(value)
+    return validators.float(value) and value % 1 == 0 and math.abs(value) <= 9007199254740991
+end
+function validators.string(value) return type(value) == "string" end
+function validators.boolean(value) return type(value) == "boolean" end
+-- Vectors use the same finite-number check as scalar floats.
+function validators.vec3(value)
+    return type(value) == "table" and validators.float(value.x)
+        and validators.float(value.y) and validators.float(value.z)
+end
+-- Scalar and list rules share a validator selected by metadata, not by kind spelling.
 local function validSignalValue(kind, value)
-    if kind:sub(-5) == "_list" then
-        if type(value) ~= "table" then return false end
-        local count = 0
-        for key, item in pairs(value) do
-            if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > #value then return false end
-            if not validSignalValue(kind:sub(1, -6), item) then return false end
-            count = count + 1
-        end
-        return count == #value
+    local spec = signalKinds[kind]
+    if not spec then return false end
+    local validate = validators[spec.validation]
+    if not spec.list then return validate(value) end
+    if type(value) ~= "table" then return false end
+    local count = 0
+    for key, item in pairs(value) do
+        if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > #value then return false end
+        if not validate(item) then return false end
+        count = count + 1
     end
-    if kind == "str" then return type(value) == "string" end
-    if kind == "bool" then return type(value) == "boolean" end
-    if kind == "vec3" then
-        return type(value) == "table" and validSignalValue("float", value.x)
-            and validSignalValue("float", value.y) and validSignalValue("float", value.z)
-    end
-    if not writers[kind] or type(value) ~= "number" or value ~= value or math.abs(value) == math.huge then return false end
-    return kind == "float" or (value % 1 == 0 and math.abs(value) <= 9007199254740991)
+    return count == #value
 end
 
 -- The send and receive boundaries reject the same count, index and value errors.
@@ -122,7 +133,7 @@ function M.send(signal, ...)
     if message then error(message, 2) end
     local instance = game.ServerSignal(signal.name)
     for i, param in ipairs(signal.params) do
-        instance[writers[param[2]]](instance, values[i])
+        instance[signalKinds[param[2]].writer](instance, values[i])
     end
     instance:SendSignal()
 end

@@ -63,23 +63,6 @@ fs.cpSync(
   { recursive: true }
 )
 
-// Keep the runtime writer table and TypeScript signal types on one data source.
-const { luaSignalWriters } = await import('../dist/src/runtime/lua_signals.js')
-const writerTable = (suffix = '') =>
-  Object.entries(luaSignalWriters)
-    .map(([name, method]) => `${name}="${method}${suffix}"`)
-    .join(', ')
-const helperPath = path.join(repoRoot, 'dist/src/runtime/lua_assets/helpers.lua')
-const helperSource = fs.readFileSync(helperPath, 'utf8')
-const helperNewline = helperSource.includes('\r\n') ? '\r\n' : '\n'
-fs.writeFileSync(
-  helperPath,
-  helperSource.replace(
-    '-- @gsts:signal-writers',
-    `local writers = {${writerTable()}}${helperNewline}for name, method in pairs({${writerTable('List')}}) do writers[name .. "_list"] = method end`
-  )
-)
-
 const { build } = await import('esbuild')
 const { generateLuaDataModules } = await import('../dist/src/compiler/lua/data_modules.js')
 generateLuaDataModules(repoRoot)

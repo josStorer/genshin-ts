@@ -20,6 +20,7 @@ import {
 import { createLuaPlugin, diagnostic } from './plugin.js'
 import { lowerPrivateFields } from './private_fields.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
+import { renderSignalKindsLua } from './signal_kinds.js'
 import { packageLuaMaps } from './source_maps.js'
 import { isNodeGraphEntry } from './syntax.js'
 import { LocatedLuaError, withLuaErrorLocations } from './tstl_compat.js'
@@ -726,6 +727,7 @@ function packageLua({
       }
     const helpers = path.join(packageRoot(), 'dist/src/runtime/lua_assets/helpers.lua')
     files.set('__gsts_helpers.lua', fs.readFileSync(helpers, 'utf8'))
+    files.set('__gsts_signal_kinds.lua', renderSignalKindsLua())
     for (const [name, text] of files) {
       if (!name.endsWith('.lua')) continue
       files.set(name, `-- @gsts:lua\n${text.replace(/^-- @gsts:lua\r?\n/, '')}`)
