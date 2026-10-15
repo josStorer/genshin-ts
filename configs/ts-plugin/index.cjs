@@ -173,6 +173,7 @@ function init(modules) {
   }
 
   function create(info) {
+    const luaContexts = new WeakMap()
     const languageService = info.languageService
     const proxy = Object.create(null)
     for (const key of Object.keys(languageService)) {
@@ -188,12 +189,20 @@ function init(modules) {
       if (!sourceFile) return base
       const checker = program.getTypeChecker()
       const filtered = base.filter((d) => !shouldSuppress2538(d, sourceFile, checker))
-      if (program.getCompilerOptions().types?.includes('genshin-ts/runtime/lua_globals')) {
-        const { getLuaDiagnostics } = require('../../dist/src/compiler/lua/editor.cjs')
-        return filtered.concat(getLuaDiagnostics(sourceFile, program))
+      const {
+        getLuaDiagnostics,
+        getSharedModuleDiagnostics,
+        resolveSharedProject
+      } = require('../../dist/src/compiler/lua/editor.cjs')
+      let diagnosticContext = luaContexts.get(program)
+      if (!diagnosticContext) {
+        diagnosticContext = { program, project: resolveSharedProject(sourceFile, program) }
+        luaContexts.set(program, diagnosticContext)
       }
-      const { getSharedModuleDiagnostics } = require('../../dist/src/compiler/lua/editor.cjs')
-      return filtered.concat(getSharedModuleDiagnostics(sourceFile, program))
+      if (program.getCompilerOptions().types?.includes('genshin-ts/runtime/lua_globals')) {
+        return filtered.concat(getLuaDiagnostics(sourceFile, diagnosticContext))
+      }
+      return filtered.concat(getSharedModuleDiagnostics(sourceFile, diagnosticContext))
     }
 
     return proxy

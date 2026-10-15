@@ -2,12 +2,13 @@ import ts from 'typescript'
 
 import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
+import type { LuaDiagnosticContext } from './diagnostic_context.js'
 import { analyzeLuaEntry, entryDiagnosticRules } from './entry_analysis.js'
 import { getSharedModuleDiagnostics } from './shared_modules.js'
 import { standardLibraryDiagnostic } from './standard_library.js'
 import { diagnostic, nodeGraphCalls } from './syntax.js'
 
-export { getSharedModuleDiagnostics } from './shared_modules.js'
+export { getSharedModuleDiagnostics, resolveSharedProject } from './shared_modules.js'
 
 const ruleByMessage = {
   lua_importGraphEntry: 'lua-no-graph-entry',
@@ -42,7 +43,7 @@ export const luaWarningRules: readonly string[] = [
   'lua-no-array-delete'
 ]
 const diagnosticCache = new WeakMap<
-  ts.Program,
+  LuaDiagnosticContext,
   WeakMap<ts.SourceFile, { lang: string; diagnostics: ts.Diagnostic[] }>
 >()
 function issue(node: ts.Node, key: keyof typeof ruleByMessage, warning = false) {
@@ -50,18 +51,22 @@ function issue(node: ts.Node, key: keyof typeof ruleByMessage, warning = false) 
 }
 
 /** 编译器、ESLint 和编辑器共用的 Lua 规则和入口分析结果。 */
-export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): ts.Diagnostic[] {
+export function getLuaDiagnostics(
+  source: ts.SourceFile,
+  context: LuaDiagnosticContext
+): ts.Diagnostic[] {
+  const { program } = context
   const lang = getCliLanguage()
-  let cached = diagnosticCache.get(program)
+  let cached = diagnosticCache.get(context)
   if (!cached) {
     cached = new WeakMap()
-    diagnosticCache.set(program, cached)
+    diagnosticCache.set(context, cached)
   }
   const previous = cached.get(source)
   if (previous?.lang === lang) return previous.diagnostics
   const checker = program.getTypeChecker()
   const builtins = getLuaBuiltins(program)
-  const diagnostics: ts.Diagnostic[] = [...getSharedModuleDiagnostics(source, program)]
+  const diagnostics: ts.Diagnostic[] = [...getSharedModuleDiagnostics(source, context)]
   for (const call of nodeGraphCalls(source)) diagnostics.push(issue(call, 'lua_importGraphEntry'))
   const analysis = analyzeLuaEntry(source, program)
   diagnostics.push(...analysis.diagnostics)

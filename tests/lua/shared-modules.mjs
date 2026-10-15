@@ -10,7 +10,10 @@ import { ESLint } from 'eslint'
 import ts from 'typescript'
 
 import { compileLua } from '../../src/compiler/lua/build.ts'
-import { getSharedModuleDiagnostics } from '../../src/compiler/lua/shared_modules.ts'
+import {
+  getSharedModuleDiagnostics,
+  resolveSharedProject
+} from '../../src/compiler/lua/shared_modules.ts'
 import gsts from '../../src/eslint/index.ts'
 
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/shared-'))
@@ -41,7 +44,16 @@ for (const globals of ['lua_globals.d.ts', 'server_globals.global.d.ts']) {
     ],
     options
   )
-  const found = getSharedModuleDiagnostics(program.getSourceFile(shared), program)
+  const source = program.getSourceFile(shared)
+  const context = { program, project: resolveSharedProject(source, program) }
+  const isolatedContext = { program, project: { root, files: [path.join(root, 'hud.ts')] } }
+  assert.deepEqual(getSharedModuleDiagnostics(source, isolatedContext), [])
+  const found = getSharedModuleDiagnostics(source, context)
+  assert.deepEqual(
+    getSharedModuleDiagnostics(source, isolatedContext),
+    [],
+    'same Program cannot leak another project context'
+  )
   assert(
     found.some((d) => d.source === 'lua-shared-module' && String(d.messageText).includes('int()')),
     globals
@@ -101,7 +113,13 @@ fs.writeFileSync(
 )
 fs.writeFileSync(shared, 'export const value=1n')
 const removed = ts.createProgram([path.join(root, 'hud.ts')], options)
-assert.deepEqual(getSharedModuleDiagnostics(removed.getSourceFile(shared), removed), [])
+assert.deepEqual(
+  getSharedModuleDiagnostics(removed.getSourceFile(shared), {
+    program: removed,
+    project: resolveSharedProject(removed.getSourceFile(shared), removed)
+  }),
+  []
+)
 // An explicit standalone compilation root must not scan the parent project's entries.
 const isolated = path.join(root, 'isolated')
 fs.mkdirSync(isolated)

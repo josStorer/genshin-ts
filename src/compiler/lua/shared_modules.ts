@@ -3,30 +3,21 @@ import path from 'node:path'
 import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
+import type { LuaDiagnosticContext } from './diagnostic_context.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
 import { luaFileKey } from './incremental.js'
 import { diagnostic, entryCall, isNodeGraphEntry } from './syntax.js'
 
-const indexes = new WeakMap<ts.Program, Set<string>>()
-const buildProjects = new WeakMap<ts.Program, { root: string; files?: readonly string[] }>()
-/** 构建使用明确的编译根和 CLI 候选；只有编辑器需要向上查找项目配置。 */
-export function setSharedProject(
-  program: ts.Program,
-  project: { root: string; files?: readonly string[] }
-) {
-  buildProjects.set(program, project)
-  indexes.delete(program)
-}
-
-/** 沿两类入口的实际 import/re-export 找交集，不按 shared 目录名猜用途。 */
-function sharedFiles(program: ts.Program, source: ts.SourceFile) {
-  const previous = indexes.get(program)
-  if (previous) return previous
-  const buildProject = buildProjects.get(program)
+const indexes = new WeakMap<LuaDiagnosticContext, Set<string>>()
+/** 编辑器/lint 显式发现项目；构建已有配置，直接传入对应范围。 */
+export function resolveSharedProject(
+  source: ts.SourceFile,
+  program: ts.Program
+): LuaDiagnosticContext['project'] {
   let root = path.dirname(source.fileName)
   let project: string | undefined
   let configFile: string | undefined
-  while (!buildProject) {
+  while (true) {
     configFile = ['gsts.config.ts', 'gsts.config.mts', 'gsts.config.js']
       .map((name) => path.join(root, name))
       .find((file) => ts.sys.fileExists(file))
@@ -39,14 +30,7 @@ function sharedFiles(program: ts.Program, source: ts.SourceFile) {
     if (parent === root) break
     root = parent
   }
-  const shared = new Set<string>()
-  indexes.set(program, shared)
-  // Standalone compileLua callers can still share files within their explicit compilation root.
-  root =
-    buildProject?.root ??
-    project ??
-    program.getCompilerOptions().rootDir ??
-    path.dirname(source.fileName)
+  root = project ?? program.getCompilerOptions().rootDir ?? path.dirname(source.fileName)
   let entries = ['**/*']
   const excluded = ['**/node_modules/**', '**/.git/**', '**/.tmp/**']
   if (configFile) {
@@ -84,6 +68,16 @@ function sharedFiles(program: ts.Program, source: ts.SourceFile) {
     .map((entry) =>
       ts.sys.directoryExists(path.resolve(root, entry)) ? entry.replace(/\/$/, '') + '/**/*' : entry
     )
+  return { root, files: ts.sys.readDirectory(root, ['.ts', '.tsx', '.mts'], excluded, entries) }
+}
+
+/** 沿两类入口的实际 import/re-export 找交集；缓存只属于传入的上下文。 */
+function sharedFiles(context: LuaDiagnosticContext) {
+  const previous = indexes.get(context)
+  if (previous) return previous
+  const { program, project } = context
+  const shared = new Set<string>()
+  indexes.set(context, shared)
   const sources = new Map(program.getSourceFiles().map((file) => [luaFileKey(file.fileName), file]))
   const read = (file: string) => {
     const key = luaFileKey(file)
@@ -97,7 +91,13 @@ function sharedFiles(program: ts.Program, source: ts.SourceFile) {
     return source
   }
   const candidates =
-    buildProject?.files ?? ts.sys.readDirectory(root, ['.ts', '.tsx', '.mts'], excluded, entries)
+    project.files ??
+    ts.sys.readDirectory(
+      project.root,
+      ['.ts', '.tsx', '.mts'],
+      ['**/node_modules/**', '**/.git/**', '**/.tmp/**'],
+      ['**/*']
+    )
   const graphRoots: ts.SourceFile[] = [],
     luaRoots: ts.SourceFile[] = []
   for (const file of candidates) {
@@ -157,10 +157,10 @@ function sharedFiles(program: ts.Program, source: ts.SourceFile) {
 /** 可从任意一侧的 Program 调用，错误定位在共享源码上，局部同名变量不受影响。 */
 export function getSharedModuleDiagnostics(
   source: ts.SourceFile,
-  program: ts.Program
+  context: LuaDiagnosticContext
 ): ts.Diagnostic[] {
-  if (source.isDeclarationFile || !sharedFiles(program, source).has(luaFileKey(source.fileName)))
-    return []
+  const { program } = context
+  if (source.isDeclarationFile || !sharedFiles(context).has(luaFileKey(source.fileName))) return []
   const checker = program.getTypeChecker()
   const diagnostics: ts.Diagnostic[] = []
   const add = (node: ts.Node, key: 'lua_sharedBigint' | 'lua_sharedApi') =>

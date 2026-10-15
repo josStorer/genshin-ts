@@ -20,7 +20,6 @@ import {
 import { createLuaPlugin, diagnostic } from './plugin.js'
 import { lowerPrivateFields } from './private_fields.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
-import { setSharedProject } from './shared_modules.js'
 import { packageLuaMaps } from './source_maps.js'
 import { isNodeGraphEntry } from './syntax.js'
 import { LocatedLuaError, withLuaErrorLocations } from './tstl_compat.js'
@@ -138,7 +137,6 @@ export function compileLua(
   const resolved = resolveLuaHost(input, cache)
   timer.mark('setup')
   const prepared = prepareLuaProgram(input, resolved, timer, cache)
-  setSharedProject(prepared.program, { root: resolved.root, files: input.sharedProjectFiles })
   onPrepared?.({
     dependencies: prepared.sources.map((source) => source.fileName),
     graphEntries: prepared.sources
@@ -388,6 +386,7 @@ function diagnoseLua(
 ) {
   const { root, outDir, configPath, configDiagnostics } = resolved
   const { program, sources, oldCheck, cacheKey, plan } = prepared
+  const diagnosticContext = { program, project: { root, files: input.sharedProjectFiles } }
   const { mark } = timer
   const checker = program.getTypeChecker()
   const builtins = getLuaBuiltins(program)
@@ -456,7 +455,7 @@ function diagnoseLua(
     const key = luaFileKey(source.fileName)
     let checks = plan.affected.has(key) ? undefined : oldCheck?.sourceChecks.get(key)
     if (!checks) {
-      const localDiagnostics = [...getLuaDiagnostics(source, program)]
+      const localDiagnostics = [...getLuaDiagnostics(source, diagnosticContext)]
       if (!input.typeCheck) {
         nameCheckedFiles++
         localDiagnostics.push(
