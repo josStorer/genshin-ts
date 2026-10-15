@@ -52,6 +52,7 @@ export interface LuaCompileProfile {
     sourceReads: number
     resolvedDependencyFiles: number
     cycleChecks: number
+    nameCheckedFiles: number
   }
 }
 export interface LuaBuildResult {
@@ -91,6 +92,11 @@ export interface LuaCompileCache {
 export function createLuaCompileCache(): LuaCompileCache {
   return { sources: new Map(), lua: createLuaParseCache() }
 }
+// Always reject unresolved names/members, while leaving ordinary type compatibility to the editor.
+// These are filtered from affected-file diagnostics, never a second project-wide typecheck.
+const unresolvedNameCodes = new Set([
+  2304, 2305, 2306, 2307, 2339, 2503, 2551, 2552, 2553, 2662, 2663, 2724, 2792, 18004
+])
 const posix = (name: string) => name.replace(/\\/g, '/')
 export function formatLuaDiagnostics(diagnostics: readonly ts.Diagnostic[]) {
   return ts.formatDiagnosticsWithColorAndContext(diagnostics, {
@@ -427,11 +433,18 @@ function diagnoseLua(
   }
   const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))
   const rawRequires: ts.CallExpression[] = []
+  let nameCheckedFiles = 0
   for (const source of modules) {
     const key = luaFileKey(source.fileName)
     let checks = plan.affected.has(key) ? undefined : oldCheck?.sourceChecks.get(key)
     if (!checks) {
-      const localDiagnostics = getLuaDiagnostics(source, program)
+      const localDiagnostics = [...getLuaDiagnostics(source, program)]
+      if (!input.typeCheck) {
+        nameCheckedFiles++
+        localDiagnostics.push(
+          ...program.getSemanticDiagnostics(source).filter((d) => unresolvedNameCodes.has(d.code))
+        )
+      }
       const fromOutput = path.relative(outDir, source.fileName)
       if (!fromOutput.startsWith('..') && !path.isAbsolute(fromOutput))
         localDiagnostics.push(diagnostic(source, t('lua_sourceInOutput')))
@@ -466,7 +479,8 @@ function diagnoseLua(
     transpileDiagnostics,
     modulePath,
     availableModules,
-    rawRequires
+    rawRequires,
+    nameCheckedFiles
   }
 }
 
@@ -704,6 +718,7 @@ function packageLua({
             timingsMs: timer.snapshot(),
             stats: {
               sourceReads: resolved.sourceReads,
+              nameCheckedFiles: checked.nameCheckedFiles,
               resolvedDependencyFiles: plan.resolvedFiles,
               cycleChecks: luaCache.cycleChecks,
               reusedTs: !!reuse,
