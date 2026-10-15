@@ -23,6 +23,7 @@ export function createLuaPlugin(
   const imports = new Map<ts.SourceFile, lua.Statement[]>()
   const getters = new Map<ts.SourceFile, lua.TableFieldExpression[]>()
   const helperLocals = new Map<ts.SourceFile, lua.Identifier>()
+  const booleanLocals = new Map<ts.SourceFile, lua.Identifier>()
   function helpers(ctx: lua.TransformationContext) {
     let local = helperLocals.get(ctx.sourceFile)
     if (!local) {
@@ -171,6 +172,32 @@ export function createLuaPlugin(
           prelude.unshift(
             lua.createVariableDeclarationStatement(helper, requireModule('__gsts_helpers'))
           )
+        const boolean = booleanLocals.get(node)
+        if (boolean) {
+          const value = id('value')
+          const unequal = (other: lua.Expression) =>
+            lua.createBinaryExpression(value, other, lua.SyntaxKind.InequalityOperator)
+          const comparisons = [
+            unequal(lua.createNilLiteral()),
+            unequal(lua.createBooleanLiteral(false)),
+            unequal(lua.createNumericLiteral(0)),
+            unequal(str('')),
+            lua.createBinaryExpression(value, value, lua.SyntaxKind.EqualityOperator)
+          ]
+          const truth = comparisons.reduce((left, right) =>
+            lua.createBinaryExpression(left, right, lua.SyntaxKind.AndOperator)
+          )
+          // JS 标准库函数的回调带接收者槽；直接调用、别名和 filter(Boolean) 共用同一实现。
+          prelude.push(
+            lua.createVariableDeclarationStatement(
+              boolean,
+              lua.createFunctionExpression(lua.createBlock([lua.createReturnStatement([truth])]), [
+                id('_'),
+                value
+              ])
+            )
+          )
+        }
         result.statements.unshift(...prelude)
         return result
       },
@@ -219,6 +246,14 @@ export function createLuaPlugin(
       },
       [ts.SyntaxKind.Identifier]: (node, ctx) => {
         const builtin = getLuaBuiltins(ctx.program).global(node)
+        if (builtin === 'Boolean') {
+          let local = booleanLocals.get(ctx.sourceFile)
+          if (!local) {
+            local = id(ctx.createTempName('boolean'))
+            booleanLocals.set(ctx.sourceFile, local)
+          }
+          return local
+        }
         if (builtin === 'self') return field(field(id('_ENV'), 'script'), 'object')
         if (builtin === 'send' || builtin === 'console') return field(helpers(ctx), builtin)
         return adaptBuiltinCallback(

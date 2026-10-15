@@ -1,5 +1,7 @@
 import ts from 'typescript'
 
+import { luaStandardLibrary, unavailableLuaGlobals } from './standard-library.js'
+
 const tables = new WeakMap<ts.Program, LuaBuiltins>()
 
 export const numberConstants: Readonly<Record<string, number>> = {
@@ -24,12 +26,34 @@ function resolveBuiltins(program: ts.Program) {
     'Array',
     'Object',
     'Map',
-    'Set'
+    'Set',
+    'globalThis',
+    ...unavailableLuaGlobals
   ]) {
     const symbol = checker.resolveName(name, undefined, ts.SymbolFlags.Value, false)
     if (symbol) globals.set(symbol, name)
   }
   const members = new Map<ts.Symbol, string>()
+  const standardTypes = new Map<ts.Symbol, string>()
+  const standardMembers = new Map<ts.Symbol, { owner: string; name: string; supported: boolean }>()
+  for (const name of [
+    ...Object.keys(luaStandardLibrary),
+    'ReadonlyArray',
+    'ReadonlyMap',
+    'ReadonlySet',
+    'BooleanConstructor'
+  ]) {
+    const symbol = checker.resolveName(name, undefined, ts.SymbolFlags.Type, false)
+    if (!symbol?.declarations?.some((d) => d.getSourceFile().hasNoDefaultLib)) continue
+    const owner = name.replace(/^Readonly/, '')
+    standardTypes.set(symbol, owner)
+    for (const property of checker.getDeclaredTypeOfSymbol(symbol).getProperties())
+      standardMembers.set(property, {
+        owner,
+        name: property.name,
+        supported: luaStandardLibrary[owner]?.includes(property.name) ?? false
+      })
+  }
   const modules = new Map<ts.Symbol, string>()
   let clientGlobals: ts.Symbol | undefined
   let entry: ts.Symbol | undefined
@@ -61,6 +85,27 @@ function resolveBuiltins(program: ts.Program) {
     const symbol = checker.getSymbolAtLocation(node)
     return symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
   }
+  function standardMemberSymbol(symbol: ts.Symbol | undefined) {
+    if (!symbol) return undefined
+    const direct = standardMembers.get(symbol)
+    if (direct) return direct
+    for (const declaration of symbol.declarations ?? []) {
+      if (!('name' in declaration) || !declaration.name) continue
+      const original = checker.getSymbolAtLocation(declaration.name as ts.Node)
+      if (original && standardMembers.has(original)) return standardMembers.get(original)
+      if (ts.isInterfaceDeclaration(declaration.parent)) {
+        const ownerSymbol = checker.getSymbolAtLocation(declaration.parent.name)
+        const owner = ownerSymbol && standardTypes.get(ownerSymbol)
+        if (owner)
+          return {
+            owner,
+            name: symbol.name,
+            supported: luaStandardLibrary[owner]?.includes(symbol.name) ?? false
+          }
+      }
+    }
+    return undefined
+  }
   return {
     globals,
     members,
@@ -68,6 +113,22 @@ function resolveBuiltins(program: ts.Program) {
     clientGlobals,
     entry,
     symbolAt,
+    standardMemberSymbol,
+    standardMember(node: ts.PropertyAccessExpression | ts.ElementAccessExpression) {
+      const name = ts.isPropertyAccessExpression(node)
+        ? node.name.text
+        : ts.isStringLiteralLike(node.argumentExpression)
+          ? node.argumentExpression.text
+          : undefined
+      return standardMemberSymbol(
+        symbolAt(node) ??
+          (name ? checker.getTypeAtLocation(node.expression).getProperty(name) : undefined)
+      )
+    },
+    standardType(node: ts.Expression) {
+      const type = checker.getTypeAtLocation(node)
+      return type.getSymbol() && standardTypes.get(type.getSymbol()!)
+    },
     global(node: ts.Node) {
       const symbol = symbolAt(node)
       return symbol && globals.get(symbol)

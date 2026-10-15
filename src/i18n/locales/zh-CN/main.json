@@ -144,5 +144,9 @@
   "lua_workerExited": "Lua 编译线程提前退出（{{arg0}}）；下次改动会重新启动。",
   "lua_cancelled": "Lua 编译已取消。",
   "build_summary": "[{{target}}] 编译：{{compilation}}；注入：{{injection}}。",
-  "build_graphTarget": "TS→节点图"
+  "build_graphTarget": "TS→节点图",
+  "lua_unavailableGlobal": "Lua 客户端没有 {{arg0}}。定时任务请先用 onUpdate/onLevelUpdate 累计 dt，动画可用 lua.game.Tween；其他宿主能力请查 lua.game/lua.script。",
+  "lua_booleanObject": "Lua 不支持 new Boolean() 包装对象；请使用 Boolean(value) 得到布尔值。",
+  "lua_unsupportedMember": "Lua 尚不支持标准库成员 {{arg0}}；请使用 Lua 支持清单中的成员，或 lua 下的原生 API。",
+  "lua_builtinMethodValue": "Lua 标准库方法需要在对象上直接调用；传回调时写成 value => Math.abs(value) 这样的函数。"
 }

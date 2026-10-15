@@ -22,6 +22,7 @@ const source = `import {g} from 'genshin-ts/runtime/core';
 export default g.clientControlScript(lua=>{
  if (0) {}
  const n=lua.tonumber("0") ?? 0; const negated=!n; const fallback=n || 1;
+ const unavailable=setTimeout; new Boolean(0); Math.cosh(1);
  lua./*env*/;
  lua.game./*game*/;
  if(lua.helper.isControl(self,'ClientUITextBoxControl')) {self./*control*/;}
@@ -77,6 +78,8 @@ assert.ok(
   'Lua diagnostics must also reach tsserver'
 )
 const semanticDiagnostics = proxy.getSemanticDiagnostics(file)
+assert.ok(semanticDiagnostics.some((d) => d.source === 'lua-unavailable-global'))
+assert.ok(semanticDiagnostics.some((d) => d.source === 'lua-standard-library'))
 for (const start of [source.indexOf('!n') + 1, source.indexOf('n ||')])
   assert.ok(
     semanticDiagnostics.some((d) => d.code === 97001 && d.start === start),

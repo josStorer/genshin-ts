@@ -2,6 +2,7 @@ import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
+import { standardLibraryDiagnostic } from './standard-library.js'
 import { diagnostic, entryCall, hooks, nodeGraphCalls } from './syntax.js'
 
 /** 编译器、ESLint 和编辑器共用的 Lua 规则，不加载 TSTL。 */
@@ -13,8 +14,7 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
     diagnostics.push(diagnostic(call, t('lua_importGraphEntry')))
   const call = entryCall(source)
   if (call) {
-    if (!builtins.isEntryCall(call))
-      diagnostics.push(diagnostic(call, t('lua_invalidEntry')))
+    if (!builtins.isEntryCall(call)) diagnostics.push(diagnostic(call, t('lua_invalidEntry')))
     const setup = call.arguments[call.arguments.length - 1]
     if (
       call.arguments.length < 1 ||
@@ -130,11 +130,9 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
     }
   }
   const visit = (node: ts.Node) => {
-    if (
-      ts.isCallExpression(node) &&
-      node !== call &&
-      builtins.isEntryCall(node)
-    )
+    const standard = standardLibraryDiagnostic(node, checker, builtins)
+    if (standard) diagnostics.push(standard)
+    if (ts.isCallExpression(node) && node !== call && builtins.isEntryCall(node))
       diagnostics.push(diagnostic(node, t('lua_nestedEntry')))
     if (
       ts.isIdentifier(node) &&
@@ -162,14 +160,6 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
       (node.name.elements.some((e) => e.dotDotDotToken) || !ts.isIdentifier(node.initializer))
     )
       diagnostics.push(diagnostic(node, t('lua_spreadEnvironment')))
-    if (
-      ts.isIdentifier(node) &&
-      ['Promise', 'WeakMap', 'WeakSet', 'Date', 'RegExp', 'JSON'].includes(node.text) &&
-      checker
-        .getSymbolAtLocation(node)
-        ?.declarations?.some((d) => d.getSourceFile().hasNoDefaultLib)
-    )
-      diagnostics.push(diagnostic(node, t('lua_hostUnavailable', { arg0: node.text })))
     if (
       ts.isAwaitExpression(node) ||
       ts.isYieldExpression(node) ||

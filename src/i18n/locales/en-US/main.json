@@ -144,5 +144,9 @@
   "lua_workerExited": "The Lua compiler worker exited early ({{arg0}}). It will restart on the next change.",
   "lua_cancelled": "Lua compilation cancelled.",
   "build_summary": "[{{target}}] Compilation: {{compilation}}; injection: {{injection}}.",
-  "build_graphTarget": "TS→NodeGraph"
+  "build_graphTarget": "TS→NodeGraph",
+  "lua_unavailableGlobal": "Client Lua has no {{arg0}}. For timers, accumulate dt in onUpdate/onLevelUpdate; use lua.game.Tween for animations. See lua.game/lua.script for host APIs.",
+  "lua_booleanObject": "Lua does not support new Boolean() wrapper objects. Use Boolean(value) to get a boolean.",
+  "lua_unsupportedMember": "Lua does not support standard library member {{arg0}}. Use a member from the Lua support list or a native API under lua.",
+  "lua_builtinMethodValue": "Call Lua standard library methods directly on their object. For callbacks, use a function such as value => Math.abs(value)."
 }
