@@ -104,7 +104,27 @@ type GiaGenerationTask = {
   opts?: { includeIndices?: number[]; preserveIndices?: boolean }
 }
 
+type RunBatchData = {
+  cfgDir: string
+  cfg: GstsConfig
+  lang: Lang
+  sourceFiles: string[]
+  moduleFiles: string[]
+  outDirAbs?: string
+  mergeResults?: MergeResult[]
+  giaPaths: string[]
+  parsedGil?: ParsedGilCache
+  profile?: RunBatchProfile
+}
+
+// Lua 单独完成和汇总；这里的成功标记只用于恢复节点图的 dev 状态。
+type RunBatchResult =
+  | { graphCompleted: true; data: RunBatchData }
+  | { graphCompleted: false; error: string }
+
 type RunBatchHooks = InjectionAttemptHooks & {
+  /** 编译后的资源提取或 dev 状态更新；无论这里是否成功，runBatch 都会输出最终汇总。 */
+  onComplete?: (result: RunBatchData) => void | Promise<void>
   luaSession?: ClientLuaSession
   programCache?: TsToGsProgramCache
   invalidatedFiles?: Iterable<string>
@@ -928,7 +948,7 @@ function buildDevWatchGlobs(
   return { cwd: compileRoot, watch, ignored: [...ignored, ...dependencyIgnored], dependencyIgnored }
 }
 
-async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
+async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks): Promise<RunBatchResult> {
   const profiling = injectProfileEnabled(opts)
   const totalStart = profiling ? performance.now() : 0
   const loadConfigStart = profiling ? performance.now() : 0
@@ -965,10 +985,6 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
     .catch(() => undefined)
   const luaSources = await luaTask.prepared
   const summary = { compilation: t('summary_failed'), injection: t('summary_compileFailed') }
-  const report = async () => {
-    console.log(formatBuildSummary('graph', summary))
-    await luaTask.finish()
-  }
   try {
     const compileStart = profiling ? performance.now() : 0
     const compileResult = await compileTsToGs({
@@ -1107,8 +1123,7 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
     }
 
     const luaResult = await luaDone
-    return {
-      report,
+    const data: RunBatchData = {
       cfgDir,
       cfg,
       lang,
@@ -1153,11 +1168,16 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks) {
           }
         : {})
     }
+    await hooks?.onComplete?.(data)
+    return { graphCompleted: true, data }
   } catch (error) {
-    ui.error(errorText(error))
+    const message = errorText(error)
+    ui.error(message)
     process.exitCode = 1
-    await report()
-    return undefined
+    return { graphCompleted: false, error: message }
+  } finally {
+    console.log(formatBuildSummary('graph', summary))
+    await luaTask.finish()
   }
 }
 
@@ -1237,9 +1257,13 @@ async function runDev(opts: GlobalOptions) {
     }
   }
 
-  const safeRunBatch = async (invalidatedFiles?: Iterable<string>) => {
+  const safeRunBatch = async (
+    invalidatedFiles?: Iterable<string>,
+    onComplete?: RunBatchHooks['onComplete']
+  ) => {
     try {
       const res = await runBatch(opts, {
+        onComplete,
         luaSession,
         programCache,
         invalidatedFiles,
@@ -1254,7 +1278,7 @@ async function runDev(opts: GlobalOptions) {
         },
         ...injectionHooks
       })
-      return res
+      return res.graphCompleted ? res.data : undefined
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       ui.error(msg.replace('[error]', '').trim())
@@ -1293,21 +1317,16 @@ async function runDev(opts: GlobalOptions) {
     }, 200)
   }
 
-  const initial = await safeRunBatch()
-  if (initial) {
-    try {
-      maybeExtractResources({
-        cfgDir,
-        injectCfg: initial.cfg.inject,
-        opts,
-        lang: initial.lang,
-        gilPath,
-        parsedGil: initial.parsedGil
-      })
-    } finally {
-      await initial.report()
-    }
-  }
+  const initial = await safeRunBatch(undefined, (result) => {
+    maybeExtractResources({
+      cfgDir,
+      injectCfg: result.cfg.inject,
+      opts,
+      lang: result.lang,
+      gilPath,
+      parsedGil: result.parsedGil
+    })
+  })
 
   const compilerOptions = loadTsCompilerOptions(cfgDir)
   const depGraph: DepGraph = {
@@ -1713,15 +1732,10 @@ async function runDev(opts: GlobalOptions) {
     changed.clear()
     if (removedBatch.length > 20 || changedBatch.length > 20) {
       const result = await safeRunBatch(
-        [...removedBatch, ...changedBatch].map((rel) => path.resolve(compileRoot, rel))
+        [...removedBatch, ...changedBatch].map((rel) => path.resolve(compileRoot, rel)),
+        (result) => refreshCompilerState(result.sourceFiles)
       )
-      if (result) {
-        try {
-          await refreshCompilerState(result.sourceFiles)
-        } finally {
-          await result.report()
-        }
-      } else {
+      if (!result) {
         for (const rel of removedBatch) removed.add(rel)
         for (const rel of changedBatch) changed.add(rel)
         // 节点图失败也可能已有新的 Lua 依赖，仍需登记监听。
@@ -2338,42 +2352,40 @@ async function main() {
       if (file) await runSingle(file, opts)
       else {
         const actionStart = injectProfileEnabled(opts) ? performance.now() : 0
-        const res = await runBatch(opts)
-        if (!res) return
-        try {
-          const extractStart = injectProfileEnabled(opts) ? performance.now() : 0
-          const extracted = maybeExtractResources({
-            cfgDir: res.cfgDir,
-            injectCfg: res.cfg.inject,
-            opts,
-            lang: res.lang,
-            parsedGil: res.parsedGil
-          })
-          if (injectProfileEnabled(opts)) {
-            const extractMs = performance.now() - extractStart
-            console.log(
-              '[pipeline-profile]',
-              JSON.stringify({
-                kind: 'gsts-pipeline-profile',
-                version: 1,
-                mode: 'batch',
-                configFile: path.basename(resolveConfigPath(opts)),
-                stats: res.profile?.stats,
-                timingsMs: {
-                  initialConfigLoad: roundMs(initialConfigLoadMs),
-                  startupBeforeAction: roundMs(actionStart - mainStart),
-                  batch: roundMs(res.profile?.timingsMs.total ?? 0),
-                  extraction: roundMs(extractMs),
-                  total: roundMs(performance.now() - mainStart)
-                },
-                batch: res.profile,
-                extraction: extracted?.profile
-              })
-            )
+        await runBatch(opts, {
+          onComplete(res) {
+            const extractStart = injectProfileEnabled(opts) ? performance.now() : 0
+            const extracted = maybeExtractResources({
+              cfgDir: res.cfgDir,
+              injectCfg: res.cfg.inject,
+              opts,
+              lang: res.lang,
+              parsedGil: res.parsedGil
+            })
+            if (injectProfileEnabled(opts)) {
+              const extractMs = performance.now() - extractStart
+              console.log(
+                '[pipeline-profile]',
+                JSON.stringify({
+                  kind: 'gsts-pipeline-profile',
+                  version: 1,
+                  mode: 'batch',
+                  configFile: path.basename(resolveConfigPath(opts)),
+                  stats: res.profile?.stats,
+                  timingsMs: {
+                    initialConfigLoad: roundMs(initialConfigLoadMs),
+                    startupBeforeAction: roundMs(actionStart - mainStart),
+                    batch: roundMs(res.profile?.timingsMs.total ?? 0),
+                    extraction: roundMs(extractMs),
+                    total: roundMs(performance.now() - mainStart)
+                  },
+                  batch: res.profile,
+                  extraction: extracted?.profile
+                })
+              )
+            }
           }
-        } finally {
-          await res.report()
-        }
+        })
       }
     })
 
