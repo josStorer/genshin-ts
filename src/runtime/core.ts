@@ -1,4 +1,4 @@
-import { clientControlScript } from './lua-entry.js'
+import { clientControlScript } from './lua_entry.js'
 import { CLIENT_GRAPH_ENTRY_SPEC_BY_SUB_TYPE } from '../definitions/client_graph_modes.js'
 import { isClientNodeTypeAvailable } from '../definitions/client_method_modes.js'
 import { registerClientEntityHelperContext } from '../definitions/entity_helpers.js'

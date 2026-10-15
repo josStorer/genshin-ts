@@ -29,7 +29,7 @@ fs.copyFileSync(srcProto, distProto)
 console.log('[ok] copied', srcProto, '->', distProto)
 
 const extraDtsFiles = [
-  path.join(repoRoot, 'src', 'runtime', 'lua-globals.d.ts'),
+  path.join(repoRoot, 'src', 'runtime', 'lua_globals.d.ts'),
   path.join(repoRoot, 'src', 'definitions', 'server_on_overloads.d.ts'),
   path.join(repoRoot, 'src', 'runtime', 'IR.d.ts')
 ]
@@ -64,7 +64,7 @@ fs.cpSync(
 )
 
 // Keep the runtime writer table and TypeScript signal types on one data source.
-const { luaSignalWriters } = await import('../dist/src/runtime/lua-signals.js')
+const { luaSignalWriters } = await import('../dist/src/runtime/lua_signals.js')
 const writerTable = (suffix = '') =>
   Object.entries(luaSignalWriters)
     .map(([name, method]) => `${name}="${method}${suffix}"`)

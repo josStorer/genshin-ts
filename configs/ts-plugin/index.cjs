@@ -188,7 +188,7 @@ function init(modules) {
       if (!sourceFile) return base
       const checker = program.getTypeChecker()
       const filtered = base.filter((d) => !shouldSuppress2538(d, sourceFile, checker))
-      if (program.getCompilerOptions().types?.includes('genshin-ts/runtime/lua-globals')) {
+      if (program.getCompilerOptions().types?.includes('genshin-ts/runtime/lua_globals')) {
         const { getLuaDiagnostics } = require('../../dist/src/compiler/lua/editor.cjs')
         return filtered.concat(getLuaDiagnostics(sourceFile, program))
       }

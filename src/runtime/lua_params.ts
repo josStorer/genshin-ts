@@ -1,4 +1,4 @@
-import type { ControlTypes, Script } from './lua-host.js'
+import type { ControlTypes, Script } from './lua_host.js'
 
 export type LuaParam =
   | { type: 'number'; default?: number }

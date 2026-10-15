@@ -1,5 +1,5 @@
-import type { ClientUIBaseControl } from './lua-host.js'
-import type { LuaSignalDefinition, LuaSignalParams, LuaSignalValues } from './lua-signals.js'
+import type { ClientUIBaseControl } from './lua_host.js'
+import type { LuaSignalDefinition, LuaSignalParams, LuaSignalValues } from './lua_signals.js'
 
 declare global {
   /** 当前脚本挂载的客户端控件，等价于 lua.script.object。 */

@@ -36,8 +36,8 @@ function resolveBuiltins(program: ts.Program) {
   // SDK 文件只在建表时定位一次；访问器比较 symbol，不依赖用户变量名或接口同名。
   const sdkFiles: Record<string, string> = {
     'lua.d.ts': 'helpers',
-    'lua-core.d.ts': 'core',
-    'lua-entry.d.ts': 'entry'
+    'lua_core.d.ts': 'core',
+    'lua_entry.d.ts': 'entry'
   }
   for (const source of program.getSourceFiles()) {
     const kind = sdkFiles[source.fileName.replaceAll('\\', '/').split('/').at(-1)!]

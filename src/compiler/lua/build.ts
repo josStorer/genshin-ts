@@ -154,7 +154,7 @@ function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
   const root = path.resolve(input.rootDir)
   const outDir = path.resolve(input.outDir)
   const sdkRoot = path.join(packageRoot(), 'dist/src/runtime')
-  const globals = path.join(sdkRoot, 'lua-globals.d.ts')
+  const globals = path.join(sdkRoot, 'lua_globals.d.ts')
   if (!fs.existsSync(globals)) throw new Error(t('lua_typesMissing'))
   const options: tstl.CompilerOptions = {
     target: ts.ScriptTarget.ES2022,
@@ -215,7 +215,7 @@ function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
   let sourceReads = 0
   const host = ts.createCompilerHost(options)
   const runtimeMap: Record<string, string> = {
-    'genshin-ts/runtime/core': 'lua-core.d.ts',
+    'genshin-ts/runtime/core': 'lua_core.d.ts',
     'genshin-ts/runtime/lua': 'lua.d.ts'
   }
   const virtual = new Map<string, string>(stableResolution ? oldHost?.virtual : undefined)

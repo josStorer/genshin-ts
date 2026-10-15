@@ -3,20 +3,14 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": [
-      "ES2022"
-    ],
-    "types": [
-      "genshin-ts/runtime/lua-globals"
-    ],
+    "lib": ["ES2022"],
+    "types": ["genshin-ts/runtime/lua_globals"],
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "genshin-ts/runtime/core": [
-        "../../dist/src/runtime/lua-core.d.ts"
-      ]
+      "genshin-ts/runtime/core": ["../../dist/src/runtime/lua_core.d.ts"]
     },
     "plugins": [
       {

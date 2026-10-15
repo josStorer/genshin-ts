@@ -2,7 +2,7 @@ import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
 import { t } from '../../i18n/index.js'
-import { luaSignalWriters } from '../../runtime/lua-signals.js'
+import { luaSignalWriters } from '../../runtime/lua_signals.js'
 import { getLuaBuiltins, numberConstants } from './builtins.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
 import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl-compat.js'

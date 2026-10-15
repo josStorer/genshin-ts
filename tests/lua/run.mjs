@@ -62,7 +62,7 @@ const result = success(
   build({
     'counter.ts': `export let count=0; export let state={count:0}; export function inc(){count++;state={count}}`,
     'bridge.ts': `export {count, state, inc} from './counter'`,
-    'native.d.ts': `import type {LuaMultiReturn} from 'genshin-ts/runtime/lua-primitives'; export function pair(this:void): LuaMultiReturn<[number,number]>`,
+    'native.d.ts': `import type {LuaMultiReturn} from 'genshin-ts/runtime/lua_primitives'; export function pair(this:void): LuaMultiReturn<[number,number]>`,
     'native.lua': `return {pair=function() return 4, 5 end}`,
     'main.ts': `import {g} from 'genshin-ts/runtime/core'; import {count,state,inc} from './bridge'; import {pair} from './native';
   export default g.clientControlScript(lua=>{ let elapsed=0; const before=count; class Counter {value=0; add(n:number){this.value+=n;return this.value}}; const c=new Counter();

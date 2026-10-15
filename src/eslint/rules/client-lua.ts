@@ -17,7 +17,7 @@ export function luaRule(warnings: boolean): Rule.RuleModule {
           if (!source || !ts.isSourceFile(source)) return
           const isolated = services.program
             .getCompilerOptions()
-            .types?.includes('genshin-ts/runtime/lua-globals')
+            .types?.includes('genshin-ts/runtime/lua_globals')
           if (!isolated && !entryCall(source)) return
           for (const diagnostic of getLuaDiagnostics(source, services.program)) {
             if ((diagnostic.category === ts.DiagnosticCategory.Warning) !== warnings) continue

@@ -5,17 +5,17 @@ import type {
   HostEnums,
   HostGame,
   Script
-} from './lua-host.js'
-import type { readParams } from './lua-params.js'
-import type { LuaMulti, LuaMultiReturn } from './lua-primitives.js'
-import type { LuaStandardGlobals } from './lua-standard.js'
+} from './lua_host.js'
+import type { readParams } from './lua_params.js'
+import type { LuaMulti, LuaMultiReturn } from './lua_primitives.js'
+import type { LuaStandardGlobals } from './lua_standard.js'
 
-export type * from './lua-standard.js'
+export type * from './lua_standard.js'
 
-export { readParams } from './lua-params.js'
+export { readParams } from './lua_params.js'
 
-export type * from './lua-host.js'
-export type { LuaMultiReturn } from './lua-primitives.js'
+export type * from './lua_host.js'
+export type { LuaMultiReturn } from './lua_primitives.js'
 
 /** 官方按名称调用这些函数；不需要全部填写。 */
 export interface ClientScriptHooks {

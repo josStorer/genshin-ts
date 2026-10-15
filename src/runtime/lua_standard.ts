@@ -1,6 +1,6 @@
-import type { LuaIterable, LuaMultiReturn } from './lua-primitives.js'
+import type { LuaIterable, LuaMultiReturn } from './lua_primitives.js'
 
-export type { LuaIterable } from './lua-primitives.js'
+export type { LuaIterable } from './lua_primitives.js'
 type ProtectedResult<R> = LuaMultiReturn<
   [true, ...(R extends LuaMultiReturn<infer Values> ? Values : [R])] | [false, unknown]
 >

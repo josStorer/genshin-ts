@@ -1,4 +1,4 @@
-import type { Vector3Value } from './lua-host.js'
+import type { Vector3Value } from './lua_host.js'
 
 /** 类型声明、静态发送代码及动态发送辅助库共用这张表。 */
 export const luaSignalWriters = {
