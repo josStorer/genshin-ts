@@ -31,8 +31,25 @@ lua.assert(CLIENT_BLOCKED_SERVER_HELPERS.length>0);
 }}})`
   })
 )
-for (const name of luaDataModules) assert(result.files.has(`__gsts_data/${name}.lua`), name)
+assert(result.files.has('__gsts_data/prefabs/CharacterPrefab.lua'))
+assert(!result.files.has('__gsts_data/prefabs/CharacterPrefabZh.lua'))
+assert(!result.files.has('__gsts_data/prefabs.lua'))
 execute(result.files, "require('main');OnStart()")
+const staticResult = successful(
+  buildFixture({
+    'main.ts': `import{g}from'genshin-ts/runtime/core';import{CharacterPrefab,CharacterPrefabZh}from'genshin-ts/definitions/prefabs';export default g.clientControlScript(lua=>{return{onStart(){lua.assert(CharacterPrefab.Amber===10000021);lua.assert(CharacterPrefabZh.丽莎===10000006)}}})`
+  })
+)
+assert(![...staticResult.files.keys()].some((name) => name.startsWith('__gsts_data/')))
+execute(staticResult.files, "require('main');OnStart()")
+const namespaceResult = successful(
+  buildFixture({
+    'main.ts': `import{g}from'genshin-ts/runtime/core';import*as data from'genshin-ts/definitions/prefabs';export default g.clientControlScript(lua=>{const key=lua.tostring('Amber') as keyof typeof data.CharacterPrefab;return{onStart(){lua.assert(data.CharacterPrefab.Amber===10000021);lua.assert(data.CharacterPrefab[key]===10000021)}}})`
+  })
+)
+assert(namespaceResult.files.has('__gsts_data/prefabs/CharacterPrefab.lua'))
+assert(!namespaceResult.files.has('__gsts_data/prefabs.lua'))
+execute(namespaceResult.files, "require('main');OnStart()")
 for (const module of [
   'genshin-ts/definitions/enum',
   'genshin-ts/definitions/client_enums',

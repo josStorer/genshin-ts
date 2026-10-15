@@ -4,6 +4,7 @@ import * as lua from 'typescript-to-lua'
 import { t } from '../../i18n/index.js'
 import { luaSignalWriters } from '../../runtime/lua_signals.js'
 import { getLuaBuiltins, numberConstants } from './builtins.js'
+import { luaDataConstant, luaDataModule } from './data-modules.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
 import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl-compat.js'
 
@@ -24,6 +25,64 @@ export function createLuaPlugin(
   const getters = new Map<ts.SourceFile, lua.TableFieldExpression[]>()
   const helperLocals = new Map<ts.SourceFile, lua.Identifier>()
   const booleanLocals = new Map<ts.SourceFile, lua.Identifier>()
+  const dataBindings = new Map<ts.Symbol, { module: string; key?: string }>()
+  const dataLocals = new Map<ts.SourceFile, Map<string, lua.Identifier>>()
+  function dataReference(
+    node: ts.Expression,
+    ctx: lua.TransformationContext
+  ): { module: string; key?: string } | undefined {
+    if (ts.isIdentifier(node)) {
+      const symbol = ctx.checker.getSymbolAtLocation(node)
+      return symbol && dataBindings.get(symbol)
+    }
+    if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+      const parent = dataReference(node.expression, ctx)
+      const key = ts.isPropertyAccessExpression(node)
+        ? node.name.text
+        : ts.isStringLiteralLike(node.argumentExpression)
+          ? node.argumentExpression.text
+          : undefined
+      if (parent && !parent.key && key) return { module: parent.module, key }
+    }
+    return undefined
+  }
+  function dataValue(reference: { module: string; key?: string }, ctx: lua.TransformationContext) {
+    const module = `__gsts_data.${reference.module}${reference.key ? '.' + reference.key : ''}`
+    const locals = dataLocals.get(ctx.sourceFile)!
+    let local = locals.get(module)
+    if (!local) {
+      local = id(ctx.createTempName('data'))
+      locals.set(module, local)
+      imports
+        .get(ctx.sourceFile)!
+        .push(lua.createVariableDeclarationStatement(local, requireModule(module)))
+    }
+    return local
+  }
+  function dataAccess(
+    node: ts.PropertyAccessExpression | ts.ElementAccessExpression,
+    ctx: lua.TransformationContext
+  ) {
+    const root = dataReference(node.expression, ctx)
+    const staticKey =
+      ts.isPropertyAccessExpression(node) ||
+      ts.isStringLiteralLike(node.argumentExpression) ||
+      ts.isNumericLiteral(node.argumentExpression)
+    if (root && staticKey) {
+      const key = ts.isPropertyAccessExpression(node)
+        ? node.name.text
+        : (node.argumentExpression as ts.StringLiteral | ts.NumericLiteral).text
+      const constant = root.key ? luaDataConstant(root.module, root.key, key) : undefined
+      if (typeof constant === 'number') return lua.createNumericLiteral(constant, node)
+      if (typeof constant === 'string') return str(constant, node)
+      if (typeof constant === 'boolean') return lua.createBooleanLiteral(constant, node)
+      const type = ctx.checker.getTypeAtLocation(node)
+      if (type.isNumberLiteral()) return lua.createNumericLiteral(type.value, node)
+      if (type.isStringLiteral()) return str(type.value, node)
+    }
+    const reference = dataReference(node, ctx)
+    return reference ? dataValue(reference, ctx) : undefined
+  }
   function helpers(ctx: lua.TransformationContext) {
     let local = helperLocals.get(ctx.sourceFile)
     if (!local) {
@@ -73,6 +132,7 @@ export function createLuaPlugin(
         const builtins = getLuaBuiltins(ctx.program)
         const prelude: lua.Statement[] = []
         imports.set(node, prelude)
+        dataLocals.set(node, new Map())
         getters.set(node, [])
         const entry = entryCall(node)
         // Register every alias before visiting bodies. This also covers uses before import declarations.
@@ -82,6 +142,25 @@ export function createLuaPlugin(
           const clause = statement.importClause
           if (clause?.isTypeOnly) continue
           const moduleName = statement.moduleSpecifier.text
+          const dataModule = luaDataModule(moduleName)
+          if (dataModule) {
+            const named = clause?.namedBindings
+            if (named && ts.isNamespaceImport(named)) {
+              const symbol = ctx.checker.getSymbolAtLocation(named.name)
+              if (symbol) dataBindings.set(symbol, { module: dataModule })
+            } else if (named) {
+              for (const item of named.elements) {
+                if (item.isTypeOnly) continue
+                const symbol = ctx.checker.getSymbolAtLocation(item.name)
+                if (symbol)
+                  dataBindings.set(symbol, {
+                    module: dataModule,
+                    key: (item.propertyName ?? item.name).text
+                  })
+              }
+            }
+            continue
+          }
           if (
             builtins.modules.get(builtins.symbolAt(statement.moduleSpecifier)!) === 'core' &&
             clause?.namedBindings &&
@@ -245,6 +324,8 @@ export function createLuaPlugin(
         return statements
       },
       [ts.SyntaxKind.Identifier]: (node, ctx) => {
+        const data = dataReference(node, ctx)
+        if (data) return dataValue(data, ctx)
         const builtin = getLuaBuiltins(ctx.program).global(node)
         if (builtin === 'Boolean') {
           let local = booleanLocals.get(ctx.sourceFile)
@@ -278,6 +359,9 @@ export function createLuaPlugin(
       },
       [ts.SyntaxKind.ShorthandPropertyAssignment]: (node, ctx) => {
         const symbol = ctx.checker.getShorthandAssignmentValueSymbol(node)
+        const data = symbol && dataBindings.get(symbol)
+        if (data)
+          return lua.createTableFieldExpression(dataValue(data, ctx), str(node.name.text), node)
         const value = symbol && bindings.get(symbol)
         return value
           ? lua.createTableFieldExpression(value, str(node.name.text), node)
@@ -416,6 +500,8 @@ export function createLuaPlugin(
         return []
       },
       [ts.SyntaxKind.PropertyAccessExpression]: (node, ctx) => {
+        const data = dataAccess(node, ctx)
+        if (data) return data
         const builtins = getLuaBuiltins(ctx.program)
         const member = builtins.member(node.name)
         if (member === 'helper') return helpers(ctx)
@@ -426,6 +512,7 @@ export function createLuaPlugin(
         return adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx)
       },
       [ts.SyntaxKind.ElementAccessExpression]: (node, ctx) =>
+        dataAccess(node, ctx) ??
         adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx),
       [ts.SyntaxKind.ParenthesizedExpression]: (node, ctx) =>
         adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx),

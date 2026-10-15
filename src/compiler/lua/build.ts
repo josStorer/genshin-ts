@@ -657,15 +657,19 @@ function transpileLua(
   }
   timer.mark('transpile')
   // 增量编译会复用未改动模块的文本；从最终引用集合收集数据模块，类型导入不产生文件。
-  for (const name of luaDataModules) {
-    if ([...files.values()].some((text) => text.includes(`"__gsts_data.${name}"`)))
-      files.set(
-        `__gsts_data/${name}.lua`,
-        fs.readFileSync(
-          path.join(packageRoot(), 'dist/src/runtime/lua-assets/data_modules', name + '.lua'),
-          'utf8'
-        )
+  const dataReferences = new Set<string>()
+  for (const text of files.values())
+    for (const match of text.matchAll(/"__gsts_data\.([A-Za-z_][\w]*)(?:\.([A-Za-z_][\w]*))?"/g))
+      if (luaDataModules.some((name) => name === match[1]))
+        dataReferences.add(match[2] ? `${match[1]}/${match[2]}` : match[1])
+  for (const name of dataReferences) {
+    files.set(
+      `__gsts_data/${name}.lua`,
+      fs.readFileSync(
+        path.join(packageRoot(), 'dist/src/runtime/lua-assets/data_modules', name + '.lua'),
+        'utf8'
       )
+    )
   }
 }
 
