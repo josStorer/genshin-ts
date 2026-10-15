@@ -166,7 +166,7 @@ import { Signal } from '../definitions/signals'
 send(Signal['操作输入'], 20, true)
 ```
 
-类型和参数顺序取自 `defineSignal` 元数据。静态契约直接生成 `AddFloat`、`AddBool` 等调用；动态契约使用相同映射的辅助函数。每次发送新建信号对象，各参数只求值一次，按源码顺序执行。Lua 不支持的信号参数类型会报错，不能仅凭 TS number 猜应该发送整数还是浮点数。
+类型和参数顺序取自 `defineSignal` 元数据。所有 `send` 都调用同一个运行时辅助函数，按 `signal.params` 和统一种类表选择 `AddFloat`、`AddBool` 等写入方法。发送和接收共用参数数量、类型、整数范围、列表和向量检查；发送校验失败会报出信号名和字段名，参数数量错误则报告信号名，并且不会创建宿主信号对象。各参数按源码顺序只求值一次，校验通过后每次新建信号对象。不能仅凭 TS number 猜应该发送整数还是浮点数。
 
 `console.log/info` 输出普通日志；`warn` 带警告前缀；`error` 使用 `printerr`；`assert` 失败记录日志而不抛错；`trace` 输出调用栈。多参数与含 `%` 的文本不会触发格式化。需要中断时使用 `throw` 或 `lua.error`。
 

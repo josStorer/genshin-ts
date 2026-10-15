@@ -113,7 +113,7 @@ import { Signal } from '../definitions/signals'
 send(Signal['操作输入'], 20, true)
 ```
 
-`defineSignal` metadata determines types and parameter order. Static definitions compile directly to AddFloat/AddBool/etc.; dynamic definitions use the same writer mapping through a helper. Each send creates a new signal, evaluates arguments once in source order and rejects unsupported signal types. A number alone cannot tell the compiler whether the host expects an integer or a float.
+`defineSignal` metadata determines types and parameter order. Every `send` calls the same runtime helper, which selects AddFloat/AddBool/etc. from `signal.params` and the shared kind table. Sending and receiving use the same count, type, integer-range, list and vector checks. Invalid sends report the signal and field name (or just the signal for a count error) before creating any host signal. Arguments are evaluated once in source order; each valid send creates a fresh signal. A number alone cannot tell the compiler whether the host expects an integer or a float.
 
 Receive with `lua.onSignal(Signal.Input, evt => console.log(evt.params.speed))`. The return value cancels that subscription idempotently. One host listener per instance/name dispatches multiple subscriptions in order. New subscriptions start with the next message; cancelled ones are skipped. A failing subscriber is logged without stopping the others. Do not mix raw Register/Unregister calls with managed subscriptions for the same script/name. Payload counts, scalar types, integer ranges, list items and vectors are checked before delivery. Invalid messages are logged and discarded. LuaEntityValue/LuaGuidValue represent host values, not node graph entity wrappers. Actual host payloads still require game acceptance.
 
