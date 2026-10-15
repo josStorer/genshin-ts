@@ -9,6 +9,7 @@ const suites = {
     'methods',
     'sdk-paths',
     'signals',
+    'timers',
     'shared-modules',
     'standard-library',
     'data-modules',

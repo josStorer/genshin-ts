@@ -103,7 +103,7 @@
   "lua_outputOutsideOutDir": "Lua output escapes outDir: {{arg0}}",
   "lua_importGraphEntry": "Node graph entries cannot be imported as Lua modules. Move shared constants or functions into a regular TS module.",
   "lua_invalidEntry": "The entry must call g.clientControlScript exported by genshin-ts/runtime/core.",
-  "lua_optionsEmpty": "Only empty options {} are supported for now. You can also pass just the callback.",
+  "lua_optionsEmpty": "Use an options object literal; timerClock accepts only 'level' or 'real'. You may also omit options and pass just the callback.",
   "lua_invalidCallback": "Declare the script as (lua) => { ...; return { ... } }.",
   "lua_returnHooks": "Return the lifecycle object directly at the end of the callback.",
   "lua_publicMethodThis": "The engine calls public methods as plain functions. Access script state through closures; class methods can still use this.",

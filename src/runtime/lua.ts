@@ -47,7 +47,10 @@ export interface ClientGlobals extends LuaStandardGlobals {
   /** 按信号契约接收具名参数；监听由当前脚本实例管理，取消函数可重复调用。 */
   readonly onSignal: LuaOnSignal
 }
-export type ClientControlScriptOptions = Record<string, never>
+export interface ClientControlScriptOptions {
+  /** level（默认）随关卡时间，real 使用 OnUpdate；EnableUpdate(false) 会暂停定时器推进。 */
+  timerClock?: 'level' | 'real'
+}
 declare const scriptDefinition: unique symbol
 export type ClientMethods = Record<string, (this: void, ...args: never[]) => unknown>
 /** 仅用于类型推断；入口在编译时展开，不会创建这个对象。 */

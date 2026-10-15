@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import ts from 'typescript'
 
-import { luaStandardLibrary, unavailableLuaGlobals } from './standard_library.js'
+import { luaStandardLibrary, luaTimerGlobals, unavailableLuaGlobals } from './standard_library.js'
 
 const tables = new WeakMap<ts.Program, LuaBuiltins>()
 const packageRoot = path.dirname(createRequire(import.meta.url).resolve('genshin-ts/package.json'))
@@ -45,6 +45,7 @@ function resolveBuiltins(program: ts.Program) {
     'Map',
     'Set',
     'globalThis',
+    ...luaTimerGlobals,
     ...unavailableLuaGlobals
   ]) {
     const symbol = checker.resolveName(name, undefined, ts.SymbolFlags.Value, false)

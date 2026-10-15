@@ -103,7 +103,7 @@
   "lua_outputOutsideOutDir": "Lua 输出越过 outDir：{{arg0}}",
   "lua_importGraphEntry": "节点图入口不能作为 Lua 模块导入；请把共享常量或函数移到普通 TS 模块。",
   "lua_invalidEntry": "入口必须调用 genshin-ts/runtime/core 导出的 g.clientControlScript。",
-  "lua_optionsEmpty": "目前配置只支持空对象 {}，也可以只传回调。",
+  "lua_optionsEmpty": "入口配置请使用对象字面量；timerClock 只接受 'level' 或 'real'，也可以省略配置只传回调。",
   "lua_invalidCallback": "请使用 (lua) => { …; return { … } } 形式声明脚本。",
   "lua_returnHooks": "回调最后必须直接返回生命周期对象。",
   "lua_publicMethodThis": "公开方法由官方作为普通函数调用，请通过闭包访问脚本状态；class 方法仍可正常使用 this。",

@@ -35,7 +35,7 @@ function lint(code, rules = {}) {
 const entry = (body) =>
   `import{g}from'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{${body};return{onStart(){lua.print('test')}}})`
 const bad = entry(
-  `const missing=undefined;const obj={missing};const arr=[1,undefined,,2];delete arr[0];const n=1n;const b=BigInt(1);if(0){};if(''){};const nil=null;if(1==1){};setTimeout(()=>{},100);Math.cosh(1)`
+  `const missing=undefined;const obj={missing};const arr=[1,undefined,,2];delete arr[0];const n=1n;const b=BigInt(1);if(0){};if(''){};const nil=null;if(1==1){};queueMicrotask(()=>{});Math.cosh(1)`
 )
 const [result] = await lint(bad)
 for (const name of [

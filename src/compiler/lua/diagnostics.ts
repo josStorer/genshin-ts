@@ -3,7 +3,7 @@ import ts from 'typescript'
 import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
 import { getSharedModuleDiagnostics } from './shared_modules.js'
-import { standardLibraryDiagnostic } from './standard_library.js'
+import { luaTimerGlobals, standardLibraryDiagnostic } from './standard_library.js'
 import { diagnostic, entryCall, hooks, nodeGraphCalls, publicMethodFunction } from './syntax.js'
 
 export { getSharedModuleDiagnostics } from './shared_modules.js'
@@ -79,7 +79,15 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
       call.arguments.length < 1 ||
       call.arguments.length > 2 ||
       (call.arguments.length === 2 &&
-        (!ts.isObjectLiteralExpression(call.arguments[0]) || call.arguments[0].properties.length))
+        (!ts.isObjectLiteralExpression(call.arguments[0]) ||
+          call.arguments[0].properties.some(
+            (property) =>
+              !ts.isPropertyAssignment(property) ||
+              !ts.isIdentifier(property.name) ||
+              property.name.text !== 'timerClock' ||
+              !ts.isStringLiteralLike(property.initializer) ||
+              !['level', 'real'].includes(property.initializer.text)
+          )))
     )
       diagnostics.push(issue(call, 'lua_optionsEmpty'))
     if (
@@ -192,6 +200,12 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
   const managedSignals: (string | undefined)[] = []
   const rawSignals: { name: string | undefined; node: ts.Node }[] = []
   const visit = (node: ts.Node) => {
+    if (
+      !call &&
+      ts.isIdentifier(node) &&
+      luaTimerGlobals.some((name) => builtins.global(node) === name)
+    )
+      diagnostics.push(issue(node, 'lua_instanceScope'))
     if (ts.isCallExpression(node)) {
       const member = builtins.member(node.expression)
       const argument = node.arguments[0]

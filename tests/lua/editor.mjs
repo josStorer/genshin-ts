@@ -22,7 +22,7 @@ const source = `import {g} from 'genshin-ts/runtime/core';
 export default g.clientControlScript(lua=>{
  if (0) {}
  const n=lua.tonumber("0") ?? 0; const negated=!n; const fallback=n || 1;
- const unavailable=setTimeout; new Boolean(0); Math.cosh(1);
+ const unavailable=queueMicrotask; new Boolean(0); Math.cosh(1);
  lua./*env*/;
  lua.game./*game*/;
  if(lua.helper.isControl(self,'ClientUITextBoxControl')) {self./*control*/;}
@@ -68,8 +68,10 @@ const global =
   service
     .getCompletionsAtPosition(file, source.indexOf(' return'), {})
     ?.entries.map((x) => x.name) ?? []
-for (const name of ['GameObject', 'stage', 'level', 'setTimeout', 'process', 'document'])
+for (const name of ['GameObject', 'stage', 'level', 'process', 'document'])
   assert.ok(!global.includes(name), name)
+for (const name of ['setTimeout', 'setInterval', 'clearTimeout', 'clearInterval'])
+  assert.ok(global.includes(name), name)
 const require = createRequire(import.meta.url)
 const plugin = require('../../configs/ts-plugin/index.cjs')({ typescript: ts })
 const proxy = plugin.create({ languageService: service })

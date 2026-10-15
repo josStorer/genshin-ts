@@ -5,6 +5,7 @@ import { t } from '../../i18n/index.js'
 import { luaSignalWriters } from '../../runtime/lua_signals.js'
 import { getLuaBuiltins, numberConstants } from './builtins.js'
 import { luaDataConstant, luaDataModule } from './data_modules.js'
+import { luaTimerGlobals } from './standard_library.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
 import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl_compat.js'
 
@@ -26,6 +27,7 @@ export function createLuaPlugin(
   const helperLocals = new Map<ts.SourceFile, lua.Identifier>()
   const booleanLocals = new Map<ts.SourceFile, lua.Identifier>()
   const scopeLocals = new Map<ts.SourceFile, lua.Identifier>()
+  const timerScopes = new Set<ts.SourceFile>()
   function scope(ctx: lua.TransformationContext, node: ts.Node) {
     if (!entryCall(ctx.sourceFile)) ctx.diagnostics.push(diagnostic(node, t('lua_instanceScope')))
     let local = scopeLocals.get(ctx.sourceFile)
@@ -295,10 +297,30 @@ export function createLuaPlugin(
         }
         const instance = scopeLocals.get(node)
         if (instance) {
+          let clock: lua.Expression = lua.createNilLiteral()
+          if (timerScopes.has(node)) {
+            const option = entry?.arguments.length === 2 ? entry.arguments[0] : undefined
+            const timerClock =
+              option && ts.isObjectLiteralExpression(option)
+                ? option.properties.find(
+                    (property) =>
+                      property.name &&
+                      ts.isIdentifier(property.name) &&
+                      property.name.text === 'timerClock'
+                  )
+                : undefined
+            clock = str(
+              timerClock &&
+                ts.isPropertyAssignment(timerClock) &&
+                ts.isStringLiteralLike(timerClock.initializer)
+                ? timerClock.initializer.text
+                : 'level'
+            )
+          }
           prelude.push(
             lua.createVariableDeclarationStatement(
               instance,
-              lua.createCallExpression(field(helpers(ctx), 'createScope'), [id('_ENV')])
+              lua.createCallExpression(field(helpers(ctx), 'createScope'), [id('_ENV'), clock])
             )
           )
           result.statements.push(
@@ -355,6 +377,10 @@ export function createLuaPlugin(
         const data = dataReference(node, ctx)
         if (data) return dataValue(data, ctx)
         const builtin = getLuaBuiltins(ctx.program).global(node)
+        if (luaTimerGlobals.some((name) => name === builtin)) {
+          timerScopes.add(ctx.sourceFile)
+          return field(scope(ctx, node), builtin!)
+        }
         if (builtin === 'Boolean') {
           let local = booleanLocals.get(ctx.sourceFile)
           if (!local) {

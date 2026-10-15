@@ -124,13 +124,53 @@ local function validSignalValue(kind, value)
 end
 
 -- One scope per mounted script, never per shared require module.
-function M.createScope(env)
+function M.createScope(env, clock)
     local scope, groups, keys = {}, {}, {}
     local active, destroyed = false, false
+    local disabled, ticking = false, false
+    local now, tasks, order = 0, {}, {}
     local function report(message) env.printerr("[GSTS] " .. tostring(message)) end
     local function safe(fn, ...)
         local ok, message = pcall(fn, ...)
         if not ok then report(message) end
+    end
+    local function schedule(callback, delay, repeated, ...)
+        if destroyed or disabled then error("Cannot schedule a timer on a disabled or destroyed script") end
+        delay = delay or 0
+        if type(callback) ~= "function" or type(delay) ~= "number" or delay ~= delay or math.abs(delay) == math.huge then error("Invalid timer callback or delay") end
+        delay = math.max(0, delay)
+        local handle = {}
+        tasks[handle] = {callback=callback, delay=delay, due=now+delay, repeated=repeated, args={n=select('#',...),...}}
+        order[#order+1] = handle
+        if active and #order == 1 then env.script:EnableUpdate(true) end
+        return handle
+    end
+    function scope.setTimeout(callback, delay, ...) return schedule(callback, delay, false, ...) end
+    function scope.setInterval(callback, delay, ...) return schedule(callback, delay, true, ...) end
+    function scope.clearTimeout(handle) if handle ~= nil then tasks[handle] = nil end end
+    scope.clearInterval = scope.clearTimeout
+    function scope.tick(dt)
+        if not active or destroyed or ticking then return end
+        if type(dt) ~= "number" or dt < 0 or dt ~= dt or dt == math.huge then report("Invalid timer delta"); return end
+        ticking = true
+        now = now + dt * 1000
+        local snapshot = {}
+        for i, handle in ipairs(order) do snapshot[i] = handle end
+        for _, handle in ipairs(snapshot) do
+            if not active or destroyed then break end
+            local task = tasks[handle]
+            if task and task.due <= now then
+                if task.repeated then
+                    task.due = task.delay > 0 and (now + task.delay - (now - task.due) % task.delay) or now
+                else tasks[handle] = nil end
+                local ok, message = pcall(task.callback, table.unpack(task.args, 1, task.args.n))
+                if not ok then tasks[handle] = nil; report(message) end
+            end
+        end
+        local remaining = {}
+        for _, handle in ipairs(order) do if tasks[handle] then remaining[#remaining+1] = handle end end
+        order = remaining
+        ticking = false
     end
     local function register(group)
         if group.registered or #group.listeners == 0 then return end
@@ -206,16 +246,25 @@ function M.createScope(env)
     function scope.activate()
         if active or destroyed then return end
         active = true
+        disabled = false
         for _, group in pairs(groups) do register(group) end
         for _, key in ipairs(keys) do if key.enabled then key.off = M.listenKey(key.control, key.event, key.callback) end end
+        if clock and #order > 0 then env.script:EnableUpdate(true) end
     end
     function scope.deactivate(destroy)
         active = false
+        disabled = true
+        tasks, order = {}, {}
         for _, group in pairs(groups) do unregister(group) end
         for _, key in ipairs(keys) do if key.off then safe(key.off); key.off = nil end end
         if destroy then destroyed = true; groups = {}; keys = {} end
     end
     function scope.install()
+        if clock then
+            local name = clock == 'real' and 'OnUpdate' or 'OnLevelUpdate'
+            local hook = env[name]
+            env[name] = function(dt) scope.tick(dt); if hook then return hook(dt) end end
+        end
         for _, name in ipairs({"OnStart", "OnEnable"}) do
             local hook = env[name]
             env[name] = function(...) scope.activate(); if hook then return hook(...) end end

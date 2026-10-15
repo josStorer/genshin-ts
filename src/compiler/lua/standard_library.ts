@@ -121,11 +121,13 @@ export const luaStandardLibrary: Readonly<Record<string, readonly string[]>> = {
   Set: ['size', 'add', 'clear', 'delete', 'entries', 'forEach', 'has', 'keys', 'values']
 }
 
-export const unavailableLuaGlobals = [
+export const luaTimerGlobals = [
   'setTimeout',
   'setInterval',
   'clearTimeout',
-  'clearInterval',
+  'clearInterval'
+] as const
+export const unavailableLuaGlobals = [
   'requestAnimationFrame',
   'cancelAnimationFrame',
   'queueMicrotask',
