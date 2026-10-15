@@ -1435,6 +1435,266 @@ async function runDev(opts: GlobalOptions) {
     }
   }
 
+  // dev 按轮次串行执行；这里只保存本轮节点图结果，统一输出交给外层。
+  const graphResult: {
+    summary: { compilation: string; injection: string }
+    runtimeSourceFiles?: string[]
+  } = { summary: { compilation: '', injection: '' } }
+  const runGraphChanges = async (
+    excludeFiles: string[],
+    { removed: removedRels, changed: rels }: { removed: string[]; changed: string[] }
+  ) => {
+    const queuedOutJson = new Map<string, Set<number>>()
+    const queueOutJson = (outJson: string, gid: number) => {
+      const s = queuedOutJson.get(outJson) ?? new Set<number>()
+      s.add(gid)
+      queuedOutJson.set(outJson, s)
+    }
+    const pendingEntryGs = new Set<string>()
+    const retiredSources = new Set<string>()
+
+    const processEntryOutputs = async (entryOutFiles: string[]) => {
+      if (!entryOutFiles.length && !retiredSources.size) return
+      const sourceJsonPaths = entryOutFiles.map(resolveIrOutputPath)
+      const graphIds = new Set<number>()
+      // Keep old memberships before replacing them, including entries that disappeared.
+      for (const source of [...sourceJsonPaths, ...retiredSources]) {
+        for (const gid of sourceJsonToGraphIds.get(source) ?? []) graphIds.add(gid)
+      }
+
+      if (entryOutFiles.length) {
+        console.log('')
+        ui.info(t('startGia'))
+        const moduleFiles = collectActiveModuleFiles()
+        await emitIrJsonForEntries(entryOutFiles, {
+          cwd: cfgDir,
+          lang,
+          moduleFiles,
+          moduleRoot: outDirAbs,
+          runtimeOptions: {
+            precompileExpression: cfg.options?.optimize?.precompileExpression ?? true,
+            removeUnusedNodes: cfg.options?.optimize?.removeUnusedNodes ?? true
+          }
+        })
+      }
+
+      const nextSourceIds = new Map<string, Set<number>>()
+      for (const irPath of sourceJsonPaths) {
+        const ids = new Set(readJsonAsList(irPath).map(getGraphIdFromIrDocLike))
+        nextSourceIds.set(irPath, ids)
+        for (const gid of ids) graphIds.add(gid)
+      }
+
+      // Include the connected source/graph group: a source can contain several graphs.
+      // Merging whole documents must not replace another graph with a subset of its sources.
+      const unionSources = new Set(sourceJsonPaths)
+      for (const gid of graphIds) {
+        for (const source of graphIdToSources.get(gid) ?? []) {
+          if (retiredSources.has(source) || !fs.existsSync(source)) continue
+          unionSources.add(source)
+          for (const related of nextSourceIds.get(source) ??
+            sourceJsonToGraphIds.get(source) ??
+            []) {
+            graphIds.add(related)
+          }
+        }
+      }
+
+      const merged = await mergeIrJsonFilesByGraphIdAsync({
+        outDirAbs,
+        irJsonPaths: [...unionSources]
+      })
+      const nextOutputs = new Set(merged.map((m) => m.outJsonPath))
+      for (const gid of graphIds) {
+        const prevOut = graphIdToMergedJsonPath.get(gid)
+        if (prevOut && !nextOutputs.has(prevOut) && isMergedJsonFile(prevOut)) {
+          deleteIfExists(prevOut)
+        }
+        graphIdToSources.delete(gid)
+        graphIdToMergedJsonPath.delete(gid)
+        graphIdToMergeResult.delete(gid)
+      }
+      for (const source of [...unionSources, ...retiredSources]) sourceJsonToGraphIds.delete(source)
+      // Replace pending memberships too: a failed graph can later move IDs or lose all sources.
+      for (const gid of graphIds) pendingGiaGraphIds.delete(gid)
+      for (const result of merged) pendingGiaGraphIds.add(result.graphId)
+      // Retire by graph ID: single/multiple/merged outputs can use different GIA filenames.
+      for (const [giaPath, item] of lastInjectedGiaItems) {
+        if (item.targetId !== undefined && graphIds.has(item.targetId)) deleteIfExists(giaPath)
+      }
+      updateMergeCache(
+        merged.map((m) => ({
+          graphId: m.graphId,
+          outJsonPath: m.outJsonPath,
+          sourceJsonPaths: m.sourceJsonPaths,
+          sourceIndex: m.sourceIndex ?? null,
+          mergedOutput: m.mergedOutput === true
+        }))
+      )
+      for (const result of merged) queueOutJson(result.outJsonPath, result.graphId)
+    }
+
+    const impactedEntryNorms = new Set<string>()
+    for (const rel of removedRels) {
+      const abs = path.resolve(compileRoot, rel)
+      for (const dependent of collectDependents(depGraph, abs)) {
+        if (entrySources.has(dependent)) impactedEntryNorms.add(dependent)
+      }
+      removeFileFromDeps(depGraph, abs)
+      const norm = normForMap(abs)
+      entrySources.delete(norm)
+      entryOutBySource.delete(norm)
+    }
+
+    const changedAbs = rels.map((rel) => path.resolve(compileRoot, rel))
+    invalidateTsToGsProgramCache(programCache, [
+      ...removedRels.map((rel) => path.resolve(compileRoot, rel)),
+      ...changedAbs
+    ])
+    for (const abs of changedAbs) {
+      updateDepsForFile(depGraph, abs, compilerOptions)
+    }
+
+    for (const rel of removedRels) {
+      const gsOut = path.resolve(outDirAbs, rel.replace(/\.ts$/i, '.gs.ts'))
+      const irPath = resolveIrOutputPath(gsOut)
+      retiredSources.add(irPath)
+      deleteIfExists(gsOut)
+      deleteIfExists(gsOut.replace(/\.gs\.ts$/i, '.gs.js'))
+      deleteIfExists(gsOut.replace(/\.gs\.ts$/i, '.gs.js.map'))
+      deleteIfExists(irPath)
+    }
+
+    for (const abs of changedAbs) {
+      const dependents = collectDependents(depGraph, abs)
+      for (const dep of dependents) {
+        if (entrySources.has(dep)) impactedEntryNorms.add(dep)
+      }
+    }
+
+    const changedRelSet = new Set(rels)
+    const impactedEntryRels = [...impactedEntryNorms]
+      .map((norm) => depGraph.absByNorm.get(norm))
+      .filter((abs): abs is string => !!abs)
+      .map((abs) => path.relative(compileRoot, abs).replace(/\\/g, '/'))
+      .filter((rel) => rel && !changedRelSet.has(rel))
+
+    const compileRels = [...new Set([...rels, ...impactedEntryRels])]
+    if (compileRels.length) {
+      graphResult.summary.compilation = t('summary_failed')
+      graphResult.summary.injection = t('summary_compileFailed')
+      ui.info(t('startCompile'))
+      const compileResult = await compileTsToGs({
+        cfgDir,
+        cfg,
+        excludeFiles,
+        emitEntries: compileRels,
+        programEntries: cfg.entries,
+        programCache,
+        onWriteGs: (p) => ui.ok(p)
+      })
+      graphResult.runtimeSourceFiles = compileResult.runtimeSourceFiles
+      registerRuntimeSources(compileResult.runtimeSourceFiles)
+      const { entryOutFiles } = compileResult
+      const currentEntries = new Set(entryOutFiles.map((p) => path.resolve(p)))
+      for (const rel of compileRels) {
+        const norm = normForMap(path.resolve(compileRoot, rel))
+        const previous = entryOutBySource.get(norm)
+        if (previous && !currentEntries.has(path.resolve(previous))) {
+          const irPath = resolveIrOutputPath(previous)
+          retiredSources.add(irPath)
+          deleteIfExists(irPath)
+          entrySources.delete(norm)
+          entryOutBySource.delete(norm)
+        }
+      }
+      updateEntryMapping(entryOutFiles)
+      entryOutFiles.forEach((p) => pendingEntryGs.add(p))
+    }
+
+    if (pendingEntryGs.size || retiredSources.size) {
+      graphResult.summary.compilation = t('summary_failed')
+      graphResult.summary.injection = t('summary_compileFailed')
+    }
+    await processEntryOutputs([...pendingEntryGs].filter((p) => fs.existsSync(p)))
+
+    const entries = [...queuedOutJson.entries()]
+    const tasks = entries.flatMap(([outJson, gids]) => {
+      const metadata = [...gids]
+        .map((graphId) => graphIdToMergeResult.get(graphId))
+        .filter((result): result is MergeResult => !!result && result.outJsonPath === outJson)
+      if (metadata.length === gids.size) return planGiaTasksFromMergeResults(metadata)
+      const fallback = planGiaTaskFromOutJson(outJson, gids)
+      return fallback ? [fallback] : []
+    })
+
+    let all: { irPath: string; giaPath: string; graphId: number }[] = []
+    if (tasks.length) {
+      try {
+        all = await writeGiaFromIrJsonFiles(tasks, {
+          cwd: cfgDir,
+          onOkLine: (msg) => ui.ok(msg)
+        })
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
+        ui.error(msg.replace('[error]', '').trim())
+        process.exitCode = 1
+        all = []
+      }
+    }
+    if (!tasks.length || all.length) {
+      graphResult.summary.compilation =
+        compileRels.length || retiredSources.size
+          ? t('summary_generatedGia', { arg0: all.length })
+          : t('summary_unchanged')
+      graphResult.summary.injection = opts.noinject
+        ? t('summary_disabled')
+        : cfg.inject
+          ? t('summary_noInjection')
+          : t('summary_noMap')
+    }
+    if (all.length) {
+      for (const item of all) pendingGiaGraphIds.delete(item.graphId)
+      trackGiaItems(all.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })))
+    }
+
+    for (const [outJson] of entries) {
+      ui.ok(outJson)
+      // GIA 输出由 runner 实时打印，这里避免重复输出
+    }
+
+    if (all.length && !opts.noinject && cfg.inject) {
+      graphResult.summary.injection = t('summary_failed')
+      const stat = runInjectionAttempt(
+        () =>
+          injectMany({
+            giaItems: all.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })),
+            opts,
+            gilCfg: cfg.inject,
+            useConfiguredTargetId: false,
+            lang,
+            t
+          }),
+        injectionHooks
+      )
+      graphResult.summary.injection = t('summary_injected', {
+        arg0: stat.ok,
+        arg1: stat.skipped,
+        arg2: stat.fail
+      })
+      if (stat.fail) process.exitCode = 1
+      ui.info(
+        t('injectAllDone', {
+          ok: stat.ok,
+          skipped: stat.skipped,
+          fail: stat.fail,
+          count: stat.count,
+          ms: roundMs(stat.totalMs)
+        })
+      )
+    }
+  }
+
   const runChanged = async () => {
     const removedBatch = [...removed],
       changedBatch = [...changed]
@@ -1467,7 +1727,11 @@ async function runDev(opts: GlobalOptions) {
       luaSession,
       [...removedBatch, ...changedBatch].map((rel) => path.resolve(compileRoot, rel))
     )
-    const summary = { compilation: t('summary_unchanged'), injection: t('summary_noInjection') }
+    graphResult.summary = {
+      compilation: t('summary_unchanged'),
+      injection: t('summary_noInjection')
+    }
+    graphResult.runtimeSourceFiles = undefined
     try {
       const luaSources = await luaTask.prepared
       // 失败时先保留旧监听，同时补上已解析的新 TS 依赖，修复后仍能触发编译。
@@ -1480,270 +1744,21 @@ async function runDev(opts: GlobalOptions) {
         // 旧节点图入口改成 Lua 时仍需清理旧产物；共享模块仍走节点图原有影响分析。
         return ![...collectDependents(depGraph, abs)].some((file) => entrySources.has(file))
       }
-      const queuedOutJson = new Map<string, Set<number>>()
-      const queueOutJson = (outJson: string, gid: number) => {
-        const s = queuedOutJson.get(outJson) ?? new Set<number>()
-        s.add(gid)
-        queuedOutJson.set(outJson, s)
-      }
-      const pendingEntryGs = new Set<string>()
-      const retiredSources = new Set<string>()
-
-      const processEntryOutputs = async (entryOutFiles: string[]) => {
-        if (!entryOutFiles.length && !retiredSources.size) return
-        const sourceJsonPaths = entryOutFiles.map(resolveIrOutputPath)
-        const graphIds = new Set<number>()
-        // Keep old memberships before replacing them, including entries that disappeared.
-        for (const source of [...sourceJsonPaths, ...retiredSources]) {
-          for (const gid of sourceJsonToGraphIds.get(source) ?? []) graphIds.add(gid)
-        }
-
-        if (entryOutFiles.length) {
-          console.log('')
-          ui.info(t('startGia'))
-          const moduleFiles = collectActiveModuleFiles()
-          await emitIrJsonForEntries(entryOutFiles, {
-            cwd: cfgDir,
-            lang,
-            moduleFiles,
-            moduleRoot: outDirAbs,
-            runtimeOptions: {
-              precompileExpression: cfg.options?.optimize?.precompileExpression ?? true,
-              removeUnusedNodes: cfg.options?.optimize?.removeUnusedNodes ?? true
-            }
-          })
-        }
-
-        const nextSourceIds = new Map<string, Set<number>>()
-        for (const irPath of sourceJsonPaths) {
-          const ids = new Set(readJsonAsList(irPath).map(getGraphIdFromIrDocLike))
-          nextSourceIds.set(irPath, ids)
-          for (const gid of ids) graphIds.add(gid)
-        }
-
-        // Include the connected source/graph group: a source can contain several graphs.
-        // Merging whole documents must not replace another graph with a subset of its sources.
-        const unionSources = new Set(sourceJsonPaths)
-        for (const gid of graphIds) {
-          for (const source of graphIdToSources.get(gid) ?? []) {
-            if (retiredSources.has(source) || !fs.existsSync(source)) continue
-            unionSources.add(source)
-            for (const related of nextSourceIds.get(source) ??
-              sourceJsonToGraphIds.get(source) ??
-              []) {
-              graphIds.add(related)
-            }
-          }
-        }
-
-        const merged = await mergeIrJsonFilesByGraphIdAsync({
-          outDirAbs,
-          irJsonPaths: [...unionSources]
-        })
-        const nextOutputs = new Set(merged.map((m) => m.outJsonPath))
-        for (const gid of graphIds) {
-          const prevOut = graphIdToMergedJsonPath.get(gid)
-          if (prevOut && !nextOutputs.has(prevOut) && isMergedJsonFile(prevOut)) {
-            deleteIfExists(prevOut)
-          }
-          graphIdToSources.delete(gid)
-          graphIdToMergedJsonPath.delete(gid)
-          graphIdToMergeResult.delete(gid)
-        }
-        for (const source of [...unionSources, ...retiredSources])
-          sourceJsonToGraphIds.delete(source)
-        // Replace pending memberships too: a failed graph can later move IDs or lose all sources.
-        for (const gid of graphIds) pendingGiaGraphIds.delete(gid)
-        for (const result of merged) pendingGiaGraphIds.add(result.graphId)
-        // Retire by graph ID: single/multiple/merged outputs can use different GIA filenames.
-        for (const [giaPath, item] of lastInjectedGiaItems) {
-          if (item.targetId !== undefined && graphIds.has(item.targetId)) deleteIfExists(giaPath)
-        }
-        updateMergeCache(
-          merged.map((m) => ({
-            graphId: m.graphId,
-            outJsonPath: m.outJsonPath,
-            sourceJsonPaths: m.sourceJsonPaths,
-            sourceIndex: m.sourceIndex ?? null,
-            mergedOutput: m.mergedOutput === true
-          }))
-        )
-        for (const result of merged) queueOutJson(result.outJsonPath, result.graphId)
-      }
-
-      const removedRels = removedBatch.filter(
-        (rel) => isEligibleInputTsFile(rel) && !isLuaOnly(rel, true)
-      )
-      const rels = changedBatch.filter((rel) => isEligibleInputTsFile(rel) && !isLuaOnly(rel))
-
-      const impactedEntryNorms = new Set<string>()
-      for (const rel of removedRels) {
-        const abs = path.resolve(compileRoot, rel)
-        for (const dependent of collectDependents(depGraph, abs)) {
-          if (entrySources.has(dependent)) impactedEntryNorms.add(dependent)
-        }
-        removeFileFromDeps(depGraph, abs)
-        const norm = normForMap(abs)
-        entrySources.delete(norm)
-        entryOutBySource.delete(norm)
-      }
-
-      const changedAbs = rels.map((rel) => path.resolve(compileRoot, rel))
-      invalidateTsToGsProgramCache(programCache, [
-        ...removedRels.map((rel) => path.resolve(compileRoot, rel)),
-        ...changedAbs
-      ])
-      for (const abs of changedAbs) {
-        updateDepsForFile(depGraph, abs, compilerOptions)
-      }
-
-      for (const rel of removedRels) {
-        const gsOut = path.resolve(outDirAbs, rel.replace(/\.ts$/i, '.gs.ts'))
-        const irPath = resolveIrOutputPath(gsOut)
-        retiredSources.add(irPath)
-        deleteIfExists(gsOut)
-        deleteIfExists(gsOut.replace(/\.gs\.ts$/i, '.gs.js'))
-        deleteIfExists(gsOut.replace(/\.gs\.ts$/i, '.gs.js.map'))
-        deleteIfExists(irPath)
-      }
-
-      for (const abs of changedAbs) {
-        const dependents = collectDependents(depGraph, abs)
-        for (const dep of dependents) {
-          if (entrySources.has(dep)) impactedEntryNorms.add(dep)
-        }
-      }
-
-      const changedRelSet = new Set(rels)
-      const impactedEntryRels = [...impactedEntryNorms]
-        .map((norm) => depGraph.absByNorm.get(norm))
-        .filter((abs): abs is string => !!abs)
-        .map((abs) => path.relative(compileRoot, abs).replace(/\\/g, '/'))
-        .filter((rel) => rel && !changedRelSet.has(rel))
-
-      const compileRels = [...new Set([...rels, ...impactedEntryRels])]
-      if (compileRels.length) {
-        summary.compilation = t('summary_failed')
-        summary.injection = t('summary_compileFailed')
-        ui.info(t('startCompile'))
-        const compileResult = await compileTsToGs({
-          cfgDir,
-          cfg,
-          excludeFiles: luaSources.excludeFiles,
-          emitEntries: compileRels,
-          programEntries: cfg.entries,
-          programCache,
-          onWriteGs: (p) => ui.ok(p)
-        })
-        luaSession.graphFiles = new Set(compileResult.runtimeSourceFiles)
-        registerRuntimeSources(compileResult.runtimeSourceFiles)
-        const { entryOutFiles } = compileResult
-        const currentEntries = new Set(entryOutFiles.map((p) => path.resolve(p)))
-        for (const rel of compileRels) {
-          const norm = normForMap(path.resolve(compileRoot, rel))
-          const previous = entryOutBySource.get(norm)
-          if (previous && !currentEntries.has(path.resolve(previous))) {
-            const irPath = resolveIrOutputPath(previous)
-            retiredSources.add(irPath)
-            deleteIfExists(irPath)
-            entrySources.delete(norm)
-            entryOutBySource.delete(norm)
-          }
-        }
-        updateEntryMapping(entryOutFiles)
-        entryOutFiles.forEach((p) => pendingEntryGs.add(p))
-      }
-
-      if (pendingEntryGs.size || retiredSources.size) {
-        summary.compilation = t('summary_failed')
-        summary.injection = t('summary_compileFailed')
-      }
-      await processEntryOutputs([...pendingEntryGs].filter((p) => fs.existsSync(p)))
-
-      const entries = [...queuedOutJson.entries()]
-      const tasks = entries.flatMap(([outJson, gids]) => {
-        const metadata = [...gids]
-          .map((graphId) => graphIdToMergeResult.get(graphId))
-          .filter((result): result is MergeResult => !!result && result.outJsonPath === outJson)
-        if (metadata.length === gids.size) return planGiaTasksFromMergeResults(metadata)
-        const fallback = planGiaTaskFromOutJson(outJson, gids)
-        return fallback ? [fallback] : []
+      await runGraphChanges(luaSources.excludeFiles, {
+        removed: removedBatch.filter((rel) => isEligibleInputTsFile(rel) && !isLuaOnly(rel, true)),
+        changed: changedBatch.filter((rel) => isEligibleInputTsFile(rel) && !isLuaOnly(rel))
       })
-
-      let all: { irPath: string; giaPath: string; graphId: number }[] = []
-      if (tasks.length) {
-        try {
-          all = await writeGiaFromIrJsonFiles(tasks, {
-            cwd: cfgDir,
-            onOkLine: (msg) => ui.ok(msg)
-          })
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : String(e)
-          ui.error(msg.replace('[error]', '').trim())
-          process.exitCode = 1
-          all = []
-        }
-      }
-      if (!tasks.length || all.length) {
-        summary.compilation =
-          compileRels.length || retiredSources.size
-            ? t('summary_generatedGia', { arg0: all.length })
-            : t('summary_unchanged')
-        summary.injection = opts.noinject
-          ? t('summary_disabled')
-          : cfg.inject
-            ? t('summary_noInjection')
-            : t('summary_noMap')
-      }
-      if (all.length) {
-        for (const item of all) pendingGiaGraphIds.delete(item.graphId)
-        trackGiaItems(all.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })))
-      }
-
-      for (const [outJson] of entries) {
-        ui.ok(outJson)
-        // GIA 输出由 runner 实时打印，这里避免重复输出
-      }
-
-      if (all.length && !opts.noinject && cfg.inject) {
-        summary.injection = t('summary_failed')
-        const stat = runInjectionAttempt(
-          () =>
-            injectMany({
-              giaItems: all.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })),
-              opts,
-              gilCfg: cfg.inject,
-              useConfiguredTargetId: false,
-              lang,
-              t
-            }),
-          injectionHooks
-        )
-        summary.injection = t('summary_injected', {
-          arg0: stat.ok,
-          arg1: stat.skipped,
-          arg2: stat.fail
-        })
-        if (stat.fail) process.exitCode = 1
-        ui.info(
-          t('injectAllDone', {
-            ok: stat.ok,
-            skipped: stat.skipped,
-            fail: stat.fail,
-            count: stat.count,
-            ms: roundMs(stat.totalMs)
-          })
-        )
-      }
     } catch (error) {
       for (const rel of removedBatch) removed.add(rel)
       for (const rel of changedBatch) changed.add(rel)
       ui.error(errorText(error))
       process.exitCode = 1
     } finally {
+      if (graphResult.runtimeSourceFiles)
+        luaSession.graphFiles = new Set(graphResult.runtimeSourceFiles)
       const luaResult = await luaTask.result.catch(() => undefined)
       await watchLuaSources(luaSession.dependencies ?? [], !!luaResult)
-      console.log(formatBuildSummary('graph', summary))
+      console.log(formatBuildSummary('graph', graphResult.summary))
       await luaTask.finish()
     }
   }
