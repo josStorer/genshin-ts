@@ -22,7 +22,7 @@ local text=${JSON.stringify(result.files.get('main.lua'))}
 local function mount()
  local errors={}
  local script={object={},enables=0}
- function script:EnableUpdate(value) assert(value);self.enables=self.enables+1 end
+ function script:EnableUpdate(value) self.updates=value;self.enables=self.enables+1 end
  local env=setmetatable({script=script,printerr=function(msg)errors[#errors+1]=msg end},{__index=_G})
  assert(load(text,'timer.lua','t',env))();return env,errors
 end

@@ -92,6 +92,17 @@ export function generateScopeHooks(
       )
     ])
   }
+  const update = functions.get('OnUpdate')
+  if (update)
+    update.body = lua.createBlock([
+      lua.createIfStatement(
+        lua.createCallExpression(
+          lua.createTableIndexExpression(scope, lua.createStringLiteral('wantsUpdate')),
+          []
+        ),
+        update.body
+      )
+    ])
   if (model.scope.timers) {
     const fn = hook(model.options.timerClock === 'real' ? 'OnUpdate' : 'OnLevelUpdate', true)
     // 用户可以省略未使用的 dt；调度器仍需接收宿主的第一个参数。

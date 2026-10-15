@@ -102,6 +102,9 @@ function resolveBuiltins(program: ts.Program) {
             .getTypeOfSymbolAtLocation(script, source)
             .getProperty('RegisterServerSignalHandler')
         if (handler) members.set(handler, 'rawSignalHandler')
+        const update =
+          script && checker.getTypeOfSymbolAtLocation(script, source).getProperty('EnableUpdate')
+        if (update) members.set(update, 'enableUpdate')
       }
       if (kind === 'helpers' && symbol.name === 'ClientHelpers') {
         const member = checker.getDeclaredTypeOfSymbol(symbol).getProperty('listenKey')
@@ -110,7 +113,12 @@ function resolveBuiltins(program: ts.Program) {
     }
   }
   function symbolAt(node: ts.Node) {
-    const symbol = checker.getSymbolAtLocation(node)
+    let symbol = checker.getSymbolAtLocation(node)
+    if (!symbol && ts.isElementAccessExpression(node)) {
+      const key = checker.getTypeAtLocation(node.argumentExpression)
+      if (key.isStringLiteral())
+        symbol = checker.getTypeAtLocation(node.expression).getProperty(key.value)
+    }
     return symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
   }
   function standardMemberSymbol(symbol: ts.Symbol | undefined) {
@@ -152,6 +160,40 @@ function resolveBuiltins(program: ts.Program) {
         symbolAt(node) ??
           (name ? checker.getTypeAtLocation(node.expression).getProperty(name) : undefined)
       )
+    },
+    /** 只接管当前入口的 script；查询到的其他脚本仍调用官方方法。 */
+    isCurrentScript(node: ts.Expression): boolean {
+      const seen = new Set<ts.Symbol>()
+      let current = node
+      while (true) {
+        const symbol = symbolAt(current)
+        if (symbol && members.get(symbol) === 'script') return true
+        if (!symbol || seen.has(symbol)) return false
+        seen.add(symbol)
+        const declaration = symbol.valueDeclaration
+        if (declaration && ts.isVariableDeclaration(declaration) && declaration.initializer) {
+          current = declaration.initializer
+          continue
+        }
+        if (
+          declaration &&
+          ts.isBindingElement(declaration) &&
+          ts.isObjectBindingPattern(declaration.parent)
+        ) {
+          const initializer = declaration.parent.parent
+          const key = declaration.propertyName ?? declaration.name
+          if (
+            ts.isVariableDeclaration(initializer) &&
+            initializer.initializer &&
+            ts.isIdentifier(key)
+          ) {
+            const type = checker.getTypeAtLocation(initializer.initializer)
+            const property = type.getProperty(key.text)
+            return property !== undefined && members.get(property) === 'script'
+          }
+        }
+        return false
+      }
     },
     standardType(node: ts.Expression) {
       const type = checker.getTypeAtLocation(node)

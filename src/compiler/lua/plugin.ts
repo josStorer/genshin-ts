@@ -37,6 +37,26 @@ export function createLuaPlugin(
     }
     return local
   }
+  function scopedUpdate(node: ts.Expression, ctx: lua.TransformationContext) {
+    if (!(ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node))) return false
+    const builtins = getLuaBuiltins(ctx.program)
+    if (builtins.member(node) !== 'enableUpdate' || !builtins.isCurrentScript(node.expression))
+      return false
+    const model = analyzeLuaEntry(ctx.sourceFile, ctx.program).model
+    return !!model && (model.scope.signals || model.scope.keys || model.scope.timers)
+  }
+  // 方法引用仍接收 TSTL 的 self 槽，实际开关归属当前挂载的作用域。
+  function updateReference(ctx: lua.TransformationContext) {
+    const enabled = id('enabled')
+    return lua.createFunctionExpression(
+      lua.createBlock([
+        lua.createExpressionStatement(
+          lua.createCallExpression(field(scope(ctx), 'enableUpdate'), [enabled])
+        )
+      ]),
+      [id('_'), enabled]
+    )
+  }
   const dataBindings = new Map<ts.Symbol, { module: string; key?: string }>()
   const dataLocals = new Map<ts.SourceFile, Map<string, lua.Identifier>>()
   function dataReference(
@@ -488,6 +508,7 @@ export function createLuaPlugin(
         return []
       },
       [ts.SyntaxKind.PropertyAccessExpression]: (node, ctx) => {
+        if (scopedUpdate(node, ctx)) return updateReference(ctx)
         const data = dataAccess(node, ctx)
         if (data) return data
         const builtins = getLuaBuiltins(ctx.program)
@@ -501,8 +522,10 @@ export function createLuaPlugin(
         return adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx)
       },
       [ts.SyntaxKind.ElementAccessExpression]: (node, ctx) =>
-        dataAccess(node, ctx) ??
-        adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx),
+        scopedUpdate(node, ctx)
+          ? updateReference(ctx)
+          : (dataAccess(node, ctx) ??
+            adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx)),
       [ts.SyntaxKind.ParenthesizedExpression]: (node, ctx) =>
         adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx),
       [ts.SyntaxKind.AsExpression]: (node, ctx) =>
@@ -511,6 +534,12 @@ export function createLuaPlugin(
         adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx),
       [ts.SyntaxKind.CallExpression]: (node, ctx) => {
         const callee = node.expression
+        if (scopedUpdate(callee, ctx))
+          return lua.createCallExpression(
+            field(scope(ctx), 'enableUpdate'),
+            transformOrderedExpressions(ctx, node.arguments),
+            node
+          )
         const builtins = getLuaBuiltins(ctx.program)
         if (builtins.member(callee) === 'require') {
           const argument = node.arguments[0]

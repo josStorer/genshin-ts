@@ -48,7 +48,7 @@ export interface ClientGlobals extends LuaStandardGlobals {
   readonly onSignal: LuaOnSignal
 }
 export interface ClientControlScriptOptions {
-  /** level（默认）随关卡时间，real 使用 OnUpdate；EnableUpdate(false) 会暂停定时器推进。 */
+  /** level（默认）随关卡时间，real 使用 OnUpdate；当前脚本关闭用户更新不会暂停框架定时器。 */
   timerClock?: 'level' | 'real'
 }
 declare const scriptDefinition: unique symbol

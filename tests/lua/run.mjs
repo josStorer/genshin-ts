@@ -13,6 +13,7 @@ const suites = {
     'scope-lifecycle',
     'signal-kinds',
     'timers',
+    'update-ownership',
     'source-maps',
     'mounts',
     'scaffold',

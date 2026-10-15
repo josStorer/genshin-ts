@@ -123,6 +123,10 @@ local function validSignalValue(kind, value)
     return kind == "float" or (value % 1 == 0 and math.abs(value) <= 9007199254740991)
 end
 
+-- Pending in-game confirmation: assume EnableUpdate also gates OnLevelUpdate.
+-- Keeping it enabled for level timers is correct under either known host interpretation.
+local LEVEL_CLOCK_NEEDS_UPDATE = true
+
 -- One scope belongs to one mount. The ordered list owns every external subscription.
 function M.createScope(env, clock)
     local scope, groups, subscriptions = {}, {}, {}
@@ -130,6 +134,23 @@ function M.createScope(env, clock)
     -- Repeating a state change and activating a destroyed scope are ignored.
     local state = "idle"
     local now, tasks, order, ticking = 0, {}, {}, false
+    local userWantsUpdate, actualUpdate = false, false
+    -- The host switch belongs to the scope; timer demand never changes user intent.
+    local function syncUpdate()
+        local timerNeedsUpdate = clock == "real" or (clock == "level" and LEVEL_CLOCK_NEEDS_UPDATE)
+        local enabled = state == "active" and (userWantsUpdate or (timerNeedsUpdate and next(tasks) ~= nil))
+        if enabled ~= actualUpdate then
+            actualUpdate = enabled
+            env.script:EnableUpdate(enabled)
+        end
+    end
+    -- Generated user OnUpdate code reads only this intent, never the physical host switch.
+    function scope.wantsUpdate() return state == "active" and userWantsUpdate end
+    -- Only calls targeting the current script are redirected here by the compiler.
+    function scope.enableUpdate(enabled)
+        userWantsUpdate = enabled
+        syncUpdate()
+    end
 
     -- Reporting a callback failure does not abort the remaining subscribers.
     local function report(message) env.printerr("[GSTS] " .. tostring(message)) end
@@ -167,10 +188,10 @@ function M.createScope(env, clock)
     -- The timer queue is one subscription; disabling it drops every pending task.
     local timers = {}
     function timers.activate()
-        if #order > 0 then env.script:EnableUpdate(true) end
+        syncUpdate()
     end
     -- Clock position survives a disable; pending callbacks do not.
-    function timers.deactivate() tasks, order = {}, {} end
+    function timers.deactivate() tasks, order = {}, {}; syncUpdate() end
     timers.dispose = timers.deactivate
     if clock then subscribe(timers) end
 
@@ -183,7 +204,7 @@ function M.createScope(env, clock)
         local handle = {}
         tasks[handle] = {callback=callback, delay=delay, due=now+delay, repeated=repeated, args={n=select('#',...),...}}
         order[#order+1] = handle
-        if state == "active" and #order == 1 then timers.activate() end
+        syncUpdate()
         return handle
     end
     -- Timer handles are opaque identities and belong only to this mount.
@@ -191,7 +212,9 @@ function M.createScope(env, clock)
     -- Missed intervals run once per tick, rather than replaying an unbounded backlog.
     function scope.setInterval(callback, delay, ...) return schedule(callback, delay, true, ...) end
     -- Cancelling an unknown or already cancelled handle is harmless.
-    function scope.clearTimeout(handle) if handle ~= nil then tasks[handle] = nil end end
+    function scope.clearTimeout(handle)
+        if handle ~= nil then tasks[handle] = nil; syncUpdate() end
+    end
     scope.clearInterval = scope.clearTimeout
     -- A tick cannot re-enter itself; tasks created during it run on a later tick.
     function scope.tick(dt)
@@ -216,6 +239,7 @@ function M.createScope(env, clock)
         for _, handle in ipairs(order) do if tasks[handle] then remaining[#remaining+1] = handle end end
         order = remaining
         ticking = false
+        syncUpdate()
     end
 
     -- A signal name has one host registration; all listeners share its validated payload.
@@ -309,12 +333,14 @@ function M.createScope(env, clock)
         if state == "active" or state == "destroyed" then return end
         state = "active"
         visitSubscriptions("activate")
+        syncUpdate()
     end
     -- Disable retains subscriptions for reactivation but always clears pending timers.
     function scope.deactivate()
         if state == "inactive" or state == "destroyed" then return end
         state = "inactive"
         visitSubscriptions("deactivate")
+        syncUpdate()
     end
     -- Destruction is terminal and drops every resource owned by this mount.
     function scope.dispose()
@@ -322,6 +348,7 @@ function M.createScope(env, clock)
         state = "destroyed"
         visitSubscriptions("dispose")
         subscriptions, groups = {}, {}
+        syncUpdate()
     end
     return scope
 end
