@@ -7,10 +7,13 @@ import { luaFileKey } from './incremental.js'
 import { diagnostic, entryCall, isNodeGraphEntry } from './syntax.js'
 
 const indexes = new WeakMap<ts.Program, Set<string>>()
-const projectFiles = new WeakMap<ts.Program, readonly string[]>()
-/** 构建复用 CLI 已发现的候选文件；编辑器按项目配置发现。 */
-export function setSharedProjectFiles(program: ts.Program, files: readonly string[]) {
-  projectFiles.set(program, files)
+const buildProjects = new WeakMap<ts.Program, { root: string; files?: readonly string[] }>()
+/** 构建使用明确的编译根和 CLI 候选；只有编辑器需要向上查找项目配置。 */
+export function setSharedProject(
+  program: ts.Program,
+  project: { root: string; files?: readonly string[] }
+) {
+  buildProjects.set(program, project)
   indexes.delete(program)
 }
 
@@ -18,10 +21,11 @@ export function setSharedProjectFiles(program: ts.Program, files: readonly strin
 function sharedFiles(program: ts.Program, source: ts.SourceFile) {
   const previous = indexes.get(program)
   if (previous) return previous
+  const buildProject = buildProjects.get(program)
   let root = path.dirname(source.fileName)
   let project: string | undefined
   let configFile: string | undefined
-  while (true) {
+  while (!buildProject) {
     configFile = ['gsts.config.ts', 'gsts.config.mts', 'gsts.config.js']
       .map((name) => path.join(root, name))
       .find((file) => ts.sys.fileExists(file))
@@ -37,7 +41,11 @@ function sharedFiles(program: ts.Program, source: ts.SourceFile) {
   const shared = new Set<string>()
   indexes.set(program, shared)
   // Standalone compileLua callers can still share files within their explicit compilation root.
-  root = project ?? program.getCompilerOptions().rootDir ?? path.dirname(source.fileName)
+  root =
+    buildProject?.root ??
+    project ??
+    program.getCompilerOptions().rootDir ??
+    path.dirname(source.fileName)
   let entries = ['**/*']
   const excluded = ['**/node_modules/**', '**/.git/**', '**/.tmp/**']
   if (configFile) {
@@ -69,9 +77,12 @@ function sharedFiles(program: ts.Program, source: ts.SourceFile) {
     }
     inspect(config)
   }
-  entries = entries.map((entry) =>
-    ts.sys.directoryExists(path.resolve(root, entry)) ? entry.replace(/\/$/, '') + '/**/*' : entry
-  )
+  excluded.push(...entries.filter((entry) => entry.startsWith('!')).map((entry) => entry.slice(1)))
+  entries = entries
+    .filter((entry) => !entry.startsWith('!'))
+    .map((entry) =>
+      ts.sys.directoryExists(path.resolve(root, entry)) ? entry.replace(/\/$/, '') + '/**/*' : entry
+    )
   const sources = new Map(program.getSourceFiles().map((file) => [luaFileKey(file.fileName), file]))
   const read = (file: string) => {
     const key = luaFileKey(file)
@@ -85,8 +96,7 @@ function sharedFiles(program: ts.Program, source: ts.SourceFile) {
     return source
   }
   const candidates =
-    projectFiles.get(program) ??
-    ts.sys.readDirectory(root, ['.ts', '.tsx', '.mts'], excluded, entries)
+    buildProject?.files ?? ts.sys.readDirectory(root, ['.ts', '.tsx', '.mts'], excluded, entries)
   const graphRoots: ts.SourceFile[] = [],
     luaRoots: ts.SourceFile[] = []
   for (const file of candidates) {

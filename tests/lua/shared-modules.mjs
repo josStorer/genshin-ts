@@ -102,6 +102,21 @@ fs.writeFileSync(
 fs.writeFileSync(shared, 'export const value=1n')
 const removed = ts.createProgram([path.join(root, 'hud.ts')], options)
 assert.deepEqual(getSharedModuleDiagnostics(removed.getSourceFile(shared), removed), [])
+// An explicit standalone compilation root must not scan the parent project's entries.
+const isolated = path.join(root, 'isolated')
+fs.mkdirSync(isolated)
+fs.writeFileSync(path.join(isolated, 'shared.ts'), 'export const value=self')
+fs.writeFileSync(path.join(isolated, 'hud.ts'), fs.readFileSync(path.join(root, 'hud.ts')))
+fs.writeFileSync(
+  path.join(root, 'graph.ts'),
+  "import{g}from'genshin-ts/runtime/core';import{value}from'./isolated/shared';g.server({id:1073741901})"
+)
+const isolatedBuild = compileLua({
+  entries: [path.join(isolated, 'hud.ts')],
+  rootDir: isolated,
+  outDir: path.join(isolated, 'out')
+})
+assert(!isolatedBuild.diagnostics.some((d) => d.source === 'lua-shared-module'))
 console.log(
   'Shared modules: actual imports and reexports, cross-tsconfig diagnostics, neutral numbers and import removal: PASS'
 )

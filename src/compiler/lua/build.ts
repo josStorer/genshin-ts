@@ -19,7 +19,7 @@ import {
 import { createLuaPlugin, diagnostic, entryCall } from './plugin.js'
 import { lowerPrivateFields } from './private_fields.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
-import { setSharedProjectFiles } from './shared_modules.js'
+import { setSharedProject } from './shared_modules.js'
 import { packageLuaMaps } from './source_maps.js'
 import { isNodeGraphEntry } from './syntax.js'
 import { LocatedLuaError, withLuaErrorLocations } from './tstl_compat.js'
@@ -137,7 +137,7 @@ export function compileLua(
   const resolved = resolveLuaHost(input, cache)
   timer.mark('setup')
   const prepared = prepareLuaProgram(input, resolved, timer, cache)
-  if (input.sharedProjectFiles) setSharedProjectFiles(prepared.program, input.sharedProjectFiles)
+  setSharedProject(prepared.program, { root: resolved.root, files: input.sharedProjectFiles })
   onPrepared?.({
     dependencies: prepared.sources.map((source) => source.fileName),
     graphEntries: prepared.sources
