@@ -1,5 +1,13 @@
 # create-genshin-ts
 
+Pass `--with-lua` to add a client Lua subproject, a minimal timer example, and mounting instructions:
+
+```sh
+npm create genshin-ts@latest my-world -- --with-lua
+```
+
+Without this flag the existing nodegraph template is unchanged. Lua uses its own tsconfig; the default ESLint configuration detects it automatically. File injection does not mount the script in the editor.
+
 Scaffold a Genshin-TS project.
 
 ## Usage

@@ -12,6 +12,7 @@ const suites = {
     'timers',
     'source-maps',
     'mounts',
+    'scaffold',
     'shared-modules',
     'standard-library',
     'data-modules',

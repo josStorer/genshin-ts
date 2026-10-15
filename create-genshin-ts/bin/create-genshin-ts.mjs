@@ -10,6 +10,7 @@ const args = process.argv.slice(2)
 const flags = new Set(args.filter((arg) => arg.startsWith('--')))
 const nameArg = args.find((arg) => !arg.startsWith('--')) ?? ''
 const force = flags.has('--force')
+const withLua = flags.has('--with-lua')
 
 const toPackageName = (input) => {
   const base = input.trim().toLowerCase()
@@ -92,6 +93,20 @@ const run = async () => {
 
   const templateDir = path.resolve(__dirname, '../templates/start')
   await copyDir(templateDir, targetDir, values)
+  if (withLua) {
+    await copyDir(path.resolve(__dirname, '../templates/lua'), targetDir, values)
+    const configPath = path.join(targetDir, 'tsconfig.json')
+    const config = JSON.parse(await fs.readFile(configPath, 'utf8'))
+    config.exclude = [...(config.exclude ?? []), 'src/lua']
+    await fs.writeFile(configPath, JSON.stringify(config, null, 2) + '\n')
+    const packagePath = path.join(targetDir, 'package.json')
+    const manifest = JSON.parse(await fs.readFile(packagePath, 'utf8'))
+    manifest.scripts['typecheck:lua'] = 'tsc -p src/lua/tsconfig.json --noEmit'
+    await fs.writeFile(packagePath, JSON.stringify(manifest, null, 2) + '\n')
+    const guide = await fs.readFile(path.join(targetDir, 'docs/LUA.md'), 'utf8')
+    for (const name of ['AGENTS.md', 'CLAUDE.md'])
+      await fs.appendFile(path.join(targetDir, name), '\n\n' + guide)
+  }
 
   console.log(`\nCreated ${values.projectName}`)
   console.log('\nNext steps:')
