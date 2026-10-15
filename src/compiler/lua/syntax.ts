@@ -1,5 +1,7 @@
 import ts from 'typescript'
 
+import { NODE_GRAPH_ENTRY_FACTORIES } from '../../definitions/node_graph_entries.js'
+
 export const hooks = new Map(
   ['Init', 'Start', 'Enable', 'Disable', 'Update', 'LevelUpdate', 'Destroy'].map((x) => [
     `on${x}`,
@@ -31,7 +33,7 @@ export function diagnostic(node: ts.Node, messageText: string, warning = false):
   }
 }
 
-/** åªè¯†åˆ«ä» GSTS å¯¼å…¥çš„èŠ‚ç‚¹å›¾å·¥å‚ï¼Œé¿å…æŠŠæ™®é€šå¯¹è±¡çš„ server() å½“æˆèŠ‚ç‚¹å›¾ã€‚ */
+/** Ö»Ê¶±ğ´Ó GSTS µ¼ÈëµÄ½ÚµãÍ¼¹¤³§£¬±ÜÃâ°ÑÆÕÍ¨¶ÔÏóµÄ server() µ±³É½ÚµãÍ¼¡£ */
 export function nodeGraphCalls(source: ts.SourceFile): ts.CallExpression[] {
   const imports = new Set<string>()
   const namespaces = new Set<string>()
@@ -50,16 +52,8 @@ export function nodeGraphCalls(source: ts.SourceFile): ts.CallExpression[] {
         if (!item.isTypeOnly && (item.propertyName ?? item.name).text === 'g')
           imports.add(item.name.text)
   }
-  const methods = new Set([
-    'server',
-    'characterSkill',
-    'characterControlSkill',
-    'creationSkill',
-    'creationStatus',
-    'creationStatusDecision',
-    'boolFilter',
-    'intFilter'
-  ])
+  if (!imports.size && !namespaces.size) return []
+  const methods = new Set<string>(NODE_GRAPH_ENTRY_FACTORIES)
   const calls: ts.CallExpression[] = []
   const visit = (node: ts.Node) => {
     if (
