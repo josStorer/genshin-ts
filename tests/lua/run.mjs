@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 const suites = {
   default: [
     'compiler',
+    'entry-model',
     'names',
     'private-fields',
     'methods',

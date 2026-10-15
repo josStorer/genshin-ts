@@ -1,12 +1,12 @@
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
-import { t } from '../../i18n/index.js'
 import { luaSignalWriters } from '../../runtime/lua_signals.js'
 import { getLuaBuiltins, numberConstants } from './builtins.js'
 import { luaDataConstant, luaDataModule } from './data_modules.js'
+import { analyzeLuaEntry } from './entry_analysis.js'
 import { luaTimerGlobals } from './standard_library.js'
-import { diagnostic, entryCall, hooks } from './syntax.js'
+import { hooks } from './syntax.js'
 import { ContextType, getFunctionContextType, transformOrderedExpressions } from './tstl_compat.js'
 
 export { entryCall, diagnostic, hooks } from './syntax.js'
@@ -27,9 +27,7 @@ export function createLuaPlugin(
   const helperLocals = new Map<ts.SourceFile, lua.Identifier>()
   const booleanLocals = new Map<ts.SourceFile, lua.Identifier>()
   const scopeLocals = new Map<ts.SourceFile, lua.Identifier>()
-  const timerScopes = new Set<ts.SourceFile>()
-  function scope(ctx: lua.TransformationContext, node: ts.Node) {
-    if (!entryCall(ctx.sourceFile)) ctx.diagnostics.push(diagnostic(node, t('lua_instanceScope')))
+  function scope(ctx: lua.TransformationContext) {
     let local = scopeLocals.get(ctx.sourceFile)
     if (!local) {
       local = id(ctx.createTempName('scope'))
@@ -147,7 +145,7 @@ export function createLuaPlugin(
         imports.set(node, prelude)
         dataLocals.set(node, new Map())
         getters.set(node, [])
-        const entry = entryCall(node)
+        const entry = analyzeLuaEntry(node, ctx.program).model
         // Register every alias before visiting bodies. This also covers uses before import declarations.
         for (const statement of node.statements) {
           if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
@@ -174,17 +172,6 @@ export function createLuaPlugin(
             }
             continue
           }
-          if (
-            builtins.modules.get(builtins.symbolAt(statement.moduleSpecifier)!) === 'core' &&
-            clause?.namedBindings &&
-            ts.isNamedImports(clause.namedBindings)
-          ) {
-            for (const item of clause.namedBindings.elements) {
-              const name = (item.propertyName ?? item.name).text
-              if (name !== 'g' && name !== 'defineSignal' && !item.isTypeOnly)
-                ctx.diagnostics.push(diagnostic(item, t('lua_graphApi', { arg0: name })))
-            }
-          }
           const moduleKind = builtins.modules.get(builtins.symbolAt(statement.moduleSpecifier)!)
           const helperImport = moduleKind === 'helpers' || moduleKind === 'core'
           const table = id(ctx.createTempName('module'))
@@ -207,7 +194,7 @@ export function createLuaPlugin(
                 if (moduleKind === 'core' && name === 'g') continue
                 if (moduleKind === 'helpers' && name === 'listenKey') {
                   const symbol = ctx.checker.getSymbolAtLocation(item.name)
-                  if (symbol) bindings.set(symbol, field(scope(ctx, item), 'listenKey'))
+                  if (symbol) bindings.set(symbol, field(scope(ctx), 'listenKey'))
                   continue
                 }
                 bind(item.name, name)
@@ -297,26 +284,7 @@ export function createLuaPlugin(
         }
         const instance = scopeLocals.get(node)
         if (instance) {
-          let clock: lua.Expression = lua.createNilLiteral()
-          if (timerScopes.has(node)) {
-            const option = entry?.arguments.length === 2 ? entry.arguments[0] : undefined
-            const timerClock =
-              option && ts.isObjectLiteralExpression(option)
-                ? option.properties.find(
-                    (property) =>
-                      property.name &&
-                      ts.isIdentifier(property.name) &&
-                      property.name.text === 'timerClock'
-                  )
-                : undefined
-            clock = str(
-              timerClock &&
-                ts.isPropertyAssignment(timerClock) &&
-                ts.isStringLiteralLike(timerClock.initializer)
-                ? timerClock.initializer.text
-                : 'level'
-            )
-          }
+          const clock = entry?.scope.timers ? str(entry.options.timerClock) : lua.createNilLiteral()
           prelude.push(
             lua.createVariableDeclarationStatement(
               instance,
@@ -378,8 +346,7 @@ export function createLuaPlugin(
         if (data) return dataValue(data, ctx)
         const builtin = getLuaBuiltins(ctx.program).global(node)
         if (luaTimerGlobals.some((name) => name === builtin)) {
-          timerScopes.add(ctx.sourceFile)
-          return field(scope(ctx, node), builtin!)
+          return field(scope(ctx), builtin!)
         }
         if (builtin === 'Boolean') {
           let local = booleanLocals.get(ctx.sourceFile)
@@ -422,41 +389,16 @@ export function createLuaPlugin(
           : ctx.superTransformNode(node)
       },
       [ts.SyntaxKind.ExportAssignment]: (node, ctx) => {
-        if (node.expression !== entryCall(ctx.sourceFile)) return ctx.superTransformStatements(node)
-        const call = node.expression as ts.CallExpression
-        const setup = call.arguments[call.arguments.length - 1]
-        if (!setup || !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup))) return []
-        const returned = ts.isBlock(setup.body) ? setup.body.statements.at(-1) : undefined
-        const members = new Map<string, ts.ObjectLiteralElementLike>()
-        const hookMembers = new Set<string>()
-        if (
-          returned &&
-          ts.isReturnStatement(returned) &&
-          returned.expression &&
-          ts.isObjectLiteralExpression(returned.expression)
-        ) {
-          for (const hook of returned.expression.properties) {
-            if (!hook.name || !ts.isIdentifier(hook.name)) continue
-            if (
-              hook.name.text === 'methods' &&
-              ts.isPropertyAssignment(hook) &&
-              ts.isObjectLiteralExpression(hook.initializer)
-            ) {
-              for (const method of hook.initializer.properties)
-                if (method.name && ts.isIdentifier(method.name))
-                  members.set(method.name.text, method)
-            } else hookMembers.add(hook.name.text)
-          }
-        }
+        const model = analyzeLuaEntry(ctx.sourceFile, ctx.program).model
+        if (!model || node.expression !== model.call) return ctx.superTransformStatements(node)
+        const setup = model.setup
         const transformed = ctx.transformExpression(setup)
         if (!lua.isFunctionExpression(transformed)) return []
         const body = [...transformed.body.statements]
         const last = body.pop()
         const value = last && lua.isReturnStatement(last) ? last.expressions[0] : undefined
-        if (!value || !lua.isTableExpression(value)) {
-          ctx.diagnostics.push(diagnostic(setup, t('lua_literalHooks')))
-          return []
-        }
+        if (!value || !lua.isTableExpression(value))
+          throw new Error('Validated Lua entry did not produce a hook table')
         if (transformed.params?.length)
           body.unshift(lua.createVariableDeclarationStatement(transformed.params[0], id('_ENV')))
         for (const member of value.fields) {
@@ -464,13 +406,8 @@ export function createLuaPlugin(
           if (name === 'methods' && lua.isTableExpression(member.value)) {
             for (const method of member.value.fields) {
               if (method.key && lua.isStringLiteral(method.key)) {
-                const original = members.get(method.key.value)
-                if (
-                  lua.isFunctionExpression(method.value) &&
-                  original &&
-                  getFunctionContextType(ctx, ctx.checker.getTypeAtLocation(original)) ===
-                    ContextType.NonVoid
-                )
+                const original = model.methods.get(method.key.value)
+                if (lua.isFunctionExpression(method.value) && original?.removeSelf)
                   method.value.params?.shift()
                 if (lua.isFunctionExpression(method.value))
                   method.value.flags |= lua.NodeFlags.Declaration
@@ -481,11 +418,9 @@ export function createLuaPlugin(
             }
             continue
           }
-          const globalName = hookMembers.has(name) ? hooks.get(name) : undefined
-          if (!globalName || !lua.isFunctionExpression(member.value)) {
-            ctx.diagnostics.push(diagnostic(setup, t('lua_hookFunction', { arg0: name })))
-            continue
-          }
+          const globalName = model.hooks.has(name) ? hooks.get(name) : undefined
+          if (!globalName || !lua.isFunctionExpression(member.value))
+            throw new Error('Validated Lua hook did not produce a function')
           member.value.flags |= lua.NodeFlags.Declaration
           body.push(lua.createAssignmentStatement(field(id('_ENV'), globalName), member.value))
         }
@@ -558,7 +493,7 @@ export function createLuaPlugin(
         if (data) return data
         const builtins = getLuaBuiltins(ctx.program)
         const member = builtins.member(node.name)
-        if (member === 'onSignal' || member === 'listenKey') return field(scope(ctx, node), member)
+        if (member === 'onSignal' || member === 'listenKey') return field(scope(ctx), member)
         if (member === 'helper') return helpers(ctx)
         if (member === 'self')
           return field(field(ctx.transformExpression(node.expression), 'script'), 'object')

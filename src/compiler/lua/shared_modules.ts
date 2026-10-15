@@ -3,6 +3,7 @@ import path from 'node:path'
 import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
+import { analyzeLuaEntry } from './entry_analysis.js'
 import { luaFileKey } from './incremental.js'
 import { diagnostic, entryCall, isNodeGraphEntry } from './syntax.js'
 
@@ -103,7 +104,12 @@ function sharedFiles(program: ts.Program, source: ts.SourceFile) {
     if (file.endsWith('.d.ts')) continue
     const source = read(file)
     if (!source) continue
-    if (entryCall(source)) luaRoots.push(source)
+    // 跨 tsconfig 尚未进入 Program 的文件只做发现；已有类型信息的入口读取公共模型。
+    const entry =
+      program.getSourceFile(source.fileName) === source
+        ? analyzeLuaEntry(source, program).model
+        : entryCall(source)
+    if (entry) luaRoots.push(source)
     if (isNodeGraphEntry(source)) graphRoots.push(source)
   }
   if (!luaRoots.length || !graphRoots.length) return shared

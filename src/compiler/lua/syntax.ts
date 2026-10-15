@@ -9,44 +9,6 @@ export const hooks = new Map(
   ])
 )
 
-/** 公开方法可内联，也可引用当前入口回调中声明的函数；不接收需要对象上下文的方法。 */
-export function publicMethodFunction(
-  member: ts.ObjectLiteralElementLike,
-  checker: ts.TypeChecker,
-  body: ts.ConciseBody
-):
-  | ts.FunctionDeclaration
-  | ts.FunctionExpression
-  | ts.ArrowFunction
-  | ts.MethodDeclaration
-  | undefined {
-  if (ts.isMethodDeclaration(member)) return member
-  const value = ts.isPropertyAssignment(member) ? member.initializer : undefined
-  if (value && (ts.isArrowFunction(value) || ts.isFunctionExpression(value))) return value
-  const symbol = ts.isShorthandPropertyAssignment(member)
-    ? checker.getShorthandAssignmentValueSymbol(member)
-    : value && ts.isIdentifier(value)
-      ? checker.getSymbolAtLocation(value)
-      : undefined
-  const declaration = symbol?.valueDeclaration
-  if (
-    declaration &&
-    ts.isFunctionDeclaration(declaration) &&
-    declaration.parent === body &&
-    declaration.body
-  )
-    return declaration
-  if (
-    declaration &&
-    ts.isVariableDeclaration(declaration) &&
-    declaration.parent.parent.parent === body &&
-    declaration.initializer &&
-    (ts.isArrowFunction(declaration.initializer) ||
-      ts.isFunctionExpression(declaration.initializer))
-  )
-    return declaration.initializer
-  return undefined
-}
 export function entryCall(source: ts.SourceFile): ts.CallExpression | undefined {
   // Discovery only. The compiler subsequently verifies the resolved declaration.
   for (const statement of source.statements) {

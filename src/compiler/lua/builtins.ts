@@ -86,6 +86,7 @@ function resolveBuiltins(program: ts.Program) {
     if (!module) continue
     modules.set(module, kind)
     for (const symbol of checker.getExportsOfModule(module)) {
+      if (kind === 'helpers' && symbol.name === 'listenKey') members.set(symbol, 'listenKey')
       if (kind === 'entry' && symbol.name === 'clientControlScript') entry = symbol
       if (kind === 'helpers' && symbol.name === 'ClientGlobals') {
         clientGlobals = symbol

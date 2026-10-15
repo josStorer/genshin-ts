@@ -9,6 +9,7 @@ import { initCliI18n, t, type Lang } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
 import { luaDataModule, luaDataModules } from './data_modules.js'
 import { getLuaDiagnostics } from './diagnostics.js'
+import { analyzeLuaEntry } from './entry_analysis.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
 import {
   checkLuaModuleCycles,
@@ -16,7 +17,7 @@ import {
   createLuaParseCache,
   type LuaParseCache
 } from './native.js'
-import { createLuaPlugin, diagnostic, entryCall } from './plugin.js'
+import { createLuaPlugin, diagnostic } from './plugin.js'
 import { lowerPrivateFields } from './private_fields.js'
 import { createBuildTimer, type BuildTimer } from './profile.js'
 import { setSharedProject } from './shared_modules.js'
@@ -420,7 +421,9 @@ function diagnoseLua(
   if (configPath) dependencies.add(configPath)
   const emitted = new Map<string, string>()
   const modules = program.getSourceFiles().filter((x) => !x.isDeclarationFile)
-  const entryFiles = new Set(modules.filter((x) => entryCall(x)).map((x) => x.fileName))
+  const entryFiles = new Set(
+    modules.filter((x) => analyzeLuaEntry(x, program).model).map((x) => x.fileName)
+  )
   const targets = modules.filter((source) => plan.affected.has(luaFileKey(source.fileName)))
   const sourceChecks = new Map<
     string,

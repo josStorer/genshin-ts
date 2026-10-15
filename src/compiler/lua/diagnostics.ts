@@ -2,26 +2,18 @@ import ts from 'typescript'
 
 import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
+import { analyzeLuaEntry, entryDiagnosticRules } from './entry_analysis.js'
 import { getSharedModuleDiagnostics } from './shared_modules.js'
-import { luaTimerGlobals, standardLibraryDiagnostic } from './standard_library.js'
-import { diagnostic, entryCall, hooks, nodeGraphCalls, publicMethodFunction } from './syntax.js'
+import { standardLibraryDiagnostic } from './standard_library.js'
+import { diagnostic, nodeGraphCalls } from './syntax.js'
 
 export { getSharedModuleDiagnostics } from './shared_modules.js'
 
 const ruleByMessage = {
   lua_importGraphEntry: 'lua-no-graph-entry',
-  lua_invalidEntry: 'lua-entry-declaration',
+  ...entryDiagnosticRules,
   lua_nestedEntry: 'lua-entry-declaration',
-  lua_optionsEmpty: 'lua-entry-options',
-  lua_invalidCallback: 'lua-entry-callback',
-  lua_returnHooks: 'lua-entry-return',
-  lua_dynamicHooks: 'lua-entry-return',
-  lua_earlyReturn: 'lua-entry-return',
-  lua_publicMethodThis: 'lua-public-methods',
-  lua_publicMethodName: 'lua-public-methods',
   lua_listenerOwnership: 'lua-listener-ownership',
-  lua_instanceScope: 'lua-instance-scope',
-  lua_entryTopLevel: 'lua-entry-top-level',
   lua_reservedEnv: 'lua-reserved-env',
   lua_asyncFunction: 'lua-no-async',
   lua_spreadEnvironment: 'lua-environment-destructuring',
@@ -57,7 +49,7 @@ function issue(node: ts.Node, key: keyof typeof ruleByMessage, warning = false) 
   return { ...diagnostic(node, t(key), warning), source: ruleByMessage[key] }
 }
 
-/** 编译器、ESLint 和编辑器共用的 Lua 规则，不加载 TSTL。 */
+/** 编译器、ESLint 和编辑器共用的 Lua 规则和入口分析结果。 */
 export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): ts.Diagnostic[] {
   const lang = getCliLanguage()
   let cached = diagnosticCache.get(program)
@@ -71,126 +63,9 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
   const builtins = getLuaBuiltins(program)
   const diagnostics: ts.Diagnostic[] = [...getSharedModuleDiagnostics(source, program)]
   for (const call of nodeGraphCalls(source)) diagnostics.push(issue(call, 'lua_importGraphEntry'))
-  const call = entryCall(source)
-  if (call) {
-    if (!builtins.isEntryCall(call)) diagnostics.push(issue(call, 'lua_invalidEntry'))
-    const setup = call.arguments[call.arguments.length - 1]
-    if (
-      call.arguments.length < 1 ||
-      call.arguments.length > 2 ||
-      (call.arguments.length === 2 &&
-        (!ts.isObjectLiteralExpression(call.arguments[0]) ||
-          call.arguments[0].properties.some(
-            (property) =>
-              !ts.isPropertyAssignment(property) ||
-              !ts.isIdentifier(property.name) ||
-              property.name.text !== 'timerClock' ||
-              !ts.isStringLiteralLike(property.initializer) ||
-              !['level', 'real'].includes(property.initializer.text)
-          )))
-    )
-      diagnostics.push(issue(call, 'lua_optionsEmpty'))
-    if (
-      !setup ||
-      !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup)) ||
-      !ts.isBlock(setup.body) ||
-      setup.parameters.length > 1 ||
-      (setup.parameters[0] && !ts.isIdentifier(setup.parameters[0].name))
-    )
-      diagnostics.push(issue(call, 'lua_invalidCallback'))
-    else {
-      const last = setup.body.statements.at(-1)
-      if (
-        !last ||
-        !ts.isReturnStatement(last) ||
-        !last.expression ||
-        !ts.isObjectLiteralExpression(last.expression)
-      )
-        diagnostics.push(issue(setup, 'lua_returnHooks'))
-      else
-        for (const member of last.expression.properties) {
-          if (
-            member.name &&
-            ts.isIdentifier(member.name) &&
-            member.name.text === 'methods' &&
-            ts.isPropertyAssignment(member) &&
-            ts.isObjectLiteralExpression(member.initializer)
-          ) {
-            for (const method of member.initializer.properties) {
-              const fn = publicMethodFunction(method, checker, setup.body)
-              const checkThis = (node: ts.Node) => {
-                if (
-                  node !== fn &&
-                  (ts.isClassLike(node) ||
-                    ts.isFunctionDeclaration(node) ||
-                    ts.isFunctionExpression(node))
-                )
-                  return
-                if (node.kind === ts.SyntaxKind.ThisKeyword)
-                  diagnostics.push(issue(node, 'lua_publicMethodThis'))
-                ts.forEachChild(node, checkThis)
-              }
-              if (fn) checkThis(fn)
-              if (
-                !method.name ||
-                !ts.isIdentifier(method.name) ||
-                !/^[A-Za-z_][A-Za-z0-9_]*$/.test(method.name.text) ||
-                [...hooks.values()].includes(method.name.text) ||
-                [
-                  'script',
-                  'game',
-                  'Enum',
-                  'Color',
-                  'print',
-                  'printerr',
-                  'require',
-                  'self',
-                  '_ENV',
-                  'math',
-                  'string',
-                  'table',
-                  'os',
-                  'debug'
-                ].includes(method.name.text) ||
-                !fn
-              )
-                diagnostics.push(issue(method, 'lua_publicMethodName'))
-            }
-          } else if (
-            !member.name ||
-            !ts.isIdentifier(member.name) ||
-            !hooks.has(member.name.text) ||
-            !(
-              ts.isMethodDeclaration(member) ||
-              (ts.isPropertyAssignment(member) &&
-                (ts.isArrowFunction(member.initializer) ||
-                  ts.isFunctionExpression(member.initializer)))
-            )
-          )
-            diagnostics.push(issue(member, 'lua_dynamicHooks'))
-        }
-      const checkReturn = (node: ts.Node) => {
-        if (node !== setup.body && ts.isFunctionLike(node)) return
-        if (ts.isReturnStatement(node) && node !== last)
-          diagnostics.push(issue(node, 'lua_earlyReturn'))
-        ts.forEachChild(node, checkReturn)
-      }
-      checkReturn(setup.body)
-    }
-    for (const statement of source.statements) {
-      if (
-        ts.isImportDeclaration(statement) ||
-        ts.isExportAssignment(statement) ||
-        ts.isInterfaceDeclaration(statement) ||
-        ts.isTypeAliasDeclaration(statement) ||
-        ts.isEmptyStatement(statement) ||
-        (ts.canHaveModifiers(statement) &&
-          ts.getModifiers(statement)?.some((m) => m.kind === ts.SyntaxKind.DeclareKeyword))
-      )
-        continue
-      diagnostics.push(issue(statement, 'lua_entryTopLevel'))
-    }
-  }
+  const analysis = analyzeLuaEntry(source, program)
+  diagnostics.push(...analysis.diagnostics)
+  const call = analysis.model?.call
   const includesNil = (expression: ts.Expression) => {
     const type = checker.getTypeAtLocation(expression)
     return (type.isUnion() ? type.types : [type]).some(
@@ -200,17 +75,10 @@ export function getLuaDiagnostics(source: ts.SourceFile, program: ts.Program): t
   const managedSignals: (string | undefined)[] = []
   const rawSignals: { name: string | undefined; node: ts.Node }[] = []
   const visit = (node: ts.Node) => {
-    if (
-      !call &&
-      ts.isIdentifier(node) &&
-      luaTimerGlobals.some((name) => builtins.global(node) === name)
-    )
-      diagnostics.push(issue(node, 'lua_instanceScope'))
     if (ts.isCallExpression(node)) {
       const member = builtins.member(node.expression)
       const argument = node.arguments[0]
       if (member === 'onSignal') {
-        if (!call) diagnostics.push(issue(node, 'lua_instanceScope'))
         const name = argument && checker.getTypeAtLocation(argument).getProperty('name')
         const type = name && checker.getTypeOfSymbolAtLocation(name, argument)
         managedSignals.push(type?.isStringLiteral() ? type.value : undefined)
