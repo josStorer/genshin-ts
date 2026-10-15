@@ -23,9 +23,9 @@ export default g.clientControlScript((lua) => {
 })
 ```
 
-回调中的声明和执行语句展开到 Lua 文件根级；`onStart`、`onUpdate` 生成官方的 `OnStart`、`OnUpdate`，不会创建运行时脚本工厂。一个入口文件对应一个挂载脚本。可以在回调里写函数、class、对象、数组和普通 TS 运算；class 的 `this` 正常使用。
+回调中的声明和执行语句展开到 Lua 文件根级；`onStart`、`onUpdate` 生成官方的 `OnStart`、`OnUpdate`，不会创建运行时脚本工厂。一个入口文件对应一个挂载脚本。可以在回调里写函数、class、对象、数组和普通 TS 运算；class 的 `this` 正常使用。`#value` 私有字段会改写为不冲突的普通 Lua 字段；Lua 侧不提供访问控制。私有字段的 `in` 品牌检查不支持。
 
-回调参数可以叫 `lua`、`env`、`global` 或 `g`。也可以写 `g.clientControlScript({}, lua => { … })`，目前配置对象没有可填字段。`_ENV` 是 Lua 保留的运行环境名称，不能拿来声明变量。
+回调参数可以叫 `lua`、`env`、`global` 或 `g`。也可以写 `g.clientControlScript({}, lua => { … })`，配置可填写 `timerClock: 'level' | 'real'`，默认使用关卡时钟。`_ENV` 是 Lua 保留的运行环境名称，不能拿来声明变量。
 
 入口文件在回调外只放 import、类型和 declare 声明。结尾直接 `return { … }`，暂不接受动态拼接、展开生命周期对象或提前返回。普通模块的顶层执行不受此限制。挂载入口不能作为值模块导入；共享内容放进普通模块，入口的类型可以 `import type`。
 
@@ -45,7 +45,7 @@ export default g.clientControlScript((lua) => {
 
 同时从节点图工程的 tsconfig 中排除这个目录，避免同一文件落入两套全局类型。导入路径仍然是 `genshin-ts/runtime/core`；Lua tsconfig 将其类型解析到轻量声明，编译器消除入口标记，不加载节点图运行库。不要覆盖继承配置中的 `paths`；若确实需要项目别名，必须同时保留 core 的 Lua 类型映射。Lua CLI 读取首个入口最近的 tsconfig 的 baseUrl/paths，依赖最终仍须位于 compileRoot 内。多个入口应使用同一套路径映射。
 
-`lua.script`、`lua.game`、`lua.Enum`、`lua.Color` 提供官方接口，悬停可查看用途；`lua.helper` 提供工具。`self` 和 `lua.self` 都代表当前挂载控件，编译为当前环境的 `script.object`。这与节点图里代表实体的 `self` 不同。
+`lua.script`、`lua.game`、`lua.Enum`、`lua.Color` 提供官方接口，悬停可查看用途；`lua.helper` 提供工具。全局 `self` 统一表示“当前脚本挂载的宿主”：这里是控件，编译为 `script.object`；节点图中是实体。`send`、`console` 和四个定时器函数也保持全局写法。宿主能力继续经 `lua.script/game/Enum/Color/helper` 访问。
 
 ```ts
 const control = lua.game.GetClientUIControl(self.id)
@@ -59,7 +59,7 @@ if (lua.helper.isControl(control, 'ClientUITextBoxControl')) {
 
 Lua 环境不引入 `GameObject`、`stage`、`level`、节点图的 `f`、Node 或 DOM 全局。基础 `Math`、`Number`、字符串、数组、对象、Map/Set 由固定版本 TSTL 支持；不支持的操作在构建时诊断。Promise、异步函数、生成器、Date、RegExp、JSON、WeakMap/WeakSet 等不在当前支持范围。
 
-ESLint 可以对 Lua 目录单独使用：
+模板默认配置 `export { default } from 'genshin-ts/configs/eslint/full.mjs'` 会按文件所属 tsconfig 中的 `lua_globals` 类型自动启用 Lua 规则，不依赖目录名；节点图专属规则不会运行在 Lua 文件上。自定义配置也可以单独使用：
 
 ```js
 import tseslint from '@typescript-eslint/eslint-plugin'
@@ -132,7 +132,7 @@ lua: {
 
 ## 常用工具、信号和参数
 
-工具可通过 `lua.helper.xxx` 使用，也可从 `genshin-ts/runtime/lua` 按需导入。两种写法使用相同实现。`helper`、`self` 是编译期成员，不写入宿主环境表；支持直接访问、局部别名和 `const { helper, self: host } = lua` 这样的命名解构；不支持展开整个运行环境。
+工具可通过 `lua.helper.xxx` 使用，也可从 `genshin-ts/runtime/lua` 按需导入。两种写法使用相同实现。`helper` 是编译期成员，不写入宿主环境表；支持直接访问、局部别名和 `const { helper } = lua` 这样的命名解构；不支持展开整个运行环境。
 
 | 能力           | 用法                                                                                                   |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
@@ -145,7 +145,7 @@ lua: {
 | 多返回值       | `multi(a, b)`；普通 TS 数组仍然返回一个 table                                                          |
 | 脚本公开方法   | `scriptHandle<typeof OtherEntry>(otherScript)` 后调用 `Invoke`                                         |
 
-生命周期和资源所有权由用户掌握。工具不会暗中启动更新、销毁借用控件或自动取消所有监听。保存 `off`，在自己的 `onDisable` / `onDestroy` 中调用即可。
+入口中的 `listenKey` 与 `lua.onSignal` 随实例启用/停用注册和取消，未主动取消的订阅在再次启用时恢复；返回的 `off()` 可提前取消且可重复调用。原始官方监听接口仍由调用者管理。控件和 Tween 的所有权仍由用户掌握；框架不会销毁借用的控件。
 
 ```ts
 const params = lua.helper.readParams(lua.script, {
@@ -194,7 +194,7 @@ if (other) {
 }
 ```
 
-`methods` 中的函数生成 Lua 全局函数，官方 `Invoke` 可以调用。方法参数和返回值有类型提示；多返回值用 `multi`。由你确认取得的句柄确实对应所声明入口；目前不读取编辑器挂载映射来验证。公开函数访问闭包状态，class 方法才使用 class 的 `this`。
+`methods` 中的函数生成 Lua 全局函数，官方 `Invoke` 可以调用。方法参数和返回值有类型提示；多返回值用 `multi`。由你确认取得的句柄确实对应所声明入口；目前不读取编辑器挂载映射来验证。公开函数访问闭包状态，class 方法才使用 class 的 `this`。也支持回调内已有函数：`function summary() { return value }`，再写 `methods: { summary }` 或 `methods: { summary: summary }`。引用对象/class 的方法、非函数值或回调外函数会得到明确诊断。
 
 ## 标准库支持清单
 
@@ -218,13 +218,13 @@ if (other) {
 
 `Boolean(value)` 支持显式 JS 真值转换，参数只求值一次：0、空字符串、NaN、undefined（Lua nil）和 false 为 false；对象和数组为 true。无参调用为 false，支持函数别名和 `filter(Boolean)`。`new Boolean()` 不支持。直接在条件中使用数字/字符串仍应改成明确比较；这与显式 Boolean 转换不同。
 
-`setTimeout`、`setInterval`、对应 clear 函数、requestAnimationFrame、queueMicrotask 暂不可用；用生命周期 dt 累加计时，停用/销毁时自己清理。Promise、Date、RegExp、JSON、WeakMap/WeakSet、浏览器与 Node 全局不可用。编译器、编辑器插件和 ESLint 共用说明性诊断；用户自己定义的同名局部函数不受影响。
+`setTimeout`、`setInterval` 和对应 clear 函数可用，见下文定时器。requestAnimationFrame、queueMicrotask 暂不可用。Promise、Date、RegExp、JSON、WeakMap/WeakSet、浏览器与 Node 全局不可用。编译器、编辑器插件和 ESLint 共用说明性诊断；用户自己定义的同名局部函数不受影响。
 
 ### 包内数据
 
 `genshin-ts/definitions/` 下可导入 prefabs、zh_aliases、node_modes、node_graph_entries、server_node_metadata、client_scoped_globals。这些文件只有字面量数据，构建时从原 TS 数据生成配套 Lua；按需输出，中文名、英文名和动态键访问均保留。
 
-`import { CharacterPrefab } from 'genshin-ts/definitions/prefabs'` 可直接使用。节点图 enum/client_enums 包含运行时类，不属于纯数据；Lua 宿主枚举用 `lua.Enum`。其他包内 JS 和 npm 模块不能自动在 Lua 中运行，构建时会解释拒绝原因。
+`import { CharacterPrefab } from 'genshin-ts/definitions/prefabs'` 可直接使用。`CharacterPrefab.Amber`、`CharacterPrefabZh.丽莎` 等静态访问直接生成数值，不输出数据模块。动态键访问只输出被访问的那张导出表；整个命名空间作为值传递时才需要完整模块。节点图 enum/client_enums 包含运行时类，不属于纯数据；Lua 宿主枚举用 `lua.Enum`。其他包内 JS 和 npm 模块不能自动在 Lua 中运行，构建时会解释拒绝原因。
 
 ### 需要注意的语义
 
@@ -258,13 +258,13 @@ JS 与 Lua 不是完全相同的运行时：nil 会删除字段、造成数组�
 
 后续待办：提取编辑器脚本变量、控件树与挂载映射，用户补充详细编辑器操作说明；不继续追究时停切换瞬间的严格 OnLevelUpdate 次序。
 
-生成文件头只保留 `-- @gsts:lua`；目前运行时报错仍使用 Lua 行号，没有 TS sourcemap。
+生成文件头只保留 `-- @gsts:lua`；可选择生成映射文件，用离线命令把 Lua 报错位置还原到 TS，见下文。
 
 需要排查耗时时，设置 `GSTS_INJECT_PROFILE=1`（或 `--inject-profile`）。统一的 `[pipeline-profile]` JSON 中，`lua` 字段记录入口发现、Program、转译、写出和监听阶段；普通构建不会打印这些细节。dev 中 Lua 使用独立 worker，与节点图并行；只重编受修改影响的依赖。
 
 ### 编译时的类型检查
 
-日常编译默认不执行整项目 typecheck；编辑器中的类型提示、类型错误与 GSTS 规则照常工作。编译器仍按需读取类型信息，检查 TS 语法、可转译范围、模块依赖和 Lua 产物。
+日常编译默认不执行整项目 typecheck；编辑器中的类型提示、类型错误与 GSTS 规则照常工作。编译器仍按需读取类型信息，检查 TS 语法、可转译范围、模块依赖和 Lua 产物。默认还会对本轮受影响文件检查无法解析的名称、导入和成员（如 TS2304、TS2339、TS2551），避免拼错 API 后运行才崩；其他完整类型检查仍是可选项。
 
 需要构建时同时检查完整 TS 类型，可在 `gsts.config.ts` 中设置 `lua: { typeCheck: true }`。它与 `lua.include` 可以同时使用；关闭后不会隐藏编辑器里的类型错误。
 
@@ -311,3 +311,67 @@ Lua 依赖使用独立监听，只增删实际变化的监听项，不再交给�
 这里的“自动识别”是现有行为，不是一个可切换的模式。目前没有另一套手动选择节点图或 Lua 的构建模式；同一套 `entries` 同时发现两类入口，再按文件内的声明分流。
 
 `dev` 就绪后，即使源码目录最初为空，新增节点图入口或 `export default g.clientControlScript(...)` 入口也会触发对应编译。已有一种入口时再新增另一种同样支持，不必重启 dev。新增文件须匹配 `entries` 且未被入口排除规则排除。例如 `entries: ['**/*.ts']` 包含新子目录的 TS 文件；`entries: ['main.ts']` 不会把另一个 `other.ts` 自动当作入口。纯 `.d.ts` 是类型声明，不会单独产出 Lua 或 GIA。
+
+## 类型化接收与共享模块
+
+```ts
+// 在入口回调中声明；Signal 使用现有 defineSignal 契约
+const off = lua.onSignal(Signal.Input, (evt) => {
+  console.log(evt.params.speed, evt.params.fire)
+})
+// off() 可提前取消；重复调用没有额外效果
+```
+
+每个实例、每个信号只有一个宿主监听，多个订阅按声明顺序各执行一次。Start/Enable 幂等注册，Disable 在用户钩子前取消底层监听，Destroy 永久释放。分发中新增的订阅从下一条消息生效；已取消的订阅跳过。单个订阅抛错会记录错误，不中断其他订阅。不要对同一个脚本/信号同时使用原始 Register/Unregister 和框架订阅。
+
+接收先检查参数数量、类型、整数范围、列表元素和向量形状；错误载荷记录信号/字段后丢弃。实体和 GUID 是官方传递的原值，类型为 LuaEntityValue/LuaGuidValue，不会变成节点图实体包装。宿主实际载荷仍须实机验收。
+
+被节点图和 Lua 实际共同导入的模块只写中立代码：类型、常量、纯函数、defineSignal。构建、默认 ESLint 和 TS 编辑器插件都会检查共享模块，即使文件分别落在两套 tsconfig 中。不要在共享模块直接使用 self、宿主 API 或某侧专有运行库。
+
+```ts
+// shared/rules.ts
+export const INITIAL_SCORE = 10
+// server.ts：节点图 int 是 bigint，边界处转换
+const score = int(INITIAL_SCORE)
+// Lua 侧直接使用 INITIAL_SCORE；Lua int 用 number 表示
+```
+
+共享 bigint 字面量和 BigInt() 会报错并提示改用 number。defineSignal 的契约和写入方法映射共用一份中立数据；两侧各自映射到适用的参数类型。
+
+## 定时器
+
+```ts
+export default g.clientControlScript({ timerClock: 'level' }, (lua) => ({
+  onEnable() {
+    const repeat = setInterval(() => console.log(self.name), 1000)
+    setTimeout(() => clearInterval(repeat), 5000)
+  }
+}))
+```
+
+延迟单位为毫秒；默认 level 累加 OnLevelUpdate 的 dt，real 累加 OnUpdate 的 dt。它们都由宿主派发更新驱动，不是系统墙钟；暂停关系以宿主提供的 dt 为准。有待执行任务时框架启用更新；手动 EnableUpdate(false) 会暂停依赖该更新流的计时。
+
+停用和销毁自动清空所有任务，再启用不会恢复旧任务。需要每次启用重新计时，就像上例放在 onEnable 中。clearTimeout/clearInterval 可重复调用；0 或负延迟最早下次更新执行，interval 卡顿后每次更新最多补一次，不连续补发积压。回调抛错会记录并移除该任务，其余任务继续。回调内新建任务从下次更新开始。
+
+定时器需要入口实例：在入口回调中使用；普通模块应接收入口传入的调度函数，不能假定其全局 script 属于调用者。
+
+## 报错定位与挂载提示
+
+默认不输出 sourcemap。在 gsts.config.ts 设置 `lua: { sourceMap: true }` 后，本地 Lua 文件旁会输出 .lua.map；映射不会复制进地图。原生 Lua 也记录添加文件头后的行号偏移。
+
+```sh
+gsts lua locate dist/lua/hud.lua:42
+gsts lua locate --log game-error.log --outDir dist
+```
+
+命令显示对应 TS/原生 Lua 文件和行列。它识别常见 file.lua:line 和 [string "..."]:line 文本，不连接游戏进程。Lua 内容与映射不匹配时拒绝定位，框架生成代码可能没有源码位置；请保存同一轮的产物与映射。
+
+构建完成会列出入口的编辑器挂载路径。配置地图后只读核对已识别的 GIL 记录；找到候选记录不代表已确认游戏内挂载成功，未找到也不等于一定没挂载。不会写 GIL 或自动挂载。控件树、脚本变量和精确挂载类型提取待差分地图样本补齐。
+
+## 创建新项目
+
+```sh
+npm create genshin-ts@latest my-project -- --with-lua
+```
+
+该选项增加 src/lua、独立 tsconfig、最小示例和 typecheck:lua 命令，并补充 AGENTS.md/CLAUDE.md 指引。不加选项的默认模板仍为纯节点图。
