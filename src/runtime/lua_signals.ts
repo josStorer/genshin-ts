@@ -1,9 +1,9 @@
 import type { Vector3Value } from './lua_host.js'
-import { luaSignalWriters, type SignalDefinition } from './signal_definition.js'
+import type { LuaSignalKind, SignalDefinition } from './signal_definition.js'
 
 export { defineSignal, luaSignalWriters } from './signal_definition.js'
 
-export type LuaSignalParamType = keyof typeof luaSignalWriters
+export type LuaSignalParamType = LuaSignalKind
 export type LuaSignalType = LuaSignalParamType | `${LuaSignalParamType}_list`
 export type LuaSignalParams = readonly (readonly [name: string, type: LuaSignalType])[]
 export type LuaSignalDefinition<
@@ -14,19 +14,27 @@ export type LuaSignalDefinition<
 export type LuaEntityValue = number & { readonly __gstsHostEntity?: unique symbol }
 /** 官方传递的 GUID 数值；不转换成节点图的值封装。 */
 export type LuaGuidValue = number & { readonly __gstsHostGuid?: unique symbol }
-type Value<T extends LuaSignalType> = T extends `${infer E extends LuaSignalParamType}_list`
-  ? Value<E>[]
-  : T extends 'bool'
-    ? boolean
-    : T extends 'str'
-      ? string
-      : T extends 'vec3'
-        ? Vector3Value
-        : T extends 'entity'
-          ? LuaEntityValue
-          : T extends 'guid'
-            ? LuaGuidValue
-            : number
+/** 每个 Lua 种类的 TS 值。新增或删除种类时，下方的完整性约束会报错。 */
+export interface LuaKindValues {
+  int: number
+  float: number
+  str: string
+  bool: boolean
+  vec3: Vector3Value
+  guid: LuaGuidValue
+  entity: LuaEntityValue
+  prefab_id: number
+  config_id: number
+}
+type CompleteKinds<
+  T extends Record<LuaSignalKind, unknown> & Record<Exclude<keyof T, LuaSignalKind>, never>
+> = T
+type KindValues = CompleteKinds<LuaKindValues>
+type Value<T extends LuaSignalType> = T extends LuaSignalKind
+  ? KindValues[T]
+  : T extends `${infer K extends LuaSignalKind}_list`
+    ? KindValues[K][]
+    : never
 export type LuaSignalValues<P extends LuaSignalParams> = {
   -readonly [K in keyof P]: P[K] extends readonly [string, infer T extends LuaSignalType]
     ? Value<T>

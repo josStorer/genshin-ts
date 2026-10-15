@@ -9,6 +9,7 @@ const suites = {
     'methods',
     'sdk-paths',
     'signals',
+    'signal-kinds',
     'timers',
     'source-maps',
     'mounts',
