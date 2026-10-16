@@ -298,7 +298,7 @@ export default g.clientControlScript({ timerClock: 'level' }, () => {
 })
 ```
 
-Delays are milliseconds. The default level clock accumulates OnLevelUpdate dt; real accumulates OnUpdate dt. Neither is a wall clock: host scheduling controls progress. For entries with managed subscriptions or timers, calls to the current script’s EnableUpdate record whether user OnUpdate should run. Pending timers keep the host update switch enabled independently; turning off user updates does not stop the countdown. Calls to other script instances remain raw host calls.
+Delays are milliseconds. The default level clock accumulates OnLevelUpdate dt; real accumulates OnUpdate dt. Neither is a wall clock: host scheduling controls progress. For entries with managed subscriptions or timers, calls to the current script’s EnableUpdate record whether user OnUpdate should run. Pending timers keep the host update switch enabled independently; turning off user updates does not stop the countdown. Calls to other script instances remain raw host calls. Only calls written in the entry (including local aliases such as `const s = lua.script`) are routed; if you pass `lua.script` into a regular module and call EnableUpdate there, it switches the host directly and can stop pending timers, so keep EnableUpdate calls in the entry.
 
 Disable/Destroy clears every task. Enable does not resume old tasks; create fresh tasks in onEnable when needed. Both clear functions are idempotent. Zero/negative delays wait until the next update. Intervals run at most once per update after a stall, without replaying every missed tick. A throwing task is logged and removed while others continue. Tasks created during a callback wait for the next update.
 
