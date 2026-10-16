@@ -13,7 +13,7 @@ const result = successful(
   return {
    onStart(){lua.print('start')},
    onDisable(){setTimeout(()=>{count+=1000},0);off();lua.print('disable');if(count===9)throw new Error('disable failure')},
-   onDestroy(){setTimeout(()=>{count+=1000},0);lua.print('destroy');throw new Error('destroy failure')},
+   onDestroy(){setTimeout(()=>{count+=1000},0);lua.print('destroy');lua.error('destroy failure')},
    methods:{count(){return count}}
   }
  })`
@@ -46,17 +46,18 @@ execute(
  env.OnStart(); env.OnEnable(); handlers.Scope('Scope',{9})
  assert(env.count()==9 and next(keys))
  local ok,err=pcall(env.OnDisable)
- assert(not ok and tostring(err):find('disable failure',1,true))
+ assert(not ok and type(err)=='table' and tostring(err):find('disable failure',1,true),'Error objects pass through unchanged')
  assert(not next(keys) and not next(handlers))
  env.OnLevelUpdate(10); assert(env.count()==9)
  env.OnEnable(); assert(handlers.Scope and not next(keys))
  env.OnLevelUpdate(10); assert(env.count()==9,'disable must clear the timer scheduled in the user hook')
  ok,err=pcall(env.OnDestroy)
  assert(not ok and tostring(err):find('destroy failure',1,true))
+ assert(tostring(err):find('stack traceback',1,true),'string errors keep the stack where they were raised')
  assert(not next(handlers)); env.OnEnable(); assert(not next(handlers))
  env.OnLevelUpdate(10);assert(env.count()==9)
 `
 )
 console.log(
-  'Scope lifecycle: visible wrappers, active stop hooks, cleanup after errors, timer clearing and terminal destruction: PASS'
+  'Scope lifecycle: visible wrappers, active stop hooks, cleanup after errors with preserved stacks, timer clearing and terminal destruction: PASS'
 )

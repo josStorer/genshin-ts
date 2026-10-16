@@ -72,8 +72,9 @@ export function generateScopeHooks(
     fn.body = lua.createBlock([
       lua.createVariableDeclarationStatement(
         [ok, message],
-        lua.createCallExpression(lua.createIdentifier('pcall'), [
+        lua.createCallExpression(lua.createIdentifier('xpcall'), [
           user,
+          lua.createTableIndexExpression(scope, lua.createStringLiteral('traceback')),
           ...(fn.params ?? []),
           ...(fn.dots ? [lua.createDotsLiteral()] : [])
         ])

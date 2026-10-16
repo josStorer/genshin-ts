@@ -187,6 +187,13 @@ function M.createScope(env, clock)
         syncUpdate()
     end
 
+    -- Stop hooks rethrow user errors after cleanup; capture the stack where the error was raised.
+    -- TSTL Error objects already record their own stack and are passed through unchanged.
+    function scope.traceback(message)
+        if type(message) == "string" and debug and debug.traceback then return debug.traceback(message, 2) end
+        return message
+    end
+
     -- Reporting a callback failure does not abort the remaining subscribers.
     local function report(message) env.printerr("[GSTS] " .. tostring(message)) end
     -- Cleanup is best-effort for each subscription, so one host error cannot skip the others.
