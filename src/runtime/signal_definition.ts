@@ -21,12 +21,6 @@ export type SignalScalarType = keyof typeof signalKinds
 export type LuaSignalKind = {
   [K in SignalScalarType]: (typeof signalKinds)[K]['writer'] extends string ? K : never
 }[SignalScalarType]
-/** 旧导出的兼容视图；名称与写入方法均来自 signalKinds，不再单独维护。 */
-export const luaSignalWriters = Object.fromEntries(
-  Object.entries(signalKinds)
-    .filter(([, kind]) => kind.writer !== undefined)
-    .map(([name, kind]) => [name, kind.writer])
-) as { [K in LuaSignalKind]: (typeof signalKinds)[K]['writer'] }
 export type SignalParamType = SignalScalarType | `${SignalScalarType}_list` | 'unknown'
 export type SignalParamEntry = readonly [name: string, type: SignalParamType]
 export type SignalParamEntries = readonly SignalParamEntry[]

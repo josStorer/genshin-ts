@@ -1,7 +1,7 @@
 import type { Vector3Value } from './lua_host.js'
 import type { LuaSignalKind, SignalDefinition } from './signal_definition.js'
 
-export { defineSignal, luaSignalWriters } from './signal_definition.js'
+export { defineSignal } from './signal_definition.js'
 
 export type LuaSignalParamType = LuaSignalKind
 export type LuaSignalType = LuaSignalParamType | `${LuaSignalParamType}_list`
