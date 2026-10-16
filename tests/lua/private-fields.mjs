@@ -22,6 +22,26 @@ export default g.clientControlScript(lua=>{
 )
 execute(result.files, "require('main');OnStart()")
 assert(!result.files.get('main.lua').includes('["#value"]'))
+// Names are readable and independent of where the class sits in the file.
+assert(result.files.get('main.lua').includes('__private_Counter_value'))
+assert(result.files.get('main.lua').includes('__private_Counter_total'))
+assert(result.files.get('base.lua').includes('__private_Base_value'))
+
+// Same-named classes on one prototype chain must not share a private field.
+const chain = successful(
+  buildFixture({
+    'counter.ts': `export class Counter { #value=1; get inner(){return this.#value} }`,
+    'main.ts': `import {g} from 'genshin-ts/runtime/core';import * as base from './counter';
+export default g.clientControlScript(lua=>{
+ class Counter extends base.Counter {#value=2; get outer(){return this.#value}}
+ const c=new Counter()
+ return{onStart(){lua.assert(c.inner===1&&c.outer===2)}}
+})`
+  })
+)
+execute(chain.files, "require('main');OnStart()")
+assert(chain.files.get('counter.lua').includes('__private_Counter_value'))
+assert(chain.files.get('main.lua').includes('__private_Counter_value_1'))
 
 const unsupported = buildFixture(
   {
@@ -68,5 +88,5 @@ assert.throws(
   }
 )
 console.log(
-  'Private fields, inheritance, static fields and accessors execute; unsupported syntax has source locations: PASS'
+  'Private fields, inheritance, same-named class chains, static fields and accessors execute with readable names; unsupported syntax has source locations: PASS'
 )
