@@ -42,7 +42,8 @@ export interface LuaEntryModel {
   methods: ReadonlyMap<string, LuaEntryFunction>
   /** 回调根部语句，不包含最后的生命周期对象 return。 */
   statements: readonly ts.Statement[]
-  returned: ts.ReturnStatement
+  /** 两种回调写法都指向最终返回的对象，已去掉括号与类型包装。 */
+  returned: ts.ObjectLiteralExpression
   /** 只记录实际引用的实例能力；没有能力时不生成作用域。 */
   scope: { signals: boolean; keys: boolean; timers: boolean }
   /** 已确定的定时器时钟；动态选择时保留两个更新钩子。 */

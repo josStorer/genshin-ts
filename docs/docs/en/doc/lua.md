@@ -58,6 +58,21 @@ g.clientControlScript((lua) => {
 })
 ```
 
+When there is no setup code, return the object directly without a block or `return`. Both forms produce the same Lua:
+
+```ts
+export default g.clientControlScript((lua) => ({
+  onStart() {
+    lua.print('Ready')
+  },
+  onUpdate(dt) {
+    lua.print(dt)
+  }
+}))
+```
+
+Parentheses, `as`, and `satisfies` may wrap the object. Write the hook object directly; `(lua) => makeHooks()` is still unsupported.
+
 These are framework recommendations, not official guidance about code placement:
 
 | Location             | Runs                                                                     | Suitable contents                                         |
@@ -69,7 +84,7 @@ These are framework recommendations, not official guidance about code placement:
 
 The initial order is **root → OnInit → OnEnable → OnStart**. OnEnable precedes OnStart, and child controls already exist at the root (user-confirmed in game, 2026-10-22). Initialization can normally go at the root without onInit.
 
-The callback parameter can be named lua, env, or another identifier; \_ENV is reserved. One file has one entry. Functions, classes, objects, arrays and ordinary TS expressions work inside the callback, which must end with a literal return object. Dynamically assembled/spread hook objects and early returns are unsupported. Class this works normally; #value becomes a distinct ordinary Lua field, without Lua access control. Private-field in brand checks are unsupported.
+The callback parameter can be named lua, env, or another identifier; \_ENV is reserved. One file has one entry. Functions, classes, objects, arrays and ordinary TS expressions work inside the callback, which returns a literal hook object in either form above. Dynamically assembled/spread hook objects and early returns are unsupported. Class this works normally; #value becomes a distinct ordinary Lua field, without Lua access control. Private-field in brand checks are unsupported.
 
 The file top level accepts imports, types, const/let, functions, classes and named exports. Instance capabilities such as self, script, timers and subscriptions belong inside the callback, not the shared top level or ordinary modules. Import/type-only top levels produce no extra shared file.
 

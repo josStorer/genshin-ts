@@ -58,6 +58,21 @@ g.clientControlScript((lua) => {
 })
 ```
 
+没有根部初始化代码时，可以直接返回对象，省去花括号和 `return`。两种写法生成的 Lua 相同：
+
+```ts
+export default g.clientControlScript((lua) => ({
+  onStart() {
+    lua.print('Ready')
+  },
+  onUpdate(dt) {
+    lua.print(dt)
+  }
+}))
+```
+
+对象外层可以加括号、`as` 或 `satisfies`。仍需直接写出钩子对象，不能用 `(lua) => makeHooks()` 代替。
+
 以下是框架的编写建议，不是官方对代码位置的推荐：
 
 | 位置         | 执行次数                                 | 适合放什么                               |
@@ -69,7 +84,7 @@ g.clientControlScript((lua) => {
 
 首次顺序是 **根部 → OnInit → OnEnable → OnStart**，OnEnable 在 OnStart 之前；根部执行时子控件已存在（2026-10-22 实机确认）。通常无需 onInit，初始化可以直接写在根部。
 
-回调参数名可用 `lua`、`env` 等；`_ENV` 是保留名。一个文件只允许一个入口。回调中可写函数、class、对象、数组和普通 TS 运算，结尾直接 `return { … }`；不接受动态拼接/展开钩子对象或提前返回。class 的 this 正常使用；`#value` 改写为不冲突的普通字段，不提供 Lua 访问控制，私有字段的 in 品牌检查不支持。
+回调参数名可用 `lua`、`env` 等；`_ENV` 是保留名。一个文件只允许一个入口。回调中可写函数、class、对象、数组和普通 TS 运算，用上面的任一种写法直接返回钩子对象；不接受动态拼接/展开钩子对象或提前返回。class 的 this 正常使用；`#value` 改写为不冲突的普通字段，不提供 Lua 访问控制，私有字段的 in 品牌检查不支持。
 
 顶层支持 import、类型、const/let、函数、class 和具名 export。涉及当前实例的 self、script、定时器、信号/按键订阅只能在回调内使用，不能放在共享顶层或普通模块中。import/type-only 顶层不生成额外共享文件。
 

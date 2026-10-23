@@ -24,6 +24,21 @@ fs.writeFileSync(
 )
 const cases = [
   [
+    'expression-return',
+    `import {g} from 'genshin-ts/runtime/core';const makeHooks=()=>({});g.clientControlScript(lua=>makeHooks())`,
+    'lua-entry-callback'
+  ],
+  [
+    'expression-hook',
+    `import {g} from 'genshin-ts/runtime/core';g.clientControlScript(lua=>({onStart:3}))`,
+    'lua-hook-function'
+  ],
+  [
+    'expression-method',
+    `import {g} from 'genshin-ts/runtime/core';g.clientControlScript(lua=>({methods:{value:3}}))`,
+    'lua-public-methods'
+  ],
+  [
     'enable-listener',
     `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>{return{onEnable(){lua.onSignal({__gstsSignal:true,name:'X',params:[]},()=>{})}}})`,
     'lua-on-enable-subscription',
@@ -56,6 +71,9 @@ const cases = [
     'lua-entry-default-value'
   ]
 ]
+const expressionFile = path.join(root, 'expression-valid.ts')
+const expressionCode = `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>({onStart(){lua.print('ready')},onUpdate:(dt)=>{lua.print(dt)},methods:{answer(){return 42}}}))`
+fs.writeFileSync(expressionFile, expressionCode)
 const modelFile = path.join(root, 'valid.ts')
 fs.writeFileSync(
   modelFile,
@@ -144,6 +162,16 @@ for (const [name, code, rule, category = 1] of cases) {
     `ESLint ${name}.ts:${message.line}:${message.column} ${message.ruleId} ${message.message}`
   )
 }
+const expressionModel = analyzeLuaEntry(program.getSourceFile(expressionFile), program)
+assert.deepEqual(expressionModel.diagnostics, [])
+assert.equal(expressionModel.model.statements.length, 0)
+assert.deepEqual([...expressionModel.model.hooks.keys()], ['onStart', 'onUpdate'])
+assert(
+  !proxy
+    .getSemanticDiagnostics(expressionFile)
+    .some((d) => d.category === ts.DiagnosticCategory.Error)
+)
+assert.equal((await eslint.lintText(expressionCode, { filePath: expressionFile }))[0].errorCount, 0)
 service.dispose()
 console.log(
   'Lua entry model: cached analysis, lifecycle/method/scope facts and all four editor/ESLint errors: PASS'

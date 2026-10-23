@@ -97,24 +97,27 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
     if (
       !setup ||
       !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup)) ||
-      !ts.isBlock(setup.body) ||
       setup.parameters.length > 1 ||
       (setup.parameters[0] && !ts.isIdentifier(setup.parameters[0].name))
     ) {
       issue(call, 'lua_invalidCallback')
     } else {
-      const returned = setup.body.statements.at(-1)
-      if (
-        !returned ||
-        !ts.isReturnStatement(returned) ||
-        !returned.expression ||
-        !ts.isObjectLiteralExpression(returned.expression)
-      ) {
-        issue(setup, 'lua_literalHooks')
+      const last = ts.isBlock(setup.body) ? setup.body.statements.at(-1) : undefined
+      const returned = last && ts.isReturnStatement(last) ? last : undefined
+      let object = ts.isBlock(setup.body) ? returned?.expression : setup.body
+      while (
+        object &&
+        (ts.isParenthesizedExpression(object) ||
+          ts.isAsExpression(object) ||
+          ts.isSatisfiesExpression(object))
+      )
+        object = object.expression
+      if (!object || !ts.isObjectLiteralExpression(object)) {
+        issue(setup, ts.isBlock(setup.body) ? 'lua_literalHooks' : 'lua_invalidCallback')
       } else {
         const hookMap = new Map<string, LuaEntryFunction>()
         const methods = new Map<string, LuaEntryFunction>()
-        for (const member of returned.expression.properties) {
+        for (const member of object.properties) {
           if (
             member.name &&
             ts.isIdentifier(member.name) &&
@@ -266,8 +269,8 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
           options: { timerClock },
           hooks: hookMap,
           methods,
-          statements: setup.body.statements.slice(0, -1),
-          returned,
+          statements: ts.isBlock(setup.body) ? setup.body.statements.slice(0, -1) : [],
+          returned: object,
           scope: { signals: false, keys: false, timers: false },
           timerClocks: new Set()
         }
@@ -277,7 +280,7 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
         if (ts.isReturnStatement(node) && node !== returned) issue(node, 'lua_earlyReturn')
         ts.forEachChild(node, checkReturn)
       }
-      checkReturn(setup.body)
+      if (ts.isBlock(setup.body)) checkReturn(setup.body)
     }
   }
   const timerClocks = new Set<'level' | 'real'>()
