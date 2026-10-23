@@ -24,6 +24,12 @@ fs.writeFileSync(
 )
 const cases = [
   [
+    'enable-listener',
+    `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>{return{onEnable(){lua.onSignal({__gstsSignal:true,name:'X',params:[]},()=>{})}}})`,
+    'lua-on-enable-subscription',
+    0
+  ],
+  [
     'graph',
     `import {GameObject} from 'genshin-ts/runtime/core'; export const value = GameObject;`,
     'lua-graph-api'
@@ -111,11 +117,13 @@ const eslint = new ESLint({
       files: ['**/*.ts'],
       languageOptions: { parser, parserOptions: { project: config } },
       plugins: { gsts },
-      rules: Object.fromEntries(cases.map(([, , rule]) => ['gsts/' + rule, 'error']))
+      rules: Object.fromEntries(
+        cases.map(([, , rule, category]) => ['gsts/' + rule, category === 0 ? 'warn' : 'error'])
+      )
     }
   ]
 })
-for (const [name, code, rule] of cases) {
+for (const [name, code, rule, category = 1] of cases) {
   const file = path.join(root, name + '.ts')
   const diagnostics = proxy.getSemanticDiagnostics(file)
   const diagnostic = diagnostics.find((d) => d.source === rule)
@@ -126,6 +134,8 @@ for (const [name, code, rule] of cases) {
   const [result] = await eslint.lintText(code, { filePath: file })
   const message = result.messages.find((m) => m.ruleId === 'gsts/' + rule)
   assert(message, `${name}: missing ESLint diagnostic; ${JSON.stringify(result.messages)}`)
+  assert.equal(diagnostic.category, category)
+  assert.equal(message.severity, category === 0 ? 1 : 2)
   const pos = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start)
   console.log(
     `ts-plugin ${name}.ts:${pos.line + 1}:${pos.character + 1} ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ')}`

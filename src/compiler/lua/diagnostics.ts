@@ -18,6 +18,7 @@ const ruleByMessage = {
   ...entryDiagnosticRules,
   lua_nestedEntry: 'lua-entry-declaration',
   lua_listenerOwnership: 'lua-listener-ownership',
+  lua_enableSubscription: 'lua-on-enable-subscription',
   lua_reservedEnv: 'lua-reserved-env',
   lua_asyncFunction: 'lua-no-async',
   lua_spreadEnvironment: 'lua-environment-destructuring',
@@ -43,6 +44,7 @@ export const luaLintRules = [
   'lua-shared-module'
 ] as const
 export const luaWarningRules: readonly string[] = [
+  'lua-on-enable-subscription',
   'lua-no-undefined-field',
   'lua-no-array-hole',
   'lua-no-array-delete'
@@ -89,6 +91,42 @@ export function getLuaDiagnostics(
   }
   const managedSignals: (string | undefined)[] = []
   const rawSignals: { name: string | undefined; node: ts.Node }[] = []
+  const onEnable = analysis.model?.hooks.get('onEnable')?.definition
+  const subscriptionMember = (expression: ts.Expression) => {
+    const seen = new Set<ts.Symbol>()
+    let node = expression
+    for (;;) {
+      const member = builtins.member(node)
+      if (member) return member
+      const symbol = checker.getSymbolAtLocation(node)
+      const declaration = symbol?.valueDeclaration
+      if (
+        !symbol ||
+        seen.has(symbol) ||
+        !declaration ||
+        !ts.isVariableDeclaration(declaration) ||
+        !declaration.initializer
+      )
+        return undefined
+      seen.add(symbol)
+      node = declaration.initializer
+    }
+  }
+  const discarded = (call: ts.CallExpression) => {
+    let node: ts.Node = call
+    while (
+      ts.isParenthesizedExpression(node.parent) ||
+      ts.isAsExpression(node.parent) ||
+      ts.isNonNullExpression(node.parent) ||
+      ts.isVoidExpression(node.parent)
+    )
+      node = node.parent
+    return (
+      ts.isExpressionStatement(node.parent) ||
+      (ts.isReturnStatement(node.parent) &&
+        ts.findAncestor(node.parent, ts.isFunctionLike) === onEnable)
+    )
+  }
   const visit = (node: ts.Node) => {
     // 类型查询和 import 声明本身不读取运行时值；默认入口只用于 scriptHandle 的类型。
     if (
@@ -119,6 +157,14 @@ export function getLuaDiagnostics(
       diagnostics.push({ ...diagnostic(node, unsupported), source: 'lua-unsupported-syntax' })
     if (ts.isCallExpression(node)) {
       const member = builtins.member(node.expression)
+      const subscribed = subscriptionMember(node.expression)
+      if (
+        (subscribed === 'onSignal' || subscribed === 'listenKey') &&
+        onEnable &&
+        ts.findAncestor(node, (parent) => parent === onEnable) &&
+        discarded(node)
+      )
+        diagnostics.push(issue(node, 'lua_enableSubscription', true))
       const argument = node.arguments[0]
       if (member === 'onSignal') {
         const name = argument && checker.getTypeAtLocation(argument).getProperty('name')

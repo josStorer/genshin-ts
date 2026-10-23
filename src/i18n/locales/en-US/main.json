@@ -175,5 +175,6 @@
   "lua_bigint": "Client Lua does not support bigint/BigInt. Use number and stay within the safe integer range.",
   "lua_nativeTuple": "Declare native Lua multiple returns as LuaMultiReturn<[...]>; an ordinary tuple means one array and may generate an incorrect table.unpack call.",
   "lua_nativeThis": "Declare this: void on native Lua function members to avoid an extra self argument; for colon methods, explicitly declare this: YourObjectType.",
-  "lua_modulo": "Negative remainder differs: -5 % 3 is -2 in JS and 1 in Lua. Ignore this when both operands are nonnegative; use lua.math.fmod(a, b) for JS results (fmod(-5, 3) is -2). Set gsts/lua-modulo to 'off' in ESLint to disable this warning."
+  "lua_modulo": "Negative remainder differs: -5 % 3 is -2 in JS and 1 in Lua. Ignore this when both operands are nonnegative; use lua.math.fmod(a, b) for JS results (fmod(-5, 3) is -2). Set gsts/lua-modulo to 'off' in ESLint to disable this warning.",
+  "lua_enableSubscription": "Subscribing in onEnable without keeping the cancellation function adds another listener on every enable and may repeat callbacks. Register at the clientControlScript callback root (automatically paused/resumed), or save the cancellation function and call it in onDisable."
 }
