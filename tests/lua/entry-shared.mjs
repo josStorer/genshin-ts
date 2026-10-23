@@ -205,3 +205,31 @@ assert(replacement.loop()==9 and public.published==9)
 console.log(
   'Shared fields: captured-only bridge, const object, destructured let, var, export writes and teleport: PASS'
 )
+
+for (const [imports, expression] of [
+  ['import Board from "./board"', 'Board'],
+  ['import {default as Board} from "./board"', 'Board'],
+  ['import * as Board from "./board"', 'Board.default'],
+  ['import * as Board from "./board"', 'Board["default"]'],
+  ['import * as Board from "./board"', '(Board).default']
+]) {
+  const main = `${imports}; const value = ${expression}`
+  const bad = buildFixture({ 'board.ts': entry, 'main.ts': main }, false)
+  const errors = bad.diagnostics.filter((d) => d.source === 'lua-entry-default-value')
+  assert.equal(errors.length, 1, expression)
+  assert.equal(main.slice(errors[0].start, errors[0].start + errors[0].length), expression)
+}
+const shadows = buildFixture(
+  {
+    'board.ts': simple.replace('g.clientControlScript', 'export default g.clientControlScript'),
+    'main.ts': `import Board from './board';import * as Space from './board';import type Handle from './board';
+ type T=typeof Board;type U=typeof Space.default;type H=typeof Handle;
+ function local(Board:number, Space:{default:number}){ return Board+Space.default }
+ const object={Board:3,default:4}; export const value=local(object.Board,{default:object.default})`
+  },
+  false
+)
+assert(!shadows.diagnostics.some((d) => d.source === 'lua-entry-default-value'))
+console.log(
+  'Entry default imports: default, named default, namespace, exact ranges and local shadows: PASS'
+)

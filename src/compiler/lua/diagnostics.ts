@@ -128,12 +128,35 @@ export function getLuaDiagnostics(
         ts.findAncestor(node.parent, ts.isFunctionLike) === onEnable)
     )
   }
+  // 只有本文件导入的名字可能读取别的入口；普通标识符不为这条规则查符号。
+  const importedNames = new Set<string>()
+  const namespaceNames = new Set<string>()
+  for (const statement of source.statements) {
+    if (!ts.isImportDeclaration(statement) || statement.importClause?.isTypeOnly) continue
+    const clause = statement.importClause
+    if (clause?.name) importedNames.add(clause.name.text)
+    const named = clause?.namedBindings
+    if (named && ts.isNamespaceImport(named)) namespaceNames.add(named.name.text)
+    else if (named)
+      for (const item of named.elements) if (!item.isTypeOnly) importedNames.add(item.name.text)
+  }
+  const importedValue = (node: ts.Node) => {
+    if (ts.isIdentifier(node)) return importedNames.has(node.text)
+    if (!ts.isPropertyAccessExpression(node) && !ts.isElementAccessExpression(node)) return false
+    let root: ts.Expression = node.expression
+    while (
+      ts.isParenthesizedExpression(root) ||
+      ts.isAsExpression(root) ||
+      ts.isSatisfiesExpression(root) ||
+      ts.isNonNullExpression(root)
+    )
+      root = root.expression
+    return ts.isIdentifier(root) && namespaceNames.has(root.text)
+  }
   const visit = (node: ts.Node) => {
     // 类型查询和 import 声明本身不读取运行时值；默认入口只用于 scriptHandle 的类型。
     if (
-      (ts.isIdentifier(node) ||
-        ts.isPropertyAccessExpression(node) ||
-        ts.isElementAccessExpression(node)) &&
+      importedValue(node) &&
       !ts.findAncestor(
         node,
         (ancestor) => ts.isTypeNode(ancestor) || ts.isImportDeclaration(ancestor)
