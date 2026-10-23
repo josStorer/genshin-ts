@@ -120,7 +120,7 @@ if (lua.helper.isControl(candidate, 'ClientUITextBoxControl')) {
 | readParams(script, schema)          | 检查脚本变量，返回带类型字段                             |
 | multi / scriptHandle                | 多返回值、指定挂载的公开方法调用                         |
 
-脚本变量只支持 number/string/boolean；schema 不创建编辑器变量，缺失时使用 default，否则报出变量名。
+脚本变量只支持 number/string/boolean；schema 不创建编辑器变量。编辑器里没有这个变量时使用 default，没有 default 就报出变量名；变量建了但留空不算缺失，字符串会读到空串（2026-10-24 实机确认）。
 
 ```ts
 const params = lua.helper.readParams(lua.script, {

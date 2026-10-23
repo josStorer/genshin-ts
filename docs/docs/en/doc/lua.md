@@ -120,7 +120,7 @@ control.SetVisible(true) automatically emits control:SetVisible(true). Host decl
 | readParams(script, schema)          | Checks script variables and returns typed fields                              |
 | multi / scriptHandle                | Multiple returns and methods of a particular mount                            |
 
-Script parameters support number/string/boolean. The schema does not create editor variables; missing values use defaults or report the variable name.
+Script parameters support number/string/boolean. The schema does not create editor variables; a variable missing from the editor uses its default, or reports the variable name when there is none. A variable that exists but is left blank is not missing: a string reads as an empty string (confirmed in game, 2026-10-24).
 
 ```ts
 const params = lua.helper.readParams(lua.script, {
