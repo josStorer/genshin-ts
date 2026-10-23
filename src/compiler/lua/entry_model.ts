@@ -15,6 +15,15 @@ export interface LuaEntryFunction {
 /** Lua 入口的公共模型。分析负责合法性，后续阶段只负责生成和输出。 */
 export interface LuaEntryModel {
   source: ts.SourceFile
+  /** 不含入口声明的模块语句；有运行时代码时单独生成 require 缓存的共享模块。 */
+  shared: {
+    runtime: boolean
+    /** 本地绑定的另一导出名；用访问器提供实时值，不保留 TSTL 的别名快照赋值。 */
+    aliases: readonly string[]
+    statements: readonly ts.Statement[]
+    /** 顶层声明的实时绑定，供各挂载读写同一份状态。 */
+    bindings: readonly ts.Identifier[]
+  }
   call: ts.CallExpression
   setup: ts.ArrowFunction | ts.FunctionExpression
   /** 只是用户选择的参数名；生成后指向当前脚本的 _ENV。 */

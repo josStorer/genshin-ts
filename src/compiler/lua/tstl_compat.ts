@@ -101,3 +101,11 @@ export function discardAdaptedCallbackDiagnostics(
     }
   }
 }
+
+/** 一个入口生成共享模块和挂载文件；TSTL 的 super 游标只能消费一次，第二份使用原始文件转换器。 */
+export const transformSharedSource: typeof import('typescript-to-lua/dist/transformation/visitors/sourceFile.js').transformSourceFileNode =
+  (...args) => {
+    const visitor =
+      require('typescript-to-lua/dist/transformation/visitors/sourceFile.js') as typeof import('typescript-to-lua/dist/transformation/visitors/sourceFile.js')
+    return visitor.transformSourceFileNode(...args)
+  }

@@ -11,6 +11,7 @@ import { luaDataModule, luaDataModules } from './data_modules.js'
 import { localizeLuaTranspileDiagnostic, removeDuplicateTruthiness } from './diagnostic_messages.js'
 import { getLuaDiagnostics } from './diagnostics.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
+import { sharedEntryFile, sharedEntryModule } from './entry_shared.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
 import { isNativeLuaDeclaration } from './native_declarations.js'
 import {
@@ -439,6 +440,10 @@ function diagnoseLua(
     if (plan.affected.has(key)) continue
     const text = oldCheck?.printed.get(key)
     if (text) printed.set(key, text)
+    const sharedKey = luaFileKey(sharedEntryFile(source.fileName, root))
+    const shared = oldCheck?.printed.get(sharedKey)
+    if (shared && analyzeLuaEntry(source, program).model?.shared.runtime)
+      printed.set(sharedKey, shared)
     nativeImports.set(key, oldCheck?.nativeImports.get(key) ?? new Set())
   }
   const modulePath = (filename: string) => {
@@ -515,7 +520,7 @@ type LuaBuildContext = {
   checked: ReturnType<typeof diagnoseLua>
 }
 
-function collectNativeInputs({ resolved, checked, luaCache, timer }: LuaBuildContext) {
+function collectNativeInputs({ resolved, prepared, checked, luaCache, timer }: LuaBuildContext) {
   const { root, resolve, additional } = resolved
   const {
     files,
@@ -554,7 +559,12 @@ function collectNativeInputs({ resolved, checked, luaCache, timer }: LuaBuildCon
         t('lua_unresolvedDependency', { arg0: name, arg1: posix(path.relative(root, from)) })
       )
     const target = resolved.resolvedFileName
-    if (entryFiles.has(target)) throw new Error(t('lua_importEntry'))
+    if (entryFiles.has(target)) {
+      const source = prepared.program.getSourceFile(target)!
+      return analyzeLuaEntry(source, prepared.program).model?.shared.runtime
+        ? sharedEntryModule(modulePath(target))
+        : undefined
+    }
     if (target.endsWith('.d.ts')) {
       const native = target.slice(0, -5) + '.lua'
       if (!fs.existsSync(native))
@@ -598,7 +608,7 @@ function transpileLua(
   { resolved, prepared, checked, timer }: LuaBuildContext,
   resolveLua: ReturnType<typeof collectNativeInputs>
 ) {
-  const { outDir, resolve } = resolved
+  const { outDir, resolve, root } = resolved
   const { program, oldCheck, plan } = prepared
   const { reuse, files, emitted, targets, printed, modules, diagnostics } = checked
   if (reuse) {
@@ -608,15 +618,19 @@ function transpileLua(
       emitted.set(name, text)
     }
   } else {
-    const plugin = createLuaPlugin(resolveLua, (name, from) => {
-      const target = resolve(name, from)?.resolvedFileName
-      return (
-        !!target &&
-        !!program
-          .getSourceFile(target)
-          ?.statements.some((s) => ts.isExportAssignment(s) && s.isExportEquals)
-      )
-    })
+    const plugin = createLuaPlugin(
+      resolveLua,
+      (name, from) => {
+        const target = resolve(name, from)?.resolvedFileName
+        return (
+          !!target &&
+          !!program
+            .getSourceFile(target)
+            ?.statements.some((s) => ts.isExportAssignment(s) && s.isExportEquals)
+        )
+      },
+      root
+    )
     const result = new tstl.Transpiler().emit({
       program,
       sourceFiles: targets,
@@ -636,11 +650,15 @@ function transpileLua(
             results.splice(
               0,
               results.length,
-              ...modules.map((source) => {
-                const result = printed.get(luaFileKey(source.fileName))
-                if (!result)
-                  throw new Error(t('lua_transpileResultMissing', { arg0: source.fileName }))
-                return { ...result, sourceFiles: [source] }
+              ...modules.flatMap((source) => {
+                const names = [source.fileName]
+                if (analyzeLuaEntry(source, program).model?.shared.runtime)
+                  names.push(sharedEntryFile(source.fileName, root))
+                return names.map((name) => {
+                  const result = printed.get(luaFileKey(name))
+                  if (!result) throw new Error(t('lua_transpileResultMissing', { arg0: name }))
+                  return { ...result, sourceFiles: [source] }
+                })
               })
             )
           }

@@ -8,12 +8,13 @@ import { analyzeLuaEntry, entryDiagnosticRules } from './entry_analysis.js'
 import { nativeDeclarationDiagnostics } from './native_declarations.js'
 import { getSharedModuleDiagnostics } from './shared_modules.js'
 import { standardLibraryDiagnostic } from './standard_library.js'
-import { diagnostic, nodeGraphCalls } from './syntax.js'
+import { diagnostic, entryCall, nodeGraphCalls } from './syntax.js'
 
 export { getSharedModuleDiagnostics, resolveSharedProject } from './shared_modules.js'
 
 const ruleByMessage = {
   lua_importGraphEntry: 'lua-no-graph-entry',
+  lua_importEntry: 'lua-entry-default-value',
   ...entryDiagnosticRules,
   lua_nestedEntry: 'lua-entry-declaration',
   lua_listenerOwnership: 'lua-listener-ownership',
@@ -89,6 +90,30 @@ export function getLuaDiagnostics(
   const managedSignals: (string | undefined)[] = []
   const rawSignals: { name: string | undefined; node: ts.Node }[] = []
   const visit = (node: ts.Node) => {
+    // 类型查询和 import 声明本身不读取运行时值；默认入口只用于 scriptHandle 的类型。
+    if (
+      (ts.isIdentifier(node) ||
+        ts.isPropertyAccessExpression(node) ||
+        ts.isElementAccessExpression(node)) &&
+      !ts.findAncestor(
+        node,
+        (ancestor) => ts.isTypeNode(ancestor) || ts.isImportDeclaration(ancestor)
+      ) &&
+      !(
+        ts.isIdentifier(node) &&
+        ts.isPropertyAccessExpression(node.parent) &&
+        node.parent.name === node
+      )
+    ) {
+      const symbol = builtins.symbolAt(node)
+      const declaration = symbol?.valueDeclaration
+      if (
+        declaration &&
+        ts.isExportAssignment(declaration) &&
+        entryCall(declaration.getSourceFile()) === declaration.expression
+      )
+        diagnostics.push(issue(node, 'lua_importEntry'))
+    }
     const unsupported = unsupportedLuaSyntax(node)
     if (unsupported)
       diagnostics.push({ ...diagnostic(node, unsupported), source: 'lua-unsupported-syntax' })

@@ -38,7 +38,17 @@ const cases = [
     `import {g} from 'genshin-ts/runtime/core'; export default g.clientControlScript(lua=>{const hooks={}; return hooks})`,
     'lua-entry-return'
   ],
-  ['scope', `export const timer = setTimeout(()=>{}, 1)`, 'lua-instance-scope']
+  ['scope', `export const timer = setTimeout(()=>{}, 1)`, 'lua-instance-scope'],
+  [
+    'top-scope',
+    `import{g}from'genshin-ts/runtime/core'; const host=self; g.clientControlScript(lua=>{return{}})`,
+    'lua-instance-scope'
+  ],
+  [
+    'default-value',
+    `import Entry from './valid'; export const value=Entry;`,
+    'lua-entry-default-value'
+  ]
 ]
 const modelFile = path.join(root, 'valid.ts')
 fs.writeFileSync(

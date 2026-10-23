@@ -326,3 +326,17 @@ npm create genshin-ts@latest my-project -- --with-lua
 ```
 
 This adds src/lua, its tsconfig, a minimal example, typecheck:lua and Lua guidance in AGENTS.md/CLAUDE.md. The default template remains graph-only.
+
+
+Runtime code at entry-file top level is a shared module: it runs once across mounts and survives teleportation. Callback code and variables belong to each mount. The shared layer cannot use instance capabilities such as self, the script object, timers or listeners. `export default` is optional; retain it when another script needs methods typing through `scriptHandle<typeof Board>`.
+
+```ts
+export let total = 0 // Shared by all mounts
+export function reset() { total = 0 }
+g.clientControlScript(lua => {
+  let own = 0 // Private to each mount
+  return { onStart() { own++; total++; lua.print(own, total) } }
+})
+```
+
+An entry `lua/hud.ts` with runtime top-level code also emits `__gsts_shared/lua/hud.lua`, cached by require. The mount path remains `lua/hud`. Named imports read live shared exports; the default is type-only. Import/type-only top levels emit no extra file. `__gsts_shared` is reserved for compiler output and cannot be a source module directory.

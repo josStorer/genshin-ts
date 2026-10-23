@@ -60,7 +60,17 @@ export interface ClientScriptDefinition<M extends ClientMethods = ClientMethods>
 export type ClientScriptSetup<M extends ClientMethods = ClientMethods> = (
   this: void,
   lua: ClientGlobals
-) => ClientScriptHooks & { methods?: M }
+) => ClientScriptHooks & {
+  /**
+   * 公开给其他脚本的方法，按挂载实例执行，操作那个实例自己的状态。
+   * 对方先用 control.GetScriptByPath('lua/board') 取得某一个挂载 s，
+   * 再用 scriptHandle<typeof Board>(s).Invoke('push', ...) 调用。
+   * 想获得方法名和参数提示，入口需写 export default g.clientControlScript(...)，
+   * 对方用 import type Board from './board' 引用类型。
+   * 全体共享的函数和数据用顶层 export；按实例调用才放在 methods。
+   */
+  methods?: M
+}
 type MethodReturns<R> =
   R extends LuaMultiReturn<infer V>
     ? LuaMultiReturn<V>

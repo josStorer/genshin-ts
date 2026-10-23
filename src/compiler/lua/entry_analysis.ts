@@ -21,7 +21,6 @@ export const entryDiagnosticRules = {
   lua_earlyReturn: 'lua-entry-return',
   lua_publicMethodThis: 'lua-public-methods',
   lua_publicMethodName: 'lua-public-methods',
-  lua_entryTopLevel: 'lua-entry-top-level',
   lua_graphApi: 'lua-graph-api',
   lua_instanceScope: 'lua-instance-scope'
 } as const
@@ -166,8 +165,71 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
             else hookMap.set(member.name.text, { member, definition, removeSelf: false })
           }
         }
+        const sharedStatements = source.statements.filter((statement) => statement !== call.parent)
+        const bindings: ts.Identifier[] = []
+        const bindName = (name: ts.BindingName) => {
+          if (ts.isIdentifier(name)) bindings.push(name)
+          else
+            for (const element of name.elements)
+              if (ts.isBindingElement(element)) bindName(element.name)
+        }
+        for (const statement of sharedStatements) {
+          if (ts.isVariableStatement(statement))
+            for (const declaration of statement.declarationList.declarations)
+              bindName(declaration.name)
+          else if (
+            (ts.isFunctionDeclaration(statement) ||
+              ts.isClassDeclaration(statement) ||
+              ts.isEnumDeclaration(statement)) &&
+            statement.name
+          )
+            bindings.push(statement.name)
+        }
         model = {
           source,
+          shared: {
+            aliases: sharedStatements.flatMap((statement) =>
+              ts.isExportDeclaration(statement) &&
+              !statement.moduleSpecifier &&
+              statement.exportClause &&
+              ts.isNamedExports(statement.exportClause)
+                ? statement.exportClause.elements
+                    .filter((item) => !item.isTypeOnly)
+                    .map((item) => item.name.text)
+                : []
+            ),
+            runtime: sharedStatements.some((statement) => {
+              if (
+                ts.isImportDeclaration(statement) ||
+                ts.isTypeAliasDeclaration(statement) ||
+                ts.isInterfaceDeclaration(statement) ||
+                ts.isEmptyStatement(statement)
+              )
+                return false
+              if (ts.isExportDeclaration(statement)) {
+                if (statement.isTypeOnly) return false
+                if (statement.exportClause && ts.isNamedExports(statement.exportClause))
+                  return statement.exportClause.elements.some((item) => {
+                    if (item.isTypeOnly) return false
+                    const symbol = checker.getSymbolAtLocation(item.name)
+                    const target =
+                      symbol &&
+                      (symbol.flags & ts.SymbolFlags.Alias
+                        ? checker.getAliasedSymbol(symbol)
+                        : symbol)
+                    return !!target && !!(target.flags & ts.SymbolFlags.Value)
+                  })
+                return true
+              }
+              if (ts.isFunctionDeclaration(statement) && !statement.body) return false
+              return !(
+                ts.canHaveModifiers(statement) &&
+                ts.getModifiers(statement)?.some((m) => m.kind === ts.SyntaxKind.DeclareKeyword)
+              )
+            }),
+            statements: sharedStatements,
+            bindings
+          },
           call,
           setup,
           environment: setup.parameters[0]?.name as ts.Identifier | undefined,
@@ -186,21 +248,10 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
       }
       checkReturn(setup.body)
     }
-    for (const statement of source.statements) {
-      if (
-        ts.isImportDeclaration(statement) ||
-        ts.isExportAssignment(statement) ||
-        ts.isInterfaceDeclaration(statement) ||
-        ts.isTypeAliasDeclaration(statement) ||
-        ts.isEmptyStatement(statement) ||
-        (ts.canHaveModifiers(statement) &&
-          ts.getModifiers(statement)?.some((m) => m.kind === ts.SyntaxKind.DeclareKeyword))
-      )
-        continue
-      issue(statement, 'lua_entryTopLevel')
-    }
   }
-  const visit = (node: ts.Node) => {
+  const visit = (node: ts.Node, instance = false) => {
+    if (node === model?.setup) instance = true
+    if (ts.isTypeNode(node)) return
     if (ts.isImportDeclaration(node)) {
       if (
         node.importClause?.isTypeOnly ||
@@ -237,12 +288,18 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
             : luaTimerGlobals.some((name) => name === global)
               ? 'timers'
               : undefined
-      if (capability) {
-        if (model) model.scope[capability] = true
-        else if (!call) issue(node, 'lua_instanceScope')
-      }
+      if (instance && capability && model) model.scope[capability] = true
+      if (
+        !instance &&
+        (capability ||
+          global === 'self' ||
+          global === 'send' ||
+          member === 'script' ||
+          member === 'self')
+      )
+        issue(node, 'lua_instanceScope')
     }
-    ts.forEachChild(node, visit)
+    ts.forEachChild(node, (child) => visit(child, instance))
   }
   visit(source)
   const result = { model, diagnostics }
@@ -273,6 +330,11 @@ function remapEntry(analysis: LuaEntryAnalysis, source: ts.SourceFile): LuaEntry
     model: {
       ...model,
       source,
+      shared: {
+        ...model.shared,
+        statements: model.shared.statements.map(remap),
+        bindings: model.shared.bindings.map(remap)
+      },
       call: remap(model.call),
       setup: remap(model.setup),
       environment: model.environment && remap(model.environment),

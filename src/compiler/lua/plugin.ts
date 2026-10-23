@@ -1,3 +1,6 @@
+import path from 'node:path'
+
+import type { RawSourceMap } from 'source-map'
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
@@ -5,6 +8,7 @@ import { getLuaBuiltins, numberConstants } from './builtins.js'
 import { luaDataConstant, luaDataModule } from './data_modules.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
 import type { LuaEntryModel } from './entry_model.js'
+import { finishSharedEntry, sharedEntryFile, sharedEntryModule } from './entry_shared.js'
 import { generateScopeHooks } from './scope_hooks.js'
 import { luaTimerGlobals } from './standard_library.js'
 import { hooks } from './syntax.js'
@@ -12,7 +16,8 @@ import {
   ContextType,
   discardAdaptedCallbackDiagnostics,
   getFunctionContextType,
-  transformOrderedExpressions
+  transformOrderedExpressions,
+  transformSharedSource
 } from './tstl_compat.js'
 
 export { entryCall, diagnostic, hooks } from './syntax.js'
@@ -22,6 +27,12 @@ const field = (target: lua.Expression, name: string) =>
   lua.createTableIndexExpression(target, str(name))
 const requireModule = (name: string) =>
   lua.createCallExpression(id('require'), [str(`@NoResolution:${name}`)])
+const importModule = (name: string | undefined) =>
+  name === undefined
+    ? lua.createTableExpression()
+    : name.startsWith('__gsts_shared/')
+      ? field(requireModule(name), 'exports')
+      : requireModule(name)
 
 /** 一个文件的生成状态；导入、前导声明和重导出只在本文件内共享。 */
 interface LuaFileContext {
@@ -34,12 +45,15 @@ interface LuaFileContext {
   dataBindings: Map<ts.Symbol, { module: string; key?: string }>
   dataLocals: Map<string, lua.Identifier>
   adaptedCallbacks: Set<ts.Node>
+  sharedAliases?: ReadonlySet<string>
 }
 
 export function createLuaPlugin(
-  resolve: (name: string, source: string) => string,
-  nativeDefault: (name: string, source: string) => boolean = () => false
+  resolve: (name: string, source: string) => string | undefined,
+  nativeDefault: (name: string, source: string) => boolean = () => false,
+  rootDir = '.'
 ): lua.Plugin {
+  const sharedFiles = new Map<string, { source: ts.SourceFile; ast: lua.File }>()
   const files = new WeakMap<ts.SourceFile, LuaFileContext>()
   const file = (ctx: lua.TransformationContext) => files.get(ctx.sourceFile)!
   function scope(ctx: lua.TransformationContext) {
@@ -234,7 +248,7 @@ export function createLuaPlugin(
         prelude.push(
           lua.createVariableDeclarationStatement(
             table,
-            requireModule(resolve(moduleName, node.fileName)),
+            importModule(resolve(moduleName, node.fileName)),
             statement
           )
         )
@@ -285,7 +299,88 @@ export function createLuaPlugin(
       generateScopeHooks(result.statements, instance, entry!, ctx)
     }
   }
+  function generateEntry(model: LuaEntryModel, ctx: lua.TransformationContext) {
+    const setup = model.setup
+    const transformed = ctx.transformExpression(setup)
+    if (!lua.isFunctionExpression(transformed)) return []
+    const body = [...transformed.body.statements]
+    const last = body.pop()
+    const value = last && lua.isReturnStatement(last) ? last.expressions[0] : undefined
+    if (!value || !lua.isTableExpression(value))
+      throw new Error('Validated Lua entry did not produce a hook table')
+    if (transformed.params?.length)
+      body.unshift(lua.createVariableDeclarationStatement(transformed.params[0], id('_ENV')))
+    for (const member of value.fields) {
+      const name = member.key && lua.isStringLiteral(member.key) ? member.key.value : ''
+      if (name === 'methods' && lua.isTableExpression(member.value)) {
+        for (const method of member.value.fields) {
+          if (method.key && lua.isStringLiteral(method.key)) {
+            const original = model.methods.get(method.key.value)
+            if (lua.isFunctionExpression(method.value) && original?.removeSelf)
+              method.value.params?.shift()
+            if (lua.isFunctionExpression(method.value))
+              method.value.flags |= lua.NodeFlags.Declaration
+            body.push(
+              lua.createAssignmentStatement(field(id('_ENV'), method.key.value), method.value)
+            )
+          }
+        }
+        continue
+      }
+      const globalName = model.hooks.has(name) ? hooks.get(name) : undefined
+      if (!globalName || !lua.isFunctionExpression(member.value))
+        throw new Error('Validated Lua hook did not produce a function')
+      member.value.flags |= lua.NodeFlags.Declaration
+      body.push(lua.createAssignmentStatement(field(id('_ENV'), globalName), member.value))
+    }
+    return body
+  }
+  // TSTL 会为 export { value as alias } 追加快照赋值；共享绑定已有实时访问器。
+  // 只处理赋值转换器直接返回/前置的语句，不遍历或反射改写整棵 Lua AST。
+  function withoutAliasWrites(statements: lua.Statement[], ctx: lua.TransformationContext) {
+    const aliases = file(ctx).sharedAliases
+    if (!aliases?.size) return statements
+    return statements.filter((statement) => {
+      if (!lua.isAssignmentStatement(statement) || statement.left.length !== 1) return true
+      const target = statement.left[0]
+      return !(
+        lua.isTableIndexExpression(target) &&
+        lua.isIdentifier(target.table) &&
+        target.table.text === '____exports' &&
+        lua.isStringLiteral(target.index) &&
+        aliases.has(target.index.value)
+      )
+    })
+  }
+  function sharedAssignment(
+    node: ts.BinaryExpression | ts.PrefixUnaryExpression | ts.PostfixUnaryExpression,
+    ctx: lua.TransformationContext
+  ) {
+    if (!file(ctx).sharedAliases?.size) return ctx.superTransformExpression(node)
+    ctx.pushPrecedingStatements()
+    const result = ctx.superTransformExpression(node)
+    ctx.addPrecedingStatements(withoutAliasWrites(ctx.popPrecedingStatements(), ctx))
+    return result
+  }
   return {
+    afterPrint(program, _options, host, results) {
+      for (const [fileName, { source, ast }] of sharedFiles) {
+        const printed = new lua.LuaPrinter(host, program, source.fileName).print(ast)
+        const map = JSON.parse(printed.sourceMap) as RawSourceMap
+        const from = path.dirname(lua.getEmitPath(source.fileName, program))
+        const to = path.dirname(lua.getEmitPath(fileName, program))
+        map.sources = map.sources.map((name) =>
+          path.relative(to, path.resolve(from, name)).replaceAll('\\', '/')
+        )
+        results.push({
+          fileName,
+          code: printed.code,
+          sourceMap: JSON.stringify(map),
+          sourceFiles: [source],
+          luaAst: ast
+        })
+      }
+    },
     visitors: {
       [ts.SyntaxKind.SourceFile]: (node, ctx) => {
         const state: LuaFileContext = {
@@ -298,8 +393,58 @@ export function createLuaPlugin(
           adaptedCallbacks: new Set()
         }
         files.set(node, state)
+        const model = state.entry
+        if (model?.shared.runtime) state.sharedAliases = new Set(model.shared.aliases)
+        let entrySource = node
+        if (model?.shared.runtime) {
+          // 同一份已分析的 AST 先生成共享模块，再生成挂载；不构造第二个 Program。
+          const sharedState: LuaFileContext = {
+            ...state,
+            entry: undefined,
+            prelude: [],
+            bindings: new Map(),
+            getters: [],
+            dataBindings: new Map(),
+            dataLocals: new Map(),
+            adaptedCallbacks: new Set()
+          }
+          files.set(node, sharedState)
+          bindImports(node, ctx)
+          const sharedSource = ts.factory.updateSourceFile(node, model.shared.statements)
+          const shared = transformSharedSource(sharedSource, ctx)
+          if (!lua.isFile(shared)) throw new Error('TSTL did not return a shared Lua file')
+          generateReexports(shared, ctx)
+          finishSharedEntry(shared, model, ctx)
+          generatePrelude(shared, ctx)
+          shared.statements.unshift(...sharedState.prelude)
+          discardAdaptedCallbackDiagnostics(ctx, sharedState.adaptedCallbacks)
+          shared.luaLibFeatures = new Set(shared.luaLibFeatures)
+          ctx.usedLuaLibFeatures.clear()
+          sharedFiles.set(sharedEntryFile(node.fileName, rootDir), { source: node, ast: shared })
+          files.set(node, state)
+          const module = sharedEntryModule(
+            path
+              .relative(rootDir, node.fileName)
+              .replaceAll('\\', '/')
+              .replace(/\.[cm]?tsx?$/, '')
+          )
+          const local = id(ctx.createTempName('shared'))
+          state.prelude.push(
+            lua.createVariableDeclarationStatement(local, field(requireModule(module), 'bindings'))
+          )
+          for (const name of model.shared.bindings) {
+            const symbol = ctx.checker.getSymbolAtLocation(name)
+            if (symbol) state.bindings.set(symbol, field(local, name.text))
+          }
+          entrySource = ts.factory.updateSourceFile(
+            node,
+            node.statements.filter(
+              (statement) => statement === model.call.parent || ts.isImportDeclaration(statement)
+            )
+          )
+        }
         bindImports(node, ctx)
-        const result = ctx.superTransformNode(node)[0]
+        const result = ctx.superTransformNode(entrySource)[0]
         if (!lua.isFile(result)) throw new Error('TSTL did not return a Lua file')
         finishEntry(result, ctx)
         generateReexports(result, ctx)
@@ -323,7 +468,7 @@ export function createLuaPlugin(
             if (lua.isIdentifier(value)) globals.add(value.text)
           }
         }
-        const statements = ctx.superTransformStatements(node)
+        const statements = withoutAliasWrites(ctx.superTransformStatements(node), ctx)
         if (!globals.size) return statements
         // 解构只生成局部声明/赋值和默认值分支。只改写声明右侧的访问链，
         // 不反射遍历整个 Lua AST，也不触碰默认值分支中的用户代码。
@@ -391,43 +536,19 @@ export function createLuaPlugin(
           ? lua.createTableFieldExpression(value, str(node.name.text), node)
           : ctx.superTransformNode(node)
       },
+      [ts.SyntaxKind.ExpressionStatement]: (node, ctx) => {
+        const model = file(ctx).entry
+        return model && node.expression === model.call
+          ? generateEntry(model, ctx)
+          : withoutAliasWrites(ctx.superTransformStatements(node), ctx)
+      },
+      [ts.SyntaxKind.BinaryExpression]: sharedAssignment,
+      [ts.SyntaxKind.PrefixUnaryExpression]: sharedAssignment,
+      [ts.SyntaxKind.PostfixUnaryExpression]: sharedAssignment,
       [ts.SyntaxKind.ExportAssignment]: (node, ctx) => {
         const model = file(ctx).entry
         if (!model || node.expression !== model.call) return ctx.superTransformStatements(node)
-        const setup = model.setup
-        const transformed = ctx.transformExpression(setup)
-        if (!lua.isFunctionExpression(transformed)) return []
-        const body = [...transformed.body.statements]
-        const last = body.pop()
-        const value = last && lua.isReturnStatement(last) ? last.expressions[0] : undefined
-        if (!value || !lua.isTableExpression(value))
-          throw new Error('Validated Lua entry did not produce a hook table')
-        if (transformed.params?.length)
-          body.unshift(lua.createVariableDeclarationStatement(transformed.params[0], id('_ENV')))
-        for (const member of value.fields) {
-          const name = member.key && lua.isStringLiteral(member.key) ? member.key.value : ''
-          if (name === 'methods' && lua.isTableExpression(member.value)) {
-            for (const method of member.value.fields) {
-              if (method.key && lua.isStringLiteral(method.key)) {
-                const original = model.methods.get(method.key.value)
-                if (lua.isFunctionExpression(method.value) && original?.removeSelf)
-                  method.value.params?.shift()
-                if (lua.isFunctionExpression(method.value))
-                  method.value.flags |= lua.NodeFlags.Declaration
-                body.push(
-                  lua.createAssignmentStatement(field(id('_ENV'), method.key.value), method.value)
-                )
-              }
-            }
-            continue
-          }
-          const globalName = model.hooks.has(name) ? hooks.get(name) : undefined
-          if (!globalName || !lua.isFunctionExpression(member.value))
-            throw new Error('Validated Lua hook did not produce a function')
-          member.value.flags |= lua.NodeFlags.Declaration
-          body.push(lua.createAssignmentStatement(field(id('_ENV'), globalName), member.value))
-        }
-        return body
+        return generateEntry(model, ctx)
       },
       [ts.SyntaxKind.ExportDeclaration]: (node, ctx) => {
         if (node.isTypeOnly) return []
@@ -437,7 +558,7 @@ export function createLuaPlugin(
           file(ctx).prelude.push(
             lua.createVariableDeclarationStatement(
               table,
-              requireModule(resolve(node.moduleSpecifier.text, ctx.sourceFile.fileName))
+              importModule(resolve(node.moduleSpecifier.text, ctx.sourceFile.fileName))
             )
           )
           module = table
@@ -456,7 +577,18 @@ export function createLuaPlugin(
           for (const item of node.exportClause.elements) {
             if (item.isTypeOnly || !ctx.resolver.isValueAliasDeclaration(item)) continue
             const local = item.propertyName ?? item.name
-            add(item.name.text, module ? field(module, local.text) : ctx.transformExpression(local))
+            const value = module ? field(module, local.text) : ctx.transformExpression(local)
+            // 同名导出已由 TSTL 存在 exports 上；再加 getter 会在值为 nil 时递归读取自身。
+            if (
+              file(ctx).sharedAliases &&
+              lua.isTableIndexExpression(value) &&
+              lua.isIdentifier(value.table) &&
+              value.table.text === '____exports' &&
+              lua.isStringLiteral(value.index) &&
+              value.index.value === item.name.text
+            )
+              continue
+            add(item.name.text, value)
           }
         } else if (node.exportClause && ts.isNamespaceExport(node.exportClause) && module) {
           add(node.exportClause.name.text, module)

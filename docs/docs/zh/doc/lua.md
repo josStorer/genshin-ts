@@ -379,3 +379,17 @@ npm create genshin-ts@latest my-project -- --with-lua
 ```
 
 该选项增加 src/lua、独立 tsconfig、最小示例和 typecheck:lua 命令，并补充 AGENTS.md/CLAUDE.md 指引。不加选项的默认模板仍为纯节点图。
+
+
+入口文件顶层的运行代码是共享模块：所有挂载只执行一次，传送后保留；回调里的代码和变量仍属于每个挂载。共享层不能使用 self、脚本对象、定时器或监听等实例能力。`export default` 可以省略；只有需要让其他脚本通过 `scriptHandle<typeof Board>` 获取 methods 类型时才需要保留。
+
+```ts
+export let total = 0 // 所有挂载共享
+export function reset() { total = 0 }
+g.clientControlScript(lua => {
+  let own = 0 // 每个挂载独立
+  return { onStart() { own++; total++; lua.print(own, total) } }
+})
+```
+
+有顶层运行代码的 `lua/hud.ts` 额外生成 `__gsts_shared/lua/hud.lua`，由 require 缓存。挂载路径仍是 `lua/hud`。具名导入读取共享模块的实时导出；default 只当类型使用。顶层只有 import/类型时不会生成额外文件。`__gsts_shared` 是编译器保留的目录，不可用于源码模块。

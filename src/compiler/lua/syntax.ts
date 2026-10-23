@@ -12,7 +12,10 @@ export const hooks = new Map(
 export function entryCall(source: ts.SourceFile): ts.CallExpression | undefined {
   // Discovery only. The compiler subsequently verifies the resolved declaration.
   for (const statement of source.statements) {
-    if (ts.isExportAssignment(statement) && ts.isCallExpression(statement.expression)) {
+    if (
+      (ts.isExportAssignment(statement) || ts.isExpressionStatement(statement)) &&
+      ts.isCallExpression(statement.expression)
+    ) {
       const call = statement.expression
       if (
         ts.isPropertyAccessExpression(call.expression) &&
