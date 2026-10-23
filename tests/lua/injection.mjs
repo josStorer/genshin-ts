@@ -43,18 +43,24 @@ try {
   assert.match(fs.readFileSync(destination, 'utf8'), /v1/)
   fs.writeFileSync(destination, '-- user file\nreturn 9')
   fs.writeFileSync(path.join(dir, 'main.ts'), entry.replace('VERSION', 'v2'))
-  await assert.rejects(
-    buildClientLua({
-      cfgDir: dir,
-      cfg,
-      noinject: false,
-      complete: true,
-      profile: false,
-      session,
-      changedFiles: [path.join(dir, 'main.ts')]
-    }),
-    /Lua 注入未完成[\s\S]*-- @gsts:lua/
-  )
+  const logs = []
+  await buildClientLua({
+    cfgDir: dir,
+    cfg,
+    noinject: false,
+    complete: true,
+    profile: false,
+    session,
+    changedFiles: [path.join(dir, 'main.ts')],
+    reporting: {
+      active: false,
+      compilation: '',
+      injection: '',
+      log: (...values) => logs.push(values.join(' '))
+    }
+  })
+  assert.match(logs.join('\n'), /已跳过注入 main.lua[\s\S]*-- @gsts:lua/)
+  assert.match(logs.join('\n'), /跳过 1，失败 0/)
   assert.equal(fs.readFileSync(destination, 'utf8'), '-- user file\nreturn 9')
   assert.match(fs.readFileSync(path.join(dir, 'dist/lua/main.lua'), 'utf8'), /v2/)
   fs.writeFileSync(destination, '-- @gsts:lua\nreturn 9')

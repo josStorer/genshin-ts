@@ -7,7 +7,7 @@ import ts from 'typescript'
 
 import type { GstsConfig } from '../compiler/gsts_config.js'
 import type { LuaCompileCache, LuaPrepared } from '../compiler/lua/build.js'
-import type { LuaOutputCache } from '../compiler/lua/output.js'
+import type { LuaOutputCache, LuaWriteResult } from '../compiler/lua/output.js'
 import { createBuildTimer } from '../compiler/lua/profile.js'
 import { entryCall, isNodeGraphEntry } from '../compiler/lua/syntax.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker_client.js'
@@ -444,7 +444,28 @@ async function compilePlannedLua(
   return { plan, result, writer }
 }
 
-/** 本地写出通过后才进入注入；冲突文件不会被覆盖。 */
+/** 本地与注入共用跳过提示；没有冲突时保持原来的输出。 */
+function reportLuaConflicts(
+  result: LuaWriteResult,
+  describe: (result: LuaWriteResult) => string,
+  log: ClientLuaReport['log'],
+  started: number
+) {
+  if (!result.conflicts.length) return
+  log(describe(result))
+  const ok = result.written.length + result.unchanged.length + result.removed.length
+  log(
+    t('injectAllDone', {
+      ok,
+      skipped: result.conflicts.length,
+      fail: 0,
+      count: ok + result.conflicts.length,
+      ms: (performance.now() - started).toFixed(3)
+    })
+  )
+}
+
+/** 本地写出后进入注入；两处独立跳过没有授权标记的文件。 */
 function writeClientLua(
   { session, complete, noinject, report, timer }: ClientLuaBuildContext,
   { plan, result, writer }: CompiledClientLua
@@ -454,8 +475,9 @@ function writeClientLua(
   const { mark } = timer
   const log = report.log
   report.compilation = t('summary_writeFailed')
+  const started = performance.now()
   const local = writeLuaFiles(outDir, result.files, complete, owner, session?.localOutput)
-  if (local.conflicts.length) throw new Error(describeLuaConflicts(local, false))
+  reportLuaConflicts(local, describeLuaConflicts, log, started)
   report.compilation = t('lua_outputSummary', {
     arg0: result.files.size,
     arg1: local.written.length,
@@ -489,6 +511,7 @@ function injectClientLua(
       const target = resolveGilTarget(cfg.inject)
       mountedGil = target.gilPath
       const destination = path.join(target.saveLevelDir, String(target.mapId), 'external_lua_file')
+      const started = performance.now()
       const injected = writeLuaFiles(
         destination,
         new Map([...result.files].filter(([name]) => name.endsWith('.lua'))),
@@ -496,7 +519,7 @@ function injectClientLua(
         owner,
         session?.injectedOutput
       )
-      if (injected.conflicts.length) throw new Error(describeLuaConflicts(injected, true))
+      reportLuaConflicts(injected, describeLuaConflicts, log, started)
       report.injection = t('lua_injectionSummary', {
         arg0: injected.written.length,
         arg1: injected.unchanged.length,

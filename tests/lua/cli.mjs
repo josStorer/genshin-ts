@@ -47,7 +47,7 @@ const bad = spawnSync(
   [cli, '-c', path.join(root, 'gsts.config.ts'), '--noinject', '--lang', 'zh'],
   { encoding: 'utf8', timeout: 120000 }
 )
-assert.notEqual(bad.status, 0)
+assert.equal(bad.status, 0)
 assert.match(bad.stdout + bad.stderr, /-- @gsts:lua/)
 assert.equal(fs.readFileSync(conflict, 'utf8'), '-- mine\nreturn 1')
 // Restore only this fixture's file so the test can be repeated.

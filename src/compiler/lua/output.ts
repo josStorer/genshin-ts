@@ -90,7 +90,7 @@ function atomicWrite(target: string, content: string, owned = false) {
     if (fs.existsSync(temp)) fs.unlinkSync(temp)
   }
 }
-/** 先预检待更新批次；有未授权文件时不覆盖。缓存跳过未变产物，实际覆盖/删除仍检查标记。
+/** 逐个预检待更新文件；跳过未授权文件，其余照常写入和清理。缓存跳过未变产物，实际覆盖/删除仍检查标记。
  * complete 提供完整输出集合以清理旧文件；省略 cache 时检查全部目标，适用于主动构建。
  */
 export function writeLuaFiles(
@@ -177,7 +177,7 @@ export function writeLuaFiles(
         else stale.push([name, target])
       }
     }
-  if (result.conflicts.length) return result
+  const conflicts = new Set(result.conflicts)
   try {
     for (const [name, target, text] of writes) {
       atomicWrite(target, text, true)
@@ -188,7 +188,13 @@ export function writeLuaFiles(
       if (fs.existsSync(target)) fs.unlinkSync(target)
       result.removed.push(name)
     }
-    const next = [...new Set(complete ? files.keys() : [...previous, ...files.keys()])].sort()
+    // 未获授权的新文件不归本项目所有；旧冲突仍留在清单中，允许恢复标记后清理。
+    const next = [
+      ...new Set([
+        ...previous.filter((name) => !complete || conflicts.has(name)),
+        ...[...files.keys()].filter((name) => !conflicts.has(name))
+      ])
+    ].sort()
     const manifest = JSON.stringify({ format: 'gsts:lua:1', files: next }, null, 2) + '\n'
     if (!fs.existsSync(manifestPath) || fs.readFileSync(manifestPath, 'utf8') !== manifest)
       atomicWrite(manifestPath, manifest)
@@ -207,12 +213,12 @@ export function writeLuaFiles(
   if (cache) {
     cache.key = cacheKey
     cache.files = complete ? new Map(files) : new Map([...(previousFiles ?? []), ...files])
+    for (const name of conflicts) cache.files.delete(name)
   }
   return result
 }
-export function describeLuaConflicts(result: LuaWriteResult, injection: boolean) {
-  return t('lua_outputConflicts', {
-    arg0: injection ? t('lua_injectionIncomplete') : t('lua_outputIncomplete'),
-    arg1: result.conflicts.map((x) => `  ${x}`).join('\n')
-  })
+export function describeLuaConflicts(result: LuaWriteResult) {
+  return result.conflicts
+    .map((file) => t('injectSkip', { file, reason: t('lua_outputConflicts') }))
+    .join('\n')
 }

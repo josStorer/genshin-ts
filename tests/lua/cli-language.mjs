@@ -55,5 +55,5 @@ fs.writeFileSync(
 assert.match(run('failed', 1), /Node graph entries cannot be imported as Lua modules/)
 fs.writeFileSync(path.join(root, 'src/hud.ts'), good.replace('hello', 'changed'))
 fs.writeFileSync(path.join(root, 'out/lua/hud.lua'), '-- user owned file\n')
-assert.match(run('conflict', 1), /add -- @gsts:lua/)
+assert.match(run('conflict', 0), /add -- @gsts:lua/)
 console.log('PASS: --lang en has no Chinese in pure TS, mixed, Lua errors or output conflicts')

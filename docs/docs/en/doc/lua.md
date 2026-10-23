@@ -253,7 +253,7 @@ Use the existing single-file, batch and `gsts dev` commands. Lua files go to `<o
 
 With inject.mapId configured and without --noinject, files are copied to that map's `external_lua_file`. **Lua injection only copies files. You must still import the folder and mount entry scripts manually in the editor.** It does not modify mount mappings in GIL. Local dist outputs are retained.
 
-The first nonempty line is `-- @gsts:lua`. Existing files without the marker are not overwritten; the entire pending batch is blocked and reports the conflicting paths. To authorize replacing your own file, add that marker as its first nonempty line. Old three-line generated headers remain accepted. skipSafeCheck cannot disable Lua protection.
+The first nonempty line is `-- @gsts:lua`. Files without the marker are skipped individually; other files are still written and cleaned up. The result lists skipped paths and counts. Rename or move your hand-written Lua file if it conflicts with generated output. To authorize overwriting, add the marker as its first nonempty line. Old three-line generated headers remain accepted. skipSafeCheck cannot disable Lua protection.
 
 Unchanged content is not rewritten. Files use temporary-file replacement, not a game-level atomic transaction. Project manifests control cleanup: only owned, still-marked obsolete files are removed. Single-file builds do not clean other entries; other projects' referenced files are kept. Path escapes, symlinks/junctions and conflicting names are rejected. Use separate module subdirectories for independent projects. Partial failures report completed and pending changes.
 
