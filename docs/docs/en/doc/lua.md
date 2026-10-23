@@ -244,9 +244,9 @@ Lua sends and receives share validation; server graphs do not perform these clie
 send(Signal.Input, 20, true) // Contract selects AddFloat and AddBool
 ```
 
-Each valid send creates a new host signal. Arguments evaluate once in source order. Checks cover counts, types, finite numbers, safe integer range, list shape and vec3. Lua TS int is a number; Lua 5.3 distinguishes integer/float, and 4 / 2 is floating-point 2.0. No math.tointeger coercion is applied; the host's AddInt(2.0) behavior awaits a game test. Entities/GUIDs remain official raw values (LuaEntityValue/LuaGuidValue), not graph entity wrappers.
+Each valid send creates a new host signal. Arguments evaluate once in source order. Checks cover counts, types, finite numbers, safe integer range, list shape and vec3. Lua TS int is a number; Lua 5.3 distinguishes integer/float, and 4 / 2 is floating-point 2.0. Whether the official AddInt accepts an integral float such as 2.0 has not been confirmed in game yet, so pass real integers to int parameters, e.g. `Math.floor(total / 2)` (math.floor returns an integer in Lua 5.3). Entities/GUIDs remain official raw values (LuaEntityValue/LuaGuidValue), not graph entity wrappers.
 
-Scalars take a few comparisons; lists scale with length. This round's wasmoon 1.16.0 / Lua 5.4 benchmark measured a 100,000-int list at **32.3 ms before and 20.2 ms after**. These are local simulated-runtime medians, not game frame times.
+Each parameter takes a few comparisons; list checks scale with length. Measured with wasmoon (Lua 5.4) on a PC, a 100,000-int list takes about 20 ms; the usual tens to hundreds of elements are negligible.
 
 Files reachable from both targets must stay neutral: types, constants, portable functions and defineSignal. Builds, default ESLint and the TS plugin check actual cross-tsconfig dependencies. Write shared constants as number, convert with int() at the graph boundary; shared bigint is rejected.
 
@@ -420,7 +420,7 @@ strict-boolean-expressions is an error; null, undefined fields, array holes/dele
 
 ## Standard library and package data
 
-The following 128 members have fengari execution cases; this is not full ECMAScript compatibility or coverage of every overload. Unsupported standard members receive diagnostics. Official host API behavior requires separate game acceptance.
+The table lists the 128 standard library members you can use; each has automated tests, but they are not guaranteed to match every JavaScript detail or overload. Members outside the table produce a diagnostic.
 
 | Type (Constructor means static members) | Covered members                                                                                                                                                                                                                                                                                  |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -495,8 +495,8 @@ Only files whose first nonempty line is -- @gsts:lua may be overwritten; old thr
 
 ```text
 hud.ts → panel.ts
-Previous manifest: lua/hud.lua
-Current output: lua/panel.lua
+Manifest from the previous build: lua/hud.lua
+Output of this build: lua/panel.lua
 Write panel.lua; remove the owned, still-marked obsolete hud.lua.
 ```
 
@@ -515,8 +515,8 @@ entries exclusions affect entry discovery only; imported dependencies still comp
 
 For timing use GSTS_INJECT_PROFILE=1 or --inject-profile and the unified [pipeline-profile] lua fields. Injection time excludes earlier compilation/GIA work; save-to-output includes debounce, so compare matching scopes.
 
-## Validation boundary
+## In-game verification status
 
-Automated tests use fengari to simulate controls, lifecycle and signals, and check types, ESLint, state and output protection. SDK checks cover 640 host API/enum members. User-confirmed native host facts are dated in this page; **they do not validate every script produced by this compiler revision in the game**.
+Automated tests run the generated Lua in a simulated runtime (fengari), covering types, ESLint, module state and output protection; the SDK check covers 640 official API and enum members. Game behavior marked with a date on this page was tested in game.
 
-Control trees, script variables and exact mount-type extraction await differential map samples.
+Not supported yet: extracting control trees, script variables and mount locations from map files.
