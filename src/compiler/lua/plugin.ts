@@ -8,7 +8,15 @@ import { getLuaBuiltins, numberConstants, scopedHelperMethods } from './builtins
 import { luaDataConstant, luaDataModule } from './data_modules.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
 import type { LuaEntryModel } from './entry_model.js'
-import { finishSharedEntry, sharedEntryFile, sharedEntryModule } from './entry_shared.js'
+import {
+  bindSharedState,
+  finishSharedEntry,
+  rewriteSharedDeclarations,
+  sharedEntryFile,
+  sharedEntryModule,
+  syncSharedWrites,
+  type SharedState
+} from './entry_shared.js'
 import { generateScopeHooks } from './scope_hooks.js'
 import { luaTimerGlobals } from './standard_library.js'
 import { hooks } from './syntax.js'
@@ -46,6 +54,7 @@ interface LuaFileContext {
   dataLocals: Map<string, lua.Identifier>
   adaptedCallbacks: Set<ts.Node>
   sharedAliases?: ReadonlySet<string>
+  shared?: SharedState
 }
 
 export function createLuaPlugin(
@@ -177,7 +186,10 @@ export function createLuaPlugin(
     )
   }
   function read(node: ts.Identifier, ctx: lua.TransformationContext) {
-    const symbol = ctx.checker.getSymbolAtLocation(node)
+    const symbol =
+      node.parent && ts.isShorthandPropertyAssignment(node.parent)
+        ? ctx.checker.getShorthandAssignmentValueSymbol(node.parent)
+        : ctx.checker.getSymbolAtLocation(node)
     return symbol && file(ctx).bindings.get(symbol)
   }
   // 导入先绑定，保证声明之前的引用也使用同一个模块局部变量。
@@ -337,7 +349,7 @@ export function createLuaPlugin(
     }
     return body
   }
-  // TSTL 会为 export { value as alias } 追加快照赋值；共享绑定已有实时访问器。
+  // TSTL 会为 export { value as alias } 追加赋值；共享状态的导出由同一处同步。
   // 只处理赋值转换器直接返回/前置的语句，不遍历或反射改写整棵 Lua AST。
   function withoutAliasWrites(statements: lua.Statement[], ctx: lua.TransformationContext) {
     const aliases = file(ctx).sharedAliases
@@ -354,14 +366,84 @@ export function createLuaPlugin(
       )
     })
   }
+  // 自增/赋值表达式可能先把状态表存进 TSTL 临时变量；从 TS 左值确认导出名。
+  function sharedExportWrites(node: ts.Expression, ctx: lua.TransformationContext) {
+    const shared = file(ctx).shared
+    if (!shared) return []
+    const target =
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+      node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
+        ? node.left
+        : (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
+            (node.operator === ts.SyntaxKind.PlusPlusToken ||
+              node.operator === ts.SyntaxKind.MinusMinusToken)
+          ? node.operand
+          : undefined
+    const writes: lua.Statement[] = []
+    const visit = (value: ts.Expression) => {
+      if (ts.isIdentifier(value)) {
+        const binding = shared.bindings.get(ctx.checker.getSymbolAtLocation(value)!)
+        for (const name of binding?.exports ?? [])
+          writes.push(
+            lua.createAssignmentStatement(
+              field(shared.exports, name),
+              field(shared.table, binding!.name.text)
+            )
+          )
+      } else if (ts.isArrayLiteralExpression(value)) value.elements.forEach(visit)
+      else if (ts.isObjectLiteralExpression(value))
+        for (const property of value.properties) {
+          if (ts.isPropertyAssignment(property)) visit(property.initializer)
+          else if (ts.isShorthandPropertyAssignment(property)) {
+            const binding = shared.bindings.get(
+              ctx.checker.getShorthandAssignmentValueSymbol(property)!
+            )
+            for (const name of binding?.exports ?? [])
+              writes.push(
+                lua.createAssignmentStatement(
+                  field(shared.exports, name),
+                  field(shared.table, binding!.name.text)
+                )
+              )
+          } else if (ts.isSpreadAssignment(property)) visit(property.expression)
+        }
+      else if (ts.isSpreadElement(value) || ts.isParenthesizedExpression(value))
+        visit(value.expression)
+      else if (
+        ts.isBinaryExpression(value) &&
+        value.operatorToken.kind === ts.SyntaxKind.EqualsToken
+      )
+        visit(value.left)
+    }
+    if (target) visit(target)
+    return writes
+  }
   function sharedAssignment(
     node: ts.BinaryExpression | ts.PrefixUnaryExpression | ts.PostfixUnaryExpression,
     ctx: lua.TransformationContext
   ) {
-    if (!file(ctx).sharedAliases?.size) return ctx.superTransformExpression(node)
+    if (!file(ctx).sharedAliases?.size && !file(ctx).shared)
+      return ctx.superTransformExpression(node)
     ctx.pushPrecedingStatements()
     const result = ctx.superTransformExpression(node)
-    ctx.addPrecedingStatements(withoutAliasWrites(ctx.popPrecedingStatements(), ctx))
+    ctx.addPrecedingStatements([
+      ...withoutAliasWrites(ctx.popPrecedingStatements(), ctx),
+      ...sharedExportWrites(node, ctx)
+    ])
+    return result
+  }
+  function sharedLoop(node: ts.ForOfStatement | ts.ForInStatement, ctx: lua.TransformationContext) {
+    const result = ctx.superTransformStatements(node)
+    if (file(ctx).shared && !ts.isVariableDeclarationList(node.initializer)) {
+      for (const statement of result)
+        if (lua.isForInStatement(statement)) {
+          statement.body.statements = syncSharedWrites(
+            withoutAliasWrites(statement.body.statements, ctx),
+            file(ctx).shared
+          )
+        }
+    }
     return result
   }
   return {
@@ -411,12 +493,20 @@ export function createLuaPlugin(
             adaptedCallbacks: new Set()
           }
           files.set(node, sharedState)
+          sharedState.shared = bindSharedState(model, ctx, sharedState.bindings)
           bindImports(node, ctx)
           const sharedSource = ts.factory.updateSourceFile(node, model.shared.statements)
           const shared = transformSharedSource(sharedSource, ctx)
           if (!lua.isFile(shared)) throw new Error('TSTL did not return a shared Lua file')
           generateReexports(shared, ctx)
-          finishSharedEntry(shared, model, ctx)
+          finishSharedEntry(shared, model, ctx, sharedState.shared?.table)
+          if (sharedState.shared)
+            sharedState.prelude.push(
+              lua.createVariableDeclarationStatement(
+                sharedState.shared.table,
+                lua.createTableExpression()
+              )
+            )
           generatePrelude(shared, ctx)
           shared.statements.unshift(...sharedState.prelude)
           discardAdaptedCallbackDiagnostics(ctx, sharedState.adaptedCallbacks)
@@ -431,12 +521,22 @@ export function createLuaPlugin(
               .replace(/\.[cm]?tsx?$/, '')
           )
           const local = id(ctx.createTempName('shared'))
-          state.prelude.push(
-            lua.createVariableDeclarationStatement(local, field(requireModule(module), 'bindings'))
-          )
-          for (const name of model.shared.bindings) {
-            const symbol = ctx.checker.getSymbolAtLocation(name)
-            if (symbol) state.bindings.set(symbol, field(local, name.text))
+          state.prelude.push(lua.createVariableDeclarationStatement(local, requireModule(module)))
+          state.shared = bindSharedState(model, ctx, state.bindings, field(local, 'exports'))
+          if (state.shared)
+            state.prelude.push(
+              lua.createVariableDeclarationStatement(state.shared.table, field(local, 'state'))
+            )
+          if (model.shared.bindings.some((binding) => !binding.mutable)) {
+            const values = id(ctx.createTempName('values'))
+            state.prelude.push(
+              lua.createVariableDeclarationStatement(values, field(local, 'values'))
+            )
+            for (const { name, mutable } of model.shared.bindings) {
+              if (mutable) continue
+              const symbol = ctx.checker.getSymbolAtLocation(name)
+              if (symbol) state.bindings.set(symbol, field(values, name.text))
+            }
           }
           entrySource = ts.factory.updateSourceFile(
             node,
@@ -486,7 +586,32 @@ export function createLuaPlugin(
           const value = ctx.transformExpression(declaration.initializer)
           if (lua.isIdentifier(value)) helperObjects.set(value.text, properties)
         }
-        const statements = withoutAliasWrites(ctx.superTransformStatements(node), ctx)
+        // 模块根部的 var 和 let 都只有一份共享状态；TSTL 默认只接受 let/const。
+        const shared = file(ctx).shared
+        const isSharedDeclaration =
+          shared &&
+          node.declarationList.declarations.some((declaration) => {
+            const check = (name: ts.BindingName): boolean =>
+              ts.isIdentifier(name)
+                ? shared.bindings.has(ctx.checker.getSymbolAtLocation(name)!)
+                : name.elements.some(
+                    (element) => ts.isBindingElement(element) && check(element.name)
+                  )
+            return check(declaration.name)
+          })
+        const input =
+          isSharedDeclaration && !(node.declarationList.flags & ts.NodeFlags.BlockScoped)
+            ? ts.factory.updateVariableStatement(
+                node,
+                node.modifiers,
+                ts.factory.createVariableDeclarationList(
+                  node.declarationList.declarations,
+                  ts.NodeFlags.Let
+                )
+              )
+            : node
+        let statements = withoutAliasWrites(ctx.superTransformStatements(input), ctx)
+        if (isSharedDeclaration) statements = rewriteSharedDeclarations(statements, shared, ctx)
         if (!globals.size && !helperObjects.size) return statements
         // 解构只生成局部声明/赋值和默认值分支。只改写声明右侧的访问链，
         // 不反射遍历整个 Lua AST，也不触碰默认值分支中的用户代码。
@@ -564,8 +689,13 @@ export function createLuaPlugin(
         const model = file(ctx).entry
         return model && node.expression === model.call
           ? generateEntry(model, ctx)
-          : withoutAliasWrites(ctx.superTransformStatements(node), ctx)
+          : [
+              ...withoutAliasWrites(ctx.superTransformStatements(node), ctx),
+              ...sharedExportWrites(node.expression, ctx)
+            ]
       },
+      [ts.SyntaxKind.ForOfStatement]: sharedLoop,
+      [ts.SyntaxKind.ForInStatement]: sharedLoop,
       [ts.SyntaxKind.BinaryExpression]: sharedAssignment,
       [ts.SyntaxKind.PrefixUnaryExpression]: sharedAssignment,
       [ts.SyntaxKind.PostfixUnaryExpression]: sharedAssignment,
@@ -601,6 +731,8 @@ export function createLuaPlugin(
           for (const item of node.exportClause.elements) {
             if (item.isTypeOnly || !ctx.resolver.isValueAliasDeclaration(item)) continue
             const local = item.propertyName ?? item.name
+            const symbol = ctx.checker.getExportSpecifierLocalTargetSymbol(item)
+            if (!module && symbol && file(ctx).shared?.bindings.has(symbol)) continue
             const value = module ? field(module, local.text) : ctx.transformExpression(local)
             // 同名导出已由 TSTL 存在 exports 上；再加 getter 会在值为 nil 时递归读取自身。
             if (

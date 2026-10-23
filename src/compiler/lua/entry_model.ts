@@ -12,17 +12,25 @@ export interface LuaEntryFunction {
   removeSelf: boolean
 }
 
+/** 回调实际引用的顶层名字；可变值在模块与挂载之间共用状态字段。 */
+export interface LuaSharedBinding {
+  name: ts.Identifier
+  mutable: boolean
+  /** 对外公开的名字；修改状态后同步这些导出，导入方直接读取最新值。 */
+  exports: readonly string[]
+}
+
 /** Lua 入口的公共模型。分析负责合法性，后续阶段只负责生成和输出。 */
 export interface LuaEntryModel {
   source: ts.SourceFile
   /** 不含入口声明的模块语句；有运行时代码时单独生成 require 缓存的共享模块。 */
   shared: {
     runtime: boolean
-    /** 本地绑定的另一导出名；用访问器提供实时值，不保留 TSTL 的别名快照赋值。 */
+    /** 本地绑定的另一导出名；生成器统一处理，不保留 TSTL 的别名快照赋值。 */
     aliases: readonly string[]
     statements: readonly ts.Statement[]
     /** 顶层声明的实时绑定，供各挂载读写同一份状态。 */
-    bindings: readonly ts.Identifier[]
+    bindings: readonly LuaSharedBinding[]
   }
   call: ts.CallExpression
   setup: ts.ArrowFunction | ts.FunctionExpression

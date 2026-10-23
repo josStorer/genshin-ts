@@ -145,3 +145,63 @@ const optional = successful(
   })
 )
 execute(optional.files, `require('main');OnStart()`)
+
+// Every bridge field is used by the mount; immutable objects keep their identity.
+const precise = successful(
+  buildFixture({
+    'main.ts': `import {g} from 'genshin-ts/runtime/core'
+let best = 0
+let {a, b = 4} = {a: 2, b: undefined as number | undefined}
+let [c, d = 9] = [3, undefined]
+var old = 5
+let published = 6
+export {published}
+export let exposed = 7
+const box = {value: 0}
+const unused = 123
+let unusedState = 321
+function change() { best += 3; published++; exposed++; return best }
+function read() { return best }
+export default g.clientControlScript(lua => {
+ let own = 0
+ return {onStart() { best++; box.value++; own++; a++; b++; c!++; d++; old++; published++; exposed++ },
+ methods: {snapshot() { return [best, box.value, own, a, b, c, d, old, published, exposed] },
+ change() { return change() }, read() {return read()}, replace() { published = undefined as unknown as number; exposed = undefined as unknown as number },
+ loop() {for (published of [8,9]) { if(published===8) continue }; return published},
+ assign() { ({a, b} = {a: 10, b: 20}); [published, exposed] = [30,40]; return ++published + exposed++ }
+ }}
+})`
+  })
+)
+const sharedText = precise.files.get('__gsts_shared/main.lua')
+assert.doesNotMatch(sharedText, /__index|__newindex|____get_|____set_/)
+assert.doesNotMatch(sharedText.slice(sharedText.lastIndexOf('return {')), /unused/)
+execute(
+  precise.files,
+  `
+local source=${JSON.stringify(precise.files.get('main.lua'))}
+local function mount()
+ local env=setmetatable({}, {__index=_G});env._ENV=env
+ assert(load(source,'main','t',env))(); return env
+end
+local left,right=mount(),mount()
+local public=require('__gsts_shared.main').exports
+assert(public.published==6 and public.exposed==7)
+assert(public.best==nil and public.unused==nil and public.box==nil)
+left.OnStart();right.OnStart()
+local snapshot=left.snapshot()
+assert(snapshot[1]==2 and snapshot[2]==2 and snapshot[3]==1)
+assert(snapshot[4]==4 and snapshot[5]==6 and snapshot[6]==5 and snapshot[7]==11 and snapshot[8]==7)
+assert(left.change()==5 and right.snapshot()[1]==5)
+right.OnStart();assert(left.read()==6)
+assert(public.published==10 and public.exposed==11)
+left=nil;local replacement=mount();assert(replacement.snapshot()[1]==6 and replacement.snapshot()[3]==0)
+replacement.replace();assert(public.published==nil and public.exposed==nil)
+assert(replacement.assign()==71 and public.published==31 and public.exposed==41)
+assert(replacement.snapshot()[4]==10 and replacement.snapshot()[5]==20)
+assert(replacement.loop()==9 and public.published==9)
+`
+)
+console.log(
+  'Shared fields: captured-only bridge, const object, destructured let, var, export writes and teleport: PASS'
+)

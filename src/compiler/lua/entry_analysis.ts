@@ -2,7 +2,12 @@ import ts from 'typescript'
 
 import { getCliLanguage, t } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
-import type { LuaEntryAnalysis, LuaEntryFunction, LuaEntryModel } from './entry_model.js'
+import type {
+  LuaEntryAnalysis,
+  LuaEntryFunction,
+  LuaEntryModel,
+  LuaSharedBinding
+} from './entry_model.js'
 import { luaTimerGlobals } from './standard_library.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
 import { functionNeedsSelf } from './tstl_compat.js'
@@ -166,25 +171,50 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
           }
         }
         const sharedStatements = source.statements.filter((statement) => statement !== call.parent)
-        const bindings: ts.Identifier[] = []
-        const bindName = (name: ts.BindingName) => {
-          if (ts.isIdentifier(name)) bindings.push(name)
-          else
+        const candidates = new Map<ts.Symbol, LuaSharedBinding>()
+        const bindName = (name: ts.BindingName, mutable: boolean) => {
+          if (ts.isIdentifier(name)) {
+            const symbol = checker.getSymbolAtLocation(name)
+            if (symbol) candidates.set(symbol, { name, mutable, exports: [] })
+          } else
             for (const element of name.elements)
-              if (ts.isBindingElement(element)) bindName(element.name)
+              if (ts.isBindingElement(element)) bindName(element.name, mutable)
         }
         for (const statement of sharedStatements) {
           if (ts.isVariableStatement(statement))
             for (const declaration of statement.declarationList.declarations)
-              bindName(declaration.name)
+              bindName(declaration.name, !(statement.declarationList.flags & ts.NodeFlags.Const))
           else if (
             (ts.isFunctionDeclaration(statement) ||
               ts.isClassDeclaration(statement) ||
               ts.isEnumDeclaration(statement)) &&
             statement.name
           )
-            bindings.push(statement.name)
+            bindName(statement.name, false)
         }
+        const sourceSymbol = checker.getSymbolAtLocation(source)
+        for (const exported of sourceSymbol ? checker.getExportsOfModule(sourceSymbol) : []) {
+          const target =
+            exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported
+          const binding = candidates.get(target)
+          if (binding) binding.exports = [...binding.exports, exported.name]
+        }
+        const names = new Set([...candidates.values()].map((binding) => binding.name.text))
+        const used = new Set<ts.Symbol>()
+        const findUses = (node: ts.Node) => {
+          if (ts.isTypeNode(node)) return
+          if (ts.isIdentifier(node) && names.has(node.text)) {
+            const symbol = ts.isShorthandPropertyAssignment(node.parent)
+              ? checker.getShorthandAssignmentValueSymbol(node.parent)
+              : checker.getSymbolAtLocation(node)
+            if (symbol && candidates.has(symbol)) used.add(symbol)
+          }
+          ts.forEachChild(node, findUses)
+        }
+        findUses(setup.body)
+        const bindings = [...candidates]
+          .filter(([symbol]) => used.has(symbol))
+          .map(([, binding]) => binding)
         model = {
           source,
           shared: {
@@ -372,7 +402,10 @@ function remapEntry(analysis: LuaEntryAnalysis, source: ts.SourceFile): LuaEntry
       shared: {
         ...model.shared,
         statements: model.shared.statements.map(remap),
-        bindings: model.shared.bindings.map(remap)
+        bindings: model.shared.bindings.map((binding) => ({
+          ...binding,
+          name: remap(binding.name)
+        }))
       },
       call: remap(model.call),
       setup: remap(model.setup),
