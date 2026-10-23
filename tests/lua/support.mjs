@@ -45,9 +45,10 @@ export function execute(files, code) {
   }
   try {
     for (const [name, text] of files)
-      run(
-        `package.preload[${JSON.stringify(name.replace(/\.lua$/, '').replaceAll('/', '.'))}] = function(...)\n${text}\nend`
-      )
+      if (name.endsWith('.lua'))
+        run(
+          `package.preload[${JSON.stringify(name.replace(/\.lua$/, '').replaceAll('/', '.'))}] = function(...)\n${text}\nend`
+        )
     run(code)
   } catch (error) {
     fs.writeFileSync(

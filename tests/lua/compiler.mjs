@@ -49,6 +49,7 @@ function execute(files, test) {
     )
   }
   for (const [name, text] of files) {
+    if (!name.endsWith('.lua')) continue
     const module = name.replace(/\.lua$/, '')
     // Both spellings resolve in the game. Cache identity across spellings is not assumed here.
     for (const key of new Set([module, module.replaceAll('/', '.')])) {
@@ -326,7 +327,8 @@ assert.equal(hasLuaMarker(oldHeader), true)
 fs.writeFileSync(path.join(target, 'main.lua'), oldHeader)
 assert.deepEqual(writeLuaFiles(target, files).written, ['main.lua'])
 assert.equal(fs.readFileSync(path.join(target, 'main.lua'), 'utf8'), files.get('main.lua'))
-for (const text of result.files.values()) {
+for (const [name, text] of result.files) {
+  if (!name.endsWith('.lua')) continue
   assert.equal(text.split('\n')[0], '-- @gsts:lua')
   assert.equal(text.includes('-- 此文件由 GSTS 生成'), false)
   assert.equal(text.includes('-- 来源：'), false)

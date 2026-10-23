@@ -39,6 +39,12 @@ try {
     session,
     changedFiles: [path.join(dir, 'main.ts')]
   })
+  assert(fs.existsSync(path.join(dir, 'dist/lua/main.lua.map')))
+  assert(
+    !fs
+      .readdirSync(path.join(map, 'external_lua_file'), { recursive: true })
+      .some((name) => name.endsWith('.map'))
+  )
   const destination = path.join(map, 'external_lua_file/main.lua')
   assert.match(fs.readFileSync(destination, 'utf8'), /v1/)
   fs.writeFileSync(destination, '-- user file\nreturn 9')

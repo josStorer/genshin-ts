@@ -33,7 +33,7 @@ fs.writeFileSync(
   path.join(root, 'raw.lua'),
   'local value=1\nreturn {value=function()return value end}\n'
 )
-const input = { entries: [entry], rootDir: root, outDir, sourceMap: true }
+const input = { entries: [entry], rootDir: root, outDir }
 const cache = createLuaCompileCache()
 function build(changed) {
   const result = compileLua({ ...input, changedFiles: changed }, cache)
@@ -47,6 +47,10 @@ function build(changed) {
 }
 const first = build()
 assert(first.files.has('main.lua.map') && first.files.has('raw.lua.map'))
+assert.deepEqual(compileLua({ ...input, sourceMap: true }).files, first.files)
+const withoutMaps = compileLua({ ...input, sourceMap: false })
+for (const [name, code] of withoutMaps.files)
+  assert.equal(first.files.get(name), code, name + ' unchanged Lua bytes')
 assert.deepEqual(build([]).files, first.files)
 const code = first.files.get('main.lua')
 const line = code.split('\n').findIndex((line) => line.includes('lua.print')) + 1

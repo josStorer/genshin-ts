@@ -193,7 +193,7 @@ function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
     luaLibImport: tstl.LuaLibImportKind.RequireMinimal,
     noHeader: true,
     noImplicitSelf: true,
-    sourceMap: input.sourceMap ?? false
+    sourceMap: input.sourceMap ?? true
   }
   const configDiagnostics: ts.Diagnostic[] = []
   const configPath = ts.findConfigFile(
@@ -753,7 +753,7 @@ function packageLua({
       if (!name.endsWith('.lua')) continue
       files.set(name, `-- @gsts:lua\n${text.replace(/^-- @gsts:lua\r?\n/, '')}`)
     }
-    if (input.sourceMap) packageLuaMaps(files, input.rootDir, input.outDir)
+    if (input.sourceMap !== false) packageLuaMaps(files, input.rootDir, input.outDir)
   }
   for (const name of luaCache.files.keys())
     if (!luaCache.used.has(name)) luaCache.files.delete(name)

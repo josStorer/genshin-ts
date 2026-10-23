@@ -308,7 +308,7 @@ Timers belong to the entry instance. Ordinary modules should receive a schedulin
 
 Static accesses such as CharacterPrefab.Amber or CharacterPrefabZh.丽莎 inline numeric constants without a data module. Dynamic keys include only the accessed export table; using a whole namespace as a value requires its full module.
 
-Source maps are off by default. Enable `lua: { sourceMap: true }` in gsts.config.ts to write .lua.map next to local outputs. Maps are not injected into the game. Native Lua maps account for the generated header too.
+Source maps are on by default: .lua.map files sit next to local outputs and are not injected into the game. Set `lua: { sourceMap: false }` in gsts.config.ts to disable them. Native Lua maps account for the generated header too.
 
 ```sh
 gsts lua locate dist/lua/hud.lua:42

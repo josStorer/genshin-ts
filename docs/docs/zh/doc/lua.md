@@ -361,7 +361,7 @@ export default g.clientControlScript({ timerClock: 'level' }, () => {
 
 ## 报错定位与挂载提示
 
-默认不输出 sourcemap。在 gsts.config.ts 设置 `lua: { sourceMap: true }` 后，本地 Lua 文件旁会输出 .lua.map；映射不会复制进地图。原生 Lua 也记录添加文件头后的行号偏移。
+默认输出 sourcemap，本地 Lua 文件旁会有 .lua.map；映射不会复制进地图。需要关闭时，在 gsts.config.ts 设置 `lua: { sourceMap: false }`。原生 Lua 也记录添加文件头后的行号偏移。
 
 ```sh
 gsts lua locate dist/lua/hud.lua:42
