@@ -87,7 +87,11 @@ try {
   await sleep(250)
   assert(!log.slice(offset).includes('开始编译'), log.slice(offset))
   // 仅修改节点图的 import，也必须重新判断原 Lua 专用模块是否变成共享模块。
-  write('private/shared-check.ts', `export const extra='extra-two'; export const readHost=()=>self`)
+  // 普通模块不能读取 self；纯 Lua helper 合法，但被节点图同时引用后必须报共享 API 错误。
+  write(
+    'private/shared-check.ts',
+    `import{clamp}from'genshin-ts/runtime/lua'; export const extra='extra-two'; export const readHost=()=>clamp(1,0,2)`
+  )
   write('main.ts', withDep.replace('./private/dep', './private/shared-check'))
   await wait(() => has('lua/private/shared-check.lua'))
   await sleep(250)
@@ -97,6 +101,7 @@ try {
     `import{extra}from'./private/shared-check';${server.replace('f.printString(message)', 'f.printString(message);f.printString(extra)')}`
   )
   await wait(() => log.slice(offset).includes('Lua 编译失败'))
+  assert(log.slice(offset).includes('只能包含中立'), log.slice(offset))
   assert(
     read('lua/private/shared-check.lua').includes('readHost'),
     'failed build preserves prior output'
