@@ -65,3 +65,32 @@ assert(external.diagnostics.some((d) => d.source === 'lua-instance-scope'))
 console.log(
   'Timers: both clocks, cancellation, repeat catch-up, errors, deferred tasks, isolated mounts and pause/resume, inactive scheduling and destruction: PASS'
 )
+
+const finiteDelay = successful(
+  buildFixture({
+    'main.ts':
+      "import{g}from'genshin-ts/runtime/core';g.clientControlScript(()=>{let count=0;return{methods:{schedule(delay:number,repeat:boolean){if(repeat)setInterval(()=>count++,delay);else setTimeout(()=>count++,delay)},count(){return count}}}})"
+  })
+)
+execute(
+  finiteDelay.files,
+  String.raw`
+script={EnableUpdate=function() end}
+require('main');OnStart()
+for _, repeatTimer in ipairs({false,true}) do
+ for _, delay in ipairs({0/0,math.huge,-math.huge}) do
+  local ok,message=pcall(schedule,delay,repeatTimer)
+  assert(not ok and tostring(message):find('Timer delay is NaN or infinite',1,true),tostring(message))
+  assert(tostring(message):find('定时器延时不能是 NaN 或无穷大',1,true))
+ end
+end
+OnLevelUpdate(1);assert(count()==0,'invalid delays must not leave tasks behind')
+schedule(-1,false);OnLevelUpdate(0);assert(count()==1)
+schedule(25,false);OnLevelUpdate(0.024);assert(count()==1)
+OnLevelUpdate(0.002);assert(count()==2)
+OnDestroy()
+`
+)
+console.log(
+  'Timer delays: NaN and both infinities report a readable error; negative and finite delays retain their behavior: PASS'
+)

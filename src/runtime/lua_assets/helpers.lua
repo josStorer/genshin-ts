@@ -275,9 +275,11 @@ function M.createScope(env, clock)
     local function schedule(callback, delay, repeated, timerClock, ...)
         if state == "destroyed" then error("Cannot schedule a timer on a destroyed script") end
         local queue = queues[timerClock]
-        if not queue then error("Invalid timer clock: " .. tostring(timerClock)) end
         delay = delay or 0
-        if type(callback) ~= "function" or type(delay) ~= "number" or delay ~= delay or math.abs(delay) == math.huge then error("Invalid timer callback or delay") end
+        -- TS checks callback/clock types; computed delays still need a finite-number check.
+        if delay ~= delay or math.abs(delay) == math.huge then
+            error("Timer delay is NaN or infinite; check the calculation and use finite milliseconds. / 定时器延时不能是 NaN 或无穷大，请检查计算结果并传入有限的毫秒数。")
+        end
         delay = math.max(0, delay)
         local handle = {}
         queue.tasks[handle] = {callback=callback, delay=delay, due=queue.now+delay, repeated=repeated, args={n=select('#',...),...}}
@@ -314,7 +316,6 @@ function M.createScope(env, clock)
     function scope.tick(dt, timerClock)
         local queue = queues[timerClock or clock]
         if state ~= "active" or not queue or queue.ticking or queue.nextDue == nil then return end
-        if type(dt) ~= "number" or dt < 0 or dt ~= dt or dt == math.huge then report("Invalid timer delta"); return end
         queue.now = queue.now + dt * 1000
         -- Waiting frames only advance the clock and compare the earliest deadline; no tables or scan.
         if queue.now < queue.nextDue then return end
