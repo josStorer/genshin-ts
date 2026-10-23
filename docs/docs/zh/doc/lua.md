@@ -222,7 +222,7 @@ if (other) {
 
 ### 包内数据
 
-`genshin-ts/definitions/` 下可导入 prefabs、zh_aliases、node_modes、node_graph_entries、server_node_metadata、client_scoped_globals。这些文件只有字面量数据，构建时从原 TS 数据生成配套 Lua；按需输出，中文名、英文名和动态键访问均保留。
+`genshin-ts/definitions/` 下只允许导入 `prefabs`。构建包时从同一份 TS 数据生成配套 Lua；用户项目按需输出，中文名、英文名和动态键访问均保留。
 
 `import { CharacterPrefab } from 'genshin-ts/definitions/prefabs'` 可直接使用。`CharacterPrefab.Amber`、`CharacterPrefabZh.丽莎` 等静态访问直接生成数值，不输出数据模块。动态键访问只输出被访问的那张导出表；整个命名空间作为值传递时才需要完整模块。节点图 enum/client_enums 包含运行时类，不属于纯数据；Lua 宿主枚举用 `lua.Enum`。其他包内 JS 和 npm 模块不能自动在 Lua 中运行，构建时会解释拒绝原因。
 

@@ -36,14 +36,7 @@ function luaValue(value: Data): string {
 }
 
 /** 只有字面量数据与类型声明。enum/client_enums 含节点图运行时类，不是宿主 Lua 枚举。 */
-export const luaDataModules = [
-  'prefabs',
-  'zh_aliases',
-  'node_modes',
-  'node_graph_entries',
-  'server_node_metadata',
-  'client_scoped_globals'
-] as const
+export const luaDataModules = ['prefabs'] as const
 
 export function luaDataModule(name: string) {
   const key = name.replace(/^genshin-ts\/definitions\//, '').replace(/\.js$/, '')

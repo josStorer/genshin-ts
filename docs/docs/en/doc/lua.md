@@ -206,7 +206,7 @@ setTimeout/setInterval and their clear functions are supported; see Timers below
 
 ### Package data
 
-The `genshin-ts/definitions/` allowlist is prefabs, zh_aliases, node_modes, node_graph_entries, server_node_metadata and client_scoped_globals. Lua modules are generated from the same literal TS data and emitted only when used. English names, Chinese names and dynamic keys remain available:
+Only `genshin-ts/definitions/prefabs` is allowlisted as package data. Lua data is generated from the same TS definitions when building the package; user builds include only the required tables. English and Chinese names and dynamic keys are preserved.
 
 ```ts
 import { CharacterPrefab } from 'genshin-ts/definitions/prefabs'

@@ -10,24 +10,15 @@ import {
 import { generateLuaDataModules, luaDataModules } from '../../src/compiler/lua/data_modules.ts'
 import { buildFixture, execute, successful } from './support.mjs'
 
+assert.deepEqual(luaDataModules, ['prefabs'])
 const result = successful(
   buildFixture({
     'main.ts': `import {g} from 'genshin-ts/runtime/core';
 import {CharacterPrefab,CharacterPrefabZh} from 'genshin-ts/definitions/prefabs';
-import {NODE_GRAPH_ENTRY_FACTORIES} from 'genshin-ts/definitions/node_graph_entries';
-import {NODE_TYPE_BY_METHOD} from 'genshin-ts/definitions/node_modes';
-import {SERVER_F_ZH_TO_EN} from 'genshin-ts/definitions/zh_aliases';
-import {SERVER_LITERAL_ARGUMENT_INDEXES_BY_METHOD} from 'genshin-ts/definitions/server_node_metadata';
-import {CLIENT_BLOCKED_SERVER_HELPERS} from 'genshin-ts/definitions/client_scoped_globals';
 export default g.clientControlScript(lua=>{return{onStart(){
 const key=lua.tostring('Kamisato_Ayaka') as keyof typeof CharacterPrefab;
 lua.assert(CharacterPrefab.Kamisato_Ayaka===10000002 && CharacterPrefab[key]===10000002);
 lua.assert(CharacterPrefabZh['神里绫华']===CharacterPrefab[key]);
-lua.assert(NODE_GRAPH_ENTRY_FACTORIES[0]==='server');
-lua.assert(NODE_TYPE_BY_METHOD.activateDisableCursorCollisionBox==='beyond');
-lua.assert(Object.keys(SERVER_F_ZH_TO_EN).length>0);
-lua.assert(SERVER_LITERAL_ARGUMENT_INDEXES_BY_METHOD.setPlayerSCursorClickSelectableTargets[0]===1);
-lua.assert(CLIENT_BLOCKED_SERVER_HELPERS.length>0);
 }}})`
   })
 )
@@ -51,6 +42,13 @@ assert(namespaceResult.files.has('__gsts_data/prefabs/CharacterPrefab.lua'))
 assert(!namespaceResult.files.has('__gsts_data/prefabs.lua'))
 execute(namespaceResult.files, "require('main');OnStart()")
 for (const module of [
+  ...[
+    'zh_aliases',
+    'node_modes',
+    'node_graph_entries',
+    'server_node_metadata',
+    'client_scoped_globals'
+  ].map((name) => 'genshin-ts/definitions/' + name),
   'genshin-ts/definitions/enum',
   'genshin-ts/definitions/client_enums',
   'genshin-ts/runtime/value',
@@ -92,5 +90,5 @@ fs.writeFileSync(
 )
 assert.throws(() => generateLuaDataModules(root), /unsupported data expression/)
 console.log(
-  'Lua package data: six allowlisted modules, Chinese/dynamic keys, incremental removal and rejected JavaScript: PASS'
+  'Lua package data: prefabs-only allowlist, Chinese/dynamic keys, incremental removal and rejected JavaScript: PASS'
 )
