@@ -11,7 +11,7 @@ src/compiler/lua/
   worker/                编译线程、增量依赖与计时
 ```
 
-`ts_to_lua_transform/plugin.ts` 只创建每文件上下文并装配访问器。`context.ts` 保存本文件的导入绑定和前导声明；`scope.ts` 处理计时与更新开关，`data.ts` 处理包内常量，`standard.ts` 处理标准库调用，`imports.ts` 处理导入、重导出和前导语句，`entry.ts` 生成生命周期与公开方法，`entry_shared.ts` 生成入口共享模块。表达式和变量声明分别交给 `expressions.ts`、`variables.ts`。这些函数显式接收文件上下文，转换顺序不依赖另一个文件的状态。
+`ts_to_lua_transform/plugin.ts` 只创建每文件上下文并装配访问器。`source_file.ts` 决定每个源文件的转换顺序：入口有顶层运行时代码时，先生成共享模块，再生成挂载脚本。`context.ts` 保存本文件的导入绑定和前导声明；`scope.ts` 处理计时与更新开关，`data.ts` 处理包内常量，`standard.ts` 处理标准库调用，`imports.ts` 处理导入、重导出和前导语句，`entry.ts` 生成生命周期与公开方法，`entry_shared.ts` 提供共享模块的生成步骤（`generateSharedModule`、`bindSharedEntry`）。表达式和变量声明分别交给 `expressions.ts`、`variables.ts`。这些函数显式接收文件上下文，转换顺序不依赖另一个文件的状态。
 
 从下面三个入口看起。模型和种类表描述“是什么”，插件负责生成代码，运行库负责每个挂载实例的资源。
 

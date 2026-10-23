@@ -28,6 +28,23 @@ export interface LuaFileContext {
   sharedModule?: boolean
   shared?: SharedState
 }
+/** 访问器按源文件查找当前上下文。 */
+export type FileContexts = WeakMap<ts.SourceFile, LuaFileContext>
+/** 在 fn 执行期间让这个源文件改用 context（生成共享模块时），结束后恢复原来的上下文。 */
+export function withFileContext<T>(
+  files: FileContexts,
+  node: ts.SourceFile,
+  context: LuaFileContext,
+  fn: (context: LuaFileContext) => T
+): T {
+  const previous = files.get(node)
+  files.set(node, context)
+  try {
+    return fn(context)
+  } finally {
+    if (previous) files.set(node, previous)
+  }
+}
 export function createFileContext(
   node: ts.SourceFile,
   ctx: lua.TransformationContext,

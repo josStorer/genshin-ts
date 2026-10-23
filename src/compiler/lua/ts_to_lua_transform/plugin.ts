@@ -1,8 +1,8 @@
 import ts from 'typescript'
 import type * as lua from 'typescript-to-lua'
 
-import { createFileContext, type LuaFileContext, type SharedFiles } from './context.js'
-import { printSharedFiles, transformSourceFile } from './entry_shared.js'
+import { createFileContext, type FileContexts, type SharedFiles } from './context.js'
+import { printSharedFiles } from './entry_shared.js'
 import { transformEntryStatement, transformExportAssignment } from './entry.js'
 import {
   transformElement,
@@ -13,6 +13,7 @@ import {
   transformWrapped
 } from './expressions.js'
 import { transformExport } from './imports.js'
+import { transformSourceFile } from './source_file.js'
 import { transformCall } from './standard.js'
 import { transformVariables } from './variables.js'
 
@@ -25,15 +26,14 @@ export function createLuaPlugin(
 ): lua.Plugin {
   const options = { resolve, nativeDefault, rootDir }
   const sharedFiles: SharedFiles = new Map()
-  const files = new WeakMap<ts.SourceFile, LuaFileContext>()
+  const files: FileContexts = new WeakMap()
   const file = (ctx: lua.TransformationContext) => files.get(ctx.sourceFile)!
   return {
     afterPrint: (...args) => printSharedFiles(sharedFiles, ...args),
     visitors: {
       [ts.SyntaxKind.SourceFile]: (node, ctx) => {
-        const state = createFileContext(node, ctx, options)
-        files.set(node, state)
-        return transformSourceFile(node, ctx, (next) => files.set(node, next), sharedFiles, state)
+        files.set(node, createFileContext(node, ctx, options))
+        return transformSourceFile(node, ctx, files, sharedFiles)
       },
       [ts.SyntaxKind.ImportDeclaration]: () => [],
       [ts.SyntaxKind.VariableStatement]: (node, ctx) => transformVariables(node, ctx, file(ctx)),

@@ -6,7 +6,6 @@ import * as lua from 'typescript-to-lua'
 
 import type { LuaEntryModel, LuaSharedBinding } from '../analysis/entry_model.js'
 import type { LuaFileContext, SharedFiles } from './context.js'
-import { finishEntry } from './entry.js'
 import { bindImports, generatePrelude, generateReexports } from './imports.js'
 import { field, id, requireModule } from './lua_ast.js'
 import { discardAdaptedCallbackDiagnostics, transformSharedSource } from './tstl_compat.js'
@@ -136,103 +135,92 @@ export function rewriteSharedDeclarations(
   })
 }
 
-export function transformSourceFile(
-  node: ts.SourceFile,
-  ctx: lua.TransformationContext,
-  selectFile: (file: LuaFileContext) => void,
-  sharedFiles: SharedFiles,
-  file: LuaFileContext
-) {
-  const state = file
-  const model = state.entry
-  let entrySource = node
-  if (model?.shared.runtime) {
-    // 同一份已分析的 AST 先生成共享模块，再生成挂载；不构造第二个 Program。
-    const sharedState: LuaFileContext = {
-      ...state,
-      entry: undefined,
-      sharedModule: true,
-      prelude: [],
-      bindings: new Map(),
-      getters: [],
-      dataBindings: new Map(),
-      dataLocals: new Map(),
-      adaptedCallbacks: new Set()
-    }
-    selectFile(sharedState)
-    file = sharedState
-    sharedState.shared = bindSharedState(model, ctx, sharedState.bindings)
-    bindImports(node, ctx, file)
-    const sharedSource = ts.factory.updateSourceFile(node, model.shared.statements)
-    const shared = transformSharedSource(sharedSource, ctx)
-    if (!lua.isFile(shared)) throw new Error('TSTL did not return a shared Lua file')
-    generateReexports(shared, ctx, file)
-    finishSharedEntry(shared, model, ctx, sharedState.shared?.table)
-    if (sharedState.shared?.table)
-      sharedState.prelude.push(
-        lua.createVariableDeclarationStatement(
-          sharedState.shared.table,
-          lua.createTableExpression()
-        )
-      )
-    generatePrelude(shared, ctx, file)
-    shared.statements.unshift(...sharedState.prelude)
-    discardAdaptedCallbackDiagnostics(ctx, sharedState.adaptedCallbacks)
-    shared.luaLibFeatures = new Set(shared.luaLibFeatures)
-    ctx.usedLuaLibFeatures.clear()
-    sharedFiles.set(sharedEntryFile(node.fileName, file.options.rootDir), {
-      source: node,
-      ast: shared
-    })
-    selectFile(state)
-    file = state
-    const module = sharedEntryModule(
-      path
-        .relative(file.options.rootDir, node.fileName)
-        .replaceAll('\\', '/')
-        .replace(/\.[cm]?tsx?$/, '')
-    )
-    const local = id(ctx.createTempName('shared'))
-    state.prelude.push(lua.createVariableDeclarationStatement(local, requireModule(module)))
-    const sharedExports = model.shared.bindings.some(
-      (binding) => binding.mutable && binding.declared
-    )
-      ? id(ctx.createTempName('sharedExports'))
-      : field(local, 'exports')
-    if (lua.isIdentifier(sharedExports))
-      state.prelude.push(
-        lua.createVariableDeclarationStatement(sharedExports, field(local, 'exports'))
-      )
-    state.shared = bindSharedState(model, ctx, state.bindings, sharedExports)
-    if (state.shared?.table)
-      state.prelude.push(
-        lua.createVariableDeclarationStatement(state.shared.table, field(local, 'state'))
-      )
-    if (model.shared.bindings.some((binding) => !binding.mutable)) {
-      const values = id(ctx.createTempName('values'))
-      state.prelude.push(lua.createVariableDeclarationStatement(values, field(local, 'values')))
-      for (const { name, mutable } of model.shared.bindings) {
-        if (mutable) continue
-        const symbol = ctx.checker.getSymbolAtLocation(name)
-        if (symbol) state.bindings.set(symbol, field(values, name.text))
-      }
-    }
-    entrySource = ts.factory.updateSourceFile(
-      node,
-      node.statements.filter(
-        (statement) => statement === model.call.parent || ts.isImportDeclaration(statement)
-      )
-    )
+/** 共享模块用自己的文件上下文：同一份 AST，但没有入口，绑定和前导声明各自独立。 */
+export function sharedModuleContext(file: LuaFileContext): LuaFileContext {
+  return {
+    ...file,
+    entry: undefined,
+    sharedModule: true,
+    prelude: [],
+    bindings: new Map(),
+    getters: [],
+    dataBindings: new Map(),
+    dataLocals: new Map(),
+    adaptedCallbacks: new Set()
   }
+}
+
+/** 用入口文件的顶层语句生成共享模块。调用期间 file 必须是这个源文件当前使用的上下文。 */
+export function generateSharedModule(
+  node: ts.SourceFile,
+  model: LuaEntryModel,
+  ctx: lua.TransformationContext,
+  file: LuaFileContext
+): lua.File {
+  file.shared = bindSharedState(model, ctx, file.bindings)
   bindImports(node, ctx, file)
-  const result = ctx.superTransformNode(entrySource)[0]
-  if (!lua.isFile(result)) throw new Error('TSTL did not return a Lua file')
-  finishEntry(result, ctx, file)
-  generateReexports(result, ctx, file)
-  discardAdaptedCallbackDiagnostics(ctx, state.adaptedCallbacks)
-  generatePrelude(result, ctx, file)
-  result.statements.unshift(...state.prelude)
-  return result
+  const sharedSource = ts.factory.updateSourceFile(node, model.shared.statements)
+  const shared = transformSharedSource(sharedSource, ctx)
+  if (!lua.isFile(shared)) throw new Error('TSTL did not return a shared Lua file')
+  generateReexports(shared, ctx, file)
+  finishSharedEntry(shared, model, ctx, file.shared?.table)
+  if (file.shared?.table)
+    file.prelude.push(
+      lua.createVariableDeclarationStatement(file.shared.table, lua.createTableExpression())
+    )
+  generatePrelude(shared, ctx, file)
+  shared.statements.unshift(...file.prelude)
+  discardAdaptedCallbackDiagnostics(ctx, file.adaptedCallbacks)
+  shared.luaLibFeatures = new Set(shared.luaLibFeatures)
+  ctx.usedLuaLibFeatures.clear()
+  return shared
+}
+
+/**
+ * 让挂载脚本 require 共享模块，并把回调用到的顶层名字指向模块里的字段。
+ * 返回只保留入口语句和 import 的源文件，供挂载脚本继续转换。
+ */
+export function bindSharedEntry(
+  node: ts.SourceFile,
+  model: LuaEntryModel,
+  ctx: lua.TransformationContext,
+  file: LuaFileContext
+): ts.SourceFile {
+  const module = sharedEntryModule(
+    path
+      .relative(file.options.rootDir, node.fileName)
+      .replaceAll('\\', '/')
+      .replace(/\.[cm]?tsx?$/, '')
+  )
+  const local = id(ctx.createTempName('shared'))
+  file.prelude.push(lua.createVariableDeclarationStatement(local, requireModule(module)))
+  const sharedExports = model.shared.bindings.some((binding) => binding.mutable && binding.declared)
+    ? id(ctx.createTempName('sharedExports'))
+    : field(local, 'exports')
+  if (lua.isIdentifier(sharedExports))
+    file.prelude.push(
+      lua.createVariableDeclarationStatement(sharedExports, field(local, 'exports'))
+    )
+  file.shared = bindSharedState(model, ctx, file.bindings, sharedExports)
+  if (file.shared?.table)
+    file.prelude.push(
+      lua.createVariableDeclarationStatement(file.shared.table, field(local, 'state'))
+    )
+  if (model.shared.bindings.some((binding) => !binding.mutable)) {
+    const values = id(ctx.createTempName('values'))
+    file.prelude.push(lua.createVariableDeclarationStatement(values, field(local, 'values')))
+    for (const { name, mutable } of model.shared.bindings) {
+      if (mutable) continue
+      const symbol = ctx.checker.getSymbolAtLocation(name)
+      if (symbol) file.bindings.set(symbol, field(values, name.text))
+    }
+  }
+  return ts.factory.updateSourceFile(
+    node,
+    node.statements.filter(
+      (statement) => statement === model.call.parent || ts.isImportDeclaration(statement)
+    )
+  )
 }
 
 export function printSharedFiles(
