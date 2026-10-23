@@ -135,7 +135,7 @@
   "lua_generator": "Client Lua does not support generators or yield. Keep state in ordinary functions and continue from lifecycle updates or timer callbacks.",
   "lua_unsupportedNode": "Client Lua cannot compile {{arg0}} syntax. Use ordinary functions and data operations, or import a native Lua module for Lua-specific code.",
   "lua_unsupportedSyntax": "Client Lua does not support async scheduling, generators, dynamic import or bigint. Use lifecycle hooks and regular numbers.",
-  "lua_truthiness": "In Lua, 0 and empty strings are truthy. Compare numbers or strings explicitly instead of relying on JS truthiness.",
+  "lua_truthiness": "In Lua, 0 and empty strings are truthy. Compare explicitly, e.g. count !== 0 or name !== ''; use Boolean(value) for JavaScript conversion.",
   "lua_nil": "Lua nil removes table fields. In arrays it can create holes that affect length and iteration.",
   "lua_graphApi": "Lua scripts cannot use node graph API {{arg0}}.",
   "lua_literalHooks": "End the callback with a direct return { onStart() { ... }, onUpdate(dt) { ... } }.",

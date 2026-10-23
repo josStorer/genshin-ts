@@ -30,3 +30,15 @@ export function localizeLuaTranspileDiagnostic(diagnostic: ts.Diagnostic): ts.Di
   const messageText = localizeLuaTranspileError(diagnostic.messageText)
   return messageText === diagnostic.messageText ? diagnostic : { ...diagnostic, messageText }
 }
+
+/** 同一条件已有可操作的 GSTS 错误时，不再重复显示 TSTL 的真值提醒。 */
+export function removeDuplicateTruthiness(diagnostics: readonly ts.Diagnostic[]) {
+  const sites = new Set(
+    diagnostics
+      .filter((d) => d.source === 'lua-truthiness' && d.code === 97001)
+      .map((d) => `${d.file?.fileName}:${d.start}:${d.length}`)
+  )
+  return diagnostics.filter(
+    (d) => d.code !== 100037 || !sites.has(`${d.file?.fileName}:${d.start}:${d.length}`)
+  )
+}

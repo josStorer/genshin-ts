@@ -237,9 +237,8 @@ const deferred = success(
   })
 )
 execute(deferred.files, "print=function(value)assert(value==7)end;require('main');OnStart()")
-const truthiness = success(
-  build({
-    'main.ts': `import {g} from 'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{
+const truthiness = build({
+  'main.ts': `import {g} from 'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{
     function check(n:number,s:string){
       const negated = !n;
       const fallback = s || 'fallback';
@@ -253,11 +252,13 @@ const truthiness = success(
     }
     return {onStart(){lua.print(check(0,''))}}
   })`
-  })
-)
+})
 const truthWarnings = truthiness.diagnostics.filter((d) =>
   String(d.messageText).includes('Lua 中 0')
 )
+assert(truthWarnings.every((d) => d.category === 1 && d.code === 97001))
+assert.equal(truthiness.files.size, 0)
+assert(!truthiness.diagnostics.some((d) => d.code === 100037))
 assert.equal(truthWarnings.length, 5, formatLuaDiagnostics(truthiness.diagnostics))
 assert.deepEqual(
   truthWarnings.map((d) => d.file.text.slice(d.start, d.start + d.length)),

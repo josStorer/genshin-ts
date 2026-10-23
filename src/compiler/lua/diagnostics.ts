@@ -204,7 +204,7 @@ export function getLuaDiagnostics(
           return !!(t.flags & (ts.TypeFlags.NumberLike | ts.TypeFlags.StringLike))
         })
       )
-        diagnostics.push(issue(condition, 'lua_truthiness', true))
+        diagnostics.push(issue(condition, 'lua_truthiness'))
     }
     if (
       ts.isBinaryExpression(node) &&

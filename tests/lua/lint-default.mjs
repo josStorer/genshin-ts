@@ -25,7 +25,9 @@ assert(
   JSON.stringify(result.messages)
 )
 assert(
-  result.messages.some((m) => m.ruleId === '@typescript-eslint/strict-boolean-expressions'),
+  result.messages.some(
+    (m) => m.ruleId === '@typescript-eslint/strict-boolean-expressions' && m.severity === 2
+  ),
   JSON.stringify(result.messages)
 )
 const graph = await lint.calculateConfigForFile(path.join(root, 'graph.ts'))

@@ -135,7 +135,7 @@
   "lua_generator": "客户端 Lua 不支持生成器和 yield。请用普通函数保存状态，并在生命周期更新或定时器回调中继续执行。",
   "lua_unsupportedNode": "客户端 Lua 无法编译语法 {{arg0}}。请改写为普通函数和数据操作；需要 Lua 专有写法时可导入原生 Lua 模块。",
   "lua_unsupportedSyntax": "客户端 Lua 暂不支持异步调度、生成器、动态 import 或 bigint；请使用生命周期和普通 number。",
-  "lua_truthiness": "Lua 中 0 和空字符串也是真值。建议明确比较数值或字符串，避免依赖 JS 真值。",
+  "lua_truthiness": "Lua 中 0 和空字符串也是真值。请显式比较，例如 count !== 0、name !== ''；需要 JS 转换时使用 Boolean(value)。",
   "lua_nil": "Lua 的 nil 会删除 table 中的字段；用于数组时可能形成空洞，影响长度与遍历。",
   "lua_graphApi": "Lua 脚本不能使用节点图 API {{arg0}}。",
   "lua_literalHooks": "请在回调最后直接 return { onStart() { … }, onUpdate(dt) { … } }。",

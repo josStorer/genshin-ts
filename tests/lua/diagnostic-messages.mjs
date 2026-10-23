@@ -4,7 +4,8 @@ import ts from 'typescript'
 
 import {
   localizeLuaTranspileDiagnostic,
-  localizeLuaTranspileError
+  localizeLuaTranspileError,
+  removeDuplicateTruthiness
 } from '../../src/compiler/lua/diagnostic_messages.ts'
 import { LocatedLuaError } from '../../src/compiler/lua/tstl_compat.ts'
 import { initCliI18n } from '../../src/i18n/index.ts'
@@ -79,4 +80,21 @@ for (const start of [sharedSource.indexOf('1n'), sharedSource.indexOf('BigInt')]
 }
 console.log(
   'Localized syntax alternatives retain source locations; shared bigint emits one specific diagnostic per site: PASS'
+)
+
+const truth = {
+  code: 97001,
+  source: 'lua-truthiness',
+  category: 1,
+  start: 10,
+  length: 1,
+  messageText: 'compare explicitly'
+}
+assert.deepEqual(
+  removeDuplicateTruthiness([
+    truth,
+    { ...truth, code: 100037 },
+    { ...truth, code: 100037, start: 20 }
+  ]),
+  [truth, { ...truth, code: 100037, start: 20 }]
 )

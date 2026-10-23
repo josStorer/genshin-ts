@@ -89,8 +89,8 @@ assert.ok(semanticDiagnostics.some((d) => d.source === 'lua-unavailable-global')
 assert.ok(semanticDiagnostics.some((d) => d.source === 'lua-standard-library'))
 for (const start of [source.indexOf('!n') + 1, source.indexOf('n ||')])
   assert.ok(
-    semanticDiagnostics.some((d) => d.code === 97001 && d.start === start),
-    'truthiness warning must reach the editor at the tested operand'
+    semanticDiagnostics.some((d) => d.code === 97001 && d.category === 1 && d.start === start),
+    'truthiness error must reach the editor at the tested operand'
   )
 service.dispose()
 console.log('Lua language service: globals, hooks, dt and narrowed controls: PASS')

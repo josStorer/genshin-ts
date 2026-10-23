@@ -8,7 +8,7 @@ import * as tstl from 'typescript-to-lua'
 import { initCliI18n, t, type Lang } from '../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
 import { luaDataModule, luaDataModules } from './data_modules.js'
-import { localizeLuaTranspileDiagnostic } from './diagnostic_messages.js'
+import { localizeLuaTranspileDiagnostic, removeDuplicateTruthiness } from './diagnostic_messages.js'
 import { getLuaDiagnostics } from './diagnostics.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
@@ -762,7 +762,7 @@ function packageLua({
         }
       : {}),
     files,
-    diagnostics: ts.sortAndDeduplicateDiagnostics(diagnostics),
+    diagnostics: ts.sortAndDeduplicateDiagnostics(removeDuplicateTruthiness(diagnostics)),
     entries: [...entryFiles].map((x) => modulePath(x) + '.lua'),
     dependencies: [...dependencies]
   }

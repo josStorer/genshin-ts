@@ -111,7 +111,7 @@ export const configs = {
       ),
       eqeqeq: ['error', 'always'] as const,
       '@typescript-eslint/strict-boolean-expressions': [
-        'warn',
+        'error',
         {
           allowString: false,
           allowNumber: false,
