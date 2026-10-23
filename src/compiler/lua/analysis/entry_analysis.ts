@@ -65,206 +65,24 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
     cache.set(source, { lang, result })
     return result
   }
-  const checker = program.getTypeChecker()
-  const builtins = getLuaBuiltins(program)
   const diagnostics: ts.Diagnostic[] = []
-  const issue = (node: ts.Node, key: keyof typeof entryDiagnosticRules, arg0?: string) => {
+  const issue: EntryIssue = (node, key, arg0) => {
     diagnostics.push({ ...diagnostic(node, t(key, { arg0 })), source: entryDiagnosticRules[key] })
   }
   const call = entryCall(source)
   let model: LuaEntryModel | undefined
   let timerClock: 'level' | 'real' = 'level'
   if (call) {
-    if (!builtins.isEntryCall(call)) issue(call, 'lua_invalidEntry')
-    if (call.arguments.length < 1 || call.arguments.length > 2) issue(call, 'lua_optionsEmpty')
-    if (call.arguments.length === 2) {
-      const options = call.arguments[0]
-      if (!ts.isObjectLiteralExpression(options)) issue(options, 'lua_optionsEmpty')
-      else
-        for (const property of options.properties) {
-          if (
-            ts.isPropertyAssignment(property) &&
-            ts.isIdentifier(property.name) &&
-            property.name.text === 'timerClock' &&
-            ts.isStringLiteralLike(property.initializer) &&
-            (property.initializer.text === 'level' || property.initializer.text === 'real')
-          ) {
-            timerClock = property.initializer.text
-          } else issue(property, 'lua_optionsEmpty')
-        }
-    }
-    const setup = call.arguments.at(-1)
-    if (
-      !setup ||
-      !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup)) ||
-      setup.parameters.length > 1 ||
-      (setup.parameters[0] && !ts.isIdentifier(setup.parameters[0].name))
-    ) {
-      issue(call, 'lua_invalidCallback')
-    } else {
-      const last = ts.isBlock(setup.body) ? setup.body.statements.at(-1) : undefined
-      const returned = last && ts.isReturnStatement(last) ? last : undefined
-      let object = ts.isBlock(setup.body) ? returned?.expression : setup.body
-      while (
-        object &&
-        (ts.isParenthesizedExpression(object) ||
-          ts.isAsExpression(object) ||
-          ts.isSatisfiesExpression(object))
-      )
-        object = object.expression
-      if (!object || !ts.isObjectLiteralExpression(object)) {
-        issue(setup, ts.isBlock(setup.body) ? 'lua_literalHooks' : 'lua_invalidCallback')
-      } else {
-        const hookMap = new Map<string, LuaEntryFunction>()
-        const methods = new Map<string, LuaEntryFunction>()
-        for (const member of object.properties) {
-          if (
-            member.name &&
-            ts.isIdentifier(member.name) &&
-            member.name.text === 'methods' &&
-            ts.isPropertyAssignment(member) &&
-            ts.isObjectLiteralExpression(member.initializer)
-          ) {
-            for (const method of member.initializer.properties) {
-              const definition = publicMethodFunction(method, checker, setup.body)
-              if (
-                !definition ||
-                !method.name ||
-                !ts.isIdentifier(method.name) ||
-                !/^[A-Za-z_][A-Za-z0-9_]*$/.test(method.name.text) ||
-                reservedMethods.has(method.name.text)
-              ) {
-                issue(method, 'lua_publicMethodName')
-                continue
-              }
-              const checkThis = (node: ts.Node) => {
-                if (
-                  node !== definition &&
-                  (ts.isClassLike(node) ||
-                    ts.isFunctionDeclaration(node) ||
-                    ts.isFunctionExpression(node))
-                )
-                  return
-                if (node.kind === ts.SyntaxKind.ThisKeyword) issue(node, 'lua_publicMethodThis')
-                ts.forEachChild(node, checkThis)
-              }
-              checkThis(definition)
-              methods.set(method.name.text, {
-                member: method,
-                definition,
-                removeSelf: functionNeedsSelf(program, method)
-              })
-            }
-          } else if (
-            !member.name ||
-            !ts.isIdentifier(member.name) ||
-            !hooks.has(member.name.text)
-          ) {
-            issue(member, 'lua_dynamicHooks')
-          } else {
-            const definition = ts.isMethodDeclaration(member)
-              ? member
-              : ts.isPropertyAssignment(member) &&
-                  (ts.isArrowFunction(member.initializer) ||
-                    ts.isFunctionExpression(member.initializer))
-                ? member.initializer
-                : undefined
-            if (!definition) issue(member, 'lua_hookFunction', member.name.text)
-            else hookMap.set(member.name.text, { member, definition, removeSelf: false })
-          }
-        }
-        const sharedStatements = source.statements.filter((statement) => statement !== call.parent)
-        const candidates = new Map<ts.Symbol, LuaSharedBinding>()
-        const bindName = (name: ts.BindingName, mutable: boolean) => {
-          if (ts.isIdentifier(name)) {
-            const symbol = checker.getSymbolAtLocation(name)
-            if (symbol) candidates.set(symbol, { name, mutable, exports: [], declared: false })
-          } else
-            for (const element of name.elements)
-              if (ts.isBindingElement(element)) bindName(element.name, mutable)
-        }
-        for (const statement of sharedStatements) {
-          if (ts.isVariableStatement(statement))
-            for (const declaration of statement.declarationList.declarations)
-              bindName(declaration.name, !(statement.declarationList.flags & ts.NodeFlags.Const))
-          else if (
-            (ts.isFunctionDeclaration(statement) ||
-              ts.isClassDeclaration(statement) ||
-              ts.isEnumDeclaration(statement)) &&
-            statement.name
-          )
-            bindName(statement.name, false)
-        }
-        const sourceSymbol = checker.getSymbolAtLocation(source)
-        for (const exported of sourceSymbol ? checker.getExportsOfModule(sourceSymbol) : []) {
-          const target =
-            exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported
-          const binding = candidates.get(target)
-          if (!binding) continue
-          binding.exports = [...binding.exports, exported.name]
-          if (exported === target) binding.declared = true
-        }
-        const names = new Set([...candidates.values()].map((binding) => binding.name.text))
-        const used = new Set<ts.Symbol>()
-        const findUses = (node: ts.Node) => {
-          if (ts.isTypeNode(node)) return
-          if (ts.isIdentifier(node) && names.has(node.text)) {
-            const symbol = ts.isShorthandPropertyAssignment(node.parent)
-              ? checker.getShorthandAssignmentValueSymbol(node.parent)
-              : checker.getSymbolAtLocation(node)
-            if (symbol && candidates.has(symbol)) used.add(symbol)
-          }
-          ts.forEachChild(node, findUses)
-        }
-        findUses(setup.body)
-        const bindings = [...candidates]
-          .filter(([symbol]) => used.has(symbol))
-          .map(([, binding]) => binding)
+    timerClock = readEntryOptions(call, program, issue)
+    const callback = readCallback(call, issue)
+    if (callback) {
+      const { setup, returned, object } = callback
+      if (object) {
+        const checker = program.getTypeChecker()
+        const { hookMap, methods } = readHooks(object, setup, program, issue)
         model = {
           source,
-          shared: {
-            aliases: sharedStatements.flatMap((statement) =>
-              ts.isExportDeclaration(statement) &&
-              !statement.moduleSpecifier &&
-              statement.exportClause &&
-              ts.isNamedExports(statement.exportClause)
-                ? statement.exportClause.elements
-                    .filter((item) => !item.isTypeOnly)
-                    .map((item) => item.name.text)
-                : []
-            ),
-            runtime: sharedStatements.some((statement) => {
-              if (
-                ts.isImportDeclaration(statement) ||
-                ts.isTypeAliasDeclaration(statement) ||
-                ts.isInterfaceDeclaration(statement) ||
-                ts.isEmptyStatement(statement)
-              )
-                return false
-              if (ts.isExportDeclaration(statement)) {
-                if (statement.isTypeOnly) return false
-                if (statement.exportClause && ts.isNamedExports(statement.exportClause))
-                  return statement.exportClause.elements.some((item) => {
-                    if (item.isTypeOnly) return false
-                    const symbol = checker.getSymbolAtLocation(item.name)
-                    const target =
-                      symbol &&
-                      (symbol.flags & ts.SymbolFlags.Alias
-                        ? checker.getAliasedSymbol(symbol)
-                        : symbol)
-                    return !!target && !!(target.flags & ts.SymbolFlags.Value)
-                  })
-                return true
-              }
-              if (ts.isFunctionDeclaration(statement) && !statement.body) return false
-              return !(
-                ts.canHaveModifiers(statement) &&
-                ts.getModifiers(statement)?.some((m) => m.kind === ts.SyntaxKind.DeclareKeyword)
-              )
-            }),
-            statements: sharedStatements,
-            bindings
-          },
+          shared: collectSharedNames(source, call, setup, checker),
           call,
           setup,
           environment: setup.parameters[0]?.name as ts.Identifier | undefined,
@@ -277,14 +95,261 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
           timerClocks: new Set()
         }
       }
-      const checkReturn = (node: ts.Node) => {
-        if (node !== setup.body && ts.isFunctionLike(node)) return
-        if (ts.isReturnStatement(node) && node !== returned) issue(node, 'lua_earlyReturn')
-        ts.forEachChild(node, checkReturn)
-      }
-      if (ts.isBlock(setup.body)) checkReturn(setup.body)
+      checkReturns(setup, returned, issue)
     }
   }
+  collectCapabilities(source, model, program, timerClock, issue)
+  const result = { model, diagnostics }
+  cache.set(source, { lang, result })
+  return result
+}
+
+type EntryIssue = (node: ts.Node, key: keyof typeof entryDiagnosticRules, arg0?: string) => void
+
+function readEntryOptions(call: ts.CallExpression, program: ts.Program, issue: EntryIssue) {
+  const builtins = getLuaBuiltins(program)
+  let timerClock: 'level' | 'real' = 'level'
+  if (!builtins.isEntryCall(call)) issue(call, 'lua_invalidEntry')
+  if (call.arguments.length < 1 || call.arguments.length > 2) issue(call, 'lua_optionsEmpty')
+  if (call.arguments.length === 2) {
+    const options = call.arguments[0]
+    if (!ts.isObjectLiteralExpression(options)) issue(options, 'lua_optionsEmpty')
+    else
+      for (const property of options.properties) {
+        if (
+          ts.isPropertyAssignment(property) &&
+          ts.isIdentifier(property.name) &&
+          property.name.text === 'timerClock' &&
+          ts.isStringLiteralLike(property.initializer) &&
+          (property.initializer.text === 'level' || property.initializer.text === 'real')
+        ) {
+          timerClock = property.initializer.text
+        } else issue(property, 'lua_optionsEmpty')
+      }
+  }
+
+  return timerClock
+}
+
+function readCallback(call: ts.CallExpression, issue: EntryIssue) {
+  const setup = call.arguments.at(-1)
+  if (
+    !setup ||
+    !(ts.isArrowFunction(setup) || ts.isFunctionExpression(setup)) ||
+    setup.parameters.length > 1 ||
+    (setup.parameters[0] && !ts.isIdentifier(setup.parameters[0].name))
+  ) {
+    issue(call, 'lua_invalidCallback')
+    return undefined
+  }
+
+  const last = ts.isBlock(setup.body) ? setup.body.statements.at(-1) : undefined
+  const returned = last && ts.isReturnStatement(last) ? last : undefined
+  let object = ts.isBlock(setup.body) ? returned?.expression : setup.body
+  while (
+    object &&
+    (ts.isParenthesizedExpression(object) ||
+      ts.isAsExpression(object) ||
+      ts.isSatisfiesExpression(object))
+  )
+    object = object.expression
+  if (!object || !ts.isObjectLiteralExpression(object)) {
+    issue(setup, ts.isBlock(setup.body) ? 'lua_literalHooks' : 'lua_invalidCallback')
+    return { setup, returned, object: undefined }
+  }
+  return { setup, returned, object }
+}
+
+function readMethods(
+  object: ts.ObjectLiteralExpression,
+  body: ts.ConciseBody,
+  program: ts.Program,
+  methods: Map<string, LuaEntryFunction>,
+  issue: EntryIssue
+) {
+  const checker = program.getTypeChecker()
+  for (const method of object.properties) {
+    const definition = publicMethodFunction(method, checker, body)
+    if (
+      !definition ||
+      !method.name ||
+      !ts.isIdentifier(method.name) ||
+      !/^[A-Za-z_][A-Za-z0-9_]*$/.test(method.name.text) ||
+      reservedMethods.has(method.name.text)
+    ) {
+      issue(method, 'lua_publicMethodName')
+      continue
+    }
+    const checkThis = (node: ts.Node) => {
+      if (
+        node !== definition &&
+        (ts.isClassLike(node) || ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node))
+      )
+        return
+      if (node.kind === ts.SyntaxKind.ThisKeyword) issue(node, 'lua_publicMethodThis')
+      ts.forEachChild(node, checkThis)
+    }
+    checkThis(definition)
+    methods.set(method.name.text, {
+      member: method,
+      definition,
+      removeSelf: functionNeedsSelf(program, method)
+    })
+  }
+}
+
+function readHooks(
+  object: ts.ObjectLiteralExpression,
+  setup: LuaEntryModel['setup'],
+  program: ts.Program,
+  issue: EntryIssue
+) {
+  const hookMap = new Map<string, LuaEntryFunction>()
+  const methods = new Map<string, LuaEntryFunction>()
+  for (const member of object.properties) {
+    if (
+      member.name &&
+      ts.isIdentifier(member.name) &&
+      member.name.text === 'methods' &&
+      ts.isPropertyAssignment(member) &&
+      ts.isObjectLiteralExpression(member.initializer)
+    ) {
+      readMethods(member.initializer, setup.body, program, methods, issue)
+    } else if (!member.name || !ts.isIdentifier(member.name) || !hooks.has(member.name.text)) {
+      issue(member, 'lua_dynamicHooks')
+    } else {
+      const definition = ts.isMethodDeclaration(member)
+        ? member
+        : ts.isPropertyAssignment(member) &&
+            (ts.isArrowFunction(member.initializer) || ts.isFunctionExpression(member.initializer))
+          ? member.initializer
+          : undefined
+      if (!definition) issue(member, 'lua_hookFunction', member.name.text)
+      else hookMap.set(member.name.text, { member, definition, removeSelf: false })
+    }
+  }
+
+  return { hookMap, methods }
+}
+
+function collectSharedNames(
+  source: ts.SourceFile,
+  call: ts.CallExpression,
+  setup: LuaEntryModel['setup'],
+  checker: ts.TypeChecker
+): LuaEntryModel['shared'] {
+  const sharedStatements = source.statements.filter((statement) => statement !== call.parent)
+  const candidates = new Map<ts.Symbol, LuaSharedBinding>()
+  const bindName = (name: ts.BindingName, mutable: boolean) => {
+    if (ts.isIdentifier(name)) {
+      const symbol = checker.getSymbolAtLocation(name)
+      if (symbol) candidates.set(symbol, { name, mutable, exports: [], declared: false })
+    } else
+      for (const element of name.elements)
+        if (ts.isBindingElement(element)) bindName(element.name, mutable)
+  }
+  for (const statement of sharedStatements) {
+    if (ts.isVariableStatement(statement))
+      for (const declaration of statement.declarationList.declarations)
+        bindName(declaration.name, !(statement.declarationList.flags & ts.NodeFlags.Const))
+    else if (
+      (ts.isFunctionDeclaration(statement) ||
+        ts.isClassDeclaration(statement) ||
+        ts.isEnumDeclaration(statement)) &&
+      statement.name
+    )
+      bindName(statement.name, false)
+  }
+  const sourceSymbol = checker.getSymbolAtLocation(source)
+  for (const exported of sourceSymbol ? checker.getExportsOfModule(sourceSymbol) : []) {
+    const target =
+      exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported
+    const binding = candidates.get(target)
+    if (!binding) continue
+    binding.exports = [...binding.exports, exported.name]
+    if (exported === target) binding.declared = true
+  }
+  const names = new Set([...candidates.values()].map((binding) => binding.name.text))
+  const used = new Set<ts.Symbol>()
+  const findUses = (node: ts.Node) => {
+    if (ts.isTypeNode(node)) return
+    if (ts.isIdentifier(node) && names.has(node.text)) {
+      const symbol = ts.isShorthandPropertyAssignment(node.parent)
+        ? checker.getShorthandAssignmentValueSymbol(node.parent)
+        : checker.getSymbolAtLocation(node)
+      if (symbol && candidates.has(symbol)) used.add(symbol)
+    }
+    ts.forEachChild(node, findUses)
+  }
+  findUses(setup.body)
+  const bindings = [...candidates]
+    .filter(([symbol]) => used.has(symbol))
+    .map(([, binding]) => binding)
+  return {
+    aliases: sharedStatements.flatMap((statement) =>
+      ts.isExportDeclaration(statement) &&
+      !statement.moduleSpecifier &&
+      statement.exportClause &&
+      ts.isNamedExports(statement.exportClause)
+        ? statement.exportClause.elements
+            .filter((item) => !item.isTypeOnly)
+            .map((item) => item.name.text)
+        : []
+    ),
+    runtime: sharedStatements.some((statement) => {
+      if (
+        ts.isImportDeclaration(statement) ||
+        ts.isTypeAliasDeclaration(statement) ||
+        ts.isInterfaceDeclaration(statement) ||
+        ts.isEmptyStatement(statement)
+      )
+        return false
+      if (ts.isExportDeclaration(statement)) {
+        if (statement.isTypeOnly) return false
+        if (statement.exportClause && ts.isNamedExports(statement.exportClause))
+          return statement.exportClause.elements.some((item) => {
+            if (item.isTypeOnly) return false
+            const symbol = checker.getSymbolAtLocation(item.name)
+            const target =
+              symbol &&
+              (symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol)
+            return !!target && !!(target.flags & ts.SymbolFlags.Value)
+          })
+        return true
+      }
+      if (ts.isFunctionDeclaration(statement) && !statement.body) return false
+      return !(
+        ts.canHaveModifiers(statement) &&
+        ts.getModifiers(statement)?.some((m) => m.kind === ts.SyntaxKind.DeclareKeyword)
+      )
+    }),
+    statements: sharedStatements,
+    bindings
+  }
+}
+
+function checkReturns(
+  setup: LuaEntryModel['setup'],
+  returned: ts.ReturnStatement | undefined,
+  issue: EntryIssue
+) {
+  const checkReturn = (node: ts.Node) => {
+    if (node !== setup.body && ts.isFunctionLike(node)) return
+    if (ts.isReturnStatement(node) && node !== returned) issue(node, 'lua_earlyReturn')
+    ts.forEachChild(node, checkReturn)
+  }
+  if (ts.isBlock(setup.body)) checkReturn(setup.body)
+}
+
+function collectCapabilities(
+  source: ts.SourceFile,
+  model: LuaEntryModel | undefined,
+  program: ts.Program,
+  timerClock: 'level' | 'real',
+  issue: EntryIssue
+) {
+  const checker = program.getTypeChecker()
+  const builtins = getLuaBuiltins(program)
   const timerClocks = new Set<'level' | 'real'>()
   const markCapability = (
     node: ts.Node,
@@ -376,9 +441,6 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
   }
   visit(source)
   if (model) model.timerClocks = timerClocks
-  const result = { model, diagnostics }
-  cache.set(source, { lang, result })
-  return result
 }
 
 /** 预转换后的节点只做身份映射，不再解析入口的选项、钩子或方法。 */
