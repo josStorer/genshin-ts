@@ -172,12 +172,10 @@ export function transformExport(
     for (const item of node.exportClause.elements) {
       if (item.isTypeOnly || !ctx.resolver.isValueAliasDeclaration(item)) continue
       const local = item.propertyName ?? item.name
-      const symbol = ctx.checker.getExportSpecifierLocalTargetSymbol(item)
-      if (!module && symbol && file.shared?.bindings.has(symbol)) continue
       const value = module ? field(module, local.text) : ctx.transformExpression(local)
       // 同名导出已由 TSTL 存在 exports 上；再加 getter 会在值为 nil 时递归读取自身。
       if (
-        file.sharedAliases &&
+        file.sharedModule &&
         lua.isTableIndexExpression(value) &&
         lua.isIdentifier(value.table) &&
         value.table.text === '____exports' &&

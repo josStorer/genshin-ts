@@ -9,8 +9,7 @@ const entry = `import {g} from 'genshin-ts/runtime/core'
 import {record} from './record'
 record()
 export let total = 0
-let hidden = 3
-export {hidden as current}
+export let hidden = 3
 export function bump() { hidden++; return ++total }
 export class Counter { #value = 7; read() { return this.#value } }
 const [step] = [2]
@@ -30,12 +29,8 @@ const result = successful(
 )
 assert(result.files.has('__gsts_shared/main.lua'))
 assert.doesNotMatch(result.files.get('main.lua'), /____exports/)
-// export let 只存在 exports 上，没有状态表副本和重复写入；export { hidden as current } 仍从状态表同步。
-assert.doesNotMatch(result.files.get('__gsts_shared/main.lua'), /____state_\d+\.total/)
-assert.match(
-  result.files.get('__gsts_shared/main.lua'),
-  /____exports\.current = ____state_\d+\.hidden/
-)
+// export let 只有 exports 上的一份状态，不创建私有副本或同步写入。
+assert.doesNotMatch(result.files.get('__gsts_shared/main.lua'), /____state_\d+\.(total|hidden)/)
 const mount = `function mount()
  local env = setmetatable({}, {__index=_G})
  env._ENV=env
@@ -60,17 +55,17 @@ left=nil
 local replacement=mount();replacement.OnStart()
 assert(topExecutions==1 and replacement.read()[1]==8 and replacement.read()[3]==1)
 local shared=require('__gsts_shared.main').exports
-assert(shared.current==7)
-assert(replacement.increase()==9 and shared.current==8)
+assert(shared.hidden==7)
+assert(replacement.increase()==9 and shared.hidden==8)
 replacement.OnStart()
-assert(shared.current==9 and shared.total==11)
+assert(shared.hidden==9 and shared.total==11)
 `
 )
 const named = successful(
   buildFixture({
     'board.ts': entry.replace("import {record} from './record'\nrecord()", ''),
-    'bridge.ts': `export {total,current,bump,Counter} from './board'`,
-    'main.ts': `import {g} from 'genshin-ts/runtime/core';import type Board from './board';import {total,current,bump,Counter} from './bridge';g.clientControlScript(lua=>{return{onStart(){lua.assert(total===0);bump();lua.assert(total===1 && current===4);lua.assert(new Counter().read()===7)}}})`
+    'bridge.ts': `export {total,hidden,bump,Counter} from './board'`,
+    'main.ts': `import {g} from 'genshin-ts/runtime/core';import type Board from './board';import {total,hidden,bump,Counter} from './bridge';g.clientControlScript(lua=>{return{onStart(){lua.assert(total===0);bump();lua.assert(total===1 && hidden===4);lua.assert(new Counter().read()===7)}}})`
   })
 )
 execute(named.files, `require('main');OnStart()`)
@@ -147,7 +142,7 @@ execute(empty.files, `require('main');OnStart()`)
 
 const optional = successful(
   buildFixture({
-    'main.ts': `import{g}from'genshin-ts/runtime/core';let optional:number|undefined;export{optional};g.clientControlScript(lua=>{return{onStart(){lua.assert(optional===undefined);optional=2;lua.assert(optional===2)}}})`
+    'main.ts': `import{g}from'genshin-ts/runtime/core';export let optional:number|undefined;g.clientControlScript(lua=>{return{onStart(){lua.assert(optional===undefined);optional=2;lua.assert(optional===2)}}})`
   })
 )
 execute(optional.files, `require('main');OnStart()`)
@@ -160,8 +155,7 @@ let best = 0
 let {a, b = 4} = {a: 2, b: undefined as number | undefined}
 let [c, d = 9] = [3, undefined]
 var old = 5
-let published = 6
-export {published}
+export let published = 6
 export let exposed = 7
 const box = {value: 0}
 const unused = 123
@@ -238,4 +232,40 @@ const shadows = buildFixture(
 assert(!shadows.diagnostics.some((d) => d.source === 'lua-entry-default-value'))
 console.log(
   'Entry default imports: default, named default, namespace, exact ranges and local shadows: PASS'
+)
+
+// Captured mutable variables have one public name; every frontend rejects export lists.
+for (const declaration of [
+  'let value=1;export{value}',
+  'let value=1;export{value as current}',
+  'export let value=1;export{value as current}',
+  'var value=1;export{value}',
+  'let {value}={value:1};export{value as current}'
+]) {
+  const source = `import{g}from'genshin-ts/runtime/core';${declaration};g.clientControlScript(lua=>({onStart(){lua.print(value)}}))`
+  const bad = buildFixture({ 'main.ts': source }, false)
+  const errors = bad.diagnostics.filter((d) => d.source === 'lua-shared-mutable-export')
+  assert.equal(errors.length, 1, declaration)
+  assert.equal(bad.files.size, 0)
+  assert.match(
+    source.slice(errors[0].start, errors[0].start + errors[0].length),
+    /^value(?: as current)?$/
+  )
+}
+const aliases = successful(
+  buildFixture({
+    'board.ts': `import{g}from'genshin-ts/runtime/core'
+ const box={value:1};export{box as renamed};
+ function read(){return box.value};export{read as readBox};
+ class Counter{value=9};export{Counter as BoxCounter};
+ let separate:number|undefined;export{separate};
+ let changing=4;export{changing as other};
+ export function advance(){separate=5;changing++;return changing}
+ g.clientControlScript(lua=>({onStart(){box.value++;lua.assert(read()===2);lua.assert(new Counter().value===9);advance()}}))`,
+    'main.ts': `import{g}from'genshin-ts/runtime/core';import{renamed,readBox,BoxCounter,separate,other,advance}from'./board';g.clientControlScript(lua=>({onStart(){lua.assert(separate===undefined);lua.assert(other===4);advance();lua.assert(separate===5&&other===5);renamed.value=7;lua.assert(readBox()===7&&new BoxCounter().value===9)}}))`
+  })
+)
+execute(aliases.files, `require('main');OnStart()`)
+console.log(
+  'Captured mutable export lists rejected; const/function/class aliases and uncaptured mutable aliases remain live: PASS'
 )

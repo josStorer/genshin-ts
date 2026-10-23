@@ -2,12 +2,7 @@ import ts from 'typescript'
 import type * as lua from 'typescript-to-lua'
 
 import { createFileContext, type LuaFileContext, type SharedFiles } from './context.js'
-import {
-  printSharedFiles,
-  sharedAssignment,
-  sharedLoop,
-  transformSourceFile
-} from './entry_shared.js'
+import { printSharedFiles, transformSourceFile } from './entry_shared.js'
 import { transformEntryStatement, transformExportAssignment } from './entry.js'
 import {
   transformElement,
@@ -48,11 +43,6 @@ export function createLuaPlugin(
         transformShorthand(node, ctx, file(ctx)),
       [ts.SyntaxKind.ExpressionStatement]: (node, ctx) =>
         transformEntryStatement(node, ctx, file(ctx)),
-      [ts.SyntaxKind.ForOfStatement]: (node, ctx) => sharedLoop(node, ctx, file(ctx)),
-      [ts.SyntaxKind.ForInStatement]: (node, ctx) => sharedLoop(node, ctx, file(ctx)),
-      [ts.SyntaxKind.BinaryExpression]: (node, ctx) => sharedAssignment(node, ctx, file(ctx)),
-      [ts.SyntaxKind.PrefixUnaryExpression]: (node, ctx) => sharedAssignment(node, ctx, file(ctx)),
-      [ts.SyntaxKind.PostfixUnaryExpression]: (node, ctx) => sharedAssignment(node, ctx, file(ctx)),
       [ts.SyntaxKind.ExportAssignment]: (node, ctx) =>
         transformExportAssignment(node, ctx, file(ctx)),
       [ts.SyntaxKind.ExportDeclaration]: (node, ctx) => transformExport(node, ctx, file(ctx)),

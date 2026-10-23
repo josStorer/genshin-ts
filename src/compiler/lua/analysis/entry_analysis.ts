@@ -27,7 +27,8 @@ export const entryDiagnosticRules = {
   lua_publicMethodThis: 'lua-public-methods',
   lua_publicMethodName: 'lua-public-methods',
   lua_graphApi: 'lua-graph-api',
-  lua_instanceScope: 'lua-instance-scope'
+  lua_instanceScope: 'lua-instance-scope',
+  lua_sharedMutableExport: 'lua-shared-mutable-export'
 } as const
 const reservedMethods = new Set([
   ...hooks.values(),
@@ -82,7 +83,7 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
         const { hookMap, methods } = readHooks(object, setup, program, issue)
         model = {
           source,
-          shared: collectSharedNames(source, call, setup, checker),
+          shared: collectSharedNames(source, call, setup, checker, issue),
           call,
           setup,
           environment: setup.parameters[0]?.name as ts.Identifier | undefined,
@@ -236,22 +237,27 @@ function collectSharedNames(
   source: ts.SourceFile,
   call: ts.CallExpression,
   setup: LuaEntryModel['setup'],
-  checker: ts.TypeChecker
+  checker: ts.TypeChecker,
+  issue: EntryIssue
 ): LuaEntryModel['shared'] {
   const sharedStatements = source.statements.filter((statement) => statement !== call.parent)
   const candidates = new Map<ts.Symbol, LuaSharedBinding>()
-  const bindName = (name: ts.BindingName, mutable: boolean) => {
+  const bindName = (name: ts.BindingName, mutable: boolean, declared = false) => {
     if (ts.isIdentifier(name)) {
       const symbol = checker.getSymbolAtLocation(name)
-      if (symbol) candidates.set(symbol, { name, mutable, exports: [], declared: false })
+      if (symbol) candidates.set(symbol, { name, mutable, declared })
     } else
       for (const element of name.elements)
-        if (ts.isBindingElement(element)) bindName(element.name, mutable)
+        if (ts.isBindingElement(element)) bindName(element.name, mutable, declared)
   }
   for (const statement of sharedStatements) {
     if (ts.isVariableStatement(statement))
       for (const declaration of statement.declarationList.declarations)
-        bindName(declaration.name, !(statement.declarationList.flags & ts.NodeFlags.Const))
+        bindName(
+          declaration.name,
+          !(statement.declarationList.flags & ts.NodeFlags.Const),
+          statement.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false
+        )
     else if (
       (ts.isFunctionDeclaration(statement) ||
         ts.isClassDeclaration(statement) ||
@@ -259,15 +265,6 @@ function collectSharedNames(
       statement.name
     )
       bindName(statement.name, false)
-  }
-  const sourceSymbol = checker.getSymbolAtLocation(source)
-  for (const exported of sourceSymbol ? checker.getExportsOfModule(sourceSymbol) : []) {
-    const target =
-      exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported
-    const binding = candidates.get(target)
-    if (!binding) continue
-    binding.exports = [...binding.exports, exported.name]
-    if (exported === target) binding.declared = true
   }
   const names = new Set([...candidates.values()].map((binding) => binding.name.text))
   const used = new Set<ts.Symbol>()
@@ -282,20 +279,26 @@ function collectSharedNames(
     ts.forEachChild(node, findUses)
   }
   findUses(setup.body)
+  for (const statement of sharedStatements) {
+    if (
+      !ts.isExportDeclaration(statement) ||
+      statement.isTypeOnly ||
+      statement.moduleSpecifier ||
+      !statement.exportClause ||
+      !ts.isNamedExports(statement.exportClause)
+    )
+      continue
+    for (const item of statement.exportClause.elements) {
+      if (item.isTypeOnly) continue
+      const symbol = checker.getExportSpecifierLocalTargetSymbol(item)
+      if (symbol && used.has(symbol) && candidates.get(symbol)?.mutable)
+        issue(item, 'lua_sharedMutableExport')
+    }
+  }
   const bindings = [...candidates]
     .filter(([symbol]) => used.has(symbol))
     .map(([, binding]) => binding)
   return {
-    aliases: sharedStatements.flatMap((statement) =>
-      ts.isExportDeclaration(statement) &&
-      !statement.moduleSpecifier &&
-      statement.exportClause &&
-      ts.isNamedExports(statement.exportClause)
-        ? statement.exportClause.elements
-            .filter((item) => !item.isTypeOnly)
-            .map((item) => item.name.text)
-        : []
-    ),
     runtime: sharedStatements.some((statement) => {
       if (
         ts.isImportDeclaration(statement) ||

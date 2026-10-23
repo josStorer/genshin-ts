@@ -88,6 +88,8 @@ The callback parameter can be named lua, env, or another identifier; \_ENV is re
 
 The file top level accepts imports, types, const/let, functions, classes and named exports. Instance capabilities such as self, script, timers and subscriptions belong inside the callback, not the shared top level or ordinary modules. Import/type-only top levels produce no extra shared file.
 
+If the entry callback directly uses a mutable top-level variable, export it with `export let value = 0`. Do not also export it through `export { value }` or `export { value as other }`, even after an `export let` declaration. `const`, functions, classes, and variables not directly used by the callback can still use export lists.
+
 Hooks are onInit, onStart, onEnable, onDisable, onUpdate, onLevelUpdate and onDestroy. Both update dt values are seconds.
 
 ## Host APIs, controls and script parameters

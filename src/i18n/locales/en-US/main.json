@@ -18,6 +18,7 @@
   "lua_sharedBigint": "This file is used by both node graphs and Lua, so it cannot use bigint (Lua has no bigint). Write constants as number and convert them with int() where a node graph uses them.",
   "lua_sharedApi": "This file is used by both node graphs and Lua, so it may only contain what both sides support: types, constants, pure functions and defineSignal. Move code that uses node-graph-only or Lua-only APIs into the matching entry file, or pass it in from the entry as a callback.",
   "lua_instanceScope": "This uses something tied to a specific mount (self, lua.script, timers, signal or key listeners, etc.), which is only available inside the clientControlScript callback. If shared code needs it, pass it in from the callback as an argument.",
+  "lua_sharedMutableExport": "The script callback uses this mutable top-level variable. Export it directly with export let; do not export it again through export { … }.",
   "desc": "Genshin TS toolchain: TS -> .gs.ts -> IR JSON -> .gia -> inject .gil",
   "optConfig": "Config file path (default: ./gsts.config.ts)",
   "optNoInject": "Disable injection even if configured",

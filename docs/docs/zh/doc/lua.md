@@ -88,6 +88,8 @@ export default g.clientControlScript((lua) => ({
 
 顶层支持 import、类型、const/let、函数、class 和具名 export。涉及当前实例的 self、script、定时器、信号/按键订阅只能在回调内使用，不能放在共享顶层或普通模块中。import/type-only 顶层不生成额外共享文件。
 
+入口回调直接用到的可变顶层变量，如需导出，请写 `export let value = 0`。不能再用 `export { value }` 或 `export { value as other }` 导出它，包括已经写了 `export let` 的变量。`const`、函数、class，以及回调没有直接用到的变量，仍可用 `export { … }`。
+
 支持 onInit、onStart、onEnable、onDisable、onUpdate、onLevelUpdate、onDestroy；更新函数的 dt 单位均为秒。
 
 ## 宿主 API、控件和脚本变量

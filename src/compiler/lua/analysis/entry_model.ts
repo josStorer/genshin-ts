@@ -16,9 +16,7 @@ export interface LuaEntryFunction {
 export interface LuaSharedBinding {
   name: ts.Identifier
   mutable: boolean
-  /** 对外公开的全部名字。 */
-  exports: readonly string[]
-  /** 用 export let 声明：变量直接存在 exports 的同名字段上（与 TSTL 相同）；其余公开名字写入后同步。 */
+  /** 用 export let 声明：变量直接存在 exports 的同名字段上（与 TSTL 相同）。 */
   declared: boolean
 }
 
@@ -28,8 +26,6 @@ export interface LuaEntryModel {
   /** 不含入口声明的模块语句；有运行时代码时单独生成 require 缓存的共享模块。 */
   shared: {
     runtime: boolean
-    /** 本地绑定的另一导出名；生成器统一处理，不保留 TSTL 的别名快照赋值。 */
-    aliases: readonly string[]
     statements: readonly ts.Statement[]
     /** 顶层声明的实时绑定，供各挂载读写同一份状态。 */
     bindings: readonly LuaSharedBinding[]

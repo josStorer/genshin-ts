@@ -18,6 +18,7 @@
   "lua_sharedBigint": "这个文件同时被节点图和 Lua 使用，不能写 bigint（Lua 不支持）。常量请写成 number，在节点图里用到时再用 int() 转换。",
   "lua_sharedApi": "这个文件同时被节点图和 Lua 使用，只能放两边都能用的内容：类型、常量、纯函数和 defineSignal。用到节点图或 Lua 专有 API 的代码，请移到各自的入口文件，或由入口作为回调传进来。",
   "lua_instanceScope": "这里用到了具体某个挂载的东西（self、lua.script、定时器、信号或按键监听等），只能写在 clientControlScript 的回调里。共享代码需要时，请由回调作为参数传进来。",
+  "lua_sharedMutableExport": "这个可变的顶层变量被脚本回调用到了。请直接写成 export let 导出，不要再用 export { … } 导出。",
   "desc": "Genshin TS 工具链：TS -> .gs.ts -> IR JSON -> .gia -> 注入 .gil",
   "optConfig": "配置文件路径（默认：./gsts.config.ts）",
   "optNoInject": "强制禁用注入（忽略配置）",

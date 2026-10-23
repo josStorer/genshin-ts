@@ -24,7 +24,8 @@ export interface LuaFileContext {
   dataBindings: Map<ts.Symbol, { module: string; key?: string }>
   dataLocals: Map<string, lua.Identifier>
   adaptedCallbacks: Set<ts.Node>
-  sharedAliases?: ReadonlySet<string>
+  /** 共享模块已有的同名导出由 TSTL 维护，不再额外生成 getter。 */
+  sharedModule?: boolean
   shared?: SharedState
 }
 export function createFileContext(

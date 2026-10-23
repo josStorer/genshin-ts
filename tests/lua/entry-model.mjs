@@ -24,6 +24,16 @@ fs.writeFileSync(
 )
 const cases = [
   [
+    'shared-export',
+    `import{g}from'genshin-ts/runtime/core';let value=1;export{value as current};g.clientControlScript(lua=>({onStart(){value++}}))`,
+    'lua-shared-mutable-export'
+  ],
+  [
+    'shared-export-again',
+    `import{g}from'genshin-ts/runtime/core';export let value=1;export{value as current};g.clientControlScript(lua=>({onStart(){lua.print(value)}}))`,
+    'lua-shared-mutable-export'
+  ],
+  [
     'expression-return',
     `import {g} from 'genshin-ts/runtime/core';const makeHooks=()=>({});g.clientControlScript(lua=>makeHooks())`,
     'lua-entry-callback'

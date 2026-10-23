@@ -3,7 +3,7 @@ import * as lua from 'typescript-to-lua'
 
 import { getLuaBuiltins, scopedHelperMethods } from '../analysis/builtins.js'
 import { helpers, type LuaFileContext } from './context.js'
-import { rewriteSharedDeclarations, withoutAliasWrites } from './entry_shared.js'
+import { rewriteSharedDeclarations } from './entry_shared.js'
 import { field } from './lua_ast.js'
 import { scope } from './scope.js'
 
@@ -61,7 +61,7 @@ export function transformVariables(
           )
         )
       : node
-  let statements = withoutAliasWrites(ctx.superTransformStatements(input), ctx, file)
+  let statements = ctx.superTransformStatements(input)
   if (isSharedDeclaration) statements = rewriteSharedDeclarations(statements, shared, ctx)
   if (!globals.size && !helperObjects.size) return statements
   // 解构只生成局部声明/赋值和默认值分支。只改写声明右侧的访问链，

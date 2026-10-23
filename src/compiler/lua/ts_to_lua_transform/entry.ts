@@ -4,7 +4,6 @@ import * as lua from 'typescript-to-lua'
 import type { LuaEntryModel } from '../analysis/entry_model.js'
 import { hooks } from '../analysis/syntax.js'
 import type { LuaFileContext } from './context.js'
-import { sharedExportWrites, withoutAliasWrites } from './entry_shared.js'
 import { field, id } from './lua_ast.js'
 
 export function finishEntry(
@@ -69,10 +68,7 @@ export function transformEntryStatement(
   const model = file.entry
   return model && node.expression === model.call
     ? generateEntry(model, ctx)
-    : [
-        ...withoutAliasWrites(ctx.superTransformStatements(node), ctx, file),
-        ...sharedExportWrites(node.expression, ctx, file)
-      ]
+    : ctx.superTransformStatements(node)
 }
 
 export function transformExportAssignment(
