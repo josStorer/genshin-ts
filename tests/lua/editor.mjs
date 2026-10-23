@@ -22,6 +22,7 @@ const source = `import {g} from 'genshin-ts/runtime/core';
 export default g.clientControlScript(lua=>{
  if (0) {}
  const n=lua.tonumber("0") ?? 0; const negated=!n; const fallback=n || 1;
+ lua.helper.readParams(lua.script,{Board:{type:'control',kind:'ClientUIContainerControl'}});
  const unavailable=queueMicrotask; new Boolean(0); Math.cosh(1);
  lua./*env*/;
  lua.game./*game*/;
@@ -80,6 +81,10 @@ assert.ok(
   'Lua diagnostics must also reach tsserver'
 )
 const semanticDiagnostics = proxy.getSemanticDiagnostics(file)
+assert(
+  semanticDiagnostics.some((d) => d.code === 2322 && d.start === source.indexOf("type:'control'")),
+  'removed control param gets an ordinary TS type error'
+)
 assert.ok(semanticDiagnostics.some((d) => d.source === 'lua-unavailable-global'))
 assert.ok(semanticDiagnostics.some((d) => d.source === 'lua-standard-library'))
 for (const start of [source.indexOf('!n') + 1, source.indexOf('n ||')])

@@ -149,9 +149,7 @@ function M.readParams(script, schema)
     for name, spec in pairs(schema) do
         local value = script:GetParam(name)
         if value == nil then value = spec.default end
-        if spec.type == "control" then
-            if not M.isControl(value, spec.kind) then error("Script parameter " .. name .. " must be " .. spec.kind) end
-        elseif type(value) ~= spec.type then
+        if type(value) ~= spec.type then
             error("Script parameter " .. name .. " must be " .. spec.type .. ", got " .. type(value))
         end
         values[name] = value

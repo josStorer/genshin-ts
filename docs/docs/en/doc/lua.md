@@ -100,7 +100,7 @@ const params = lua.helper.readParams(lua.script, {
 console.log(params.Speed, params.Caption)
 ```
 
-The schema validates values but does not create editor variables. Missing values can use defaults; missing required values and wrong types report the variable name. Raw `GetParam` returns unknown. A control parameter only accepts an actual control object, not a number assumed to be a control. Prefer explicit path lookup when you only have editor indices.
+The schema validates values but does not create editor variables. Missing values can use defaults; missing required values and wrong types report the variable name. Raw `GetParam` returns unknown. In-game tests on 2026-09-24 confirmed that Client Control ID parameters return the editor index (prefabIndex) unchanged, not a control or runtime ID. Integer/GUID parameters and hardcoded numbers behave the same. `GetClientUIControl` accepts runtime IDs only; there is no host API to find an existing control by editor index. Name/hierarchy lookup is the officially recommended, game-tested approach: use `lua.helper.requireControl(self, 'Panel/Title', 'ClientUITextBoxControl')` or `findControl`, not a control parameter schema.
 
 ## Signals and logs
 

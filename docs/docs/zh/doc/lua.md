@@ -155,7 +155,7 @@ const params = lua.helper.readParams(lua.script, {
 console.log(params.Speed, params.Caption)
 ```
 
-schema 不会自动创建编辑器变量。基础值未填写可使用默认值；无默认值或类型错误会报出变量名。原始 `GetParam` 返回 unknown，仍可直接使用。框架不会根据参数中的数字猜控件对象；推荐显式使用名称路径查找。`type: 'control'` 仅接受实际返回的对应控件对象，填索引不会自动转换。
+schema 不会自动创建编辑器变量。未填写可使用默认值；无默认值或类型错误会报出变量名。原始 `GetParam` 返回 unknown，仍可直接使用。2026-09-24 实机确认：客户端控件ID变量原样返回填写的编辑器索引（prefabIndex），不是控件或运行时 ID；改成整数、GUID 或写死数字也不会转换。`GetClientUIControl` 只接受运行时 ID，官方没有按索引查找已有控件的接口。控件按名称/层级查找是官方推荐且实测可用的方式；用 `lua.helper.requireControl(self, 'Panel/Title', 'ClientUITextBoxControl')` 或 `findControl`，不要把控件写进参数 schema。
 
 信号继续使用现有提取的 `Signal` 定义：
 
