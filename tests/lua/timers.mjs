@@ -33,9 +33,15 @@ tick(0.1);assert(a.count()==3 and a.interval()==1 and #errors==1)
 tick(0);assert(a.count()==103 and a.interval()==1)
 tick(2);assert(a.interval()==2);a.stop();tick(2);assert(a.interval()==2)
 assert(b.count()==0);b.${clock === 'level' ? 'OnLevelUpdate' : 'OnUpdate'}(0.1);assert(b.count()==3)
-a.restart();a.OnDisable();tick(9);assert(a.count()==103);a.OnEnable();tick(9);assert(a.count()==103)
-a.restart();tick(0.0011);assert(a.count()==110);a.OnDestroy();tick(1);assert(a.count()==110)
+a.restart();a.OnDisable();tick(9);assert(a.count()==103);a.restart();a.OnEnable();tick(0.0005);assert(a.count()==103);tick(0.0006);assert(a.count()==117)
+a.restart();tick(0.0011);assert(a.count()==124);a.OnDestroy();tick(1);assert(a.count()==124)
 assert(not pcall(a.restart));b.OnDestroy()
+local c=mount();c.OnEnable()
+local ctick=c.${clock === 'level' ? 'OnLevelUpdate' : 'OnUpdate'}
+ctick(0.04);c.OnDisable();ctick(99);c.OnEnable();ctick(0.059)
+assert(c.count()==0 and c.interval()==0)
+ctick(0.002);assert(c.count()==3 and c.interval()==1)
+c.OnDestroy();ctick(1);assert(c.count()==3)
 `
   )
 }
@@ -57,5 +63,5 @@ const external = buildFixture(
 )
 assert(external.diagnostics.some((d) => d.source === 'lua-instance-scope'))
 console.log(
-  'Timers: both clocks, cancellation, repeat catch-up, errors, deferred tasks, isolated mounts and disable/destroy cleanup: PASS'
+  'Timers: both clocks, cancellation, repeat catch-up, errors, deferred tasks, isolated mounts and pause/resume, inactive scheduling and destruction: PASS'
 )

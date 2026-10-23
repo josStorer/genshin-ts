@@ -393,3 +393,10 @@ g.clientControlScript(lua => {
 ```
 
 有顶层运行代码的 `lua/hud.ts` 额外生成 `__gsts_shared/lua/hud.lua`，由 require 缓存。挂载路径仍是 `lua/hud`。具名导入读取共享模块的实时导出；default 只当类型使用。顶层只有 import/类型时不会生成额外文件。`__gsts_shared` 是编译器保留的目录，不可用于源码模块。
+
+定时器在停用时暂停、启用后从剩余时间继续，销毁时清空；停用期间可以创建，销毁后不能创建。
+
+```ts
+setTimeout(() => console.log("ready"), 3000)
+// 运行一秒后停用；重新启用后再等两秒执行。
+```

@@ -50,14 +50,14 @@ execute(
  assert(not next(keys) and not next(handlers))
  env.OnLevelUpdate(10); assert(env.count()==9)
  env.OnEnable(); assert(handlers.Scope and not next(keys))
- env.OnLevelUpdate(10); assert(env.count()==9,'disable must clear the timer scheduled in the user hook')
+ env.OnLevelUpdate(10); assert(env.count()==1009,'enable must resume the timer scheduled in the user disable hook')
  ok,err=pcall(env.OnDestroy)
  assert(not ok and tostring(err):find('destroy failure',1,true))
  assert(tostring(err):find('stack traceback',1,true),'string errors keep the stack where they were raised')
  assert(not next(handlers)); env.OnEnable(); assert(not next(handlers))
- env.OnLevelUpdate(10);assert(env.count()==9)
+ env.OnLevelUpdate(10);assert(env.count()==1009)
 `
 )
 console.log(
-  'Scope lifecycle: visible wrappers, active stop hooks, cleanup after errors with preserved stacks, timer clearing and terminal destruction: PASS'
+  'Scope lifecycle: visible wrappers, active stop hooks, cleanup after errors with preserved stacks, timer pause/resume and terminal destruction: PASS'
 )

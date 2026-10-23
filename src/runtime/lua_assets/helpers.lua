@@ -225,19 +225,20 @@ function M.createScope(env, clock)
         end
     end
 
-    -- The timer queue is one subscription; disabling it drops every pending task.
+    -- The timer queue is one subscription; disabling pauses its clock and pending tasks.
     local timers = {}
     function timers.activate()
         syncUpdate()
     end
-    -- Clock position survives a disable; pending callbacks do not.
-    function timers.deactivate() tasks, order = {}, {}; syncUpdate() end
-    timers.dispose = timers.deactivate
+    -- Inactive ticks do not advance now, so each task retains its remaining delay.
+    function timers.deactivate() syncUpdate() end
+    -- Only destruction clears pending callbacks; it cannot be resumed.
+    function timers.dispose() tasks, order = {}, {}; syncUpdate() end
     if clock then subscribe(timers) end
 
-    -- Setup may schedule before activation; inactive/destroyed instances cannot add timers.
+    -- Setup and inactive instances may schedule; inactive time never advances their delays.
     local function schedule(callback, delay, repeated, ...)
-        if state == "inactive" or state == "destroyed" then error("Cannot schedule a timer on a disabled or destroyed script") end
+        if state == "destroyed" then error("Cannot schedule a timer on a destroyed script") end
         delay = delay or 0
         if type(callback) ~= "function" or type(delay) ~= "number" or delay ~= delay or math.abs(delay) == math.huge then error("Invalid timer callback or delay") end
         delay = math.max(0, delay)
@@ -362,7 +363,7 @@ function M.createScope(env, clock)
         visitSubscriptions("activate")
         syncUpdate()
     end
-    -- Disable retains subscriptions for reactivation but always clears pending timers.
+    -- Disable pauses subscriptions and timers; activation resumes their remaining delay.
     function scope.deactivate()
         if state == "inactive" or state == "destroyed" then return end
         state = "inactive"

@@ -7,14 +7,14 @@ export interface LuaTimerHandle {
 }
 
 declare global {
-  /** 延迟单位为毫秒；默认按关卡时间推进。停用/销毁时清空，零延迟在下次更新执行。 */
+  /** 延迟单位为毫秒；默认按关卡时间推进。停用时暂停，启用后继续，销毁时清空；零延迟在下次更新执行。 */
   function setTimeout<A extends unknown[]>(
     this: void,
     callback: (this: void, ...args: A) => void,
     delay?: number,
     ...args: A
   ): LuaTimerHandle
-  /** 卡顿后每次更新最多执行一次；在 onEnable 中创建的定时器会在停用时清空。 */
+  /** 卡顿后每次更新最多执行一次；停用时暂停、启用后继续；在 onEnable 中重复创建会累积任务，请保存并取消句柄。 */
   function setInterval<A extends unknown[]>(
     this: void,
     callback: (this: void, ...args: A) => void,

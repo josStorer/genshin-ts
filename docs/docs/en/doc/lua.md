@@ -340,3 +340,10 @@ g.clientControlScript(lua => {
 ```
 
 An entry `lua/hud.ts` with runtime top-level code also emits `__gsts_shared/lua/hud.lua`, cached by require. The mount path remains `lua/hud`. Named imports read live shared exports; the default is type-only. Import/type-only top levels emit no extra file. `__gsts_shared` is reserved for compiler output and cannot be a source module directory.
+
+Timers pause when disabled and resume their remaining delay when enabled. Destruction clears them; scheduling while inactive is allowed, while scheduling after destruction fails.
+
+```ts
+setTimeout(() => console.log("ready"), 3000)
+// Disable after one second; it runs two seconds after re-enabling.
+```

@@ -12,7 +12,7 @@
 | [作用域运行库](../../src/runtime/lua_assets/helpers.lua) | `createScope`、`subscribe`、`visitSubscriptions` | 每个挂载实例持有一个状态和订阅列表。信号组、按键和计时队列都有 activate/deactivate/dispose；重复取消不会影响其他资源。 |
 | [生命周期生成](../../src/compiler/lua/scope_hooks.ts) | `generateScopeHooks` | 启动先激活再运行用户代码；停止先运行用户代码再清理，用户抛错也会清理。生成的 Lua 显式显示调用，不在运行时改写钩子。 |
 
-作用域允许 `idle → active/inactive/destroyed`、`active ⇄ inactive`、`active/inactive → destroyed`。重复转换和销毁后的状态转换被忽略；销毁后新增订阅或计时任务报错。停用保留可恢复的监听，但清空定时器；销毁释放全部订阅。
+作用域允许 `idle → active/inactive/destroyed`、`active ⇄ inactive`、`active/inactive → destroyed`。重复转换和销毁后的状态转换被忽略；销毁后新增订阅或计时任务报错。停用同时暂停监听和定时器；启用后恢复监听，定时器从剩余时间继续。停用期间可排入任务，销毁才释放全部订阅并清空定时器。
 
 `scope.enableUpdate` 只记录用户意愿。宿主开关由“用户需要更新，或者有需要更新时钟的定时器”决定，用户 `onUpdate` 单独受意愿保护。`LEVEL_CLOCK_NEEDS_UPDATE` 是唯一待实机确认的假设，目前取 true；两种模拟宿主语义下均测试倒计时继续、用户动画不再执行，不能据此声称游戏内已验证。
 
