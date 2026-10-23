@@ -162,7 +162,7 @@ local LEVEL_CLOCK_NEEDS_UPDATE = true
 
 -- One scope belongs to one mount. The ordered list owns every external subscription.
 function M.createScope(env, clock)
-    local scope, groups, subscriptions = {}, {}, {}
+    local scope, groups, subscriptions = {wantsUpdate=false}, {}, {}
     -- Legal: idle -> active/inactive/destroyed; active <-> inactive; either -> destroyed.
     -- Repeating a state change and activating a destroyed scope are ignored.
     local state = "idle"
@@ -171,16 +171,16 @@ function M.createScope(env, clock)
     local userWantsUpdate, actualUpdate = false, false
     -- The host switch belongs to the scope; timer demand never changes user intent.
     local function syncUpdate()
-        local timerNeedsUpdate = next(queues.real.tasks) ~= nil
-            or (LEVEL_CLOCK_NEEDS_UPDATE and next(queues.level.tasks) ~= nil)
+        scope.wantsUpdate = state == "active" and userWantsUpdate
+        local timerNeedsUpdate = queues.real.nextDue ~= nil
+            or (LEVEL_CLOCK_NEEDS_UPDATE and queues.level.nextDue ~= nil)
         local enabled = state == "active" and (userWantsUpdate or timerNeedsUpdate)
         if enabled ~= actualUpdate then
             actualUpdate = enabled
             env.script:EnableUpdate(enabled)
         end
     end
-    -- Generated user OnUpdate code reads only this intent, never the physical host switch.
-    function scope.wantsUpdate() return state == "active" and userWantsUpdate end
+    -- Generated user OnUpdate reads wantsUpdate directly; syncUpdate keeps it current.
     -- Only calls targeting the current script are redirected here by the compiler.
     function scope.enableUpdate(enabled)
         userWantsUpdate = enabled
@@ -234,7 +234,7 @@ function M.createScope(env, clock)
     function timers.deactivate() syncUpdate() end
     -- Destruction clears both queues and invalidates all handles owned by this mount.
     function timers.dispose()
-        for _, queue in pairs(queues) do queue.tasks, queue.order = {}, {} end
+        for _, queue in pairs(queues) do queue.tasks, queue.order, queue.nextDue = {}, {}, nil end
         owners = {}
         syncUpdate()
     end
@@ -251,6 +251,8 @@ function M.createScope(env, clock)
         local handle = {}
         queue.tasks[handle] = {callback=callback, delay=delay, due=queue.now+delay, repeated=repeated, args={n=select('#',...),...}}
         queue.order[#queue.order+1] = handle
+        local due = queue.tasks[handle].due
+        if queue.nextDue == nil or due < queue.nextDue then queue.nextDue = due end
         owners[handle] = queue
         syncUpdate()
         return handle
@@ -263,16 +265,29 @@ function M.createScope(env, clock)
     -- Handles from either clock can be cancelled, but never a handle owned by another mount.
     function scope.clearTimeout(handle)
         local queue = handle ~= nil and owners[handle]
-        if queue then queue.tasks[handle] = nil; owners[handle] = nil; syncUpdate() end
+        if not queue then return end
+        local removed = queue.tasks[handle]
+        queue.tasks[handle], owners[handle] = nil, nil
+        -- Cancelled handles must not accumulate while a distant deadline is pending.
+        for i, item in ipairs(queue.order) do if item == handle then table.remove(queue.order, i); break end end
+        if removed.due == queue.nextDue then
+            queue.nextDue = nil
+            for _, task in pairs(queue.tasks) do
+                if queue.nextDue == nil or task.due < queue.nextDue then queue.nextDue = task.due end
+            end
+        end
+        syncUpdate()
     end
     scope.clearInterval = scope.clearTimeout
     -- A queue cannot re-enter itself; tasks created during its tick run on a later tick.
     function scope.tick(dt, timerClock)
         local queue = queues[timerClock or clock]
-        if state ~= "active" or not queue or queue.ticking then return end
+        if state ~= "active" or not queue or queue.ticking or queue.nextDue == nil then return end
         if type(dt) ~= "number" or dt < 0 or dt ~= dt or dt == math.huge then report("Invalid timer delta"); return end
-        queue.ticking = true
         queue.now = queue.now + dt * 1000
+        -- Waiting frames only advance the clock and compare the earliest deadline; no tables or scan.
+        if queue.now < queue.nextDue then return end
+        queue.ticking = true
         local snapshot = {}
         for i, handle in ipairs(queue.order) do snapshot[i] = handle end
         for _, handle in ipairs(snapshot) do
@@ -287,7 +302,14 @@ function M.createScope(env, clock)
             end
         end
         local remaining = {}
-        for _, handle in ipairs(queue.order) do if queue.tasks[handle] then remaining[#remaining+1] = handle end end
+        queue.nextDue = nil
+        for _, handle in ipairs(queue.order) do
+            local task = queue.tasks[handle]
+            if task then
+                remaining[#remaining+1] = handle
+                if queue.nextDue == nil or task.due < queue.nextDue then queue.nextDue = task.due end
+            end
+        end
         queue.order = remaining
         queue.ticking = false
         syncUpdate()

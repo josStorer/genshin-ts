@@ -19,6 +19,7 @@ const suites = {
     'signal-validation',
     'timers',
     'helper-timers',
+    'timer-queue',
     'update-ownership',
     'source-maps',
     'mounts',

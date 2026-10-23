@@ -97,10 +97,7 @@ export function generateScopeHooks(
   if (update)
     update.body = lua.createBlock([
       lua.createIfStatement(
-        lua.createCallExpression(
-          lua.createTableIndexExpression(scope, lua.createStringLiteral('wantsUpdate')),
-          []
-        ),
+        lua.createTableIndexExpression(scope, lua.createStringLiteral('wantsUpdate')),
         update.body
       )
     ])
