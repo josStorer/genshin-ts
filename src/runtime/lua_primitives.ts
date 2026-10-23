@@ -7,3 +7,8 @@ export type LuaIterable<T> = Iterable<T> & { readonly __tstlIterable: 'Iterable'
 export type LuaMulti = (<T extends unknown[]>(this: void, ...values: T) => LuaMultiReturn<T>) & {
   readonly __tstlExtension: 'MultiFunction'
 }
+
+/** 属于当前挂载实例的定时器句柄；不能当作数字或跨实例取消。 */
+export interface LuaTimerHandle {
+  readonly __gstsTimer: unique symbol
+}

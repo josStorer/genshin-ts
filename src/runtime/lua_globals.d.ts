@@ -1,10 +1,8 @@
 import type { ClientUIBaseControl } from './lua_host.js'
+import type { LuaTimerHandle } from './lua_primitives.js'
 import type { LuaSignalDefinition, LuaSignalParams, LuaSignalValues } from './lua_signals.js'
 
-/** 属于当前挂载实例的定时器句柄；不能当作数字或跨实例取消。 */
-export interface LuaTimerHandle {
-  readonly __gstsTimer: unique symbol
-}
+export type { LuaTimerHandle } from './lua_primitives.js'
 
 declare global {
   /** 延迟单位为毫秒；默认按关卡时间推进。停用时暂停，启用后继续，销毁时清空；零延迟在下次更新执行。 */

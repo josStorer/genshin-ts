@@ -347,3 +347,12 @@ Timers pause when disabled and resume their remaining delay when enabled. Destru
 setTimeout(() => console.log("ready"), 3000)
 // Disable after one second; it runs two seconds after re-enabling.
 ```
+
+Each helper timer selects a clock: real ignores level time stops, while level follows them. Both pause when the script is disabled. Global timers keep using the entry timerClock; the global cancellation functions work with both.
+
+```ts
+const timeout = lua.helper.setTimeout(() => console.log('ready'), 1000, 'real')
+const interval = lua.helper.setInterval(() => console.log('tick'), 1000, 'level')
+clearTimeout(timeout)
+clearInterval(interval)
+```

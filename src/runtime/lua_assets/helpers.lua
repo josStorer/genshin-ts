@@ -166,12 +166,14 @@ function M.createScope(env, clock)
     -- Legal: idle -> active/inactive/destroyed; active <-> inactive; either -> destroyed.
     -- Repeating a state change and activating a destroyed scope are ignored.
     local state = "idle"
-    local now, tasks, order, ticking = 0, {}, {}, false
+    local queues = {real={now=0,tasks={},order={}}, level={now=0,tasks={},order={}}}
+    local owners = {}
     local userWantsUpdate, actualUpdate = false, false
     -- The host switch belongs to the scope; timer demand never changes user intent.
     local function syncUpdate()
-        local timerNeedsUpdate = clock == "real" or (clock == "level" and LEVEL_CLOCK_NEEDS_UPDATE)
-        local enabled = state == "active" and (userWantsUpdate or (timerNeedsUpdate and next(tasks) ~= nil))
+        local timerNeedsUpdate = next(queues.real.tasks) ~= nil
+            or (LEVEL_CLOCK_NEEDS_UPDATE and next(queues.level.tasks) ~= nil)
+        local enabled = state == "active" and (userWantsUpdate or timerNeedsUpdate)
         if enabled ~= actualUpdate then
             actualUpdate = enabled
             env.script:EnableUpdate(enabled)
@@ -225,61 +227,69 @@ function M.createScope(env, clock)
         end
     end
 
-    -- The timer queue is one subscription; disabling pauses its clock and pending tasks.
+    -- Both clock queues are one subscription and share the mount's lifecycle.
     local timers = {}
-    function timers.activate()
+    function timers.activate() syncUpdate() end
+    -- Inactive ticks do not advance either clock, preserving every remaining delay.
+    function timers.deactivate() syncUpdate() end
+    -- Destruction clears both queues and invalidates all handles owned by this mount.
+    function timers.dispose()
+        for _, queue in pairs(queues) do queue.tasks, queue.order = {}, {} end
+        owners = {}
         syncUpdate()
     end
-    -- Inactive ticks do not advance now, so each task retains its remaining delay.
-    function timers.deactivate() syncUpdate() end
-    -- Only destruction clears pending callbacks; it cannot be resumed.
-    function timers.dispose() tasks, order = {}, {}; syncUpdate() end
     if clock then subscribe(timers) end
 
-    -- Setup and inactive instances may schedule; inactive time never advances their delays.
-    local function schedule(callback, delay, repeated, ...)
+    -- Each task belongs to exactly one clock; inactive time never advances its delay.
+    local function schedule(callback, delay, repeated, timerClock, ...)
         if state == "destroyed" then error("Cannot schedule a timer on a destroyed script") end
+        local queue = queues[timerClock]
+        if not queue then error("Invalid timer clock: " .. tostring(timerClock)) end
         delay = delay or 0
         if type(callback) ~= "function" or type(delay) ~= "number" or delay ~= delay or math.abs(delay) == math.huge then error("Invalid timer callback or delay") end
         delay = math.max(0, delay)
         local handle = {}
-        tasks[handle] = {callback=callback, delay=delay, due=now+delay, repeated=repeated, args={n=select('#',...),...}}
-        order[#order+1] = handle
+        queue.tasks[handle] = {callback=callback, delay=delay, due=queue.now+delay, repeated=repeated, args={n=select('#',...),...}}
+        queue.order[#queue.order+1] = handle
+        owners[handle] = queue
         syncUpdate()
         return handle
     end
-    -- Timer handles are opaque identities and belong only to this mount.
-    function scope.setTimeout(callback, delay, ...) return schedule(callback, delay, false, ...) end
-    -- Missed intervals run once per tick, rather than replaying an unbounded backlog.
-    function scope.setInterval(callback, delay, ...) return schedule(callback, delay, true, ...) end
-    -- Cancelling an unknown or already cancelled handle is harmless.
+    -- Global timers use the entry's clock; explicit helper timers select their own queue.
+    function scope.setTimeout(callback, delay, ...) return schedule(callback, delay, false, clock, ...) end
+    function scope.setInterval(callback, delay, ...) return schedule(callback, delay, true, clock, ...) end
+    function scope.setTimeoutOnClock(callback, delay, timerClock, ...) return schedule(callback, delay, false, timerClock, ...) end
+    function scope.setIntervalOnClock(callback, delay, timerClock, ...) return schedule(callback, delay, true, timerClock, ...) end
+    -- Handles from either clock can be cancelled, but never a handle owned by another mount.
     function scope.clearTimeout(handle)
-        if handle ~= nil then tasks[handle] = nil; syncUpdate() end
+        local queue = handle ~= nil and owners[handle]
+        if queue then queue.tasks[handle] = nil; owners[handle] = nil; syncUpdate() end
     end
     scope.clearInterval = scope.clearTimeout
-    -- A tick cannot re-enter itself; tasks created during it run on a later tick.
-    function scope.tick(dt)
-        if state ~= "active" or ticking then return end
+    -- A queue cannot re-enter itself; tasks created during its tick run on a later tick.
+    function scope.tick(dt, timerClock)
+        local queue = queues[timerClock or clock]
+        if state ~= "active" or not queue or queue.ticking then return end
         if type(dt) ~= "number" or dt < 0 or dt ~= dt or dt == math.huge then report("Invalid timer delta"); return end
-        ticking = true
-        now = now + dt * 1000
+        queue.ticking = true
+        queue.now = queue.now + dt * 1000
         local snapshot = {}
-        for i, handle in ipairs(order) do snapshot[i] = handle end
+        for i, handle in ipairs(queue.order) do snapshot[i] = handle end
         for _, handle in ipairs(snapshot) do
             if state ~= "active" then break end
-            local task = tasks[handle]
-            if task and task.due <= now then
+            local task = queue.tasks[handle]
+            if task and task.due <= queue.now then
                 if task.repeated then
-                    task.due = task.delay > 0 and (now + task.delay - (now - task.due) % task.delay) or now
-                else tasks[handle] = nil end
+                    task.due = task.delay > 0 and (queue.now + task.delay - (queue.now - task.due) % task.delay) or queue.now
+                else queue.tasks[handle] = nil; owners[handle] = nil end
                 local ok, message = pcall(task.callback, table.unpack(task.args, 1, task.args.n))
-                if not ok then tasks[handle] = nil; report(message) end
+                if not ok then queue.tasks[handle] = nil; owners[handle] = nil; report(message) end
             end
         end
         local remaining = {}
-        for _, handle in ipairs(order) do if tasks[handle] then remaining[#remaining+1] = handle end end
-        order = remaining
-        ticking = false
+        for _, handle in ipairs(queue.order) do if queue.tasks[handle] then remaining[#remaining+1] = handle end end
+        queue.order = remaining
+        queue.ticking = false
         syncUpdate()
     end
 

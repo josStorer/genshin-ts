@@ -21,6 +21,18 @@ const sdkFiles = new Map(
 )
 const sdkFileNames = new Set(['lua.d.ts', 'lua_core.d.ts', 'lua_entry.d.ts'])
 
+/** 实例 helper 的名称到作用域方法；声明 symbol 是唯一识别依据。 */
+export const scopedHelperMethods: Readonly<Record<string, string>> = {
+  listenKey: 'listenKey',
+  clockTimeout: 'setTimeoutOnClock',
+  clockInterval: 'setIntervalOnClock'
+}
+const helperMembers: Readonly<Record<string, string>> = {
+  listenKey: 'listenKey',
+  setTimeout: 'clockTimeout',
+  setInterval: 'clockInterval'
+}
+
 export const numberConstants: Readonly<Record<string, number>> = {
   MAX_SAFE_INTEGER: Number.MAX_SAFE_INTEGER,
   MIN_SAFE_INTEGER: Number.MIN_SAFE_INTEGER,
@@ -86,7 +98,8 @@ function resolveBuiltins(program: ts.Program) {
     if (!module) continue
     modules.set(module, kind)
     for (const symbol of checker.getExportsOfModule(module)) {
-      if (kind === 'helpers' && symbol.name === 'listenKey') members.set(symbol, 'listenKey')
+      if (kind === 'helpers' && helperMembers[symbol.name])
+        members.set(symbol, helperMembers[symbol.name])
       if (kind === 'entry' && symbol.name === 'clientControlScript') entry = symbol
       if (kind === 'helpers' && symbol.name === 'ClientGlobals') {
         clientGlobals = symbol
@@ -107,8 +120,10 @@ function resolveBuiltins(program: ts.Program) {
         if (update) members.set(update, 'enableUpdate')
       }
       if (kind === 'helpers' && symbol.name === 'ClientHelpers') {
-        const member = checker.getDeclaredTypeOfSymbol(symbol).getProperty('listenKey')
-        if (member) members.set(member, 'listenKey')
+        for (const [name, key] of Object.entries(helperMembers)) {
+          const member = checker.getDeclaredTypeOfSymbol(symbol).getProperty(name)
+          if (member) members.set(member, key)
+        }
       }
     }
   }

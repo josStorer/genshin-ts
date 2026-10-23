@@ -104,11 +104,16 @@ export function generateScopeHooks(
         update.body
       )
     ])
-  if (model.scope.timers) {
-    const fn = hook(model.options.timerClock === 'real' ? 'OnUpdate' : 'OnLevelUpdate', true)
+  for (const clock of model.timerClocks) {
+    const fn = hook(clock === 'real' ? 'OnUpdate' : 'OnLevelUpdate', true)
     // 用户可以省略未使用的 dt；调度器仍需接收宿主的第一个参数。
     const delta = fn.params?.[0] ?? lua.createIdentifier(context.createTempName('dt'))
     if (!fn.params?.length) fn.params = [delta]
-    fn.body.statements.unshift(callScope('tick', [delta]))
+    fn.body.statements.unshift(
+      callScope(
+        'tick',
+        clock === model.options.timerClock ? [delta] : [delta, lua.createStringLiteral(clock)]
+      )
+    )
   }
 }

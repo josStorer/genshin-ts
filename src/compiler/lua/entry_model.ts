@@ -37,6 +37,8 @@ export interface LuaEntryModel {
   returned: ts.ReturnStatement
   /** 只记录实际引用的实例能力；没有能力时不生成作用域。 */
   scope: { signals: boolean; keys: boolean; timers: boolean }
+  /** 已确定的定时器时钟；动态选择时保留两个更新钩子。 */
+  timerClocks: ReadonlySet<'level' | 'real'>
 }
 
 export interface LuaEntryAnalysis {

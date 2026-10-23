@@ -7,7 +7,7 @@ import type {
   Script
 } from './lua_host.js'
 import type { readParams } from './lua_params.js'
-import type { LuaMulti, LuaMultiReturn } from './lua_primitives.js'
+import type { LuaMulti, LuaMultiReturn, LuaTimerHandle } from './lua_primitives.js'
 import type { LuaOnSignal } from './lua_signals.js'
 import type { LuaStandardGlobals } from './lua_standard.js'
 
@@ -132,7 +132,25 @@ export declare function listenKey(
   event: HostEnums['KeyEventType'][keyof HostEnums['KeyEventType']],
   callback: (this: void) => boolean
 ): (this: void) => void
+/** 指定本次定时器的时钟：real 不受关卡时停影响，level 受影响；停用暂停、启用继续。 */
+export declare function setTimeout<A extends unknown[]>(
+  this: void,
+  callback: (this: void, ...args: A) => void,
+  delayMs: number,
+  clock: 'real' | 'level',
+  ...args: A
+): LuaTimerHandle
+/** 指定重复定时器的时钟：real 不受关卡时停影响，level 受影响；用全局 clearInterval 取消。 */
+export declare function setInterval<A extends unknown[]>(
+  this: void,
+  callback: (this: void, ...args: A) => void,
+  delayMs: number,
+  clock: 'real' | 'level',
+  ...args: A
+): LuaTimerHandle
 export interface ClientHelpers {
+  setTimeout: typeof setTimeout
+  setInterval: typeof setInterval
   multi: LuaMulti
   scriptHandle: typeof scriptHandle
   readParams: typeof readParams

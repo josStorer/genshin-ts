@@ -18,6 +18,7 @@ const suites = {
     'signal-kinds',
     'signal-validation',
     'timers',
+    'helper-timers',
     'update-ownership',
     'source-maps',
     'mounts',

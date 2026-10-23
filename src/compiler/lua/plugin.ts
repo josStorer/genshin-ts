@@ -4,7 +4,7 @@ import type { RawSourceMap } from 'source-map'
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
-import { getLuaBuiltins, numberConstants } from './builtins.js'
+import { getLuaBuiltins, numberConstants, scopedHelperMethods } from './builtins.js'
 import { luaDataConstant, luaDataModule } from './data_modules.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
 import type { LuaEntryModel } from './entry_model.js'
@@ -230,9 +230,11 @@ export function createLuaPlugin(
             if (item.isTypeOnly || !ctx.resolver.isReferencedAliasDeclaration(item)) continue
             const name = (item.propertyName ?? item.name).text
             if (moduleKind === 'core' && name === 'g') continue
-            if (moduleKind === 'helpers' && name === 'listenKey') {
+            const member = getLuaBuiltins(ctx.program).member(item.name)
+            if (moduleKind === 'helpers' && member && scopedHelperMethods[member]) {
               const symbol = ctx.checker.getSymbolAtLocation(item.name)
-              if (symbol) file(ctx).bindings.set(symbol, field(scope(ctx), 'listenKey'))
+              if (symbol)
+                file(ctx).bindings.set(symbol, field(scope(ctx), scopedHelperMethods[member]))
               continue
             }
             bind(item.name, name)
@@ -456,6 +458,7 @@ export function createLuaPlugin(
       [ts.SyntaxKind.ImportDeclaration]: () => [],
       [ts.SyntaxKind.VariableStatement]: (node, ctx) => {
         const globals = new Set<string>()
+        const helperObjects = new Map<string, Map<string, string>>()
         for (const declaration of node.declarationList.declarations) {
           if (
             ts.isObjectBindingPattern(declaration.name) &&
@@ -468,13 +471,32 @@ export function createLuaPlugin(
             if (lua.isIdentifier(value)) globals.add(value.text)
           }
         }
+        for (const declaration of node.declarationList.declarations) {
+          if (!ts.isObjectBindingPattern(declaration.name) || !declaration.initializer) continue
+          const properties = new Map<string, string>()
+          const builtins = getLuaBuiltins(ctx.program)
+          for (const property of ctx.checker
+            .getTypeAtLocation(declaration.initializer)
+            .getProperties()) {
+            const member = builtins.members.get(property)
+            if (member && scopedHelperMethods[member])
+              properties.set(property.name, scopedHelperMethods[member])
+          }
+          if (!properties.size) continue
+          const value = ctx.transformExpression(declaration.initializer)
+          if (lua.isIdentifier(value)) helperObjects.set(value.text, properties)
+        }
         const statements = withoutAliasWrites(ctx.superTransformStatements(node), ctx)
-        if (!globals.size) return statements
+        if (!globals.size && !helperObjects.size) return statements
         // 解构只生成局部声明/赋值和默认值分支。只改写声明右侧的访问链，
         // 不反射遍历整个 Lua AST，也不触碰默认值分支中的用户代码。
         const rewriteAccess = (value: lua.Expression): lua.Expression => {
           if (!lua.isTableIndexExpression(value)) return value
           value.table = rewriteAccess(value.table)
+          if (lua.isIdentifier(value.table) && lua.isStringLiteral(value.index)) {
+            const name = helperObjects.get(value.table.text)?.get(value.index.value)
+            if (name) return field(scope(ctx), name)
+          }
           if (
             lua.isIdentifier(value.table) &&
             globals.has(value.table.text) &&
@@ -490,6 +512,8 @@ export function createLuaPlugin(
             const value = statement.right?.[0]
             if (value && lua.isIdentifier(value) && globals.has(value.text))
               globals.add(statement.left[0].text)
+            if (value && lua.isIdentifier(value) && helperObjects.has(value.text))
+              helperObjects.set(statement.left[0].text, helperObjects.get(value.text)!)
             if (statement.right) statement.right = statement.right.map(rewriteAccess)
           } else if (lua.isAssignmentStatement(statement))
             statement.right = statement.right.map(rewriteAccess)
@@ -625,7 +649,9 @@ export function createLuaPlugin(
         if (data) return data
         const builtins = getLuaBuiltins(ctx.program)
         const member = builtins.member(node.name)
-        if (member === 'onSignal' || member === 'listenKey') return field(scope(ctx), member)
+        if (member === 'onSignal') return field(scope(ctx), member)
+        if (member && scopedHelperMethods[member])
+          return field(scope(ctx), scopedHelperMethods[member])
         if (member === 'helper') return helpers(ctx)
         if (member === 'self')
           return field(field(ctx.transformExpression(node.expression), 'script'), 'object')
@@ -633,11 +659,17 @@ export function createLuaPlugin(
           return lua.createNumericLiteral(numberConstants[node.name.text], node)
         return adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx)
       },
-      [ts.SyntaxKind.ElementAccessExpression]: (node, ctx) =>
-        scopedUpdate(node, ctx)
-          ? updateReference(ctx)
-          : (dataAccess(node, ctx) ??
-            adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx)),
+      [ts.SyntaxKind.ElementAccessExpression]: (node, ctx) => {
+        if (scopedUpdate(node, ctx)) return updateReference(ctx)
+        const member = getLuaBuiltins(ctx.program).member(node)
+        if (member === 'onSignal') return field(scope(ctx), member)
+        if (member && scopedHelperMethods[member])
+          return field(scope(ctx), scopedHelperMethods[member])
+        return (
+          dataAccess(node, ctx) ??
+          adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx)
+        )
+      },
       [ts.SyntaxKind.ParenthesizedExpression]: (node, ctx) =>
         adaptBuiltinCallback(node, ctx.superTransformExpression(node), ctx),
       [ts.SyntaxKind.AsExpression]: (node, ctx) =>

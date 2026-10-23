@@ -400,3 +400,12 @@ g.clientControlScript(lua => {
 setTimeout(() => console.log("ready"), 3000)
 // 运行一秒后停用；重新启用后再等两秒执行。
 ```
+
+每个 helper 定时器可单独选时钟：real 不受关卡时停影响，level 受影响；两种都在脚本停用时暂停。全局定时器仍跟随入口的 timerClock，取消函数两者通用。
+
+```ts
+const timeout = lua.helper.setTimeout(() => console.log('ready'), 1000, 'real')
+const interval = lua.helper.setInterval(() => console.log('tick'), 1000, 'level')
+clearTimeout(timeout)
+clearInterval(interval)
+```

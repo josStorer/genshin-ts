@@ -238,7 +238,8 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
           methods,
           statements: setup.body.statements.slice(0, -1),
           returned,
-          scope: { signals: false, keys: false, timers: false }
+          scope: { signals: false, keys: false, timers: false },
+          timerClocks: new Set()
         }
       }
       const checkReturn = (node: ts.Node) => {
@@ -248,6 +249,48 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
       }
       checkReturn(setup.body)
     }
+  }
+  const timerClocks = new Set<'level' | 'real'>()
+  const markCapability = (
+    node: ts.Node,
+    member: string | undefined,
+    global: string | undefined,
+    instance: boolean
+  ) => {
+    const clockHelper = member === 'clockTimeout' || member === 'clockInterval'
+    const capability =
+      member === 'onSignal'
+        ? 'signals'
+        : member === 'listenKey'
+          ? 'keys'
+          : clockHelper || luaTimerGlobals.some((name) => name === global)
+            ? 'timers'
+            : undefined
+    if (instance && capability && model) {
+      model.scope[capability] = true
+      if (global === 'setTimeout' || global === 'setInterval') timerClocks.add(timerClock)
+      if (clockHelper) {
+        const call = node.parent
+        const arg =
+          ts.isCallExpression(call) && call.expression === node ? call.arguments[2] : undefined
+        const type = arg && checker.getTypeAtLocation(arg)
+        if (type?.isStringLiteral() && (type.value === 'real' || type.value === 'level'))
+          timerClocks.add(type.value)
+        else {
+          timerClocks.add('real')
+          timerClocks.add('level')
+        }
+      }
+    }
+    if (
+      !instance &&
+      (capability ||
+        global === 'self' ||
+        global === 'send' ||
+        member === 'script' ||
+        member === 'self')
+    )
+      issue(node, 'lua_instanceScope')
   }
   const visit = (node: ts.Node, instance = false) => {
     if (node === model?.setup) instance = true
@@ -280,28 +323,24 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
         return
       const member = builtins.member(node),
         global = builtins.global(node)
-      const capability =
-        member === 'onSignal'
-          ? 'signals'
-          : member === 'listenKey'
-            ? 'keys'
-            : luaTimerGlobals.some((name) => name === global)
-              ? 'timers'
-              : undefined
-      if (instance && capability && model) model.scope[capability] = true
+      markCapability(node, member, global, instance)
+    }
+    if (ts.isBindingElement(node) && ts.isObjectBindingPattern(node.parent)) {
+      const declaration = node.parent.parent
+      const name = node.propertyName ?? node.name
       if (
-        !instance &&
-        (capability ||
-          global === 'self' ||
-          global === 'send' ||
-          member === 'script' ||
-          member === 'self')
-      )
-        issue(node, 'lua_instanceScope')
+        ts.isVariableDeclaration(declaration) &&
+        declaration.initializer &&
+        ts.isIdentifier(name)
+      ) {
+        const property = checker.getTypeAtLocation(declaration.initializer).getProperty(name.text)
+        if (property) markCapability(node, builtins.members.get(property), undefined, instance)
+      }
     }
     ts.forEachChild(node, (child) => visit(child, instance))
   }
   visit(source)
+  if (model) model.timerClocks = timerClocks
   const result = { model, diagnostics }
   cache.set(source, { lang, result })
   return result
