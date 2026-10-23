@@ -278,7 +278,7 @@ function M.createScope(env, clock)
         delay = delay or 0
         -- TS checks callback/clock types; computed delays still need a finite-number check.
         if delay ~= delay or math.abs(delay) == math.huge then
-            error("Timer delay is NaN or infinite; check the calculation and use finite milliseconds. / 定时器延时不能是 NaN 或无穷大，请检查计算结果并传入有限的毫秒数。")
+            error("Timer delay must be a finite number of milliseconds, got " .. tostring(delay))
         end
         delay = math.max(0, delay)
         local handle = {}

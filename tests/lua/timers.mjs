@@ -80,8 +80,7 @@ require('main');OnStart()
 for _, repeatTimer in ipairs({false,true}) do
  for _, delay in ipairs({0/0,math.huge,-math.huge}) do
   local ok,message=pcall(schedule,delay,repeatTimer)
-  assert(not ok and tostring(message):find('Timer delay is NaN or infinite',1,true),tostring(message))
-  assert(tostring(message):find('定时器延时不能是 NaN 或无穷大',1,true))
+  assert(not ok and tostring(message):find('Timer delay must be a finite number of milliseconds',1,true),tostring(message))
  end
 end
 OnLevelUpdate(1);assert(count()==0,'invalid delays must not leave tasks behind')
