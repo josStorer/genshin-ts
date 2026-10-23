@@ -1,4 +1,4 @@
-import { luaLintRules, luaWarningRules } from '../compiler/lua/diagnostics.js'
+import { luaLintRules, luaWarningRules } from '../compiler/lua/analysis/diagnostics.js'
 import assignmentRestrictions from './rules/assignment-restrictions.js'
 import builtinConsoleLogArity from './rules/builtin-console-log-arity.js'
 import builtinMathSupport from './rules/builtin-math-support.js'

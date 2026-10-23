@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { locateLua } from '../compiler/lua/source_maps.js'
+import { locateLua } from '../compiler/lua/output/source_maps.js'
 import { t } from '../i18n/index.js'
 
 export async function runLuaLocate(

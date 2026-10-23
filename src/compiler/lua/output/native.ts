@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { parse } from 'luaparse'
 
-import { t } from '../../i18n/index.js'
+import { t } from '../../../i18n/index.js'
 
 /** 同时用于复制原生依赖和检查最终 Lua 的顶层加载环；不执行脚本。 */
 function luaRequires(text: string) {

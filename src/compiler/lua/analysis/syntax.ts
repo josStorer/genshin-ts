@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { NODE_GRAPH_ENTRY_FACTORIES } from '../../definitions/node_graph_entries.js'
+import { NODE_GRAPH_ENTRY_FACTORIES } from '../../../definitions/node_graph_entries.js'
 
 export const hooks = new Map(
   ['Init', 'Start', 'Enable', 'Disable', 'Update', 'LevelUpdate', 'Destroy'].map((x) => [

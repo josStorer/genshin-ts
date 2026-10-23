@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { SourceMapConsumer, SourceMapGenerator, type RawSourceMap } from 'source-map'
 
-import { t } from '../../i18n/index.js'
+import { t } from '../../../i18n/index.js'
 
 type LuaMap = RawSourceMap & { x_gsts: '@gsts:lua'; x_gsts_hash: string }
 const hash = (text: string) => createHash('sha256').update(text).digest('hex')

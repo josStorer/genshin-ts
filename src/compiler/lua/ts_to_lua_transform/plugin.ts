@@ -4,10 +4,10 @@ import type { RawSourceMap } from 'source-map'
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
-import { getLuaBuiltins, numberConstants, scopedHelperMethods } from './builtins.js'
-import { luaDataConstant, luaDataModule } from './data_modules.js'
-import { analyzeLuaEntry } from './entry_analysis.js'
-import type { LuaEntryModel } from './entry_model.js'
+import { getLuaBuiltins, numberConstants, scopedHelperMethods } from '../analysis/builtins.js'
+import { luaDataConstant, luaDataModule } from '../output/data_modules.js'
+import { analyzeLuaEntry } from '../analysis/entry_analysis.js'
+import type { LuaEntryModel } from '../analysis/entry_model.js'
 import {
   aliasWrites,
   bindSharedState,
@@ -19,8 +19,8 @@ import {
   type SharedState
 } from './entry_shared.js'
 import { generateScopeHooks } from './scope_hooks.js'
-import { luaTimerGlobals } from './standard_library.js'
-import { hooks } from './syntax.js'
+import { luaTimerGlobals } from '../analysis/standard_library.js'
+import { hooks } from '../analysis/syntax.js'
 import {
   ContextType,
   discardAdaptedCallbackDiagnostics,
@@ -29,7 +29,7 @@ import {
   transformSharedSource
 } from './tstl_compat.js'
 
-export { entryCall, diagnostic, hooks } from './syntax.js'
+export { entryCall, diagnostic, hooks } from '../analysis/syntax.js'
 const id = lua.createIdentifier
 const str = lua.createStringLiteral
 const field = (target: lua.Expression, name: string) =>

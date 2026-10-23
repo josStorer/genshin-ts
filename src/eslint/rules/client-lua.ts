@@ -1,13 +1,13 @@
 import type { Rule } from 'eslint'
 import ts from 'typescript'
 
-import type { LuaDiagnosticContext } from '../../compiler/lua/diagnostic_context.js'
+import type { LuaDiagnosticContext } from '../../compiler/lua/analysis/diagnostic_context.js'
 import {
   getLuaDiagnostics,
   getSharedModuleDiagnostics,
   resolveSharedProject
-} from '../../compiler/lua/diagnostics.js'
-import { entryCall } from '../../compiler/lua/syntax.js'
+} from '../../compiler/lua/analysis/diagnostics.js'
+import { entryCall } from '../../compiler/lua/analysis/syntax.js'
 import { getParserServices } from '../utils/parser.js'
 
 const contexts = new WeakMap<ts.Program, LuaDiagnosticContext>()

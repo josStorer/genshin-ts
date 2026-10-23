@@ -4,8 +4,8 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { compileLua } from '../../dist/src/compiler/lua/build.js'
-import { createLuaWorker } from '../../dist/src/compiler/lua/worker_client.js'
+import { compileLua } from '../../dist/src/compiler/lua/ts_to_lua_pipeline.js'
+import { createLuaWorker } from '../../dist/src/compiler/lua/worker/worker_client.js'
 
 const base = path.resolve('.tmp/lua-worker')
 fs.mkdirSync(base, { recursive: true })

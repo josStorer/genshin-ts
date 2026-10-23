@@ -6,8 +6,8 @@ import {
   localizeLuaTranspileDiagnostic,
   localizeLuaTranspileError,
   removeDuplicateTruthiness
-} from '../../src/compiler/lua/diagnostic_messages.ts'
-import { LocatedLuaError } from '../../src/compiler/lua/tstl_compat.ts'
+} from '../../src/compiler/lua/analysis/diagnostic_messages.ts'
+import { LocatedLuaError } from '../../src/compiler/lua/ts_to_lua_transform/tstl_compat.ts'
 import { initCliI18n } from '../../src/i18n/index.ts'
 import { buildFixture } from './support.mjs'
 

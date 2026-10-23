@@ -2,8 +2,8 @@ import fs from 'node:fs'
 import { URL } from 'node:url'
 import { Worker } from 'node:worker_threads'
 
-import { getCliLanguage, t } from '../../i18n/index.js'
-import type { LuaBuildOptions, LuaBuildResult, LuaPrepared } from './build.js'
+import { getCliLanguage, t } from '../../../i18n/index.js'
+import type { LuaBuildOptions, LuaBuildResult, LuaPrepared } from '../ts_to_lua_pipeline.js'
 
 export type LuaWorkerResult = Omit<LuaBuildResult, 'diagnostics'> & {
   diagnosticsText: string
@@ -35,7 +35,7 @@ export function createLuaWorker() {
         let url = new URL('./worker.js', import.meta.url)
         // 仓库测试从 TS 源码导入时仍运行正式构建的 worker。
         if (!fs.existsSync(url))
-          url = new URL('../../../dist/src/compiler/lua/worker.js', import.meta.url)
+          url = new URL('../../../../dist/src/compiler/lua/worker/worker.js', import.meta.url)
         const current = new Worker(url)
         worker = current
         current.on('message', (message: Reply) => {

@@ -3,7 +3,7 @@ import path from 'node:path'
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
-import type { LuaEntryModel, LuaSharedBinding } from './entry_model.js'
+import type { LuaEntryModel, LuaSharedBinding } from '../analysis/entry_model.js'
 
 /** 保留目录不能作为用户模块路径；入口的挂载路径不变。 */
 export const sharedEntryModule = (module: string) => `__gsts_shared/${module}`

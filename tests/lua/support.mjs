@@ -6,7 +6,7 @@ import path from 'node:path'
 
 import { lauxlib, lua, lualib, to_jsstring, to_luastring } from 'fengari'
 
-import { compileLua, formatLuaDiagnostics } from '../../src/compiler/lua/build.ts'
+import { compileLua, formatLuaDiagnostics } from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
 
 export function buildFixture(sources, typeCheck = true) {
   const base = path.resolve('.tmp/lua-tests')

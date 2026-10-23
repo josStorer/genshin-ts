@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { t } from '../../i18n/index.js'
+import { t } from '../../../i18n/index.js'
 import type { LuaBuiltins } from './builtins.js'
 import { diagnostic } from './syntax.js'
 

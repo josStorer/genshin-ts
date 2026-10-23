@@ -6,8 +6,8 @@ import {
   compileLua,
   createLuaCompileCache,
   formatLuaDiagnostics
-} from '../../src/compiler/lua/build.ts'
-import { generateLuaDataModules, luaDataModules } from '../../src/compiler/lua/data_modules.ts'
+} from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
+import { generateLuaDataModules, luaDataModules } from '../../src/compiler/lua/output/data_modules.ts'
 import { buildFixture, execute, successful } from './support.mjs'
 
 assert.deepEqual(luaDataModules, ['prefabs'])

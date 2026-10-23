@@ -6,7 +6,7 @@ import {
   compileLua,
   createLuaCompileCache,
   formatLuaDiagnostics
-} from '../../src/compiler/lua/build.ts'
+} from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
 import { buildFixture, successful } from './support.mjs'
 
 const entry = (body) =>

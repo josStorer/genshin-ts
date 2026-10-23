@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { compileLua, createLuaCompileCache } from '../../src/compiler/lua/build.ts'
+import { compileLua, createLuaCompileCache } from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
 import { buildFixture, execute, successful } from './support.mjs'
 
 const entry = `import {g} from 'genshin-ts/runtime/core'

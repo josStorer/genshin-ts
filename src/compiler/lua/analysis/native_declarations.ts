@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { t } from '../../i18n/index.js'
+import { t } from '../../../i18n/index.js'
 import { diagnostic } from './syntax.js'
 
 /** 只检查真正配有原生 Lua 文件的声明，不改变普通 TS 或 SDK 声明规则。 */

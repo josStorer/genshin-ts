@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {
   luaStandardLibrary,
   unavailableLuaGlobals
-} from '../../src/compiler/lua/standard_library.ts'
+} from '../../src/compiler/lua/analysis/standard_library.ts'
 import { buildFixture, execute, successful } from './support.mjs'
 
 const checks = {

@@ -6,8 +6,8 @@ import path from 'node:path'
 
 import { lauxlib, lua, lualib, to_jsstring, to_luastring } from 'fengari'
 
-import { compileLua, formatLuaDiagnostics } from '../../src/compiler/lua/build.ts'
-import { describeLuaConflicts, hasLuaMarker, writeLuaFiles } from '../../src/compiler/lua/output.ts'
+import { compileLua, formatLuaDiagnostics } from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
+import { describeLuaConflicts, hasLuaMarker, writeLuaFiles } from '../../src/compiler/lua/output/output.ts'
 
 const root = path.resolve('.tmp/lua-tests')
 fs.mkdirSync(root, { recursive: true })

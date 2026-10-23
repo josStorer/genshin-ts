@@ -64,12 +64,12 @@ fs.cpSync(
 )
 
 const { build } = await import('esbuild')
-const { generateLuaDataModules } = await import('../dist/src/compiler/lua/data_modules.js')
+const { generateLuaDataModules } = await import('../dist/src/compiler/lua/output/data_modules.js')
 generateLuaDataModules(repoRoot)
 // CommonJS has no import.meta. Locale loading needs the i18n directory; SDK resolution
 // uses the same package's package.json, so this base works for both createRequire calls.
 await build({
-  entryPoints: [path.join(repoRoot, 'src/compiler/lua/diagnostics.ts')],
+  entryPoints: [path.join(repoRoot, 'src/compiler/lua/analysis/diagnostics.ts')],
   outfile: path.join(repoRoot, 'dist/src/compiler/lua/editor.cjs'),
   bundle: true,
   platform: 'node',

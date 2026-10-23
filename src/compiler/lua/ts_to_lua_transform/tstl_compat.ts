@@ -7,7 +7,7 @@ import {
   getFunctionContextType
 } from 'typescript-to-lua/dist/transformation/utils/function-context.js'
 
-import { localizeLuaTranspileError } from './diagnostic_messages.js'
+import { localizeLuaTranspileError } from '../analysis/diagnostic_messages.js'
 
 /**
  * TSTL 1.34.0 没有公开导出这两个转换工具。

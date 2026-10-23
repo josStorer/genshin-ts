@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { t } from '../../i18n/index.js'
+import { t } from '../../../i18n/index.js'
 import { hasLuaMapMarker } from './source_maps.js'
 
 const marker = '-- @gsts:lua'

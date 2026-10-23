@@ -1,4 +1,4 @@
-import { signalKinds } from '../../runtime/signal_definition.js'
+import { signalKinds } from '../../../runtime/signal_definition.js'
 
 /** Lua 表只保存种类元数据；list 的名称和写入方法从同一条标量定义派生。 */
 export function renderSignalKindsLua() {

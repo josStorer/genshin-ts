@@ -2,10 +2,10 @@ import path from 'node:path'
 
 import ts from 'typescript'
 
-import { t } from '../../i18n/index.js'
+import { t } from '../../../i18n/index.js'
+import { luaFileKey } from '../worker/incremental.js'
 import type { LuaDiagnosticContext } from './diagnostic_context.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
-import { luaFileKey } from './incremental.js'
 import { diagnostic, entryCall, isNodeGraphEntry } from './syntax.js'
 
 const indexes = new WeakMap<LuaDiagnosticContext, Set<string>>()

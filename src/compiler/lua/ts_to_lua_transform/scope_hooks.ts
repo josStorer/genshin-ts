@@ -1,6 +1,6 @@
 import * as lua from 'typescript-to-lua'
 
-import type { LuaEntryModel } from './entry_model.js'
+import type { LuaEntryModel } from '../analysis/entry_model.js'
 
 /** 生命周期包装在产物中显式可见；运行库不读取或改写 _ENV 上的用户钩子。 */
 export function generateScopeHooks(

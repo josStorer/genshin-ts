@@ -5,7 +5,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { buildClientLua } from '../../src/cli/lua.ts'
-import { writeLuaFiles } from '../../src/compiler/lua/output.ts'
+import { writeLuaFiles } from '../../src/compiler/lua/output/output.ts'
 
 const base = path.resolve('.tmp/lua-injection')
 fs.mkdirSync(base, { recursive: true })

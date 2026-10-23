@@ -7,7 +7,7 @@ import {
   createLuaCompileCache,
   formatLuaDiagnostics,
   type LuaBuildOptions
-} from './build.js'
+} from '../ts_to_lua_pipeline.js'
 
 const port = parentPort!
 const cache = createLuaCompileCache()

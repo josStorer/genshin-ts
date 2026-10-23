@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { t } from '../../i18n/index.js'
+import { t } from '../../../i18n/index.js'
 
 /** 提前检查和 TSTL 错误翻译共用同一套说明，保留原来的定位信息。 */
 export function unsupportedLuaSyntax(node: ts.Node): string | undefined {

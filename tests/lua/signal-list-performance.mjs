@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { renderSignalKindsLua } from '../../src/compiler/lua/signal_kinds.ts'
+import { renderSignalKindsLua } from '../../src/compiler/lua/output/signal_kinds.ts'
 import { execute } from './support.mjs'
 
 // Default: Fengari correctness + timing. Optional Lua 5.4 comparison:

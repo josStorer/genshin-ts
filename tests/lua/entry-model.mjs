@@ -9,7 +9,7 @@ import parser from '@typescript-eslint/parser'
 import { ESLint } from 'eslint'
 import ts from 'typescript'
 
-import { analyzeLuaEntry } from '../../src/compiler/lua/entry_analysis.ts'
+import { analyzeLuaEntry } from '../../src/compiler/lua/analysis/entry_analysis.ts'
 import gsts from '../../src/eslint/index.ts'
 
 const root = path.resolve('.tmp/lua-entry-model')

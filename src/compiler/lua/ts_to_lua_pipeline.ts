@@ -6,27 +6,30 @@ import ts from 'typescript'
 import * as tstl from 'typescript-to-lua'
 
 import { initCliI18n, t, type Lang } from '../../i18n/index.js'
-import { getLuaBuiltins } from './builtins.js'
-import { luaDataModule, luaDataModules } from './data_modules.js'
-import { localizeLuaTranspileDiagnostic, removeDuplicateTruthiness } from './diagnostic_messages.js'
-import { getLuaDiagnostics } from './diagnostics.js'
-import { analyzeLuaEntry } from './entry_analysis.js'
-import { sharedEntryFile, sharedEntryModule } from './entry_shared.js'
-import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
-import { isNativeLuaDeclaration } from './native_declarations.js'
+import { getLuaBuiltins } from './analysis/builtins.js'
+import {
+  localizeLuaTranspileDiagnostic,
+  removeDuplicateTruthiness
+} from './analysis/diagnostic_messages.js'
+import { getLuaDiagnostics } from './analysis/diagnostics.js'
+import { analyzeLuaEntry } from './analysis/entry_analysis.js'
+import { isNativeLuaDeclaration } from './analysis/native_declarations.js'
+import { isNodeGraphEntry } from './analysis/syntax.js'
+import { luaDataModule, luaDataModules } from './output/data_modules.js'
 import {
   checkLuaModuleCycles,
   collectNativeLua,
   createLuaParseCache,
   type LuaParseCache
-} from './native.js'
-import { createLuaPlugin, diagnostic } from './plugin.js'
-import { lowerPrivateFields } from './private_fields.js'
-import { createBuildTimer, type BuildTimer } from './profile.js'
-import { renderSignalKindsLua } from './signal_kinds.js'
-import { packageLuaMaps } from './source_maps.js'
-import { isNodeGraphEntry } from './syntax.js'
-import { LocatedLuaError, withLuaErrorLocations } from './tstl_compat.js'
+} from './output/native.js'
+import { renderSignalKindsLua } from './output/signal_kinds.js'
+import { packageLuaMaps } from './output/source_maps.js'
+import { sharedEntryFile, sharedEntryModule } from './ts_to_lua_transform/entry_shared.js'
+import { createLuaPlugin, diagnostic } from './ts_to_lua_transform/plugin.js'
+import { lowerPrivateFields } from './ts_to_lua_transform/private_fields.js'
+import { LocatedLuaError, withLuaErrorLocations } from './ts_to_lua_transform/tstl_compat.js'
+import { luaFileKey, planLuaModules, type LuaDependencyState } from './worker/incremental.js'
+import { createBuildTimer, type BuildTimer } from './worker/profile.js'
 
 export interface LuaBuildOptions {
   sourceMap?: boolean

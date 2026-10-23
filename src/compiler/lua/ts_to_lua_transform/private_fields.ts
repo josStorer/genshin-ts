@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { t } from '../../i18n/index.js'
+import { t } from '../../../i18n/index.js'
 import { LocatedLuaError } from './tstl_compat.js'
 
 const PRIVATE_PREFIX = '__private_'

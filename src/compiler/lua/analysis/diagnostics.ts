@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { getCliLanguage, t } from '../../i18n/index.js'
+import { getCliLanguage, t } from '../../../i18n/index.js'
 import { getLuaBuiltins } from './builtins.js'
 import type { LuaDiagnosticContext } from './diagnostic_context.js'
 import { unsupportedLuaSyntax } from './diagnostic_messages.js'

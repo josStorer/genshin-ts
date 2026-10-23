@@ -9,9 +9,9 @@ import {
   compileLua,
   createLuaCompileCache,
   formatLuaDiagnostics
-} from '../../src/compiler/lua/build.ts'
-import { writeLuaFiles } from '../../src/compiler/lua/output.ts'
-import { locateLua } from '../../src/compiler/lua/source_maps.ts'
+} from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
+import { writeLuaFiles } from '../../src/compiler/lua/output/output.ts'
+import { locateLua } from '../../src/compiler/lua/output/source_maps.ts'
 
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/maps-'))
 const entry = path.join(root, 'main.ts'),

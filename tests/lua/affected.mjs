@@ -8,7 +8,7 @@ import {
   compileLua,
   createLuaCompileCache,
   formatLuaDiagnostics
-} from '../../src/compiler/lua/build.ts'
+} from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
 
 const base = path.resolve('.tmp/lua-affected')
 fs.mkdirSync(base, { recursive: true })

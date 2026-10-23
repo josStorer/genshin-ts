@@ -1,6 +1,7 @@
 import ts from 'typescript'
 
-import { getCliLanguage, t } from '../../i18n/index.js'
+import { getCliLanguage, t } from '../../../i18n/index.js'
+import { functionNeedsSelf } from '../ts_to_lua_transform/tstl_compat.js'
 import { getLuaBuiltins } from './builtins.js'
 import type {
   LuaEntryAnalysis,
@@ -10,7 +11,6 @@ import type {
 } from './entry_model.js'
 import { luaTimerGlobals } from './standard_library.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
-import { functionNeedsSelf } from './tstl_compat.js'
 
 const analyses = new WeakMap<
   ts.Program,

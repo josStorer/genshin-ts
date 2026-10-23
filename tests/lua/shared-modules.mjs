@@ -9,11 +9,11 @@ import parser from '@typescript-eslint/parser'
 import { ESLint } from 'eslint'
 import ts from 'typescript'
 
-import { compileLua } from '../../src/compiler/lua/build.ts'
+import { compileLua } from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
 import {
   getSharedModuleDiagnostics,
   resolveSharedProject
-} from '../../src/compiler/lua/shared_modules.ts'
+} from '../../src/compiler/lua/analysis/shared_modules.ts'
 import gsts from '../../src/eslint/index.ts'
 
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/shared-'))

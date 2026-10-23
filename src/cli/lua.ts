@@ -7,11 +7,11 @@ import fg from 'fast-glob'
 import ts from 'typescript'
 
 import type { GstsConfig } from '../compiler/gsts_config.js'
-import type { LuaCompileCache, LuaPrepared } from '../compiler/lua/build.js'
-import type { LuaOutputCache, LuaWriteResult } from '../compiler/lua/output.js'
-import { createBuildTimer } from '../compiler/lua/profile.js'
-import { entryCall, isNodeGraphEntry } from '../compiler/lua/syntax.js'
-import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker_client.js'
+import { entryCall, isNodeGraphEntry } from '../compiler/lua/analysis/syntax.js'
+import type { LuaOutputCache, LuaWriteResult } from '../compiler/lua/output/output.js'
+import type { LuaCompileCache, LuaPrepared } from '../compiler/lua/ts_to_lua_pipeline.js'
+import { createBuildTimer } from '../compiler/lua/worker/profile.js'
+import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker/worker_client.js'
 import { t } from '../i18n/index.js'
 import { formatBuildSummary } from './build_summary.js'
 import { resolveGilTarget } from './gil_paths.js'
@@ -389,7 +389,7 @@ async function compilePlannedLua(
   const { outDir, key, last } = plan
   const { mark } = timer
   const log = report.log
-  const writer = await import('../compiler/lua/output.js')
+  const writer = await import('../compiler/lua/output/output.js')
   mark('loadCompiler')
   const input = {
     sharedProjectFiles: candidates,
@@ -415,7 +415,7 @@ async function compilePlannedLua(
   const compile = async () => {
     if (session?.worker) return session.worker.compile(input, prepared)
     const { compileLua, formatLuaDiagnostics, createLuaCompileCache } = await import(
-      '../compiler/lua/build.js'
+      '../compiler/lua/ts_to_lua_pipeline.js'
     )
     if (session && !session.compiler) session.compiler = createLuaCompileCache()
     const { diagnostics, ...result } = compileLua(input, session?.compiler, prepared)
