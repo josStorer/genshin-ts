@@ -101,7 +101,7 @@ try {
     `import{extra}from'./private/shared-check';${server.replace('f.printString(message)', 'f.printString(message);f.printString(extra)')}`
   )
   await wait(() => log.slice(offset).includes('Lua 编译失败'))
-  assert(log.slice(offset).includes('只能包含中立'), log.slice(offset))
+  assert(log.slice(offset).includes('只能放两边都能用的内容'), log.slice(offset))
   assert(
     read('lua/private/shared-check.lua').includes('readHost'),
     'failed build preserves prior output'

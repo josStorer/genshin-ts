@@ -197,8 +197,9 @@ export type GstsInjectConfig = {
 }
 
 export type GstsConfig = {
-  /** Lua 动态 require 可能加载的额外文件；路径和 glob 相对 compileRoot。普通 import 不需要填写。 */
+  /** 客户端 Lua 的编译选项。 */
   lua?: {
+    /** 动态 require 可能加载、但没有被 import 的文件；路径和 glob 相对 compileRoot。普通 import 不需要填写。 */
     include?: string[]
     /** 编译时额外检查完整 TS 类型。默认关闭；编辑器仍正常提示类型错误。 */
     typeCheck?: boolean

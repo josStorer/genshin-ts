@@ -217,8 +217,10 @@ export function writeLuaFiles(
   }
   return result
 }
-export function describeLuaConflicts(result: LuaWriteResult) {
+/** 注入沿用节点图注入的跳过提示；本地输出目录不是注入，用"跳过写入"。 */
+export function describeLuaConflicts(result: LuaWriteResult, injection: boolean) {
+  const key = injection ? 'injectSkip' : 'lua_outputSkip'
   return result.conflicts
-    .map((file) => t('injectSkip', { file, reason: t('lua_outputConflicts') }))
+    .map((file) => t(key, { file, reason: t('lua_outputConflicts') }))
     .join('\n')
 }

@@ -445,15 +445,16 @@ async function compilePlannedLua(
   return { plan, result, writer }
 }
 
-/** 本地与注入共用跳过提示；没有冲突时保持原来的输出。 */
+/** 逐个列出被跳过的文件；注入时（传入注入开始时间）再补一行与节点图注入相同的汇总。没有冲突时不输出。 */
 function reportLuaConflicts(
   result: LuaWriteResult,
-  describe: (result: LuaWriteResult) => string,
+  describe: (result: LuaWriteResult, injection: boolean) => string,
   log: ClientLuaReport['log'],
-  started: number
+  injectionStartedAt?: number
 ) {
   if (!result.conflicts.length) return
-  log(describe(result))
+  log(describe(result, injectionStartedAt !== undefined))
+  if (injectionStartedAt === undefined) return
   const ok = result.written.length + result.unchanged.length + result.removed.length
   log(
     t('injectAllDone', {
@@ -461,7 +462,7 @@ function reportLuaConflicts(
       skipped: result.conflicts.length,
       fail: 0,
       count: ok + result.conflicts.length,
-      ms: (performance.now() - started).toFixed(3)
+      ms: (performance.now() - injectionStartedAt).toFixed(3)
     })
   )
 }
@@ -476,9 +477,8 @@ function writeClientLua(
   const { mark } = timer
   const log = report.log
   report.compilation = t('summary_writeFailed')
-  const started = performance.now()
   const local = writeLuaFiles(outDir, result.files, complete, owner, session?.localOutput)
-  reportLuaConflicts(local, describeLuaConflicts, log, started)
+  reportLuaConflicts(local, describeLuaConflicts, log)
   report.compilation = t('lua_outputSummary', {
     arg0: result.files.size,
     arg1: local.written.length,

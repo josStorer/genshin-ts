@@ -313,7 +313,8 @@ const conflict = writeLuaFiles(
   true
 )
 assert.deepEqual(conflict.conflicts, ['user.lua'])
-assert.match(describeLuaConflicts(conflict), /已跳过注入 user.lua/)
+assert.match(describeLuaConflicts(conflict, false), /已跳过写入 user.lua/)
+assert.match(describeLuaConflicts(conflict, true), /已跳过注入 user.lua/)
 assert.equal(fs.readFileSync(path.join(target, 'user.lua'), 'utf8'), 'print("mine")')
 assert.throws(
   () => writeLuaFiles(target, new Map([['../outside.lua', '-- @gsts:lua\n']])),

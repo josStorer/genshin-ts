@@ -82,7 +82,8 @@ export function getLuaDiagnostics(
   for (const call of nodeGraphCalls(source)) diagnostics.push(issue(call, 'lua_importGraphEntry'))
   const analysis = analyzeLuaEntry(source, program)
   diagnostics.push(...analysis.diagnostics)
-  const call = analysis.model?.call
+  // 回调写法不合法时没有模型，仍以发现到的入口为准，避免把它误报成"嵌套入口"。
+  const call = analysis.model?.call ?? entryCall(source)
   const includesNil = (expression: ts.Expression) => {
     const type = checker.getTypeAtLocation(expression)
     return (type.isUnion() ? type.types : [type]).some(

@@ -44,11 +44,11 @@ export interface ClientGlobals extends LuaStandardGlobals {
   readonly Color: HostColor
   /** 常用工具，与 genshin-ts/runtime/lua 的导出相同。 */
   readonly helper: ClientHelpers
-  /** 按信号契约接收具名参数；监听由当前脚本实例管理，取消函数可重复调用。 */
+  /** 接收服务器发来的信号，回调里用 evt.params.参数名 读取参数。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。 */
   readonly onSignal: LuaOnSignal
 }
 export interface ClientControlScriptOptions {
-  /** level（默认）随关卡时间，real 使用 OnUpdate；当前脚本关闭用户更新不会暂停框架定时器。 */
+  /** 本脚本的 setTimeout / setInterval 用哪种时间计时。'level'（默认）：关卡时停时一起暂停；'real'：不受时停影响。个别定时器要用另一种，用 lua.helper.setTimeout / setInterval 单独指定。 */
   timerClock?: 'level' | 'real'
 }
 declare const scriptDefinition: unique symbol
@@ -92,7 +92,7 @@ export declare function scriptHandle<D extends ClientScriptDefinition>(
   this: void,
   script: Script
 ): TypedScript<D>
-/** 显式返回多个 Lua 值；常用于原生互操作和公开方法。 */
+/** 让函数一次返回多个 Lua 值（Lua 的多返回值），用于和原生 Lua 互相调用，以及 methods 里的公开方法。 */
 export declare const multi: LuaMulti
 /** 将数值限制在 min 到 max 之间。 */
 export declare function clamp(this: void, value: number, min: number, max: number): number
@@ -111,28 +111,28 @@ export declare function isControl<K extends keyof ControlTypes>(
   control: unknown,
   kind: K
 ): control is ControlTypes[K]
-/** 从指定父控件逐级查找；不存在时返回 undefined，重名或类型不符时报错。 */
+/** 从 root 开始按路径查找子控件，路径用 / 分隔，如 'Header/Title'。找不到返回 undefined；路径上有重名或类型不符时报错。 */
 export declare function findControl<K extends keyof ControlTypes>(
   this: void,
   root: ClientUIBaseControl,
   path: string,
   kind: K
 ): ControlTypes[K] | undefined
-/** 查找必须存在的控件；找不到时报告完整路径。 */
+/** 和 findControl 相同，但控件必须存在：找不到时直接报错，错误信息带完整路径。 */
 export declare function requireControl<K extends keyof ControlTypes>(
   this: void,
   root: ClientUIBaseControl,
   path: string,
   kind: K
 ): ControlTypes[K]
-/** 注册一次按键监听，返回可重复调用的取消函数。 */
+/** 监听控件上的一种按键事件。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。 */
 export declare function listenKey(
   this: void,
   control: ClientUIBaseControl,
   event: HostEnums['KeyEventType'][keyof HostEnums['KeyEventType']],
   callback: (this: void) => boolean
 ): (this: void) => void
-/** 指定本次定时器的时钟：real 不受关卡时停影响，level 受影响；停用暂停、启用继续。 */
+/** 和全局 setTimeout 相同，但可以单独指定这个定时器的计时方式：'real' 不受关卡时停影响，'level' 随时停暂停。用全局 clearTimeout 取消。 */
 export declare function setTimeout<A extends unknown[]>(
   this: void,
   callback: (this: void, ...args: A) => void,
@@ -140,7 +140,7 @@ export declare function setTimeout<A extends unknown[]>(
   clock: 'real' | 'level',
   ...args: A
 ): LuaTimerHandle
-/** 指定重复定时器的时钟：real 不受关卡时停影响，level 受影响；用全局 clearInterval 取消。 */
+/** 和全局 setInterval 相同，但可以单独指定这个定时器的计时方式：'real' 不受关卡时停影响，'level' 随时停暂停。用全局 clearInterval 取消。 */
 export declare function setInterval<A extends unknown[]>(
   this: void,
   callback: (this: void, ...args: A) => void,
