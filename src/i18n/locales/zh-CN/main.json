@@ -175,5 +175,7 @@
   "lua_undefinedField": "对象字段为 undefined 时，Lua 会删除这个字段；需要保留字段时请用明确的状态值。",
   "lua_arrayHole": "Lua 数组中的空值会形成空洞或缩短长度；请使用连续的有效元素。",
   "lua_deleteArray": "不要 delete 数组元素；请用 splice 移除并保持数组连续。",
-  "lua_bigint": "客户端 Lua 不支持 bigint/BigInt；请使用 number，并注意安全整数范围。"
+  "lua_bigint": "客户端 Lua 不支持 bigint/BigInt；请使用 number，并注意安全整数范围。",
+  "lua_nativeTuple": "原生 Lua 的多个返回值请声明为 LuaMultiReturn<[...]>；普通元组会被当成一个数组，调用时可能生成错误的 table.unpack。",
+  "lua_nativeThis": "原生 Lua 的函数成员请显式声明 this: void，避免多传 self；如果确实用冒号调用，请显式声明 this: 对象类型。"
 }

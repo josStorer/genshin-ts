@@ -12,6 +12,7 @@ import { localizeLuaTranspileDiagnostic, removeDuplicateTruthiness } from './dia
 import { getLuaDiagnostics } from './diagnostics.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
 import { luaFileKey, planLuaModules, type LuaDependencyState } from './incremental.js'
+import { isNativeLuaDeclaration } from './native_declarations.js'
 import {
   checkLuaModuleCycles,
   collectNativeLua,
@@ -453,12 +454,13 @@ function diagnoseLua(
   const availableModules = new Set(modules.map((x) => modulePath(x.fileName)))
   const rawRequires: ts.CallExpression[] = []
   let nameCheckedFiles = 0
-  for (const source of modules) {
+  const declarations = program.getSourceFiles().filter(isNativeLuaDeclaration)
+  for (const source of [...modules, ...declarations]) {
     const key = luaFileKey(source.fileName)
     let checks = plan.affected.has(key) ? undefined : oldCheck?.sourceChecks.get(key)
     if (!checks) {
       const localDiagnostics = [...getLuaDiagnostics(source, diagnosticContext)]
-      if (!input.typeCheck) {
+      if (!input.typeCheck && !source.isDeclarationFile) {
         nameCheckedFiles++
         localDiagnostics.push(
           ...program.getSemanticDiagnostics(source).filter((d) => unresolvedNameCodes.has(d.code))

@@ -11,6 +11,7 @@ const suites = {
     'private-fields',
     'methods',
     'sdk-paths',
+    'native-declarations',
     'signals',
     'scope-lifecycle',
     'signal-kinds',

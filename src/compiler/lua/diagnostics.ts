@@ -5,6 +5,7 @@ import { getLuaBuiltins } from './builtins.js'
 import type { LuaDiagnosticContext } from './diagnostic_context.js'
 import { unsupportedLuaSyntax } from './diagnostic_messages.js'
 import { analyzeLuaEntry, entryDiagnosticRules } from './entry_analysis.js'
+import { nativeDeclarationDiagnostics } from './native_declarations.js'
 import { getSharedModuleDiagnostics } from './shared_modules.js'
 import { standardLibraryDiagnostic } from './standard_library.js'
 import { diagnostic, nodeGraphCalls } from './syntax.js'
@@ -34,6 +35,8 @@ export const luaLintRules = [
       (name) => name !== 'lua-truthiness' && name !== 'lua-nil-assignment'
     )
   ),
+  'lua-native-multi-return',
+  'lua-native-this',
   'lua-standard-library',
   'lua-unavailable-global',
   'lua-shared-module'
@@ -57,6 +60,8 @@ export function getLuaDiagnostics(
   context: LuaDiagnosticContext
 ): ts.Diagnostic[] {
   const { program } = context
+  if (source.isDeclarationFile)
+    return nativeDeclarationDiagnostics(source, program.getTypeChecker())
   const lang = getCliLanguage()
   let cached = diagnosticCache.get(context)
   if (!cached) {
