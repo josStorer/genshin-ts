@@ -1,14 +1,67 @@
 [
-  { "type": "dir", "name": "overview", "label": "概览" },
-  { "type": "dir", "name": "quick-start", "label": "快速开始" },
-  { "type": "dir", "name": "writing", "label": "编写规范" },
-  { "type": "file", "name": "lua", "label": "客户端 Lua" },
-  { "type": "dir", "name": "globals", "label": "全局函数与类型" },
-  { "type": "dir", "name": "events", "label": "事件与入口" },
-  { "type": "dir", "name": "timers", "label": "定时器与闭包" },
-  { "type": "dir", "name": "pipeline", "label": "编译流程与产物" },
-  { "type": "dir", "name": "cli", "label": "CLI 与注入" },
-  { "type": "dir", "name": "optimize", "label": "优化与性能" },
-  { "type": "dir", "name": "examples", "label": "示例与模板" },
-  { "type": "dir", "name": "troubleshooting", "label": "排错与 FAQ" }
+  {
+    "type": "dir",
+    "name": "overview",
+    "label": "概览"
+  },
+  {
+    "type": "dir",
+    "name": "quick-start",
+    "label": "快速开始"
+  },
+  {
+    "type": "dir",
+    "name": "writing",
+    "label": "编写规范"
+  },
+  {
+    "type": "file",
+    "name": "lua",
+    "label": "客户端 Lua"
+  },
+  {
+    "type": "file",
+    "name": "lua-debug",
+    "label": "Lua 调试"
+  },
+  {
+    "type": "dir",
+    "name": "globals",
+    "label": "全局函数与类型"
+  },
+  {
+    "type": "dir",
+    "name": "events",
+    "label": "事件与入口"
+  },
+  {
+    "type": "dir",
+    "name": "timers",
+    "label": "定时器与闭包"
+  },
+  {
+    "type": "dir",
+    "name": "pipeline",
+    "label": "编译流程与产物"
+  },
+  {
+    "type": "dir",
+    "name": "cli",
+    "label": "CLI 与注入"
+  },
+  {
+    "type": "dir",
+    "name": "optimize",
+    "label": "优化与性能"
+  },
+  {
+    "type": "dir",
+    "name": "examples",
+    "label": "示例与模板"
+  },
+  {
+    "type": "dir",
+    "name": "troubleshooting",
+    "label": "排错与 FAQ"
+  }
 ]

@@ -1,10 +1,24 @@
-# Client controls: TypeScript to Lua
+# Client control scripts: TypeScript → Lua
 
-Use `g.clientControlScript` for scripts mounted on client UI controls. Ordinary TS modules and native Lua modules remain separate files, loaded through the host's `require`. The toolchain pins TypeScript 5.9.3 and TSTL 1.34.0, targets Lua 5.3, and does not fork TSTL.
+Write mounted scripts with `g.clientControlScript`. TS modules and native Lua remain separate files, loaded by the host's `require`. The compiler uses TypeScript 5.9.3 and TSTL 1.34.0, targets Lua 5.3, and does not fork TSTL.
 
-## Project layout and types
+## Project structure and completions
 
-Put Lua sources in a separate directory, for example `src/lua`, with this `tsconfig.json`:
+Lua and node graphs share a project but use separate tsconfigs to keep their global types apart.
+
+```text
+src/
+  server.ts
+  shared/signals.ts
+  lua/
+    tsconfig.json
+    hud.ts
+    board.ts
+    native.lua
+    native.d.ts
+```
+
+In `src/lua/tsconfig.json`:
 
 ```json
 {
@@ -14,175 +28,399 @@ Put Lua sources in a separate directory, for example `src/lua`, with this `tscon
 }
 ```
 
-Exclude that directory from the node graph tsconfig. Each environment has its own globals. The public import remains `genshin-ts/runtime/core`; the Lua tsconfig redirects its types to the Lua declarations. Preserve the inherited core mapping if you add `paths`. The CLI reads baseUrl/paths from the nearest tsconfig of the first Lua entry; all entries should use the same mappings and dependencies must remain under compileRoot.
+Exclude src/lua from the root graph tsconfig. Keep importing g from genshin-ts/runtime/core: the inherited paths mapping selects Lua declarations without loading the graph runtime. Preserve that mapping when adding aliases. The CLI reads baseUrl/paths from the nearest tsconfig of the first entry; entries should share the same mappings, and dependencies must remain inside compileRoot.
 
-```text
-src/
-  server.ts
-  client.ts
-  shared/constants.ts
-  lua/
-    tsconfig.json
-    hud.ts
-    easing.lua
-    easing.d.ts
-```
+The optional `npm create genshin-ts@latest my-project -- --with-lua` scaffold adds the Lua directory, config, example, typecheck:lua and AGENTS.md/CLAUDE.md guidance. The default template stays graph-only.
 
-Shared files should contain plain data, types and portable functions. Do not import a node graph entry or a mounted Lua entry as a value module. Use `import type` to reference an entry's public method types.
+## Entries and where code belongs
 
-## Entry and lifecycle
+The setup callback is flattened into the Lua file root, and hooks become official lifecycle functions; there is no runtime script factory.
 
 ```ts
 import { g } from 'genshin-ts/runtime/core'
 
-export default g.clientControlScript((lua) => {
-  let elapsed = 0
-  const speed = 20
+export let visits = 0 // Shared across mounts; retained after teleportation
 
+g.clientControlScript((lua) => {
+  visits += 1
+  let elapsed = 0 // Private to this mount
+  const title = lua.helper.requireControl(self, 'Title', 'ClientUITextBoxControl')
   return {
     onStart() {
+      title.text = `Mount ${visits}`
       lua.script.EnableUpdate(true)
     },
     onUpdate(dt) {
       elapsed += dt
-      console.log(elapsed * speed)
+      title.text = `${elapsed.toFixed(1)} seconds`
     }
   }
 })
 ```
 
-The callback body becomes Lua file-level code. Its locals belong to each mounted instance; hooks become the host's `OnStart`, `OnUpdate`, etc. There is no runtime script factory. Functions, classes, objects and arrays can be declared inside the callback; ordinary class `this` works normally. Private #fields are rewritten to collision-free Lua fields; Lua does not enforce access control. Private brand checks with in are unsupported.
+These are framework recommendations, not official guidance about code placement:
 
-The parameter may be named `lua`, `env`, `global` or another name. `g.clientControlScript({}, callback)` is also accepted; the options accept timerClock: 'level' | 'real', defaulting to 'level'. `_ENV` is reserved. Outside the callback, an entry may contain imports, types and declarations. End the callback with a literal `return { ... }`; computed/spread hook objects and early returns are not supported. Ordinary modules may execute code at the top level.
+| Location             | Runs                                                                     | Suitable contents                                         |
+| -------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Entry file top level | Once per current client module environment; retained after teleportation | Shared data, utilities, state to restore later            |
+| Callback root        | Once per mount; reruns after teleportation                               | Find controls, instance state, signal/key subscriptions   |
+| onStart              | Once per instance                                                        | Initial display, user update switch, one-time timer setup |
+| onEnable             | On every enable                                                          | Work that must repeat on each activation                  |
 
-Hooks: `onInit`, `onStart`, `onEnable`, `onDisable`, `onUpdate`, `onLevelUpdate`, `onDestroy`. Both update hooks receive seconds. Scheduling and pause behavior belong to the game host; strict transition ordering is not assumed.
+The initial order is **root → OnInit → OnEnable → OnStart**. OnEnable precedes OnStart, and child controls already exist at the root (user-confirmed in game, 2026-10-22). Initialization can normally go at the root without onInit.
 
-## Host API and controls
+The callback parameter can be named lua, env, or another identifier; \_ENV is reserved. One file has one entry. Functions, classes, objects, arrays and ordinary TS expressions work inside the callback, which must end with a literal return object. Dynamically assembled/spread hook objects and early returns are unsupported. Class this works normally; #value becomes a distinct ordinary Lua field, without Lua access control. Private-field in brand checks are unsupported.
 
-`lua.script`, `lua.game`, `lua.Enum`, `lua.Color` expose official APIs with signatures and hover documentation. `lua.helper` exposes GSTS utilities. Global `self` means the current script host: a control here (script.object), an entity in node graphs. send, console and the four timer functions also remain globals. Host APIs stay under lua.script/game/Enum/Color/helper.
+The file top level accepts imports, types, const/let, functions, classes and named exports. Instance capabilities such as self, script, timers and subscriptions belong inside the callback, not the shared top level or ordinary modules. Import/type-only top levels produce no extra shared file.
+
+Hooks are onInit, onStart, onEnable, onDisable, onUpdate, onLevelUpdate and onDestroy. Both update dt values are seconds.
+
+## Host APIs, controls and script parameters
+
+Official APIs live under lua.script, lua.game, lua.Enum and lua.Color. Tools live under lua.helper and are also exported from genshin-ts/runtime/lua.
 
 ```ts
-const control = lua.game.GetClientUIControl(self.id)
-if (lua.helper.isControl(control, 'ClientUITextBoxControl')) {
-  control.text = 'Typed text control'
-  control.fontSize = 24
+// Inside clientControlScript
+const title = lua.helper.requireControl(self, 'Panel/Title', 'ClientUITextBoxControl')
+title.text = 'Ready' // Narrowing exposes text-control properties
+const candidate = lua.game.GetClientUIControl(self.id)
+if (lua.helper.isControl(candidate, 'ClientUITextBoxControl')) {
+  candidate.fontSize = 24
 }
 ```
 
-`id` is a runtime ID. `prefabIndex` is an editor control/template index, used for template creation. Known prefabIndex values cannot be passed to GetClientUIControl by type; plain numbers are accepted, so their meaning is your responsibility. Use `InstantiateClientUIControl` for a template. Failed lookup does not silently become a tree search.
+The global self means the current script host: a control (`script.object`) in Lua, an entity in node graphs. send, console and the four timer functions remain globals. Lua does not expose graph f, GameObject, stage or level, nor Node/DOM globals.
 
-Official methods already carry the correct Lua receiver types. Write `control.SetVisible(true)`; do not pass `self` manually. `GameObject`, `stage`, `level`, node graph `f`, Node and DOM globals are not part of this environment.
+control.SetVisible(true) automatically emits control:SetVisible(true). Host declarations already handle self; callers do not pass it manually. Only authors of native Lua declarations need to distinguish this:void from receiver methods.
 
-## Utilities and script variables
+| Tool                                | Purpose                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------- |
+| findControl(root, path, kind)       | Name/path lookup; undefined if absent, error on ambiguous names or wrong type |
+| requireControl(root, path, kind)    | Required lookup; reports the missing path                                     |
+| isControl(control, kind)            | Type guard exposing control.xxx completions                                   |
+| clamp / lerp / moveTowards          | Numeric limits, interpolation and movement                                    |
+| listenKey(control, event, callback) | Idempotent cancel function; pauses/resumes with the mount                     |
+| readParams(script, schema)          | Checks script variables and returns typed fields                              |
+| multi / scriptHandle                | Multiple returns and methods of a particular mount                            |
 
-Use utilities via `lua.helper` or import them from `genshin-ts/runtime/lua`. Both forms use the same implementation. `helper` is a compiler member, not properties inserted into the game's environment table. Direct access, local aliases and named destructuring such as `const { helper } = lua` work; spreading the entire environment does not.
-
-| Task                 | Utility                                                      |
-| -------------------- | ------------------------------------------------------------ |
-| Numbers              | `clamp`, `lerp`, `moveTowards`                               |
-| Narrow a control     | `isControl(control, 'ClientUITextBoxControl')`               |
-| Find by path         | `findControl(root, 'Panel/Title', 'ClientUITextBoxControl')` |
-| Require a control    | `requireControl(root, path, kind)`                           |
-| Key listener         | `const off = listenKey(control, event, callback)`            |
-| Script variables     | `readParams(script, schema)`                                 |
-| Multiple Lua returns | `multi(a, b)`                                                |
-| Typed public methods | `scriptHandle<typeof OtherEntry>(otherScript)`               |
-
-findControl returns undefined when missing and throws for ambiguous names or the wrong type. requireControl also throws when missing. Entry-owned listenKey and onSignal subscriptions activate on Start/Enable, unregister on Disable, and restore uncancelled subscriptions on Enable. Destroy releases them permanently. Calling the returned cancellation function repeatedly is safe. Raw host listeners remain your responsibility; borrowed controls are never automatically destroyed.
-
-The scope has four states: `idle`, `active`, `inactive`, and `destroyed`. Start/Enable activates it before user code. Disable/Destroy runs user code first, then cleans up subscriptions and timers, including when user code throws. A timer created during onDisable is accepted and then cleared by that cleanup. Repeating a transition is harmless. State changes after destruction are ignored; adding a new subscription or timer after destruction throws. The generated Lua shows these lifecycle calls explicitly.
+Script parameters support number/string/boolean. The schema does not create editor variables; missing values use defaults or report the variable name.
 
 ```ts
 const params = lua.helper.readParams(lua.script, {
   Speed: { type: 'number', default: 20 },
-  Caption: { type: 'string', default: 'Speed' }
+  Caption: { type: 'string', default: 'Speed' },
+  Enabled: { type: 'boolean', default: true }
 })
-console.log(params.Speed, params.Caption)
+console.log(params.Speed, params.Caption, params.Enabled)
 ```
 
-The schema validates values but does not create editor variables. Missing values can use defaults; missing required values and wrong types report the variable name. Raw `GetParam` returns unknown. In-game tests on 2026-09-24 confirmed that Client Control ID parameters return the editor index (prefabIndex) unchanged, not a control or runtime ID. Integer/GUID parameters and hardcoded numbers behave the same. `GetClientUIControl` accepts runtime IDs only; there is no host API to find an existing control by editor index. Name/hierarchy lookup is the officially recommended, game-tested approach: use `lua.helper.requireControl(self, 'Panel/Title', 'ClientUITextBoxControl')` or `findControl`, not a control parameter schema.
+**User-confirmed in game, 2026-09-24:** a Client Control ID variable returns the entered editor index (prefabIndex), not a control or runtime ID. Integer/GUID variables and hardcoded numbers do not convert it either. GetClientUIControl accepts runtime IDs only; there is no official API to find an existing control by editor index. Officially recommended name/hierarchy lookup works in the tested game. Use it instead of a control parameter schema. prefabIndex is for template creation such as InstantiateClientUIControl; self.id is a runtime lookup value.
 
-## Signals and logs
+## Modules, teleportation and restoring state
 
-Use the existing extracted signal definitions:
+File top levels and ordinary modules share state; callback variables belong to individual mounts. Named imports read live bindings; explicitly storing a value still takes a snapshot.
 
 ```ts
-import { Signal } from '../definitions/signals'
+// In the root, find the new control and restore its display from score.
+// title.text = `${score}`
 
-// Inside a script callback or an ordinary Lua TS module
-send(Signal['操作输入'], 20, true)
+// Another entry file
+
+import { addScore, score } from './hud'
+
+// hud.ts top level
+export let score = 0
+export function addScore(amount: number) {
+  score += amount
+}
+
+// Inside its callback: addScore(1); console.log(score)
 ```
 
-`defineSignal` metadata determines types and parameter order. Every `send` calls the same runtime helper, which selects AddFloat/AddBool/etc. from `signal.params` and the shared kind table. Sending and receiving use the same count, type, integer-range, list and vector checks. Invalid sends report the signal and field name (or just the signal for a count error) before creating any host signal. Arguments are evaluated once in source order; each valid send creates a fresh signal. A number alone cannot tell the compiler whether the host expects an integer or a float.
+The teleport probe (2026-10-22) observed old instances receiving Disable/Destroy, new controls and roots being created, followed by Init → Enable → Start. Required modules were retained. The root must rebuild a complete UI and restore its display from shared data. Do not retain control objects in long-lived shared state; find them again after teleportation. Shared state belongs to all mounts, so use stable application keys when panels/players need separate stored values.
 
-Receive with `lua.onSignal(Signal.Input, evt => console.log(evt.params.speed))`. The return value cancels that subscription idempotently. One host listener per instance/name dispatches multiple subscriptions in order. New subscriptions start with the next message; cancelled ones are skipped. A failing subscriber is logged without stopping the others. Do not mix raw Register/Unregister calls with managed subscriptions for the same script/name. Payload counts, scalar types, integer ranges, list items and vectors are checked before delivery. Invalid messages are logged and discarded. LuaEntityValue/LuaGuidValue represent host values, not node graph entity wrappers. Actual host payloads still require game acceptance.
-
-`console.log/info` print normal logs; warn adds a warning prefix; error uses printerr. assert logs when false without throwing, and trace prints a stack. Multiple arguments and `%` in text are safe. Use `throw new Error(...)` or `lua.error` to interrupt execution.
-
-## Public methods
+Reconnection provisionally uses the same recovery model, **but has not been tested**. Retention across teleportation does not imply persistence after the client exits.
 
 ```ts
-// counter.ts; import g as in the entry example
-export default g.clientControlScript((lua) => {
-  let value = 0
+// A shared module: data only, no control references
+export const scores: Record<string, number> = {}
+// Inside an entry callback:
+// const title = lua.helper.requireControl(self, 'Title', 'ClientUITextBoxControl')
+// title.text = `${scores.left ?? 0}`
+```
+
+Relative TS imports become require paths rooted at compileRoot, without ./ prefixes. Top-level require cycles, including TS/Lua cycles, are rejected before output; deferred function calls are not automatically classified as top-level cycles. Keep native require spellings consistent with the generated paths.
+
+const saved = score saves a number. const old = state keeps an object reference; reassigning the exported state does not replace old. Spread/Object.assign make shallow copies whose nested objects remain shared, as in JS.
+
+## methods: invoke one mount
+
+For two scoreboards on the screen, a top-level export is shared by both; methods invoked through Invoke run in one particular mount and change its own score.
+
+```ts
+// board.ts
+
+import { g } from 'genshin-ts/runtime/core'
+
+export default g.clientControlScript(() => {
+  let score = 0
+  function push(amount: number) {
+    score += amount
+    return score
+  }
+  return { methods: { push } }
+})
+```
+
+```ts
+// hud.ts top level
+
+import type Board from './board'
+
+// Inside hud: Left and Right each mount board
+const left = lua.helper.requireControl(self, 'Left', 'ClientUIContainerControl')
+const script = left.GetScriptByPath('lua/board')
+if (script) {
+  const [score] = lua.helper.scriptHandle<typeof Board>(script).Invoke('push', 2)
+  console.log(score) // Changes Left only, not Right
+}
+```
+
+export default is optional. Keep it for import type Board / typeof Board method-name, argument and return hints. The default cannot be imported as a runtime value; named exports can. The caller must still ensure the handle actually mounts that entry; editor mount metadata is not yet used to enforce this.
+
+Methods accept inline functions, references to callback-local functions and shorthand properties. Class/object methods, non-functions and outside functions are rejected. Use lua.helper.multi(a,b) for multiple returns; ordinary TS arrays return one table.
+
+## Signals and subscriptions
+
+Use extracted signal definitions or a shared defineSignal contract; argument order, receiver fields and types come from that contract.
+
+```ts
+// shared/signals.ts
+
+import { defineSignal } from 'genshin-ts/runtime/core'
+
+export const Signal = {
+  Input: defineSignal('Input', [
+    ['speed', 'float'],
+    ['fire', 'bool']
+  ])
+}
+// Entry file: import { Signal } from '../shared/signals'
+// Callback root:
+const off = lua.onSignal(Signal.Input, (evt) => {
+  console.log(evt.params.speed, evt.params.fire)
+})
+send(Signal.Input, 20, true)
+// off() cancels early; repeated calls are harmless
+```
+
+Prefer subscribing at the root. The root and onStart run once per instance, and the framework pauses/resumes subscriptions. onEnable adds a new subscription every time; discarding its cancel function produces gsts/lua-on-enable-subscription in the editor, ESLint and builds. When repeated registration is intentional, store and cancel it in onDisable:
+
+```ts
+let off: (() => void) | undefined
+return {
+  onEnable() {
+    off = lua.onSignal(Signal.Input, (evt) => console.log(evt.params.speed))
+  },
+  onDisable() {
+    off?.()
+    off = undefined
+  }
+}
+```
+
+The same applies to listenKey. Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
+
+### Signal boundary checks
+
+Lua sends and receives share validation; server graphs do not perform these client-side checks. Invalid sends throw. Invalid receives log an error and are discarded without invoking callbacks.
+
+```text
+[GSTS] Invalid signal payload: Input.speed
+```
+
+```ts
+// Validation still applies when native callers bypass TS types.
+send(Signal.Input, 20, true) // Contract selects AddFloat and AddBool
+```
+
+Each valid send creates a new host signal. Arguments evaluate once in source order. Checks cover counts, types, finite numbers, safe integer range, list shape and vec3. Lua TS int is a number; Lua 5.3 distinguishes integer/float, and 4 / 2 is floating-point 2.0. No math.tointeger coercion is applied; the host's AddInt(2.0) behavior awaits a game test. Entities/GUIDs remain official raw values (LuaEntityValue/LuaGuidValue), not graph entity wrappers.
+
+Scalars take a few comparisons; lists scale with length. This round's wasmoon 1.16.0 / Lua 5.4 benchmark measured a 100,000-int list at **32.3 ms before and 20.2 ms after**. These are local simulated-runtime medians, not game frame times.
+
+Files reachable from both targets must stay neutral: types, constants, portable functions and defineSignal. Builds, default ESLint and the TS plugin check actual cross-tsconfig dependencies. Write shared constants as number, convert with int() at the graph boundary; shared bigint is rejected.
+
+```ts
+// shared/rules.ts
+export const INITIAL_SCORE = 10
+// server.ts
+const score = int(INITIAL_SCORE)
+// Lua uses INITIAL_SCORE directly
+```
+
+## Disable, timers and level time stops
+
+Disabling pauses listeners and timers; enabling resumes the remaining delay; destruction clears them. Re-enabling script.enabled or reactivating the control makes the host call OnEnable again.
+
+```ts
+import type { LuaTimerHandle } from 'genshin-ts/runtime/lua'
+
+// Inside the callback
+const pending: LuaTimerHandle = setTimeout(() => console.log('ready'), 3000)
+// Run 1 second → disable for 5 seconds → enable → run 2 more seconds to fire.
+// clearTimeout(pending) cancels early.
+```
+
+Inactive mounts can schedule tasks, which start counting when enabled. Scheduling after destruction throws. Start/Enable activates the scope before user code; Disable/Destroy runs user code before pausing/disposing resources, even if user code throws. A timer scheduled in onDisable is paused immediately afterward and may later resume.
+
+Global delays are milliseconds and use level time by default. Change the entire entry to real, or choose a clock per helper timer.
+
+```ts
+g.clientControlScript({ timerClock: 'real' }, (lua) => {
+  const real = setTimeout(() => console.log('entry uses real'), 1000)
+  const level = lua.helper.setInterval(() => console.log('level tick'), 1000, 'level')
+  const prompt = lua.helper.setTimeout(() => console.log('ignores level pause'), 1000, 'real')
   return {
     methods: {
-      add(amount: number) {
-        value += amount
-        return value
+      cancel() {
+        clearTimeout(real)
+        clearInterval(level)
+        clearTimeout(prompt)
       }
     }
   }
 })
 ```
 
+real advances through OnUpdate and ignores level time stops; level advances through OnLevelUpdate and pauses with the level. Both pause when the script is disabled, and neither is a wall clock. Global clear functions work with helper handles too and are idempotent. Zero/negative delays wait for the next update. Intervals run at most once per update after a stall; missed ticks are not replayed. Newly scheduled callbacks wait until the next update; throwing tasks are logged and removed.
+
+### Update ownership
+
+In entries using managed listeners/timers, lua.script.EnableUpdate(x) records whether the user's onUpdate should run. Pending timers independently keep the host update switch enabled.
+
+| Last EnableUpdate | Timers pending | Host switch while active | User onUpdate |
+| ----------------- | -------------- | ------------------------ | ------------- |
+| true              | Either         | On                       | Runs          |
+| false             | Yes            | On, for timers           | Does not run  |
+| false             | No             | Off                      | Does not run  |
+
 ```ts
-// Another entry: import type Counter from './counter'
-const other = self.GetScriptByPath('counter')
-if (other) {
-  const typed = lua.helper.scriptHandle<typeof Counter>(other)
-  const [value] = typed.Invoke('add', 2)
+let elapsed = 0
+return {
+  onStart() {
+    lua.script.EnableUpdate(true)
+    setTimeout(() => console.log('3 seconds finished'), 3000)
+  },
+  onUpdate(dt) {
+    elapsed += dt
+    if (elapsed >= 1) lua.script.EnableUpdate(false) // Animation ends; countdown continues
+  }
 }
 ```
 
-methods become global Lua functions callable through the host's Invoke. Parameters and return values have types; use multi for several returns. You must obtain the correct script handle: the compiler does not yet read editor mount mappings to prove that it matches Counter. Public methods capture local state; they do not need class `this`. Callback-local functions also work as `methods: { summary }` or `methods: { summary: summary }`. Object/class method references and non-function values produce diagnostics.
+The real host call occurs only when the final switch value changes. Keep the current instance's update calls inside the entry; calls to other scripts remain raw host calls. Confirmed in game on 2026-10-22: official EnableUpdate(false) stops both update hooks, so level timers need that switch too.
 
-## Modules and native Lua
+## Native Lua interoperability
 
-Each ordinary module has one shared module state. Mounted entry locals remain private to their instance. Named imports, default imports, namespace imports and re-exports read current exports. `const snapshot = count` deliberately saves a value; `const old = state` preserves the old object even if the exporter later replaces state. Shallow copies still share nested objects, as in JS.
-
-Relative TS imports compile to root-relative dotted require paths, such as `ui.counter`, without `./`. Use one spelling in native Lua too; cache identity across alternate spellings is not guaranteed. A module must not assume its global script is the calling entry's script. Pass the relevant script or control explicitly.
+Give native modules matching .d.ts files. Use LuaMultiReturn for multiple return values and this:void for plain functions.
 
 ```lua
--- easing.lua
-return { double = function(value) return value * 2 end }
+-- vector.lua
+return { split = function(value) return value, value * 2 end }
 ```
 
 ```ts
-// easing.d.ts
-export function double(this: void, value: number): number
+// vector.d.ts
+
+import type { LuaMultiReturn } from 'genshin-ts/runtime/lua'
+
+export function split(this: void, value: number): LuaMultiReturn<[number, number]>
+// Usage: import { split } from './vector'
+// const [x, y] = split(3)
 ```
 
+A plain [number,number] return means one array and receives a diagnostic suggesting LuaMultiReturn. Object/interface function members also need explicit this: void for plain dot calls, or the receiver type for colon methods. Top-level export function declarations are not warned merely for lacking this.
+
 ```ts
-import { double } from './easing'
+export interface VectorApi {
+  add(this: void, a: number, b: number): number
+}
 ```
 
-Native plain functions use `this: void`; native methods use `this: ReceiverType` in their declarations. This only concerns authoring external Lua types. For a module returning an entire object/function, declare `export = api` and use a default import. Undeclared native modules can be default-imported as unknown; add types or narrow the value. Native code is copied with the generated marker.
-
-Static `lua.require('vendor/module')` and native Lua require dependencies are collected automatically. Top-level require cycles, including mixed TS/Lua cycles, are rejected before output. Deferred loads inside functions are not automatically treated as top-level cycles. List possible dynamic dependencies explicitly:
+Use export = for a whole returned object/function, then a default import. Undeclared .lua default imports are unknown and need narrowing. Native code is copied with a generated marker. Static lua.require('vendor/module') and native requires are collected automatically; dynamic paths need candidates in include:
 
 ```ts
-// gsts.config.ts; paths relative to compileRoot
+// gsts.config.ts; relative to compileRoot
 lua: {
   include: ['vendor/**/*.lua', 'shared/dynamically-loaded.ts']
 }
 ```
 
-This is a build list, not a replacement loader. Runtime paths and deferred cycles remain your responsibility. Include TS modules referenced only from native Lua as well.
+include adds build inputs; it does not replace host require or guarantee dynamic calls are acyclic. A native module cannot assume its script global is the calling mount; pass instance objects explicitly.
 
-## Standard library support
+## Semantic differences and checks
 
-The following 128 members have fengari execution cases. This covers common operations, not every ECMAScript edge case or overload. New members need execution tests before admission. Other standard members produce an explanatory diagnostic. Host APIs are separate and still need game acceptance.
+Numeric/string conditions are errors in the editor, ESLint and builds; use explicit comparisons or Boolean conversion.
+
+```ts
+if (count !== 0) {
+  /* … */
+}
+if (name !== '') {
+  /* … */
+}
+const selected = [0, 1, 2].filter(Boolean) // [1, 2]
+```
+
+Boolean(x) follows JS conversion and emits \_\_gsts_helpers.toBoolean(nil,x). The nil receiver placeholder supports filter(Boolean). Zero, empty string, NaN, undefined/nil and false become false; other values become true. Arguments evaluate once; no argument returns false; aliases work; new Boolean() is unsupported.
+
+### Arrays and nil
+
+Write zero-based TS arrays normally: TSTL converts them to one-based contiguous Lua tables and length to #arr.
+
+```ts
+const values = [10, 20, 30]
+console.log(values[0]) // Lua: values[1]
+const copy = values.slice(1) // New contiguous [20, 30]
+values.splice(1, 1) // Remove and compact; do not delete values[1]
+```
+
+undefined removes object fields. Array holes, [1,undefined,3], assigning undefined to a middle element, and delete can break continuity. ESLint warns about statically recognizable cases; signal boundaries reject holes, extra keys and noncontiguous tables, including native zero-based tables. This is not a general runtime check of every array assignment.
+
+### Equality and remainder
+
+==/!= are allowed and compile like ===/!== to Lua ==/~=. Lua does not coerce types, so string '1' is not number 1.
+
+```ts
+const a: unknown = '1'
+const b: unknown = 1
+console.log(a == b, a === b) // false, false
+```
+
+| Operands | JS % | Lua % | lua.math.fmod |
+| -------- | ---- | ----- | ------------- |
+| 5, 3     | 2    | 2     | 2             |
+| -5, 3    | -2   | 1     | -2            |
+| 5, -3    | 2    | -1    | 2             |
+
+The ESLint-only gsts/lua-modulo warning covers % and %=. Ignore it for nonnegative operands, or use lua.math.fmod for JS remainder. It is not a TS-plugin/build diagnostic and can be disabled independently.
+
+```ts
+const remainder = lua.math.fmod(-5, 3) // -2
+```
+
+```js
+// Append to eslint.config.mjs
+{ files: ['src/lua/**/*.ts'], rules: { 'gsts/lua-modulo': 'off' } }
+```
+
+The template's `export { default } from 'genshin-ts/configs/eslint/full.mjs'` detects lua_globals in the owning tsconfig, independent of folder names, and excludes graph-only rules from Lua files. Custom configs may use gsts.configs.lua.rules with the typescript-eslint parser/project setup.
+
+strict-boolean-expressions is an error; null, undefined fields, array holes/deletions have separate guidance; bigint is unsupported. Default builds check unresolved names/members in affected files without full typecheck. Editors still check ordinary TS types. Enable lua: { typeCheck: true } for complete build-time type checking.
+
+## Standard library and package data
+
+The following 128 members have fengari execution cases; this is not full ECMAScript compatibility or coverage of every overload. Unsupported standard members receive diagnostics. Official host API behavior requires separate game acceptance.
 
 | Type (Constructor means static members) | Covered members                                                                                                                                                                                                                                                                                  |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -198,161 +436,87 @@ The following 128 members have fengari execution cases. This covers common opera
 | Map                                     | `size`, `clear`, `delete`, `entries`, `forEach`, `get`, `has`, `keys`, `set`, `values`                                                                                                                                                                                                           |
 | Set                                     | `size`, `add`, `clear`, `delete`, `entries`, `forEach`, `has`, `keys`, `values`                                                                                                                                                                                                                  |
 
-Ordinary objects, arrays, classes, Map/Set construction, Number/String conversions, Error and try/catch are available. Standard methods cannot be extracted or destructured as values: write `values.map(value => Math.abs(value))`. Dynamic method-name access is unsupported; numeric string/array indexing remains supported.
+Ordinary classes, arrays/objects, Map/Set, Number/String and Error/throw/try/catch work. Standard methods cannot be extracted as values or dynamically indexed by method name: use values.map(value => Math.abs(value)). Numeric indexing remains available. Promise, Date, RegExp, JSON, WeakMap/WeakSet, requestAnimationFrame and queueMicrotask are unavailable; same-named user-local functions are not falsely rejected. Consider Lua string.match/gsub instead of regular expressions.
 
-`Boolean(value)` explicitly follows JS truthiness and evaluates its argument once. 0, empty string, NaN, undefined/nil and false produce false; objects and arrays produce true. No argument produces false. Function aliases and `filter(Boolean)` work; `new Boolean()` is rejected. Direct numeric/string conditions still need explicit comparisons.
-
-setTimeout/setInterval and their clear functions are supported; see Timers below. requestAnimationFrame and queueMicrotask remain unavailable. Promise, Date, RegExp, JSON, WeakMap/WeakSet and browser/Node globals are unavailable. Compiler, editor plugin and ESLint share the explanatory diagnostics. A user-defined local function with the same name remains allowed.
-
-### Package data
-
-Only `genshin-ts/definitions/prefabs` is allowlisted as package data. Lua data is generated from the same TS definitions when building the package; user builds include only the required tables. English and Chinese names and dynamic keys are preserved.
+The package data allowlist contains only prefabs. Static accesses inline numbers; dynamic keys emit only the accessed table, retaining Chinese/English completions.
 
 ```ts
-import { CharacterPrefab } from 'genshin-ts/definitions/prefabs'
+import { CharacterPrefab, CharacterPrefabZh } from 'genshin-ts/definitions/prefabs'
+
+const amber = CharacterPrefab.Amber
+const lisa = CharacterPrefabZh.丽莎
+function getCharacter(key: keyof typeof CharacterPrefab) {
+  return CharacterPrefab[key]
+}
 ```
 
-enum/client_enums contain node graph runtime classes and are not pure data. For host enums use `lua.Enum`. Other package JS and npm modules are rejected with a reason; they cannot automatically execute in Lua.
+Other package JS/npm modules cannot run directly as Lua. Use lua.Enum for official host enums. Passing the whole prefab namespace as a value requires its full data module.
 
-### Semantic differences
+console.log/info log normally; warn adds a prefix; error uses printerr; assert logs without throwing; trace emits a stack. Use throw or lua.error to interrupt execution. See [Lua debugging](./lua-debug.md) for source locations.
 
-- TS arrays keep zero-based source indexing; the compiler handles Lua's one-based tables. Native API calls follow their declarations.
-- `{ a: undefined }` has no a field in Lua. Undefined or holes in arrays can stop iteration; `delete items[i]` leaves a hole. Use splice to remove an element.
-- JS `-5 % 3` is -2; Lua's result is 1. For nonnegative wrapping use `((n % size) + size) % size`. For JS remainder, compute from a quotient truncated toward zero.
-- Assignment shares objects; spread/Object.assign are shallow copies. Nested references remain shared, just as in JS. There is no implicit deep copy.
+## Build, paths and injection
 
-## Editor checks and ESLint
+Single-file, batch and dev commands support Lua. These examples assume compileRoot=src and outDir=dist.
 
-The template's `export { default } from 'genshin-ts/configs/eslint/full.mjs'` automatically enables Lua rules when a file's owning tsconfig includes lua_globals. Directory names do not matter. Graph-only rules remain off for those files. For a custom config:
-
-```js
-import tseslint from '@typescript-eslint/eslint-plugin'
-import parser from '@typescript-eslint/parser'
-import gsts from 'genshin-ts/eslint'
-
-export default [
-  {
-    files: ['src/lua/**/*.ts'],
-    languageOptions: {
-      parser,
-      parserOptions: { project: './src/lua/tsconfig.json' }
-    },
-    plugins: { gsts, '@typescript-eslint': tseslint },
-    rules: gsts.configs.lua.rules
-  }
-]
+```ts
+// gsts.config.ts options
+compileRoot: 'src',
+entries: ['**/*.ts'],
+outDir: 'dist',
+lua: { sourceMap: true } // Already the default; maps stay local
 ```
 
-The preset disables graph-only restrictions and enables individually configurable `gsts/lua-*` rules. eqeqeq requires strict equality. strict-boolean-expressions disallows numeric/string conditions. no-restricted-syntax recommends undefined instead of null. Lua rules include lua-no-undefined-field, lua-no-array-hole, lua-no-array-delete and lua-no-bigint. Negative remainder is documented rather than linted.
+| Source/purpose             | Local output                                                 | Editor mount path                   |
+| -------------------------- | ------------------------------------------------------------ | ----------------------------------- |
+| src/lua/hud.ts entry       | dist/lua/lua/hud.lua                                         | lua/hud                             |
+| Its runtime top-level code | dist/lua/\_\_gsts_shared/lua/hud.lua                         | Do not mount; required by the entry |
+| Ordinary TS/native modules | Matching paths under dist/lua                                | Do not mount                        |
+| Runtime/standard library   | **gsts_helpers.lua, **gsts_signal_kinds.lua, required lualib | Do not mount                        |
+| Source maps                | Adjacent .lua.map files                                      | Not copied to the game              |
 
-TypeScript checks API signatures, read-only properties, enums, callbacks and ordinary syntax. The editor plugin reuses Lua diagnostics; TSTL-specific restrictions are also checked during builds. Builds do not run full-project typecheck by default. They do reject unresolved names, imports and members (for example TS2304, TS2339 and TS2551), checking only affected files in incremental builds. Enable `lua: { typeCheck: true }` when needed; disabling this does not hide editor errors.
+\_\_gsts_shared is reserved for compiler output, not source module names. Unconfigured single-file builds default to dist/lua.
 
-## Build, dev and injection
+Injection only copies .lua files into external_lua_file; **it does not mount entries**. Import the entire output folder and mount entries manually in the editor. Preserve relative directories when adding files manually: require resolves disk paths, not editor mapping names (game-tested 2026-09-24). Automatic injection preserves this layout.
 
-Use the existing single-file, batch and `gsts dev` commands. Lua files go to `<outDir>/lua/`, or `dist/lua/` for an unconfigured single-file build. Outputs include entries, dependencies, native Lua, helpers and required lualib functions.
+```text
+external_lua_file/
+  lua/hud.lua
+  lua/board.lua
+  __gsts_shared/lua/hud.lua
+  __gsts_helpers.lua
+  …other dependencies
+```
 
-With inject.mapId configured and without --noinject, files are copied to that map's `external_lua_file`. **Lua injection only copies files. You must still import the folder and mount entry scripts manually in the editor.** It does not modify mount mappings in GIL. Local dist outputs are retained.
+With inject.mapId configured, omit --noinject to copy files to the map; local dist remains. After editing Lua, rerun the game in the editor; no separate script-refresh step is needed. For TS, wait for dev compilation/copying first. CLI mount checks inspect recognized GIL records read-only; a candidate match does not prove a working mount, and the check never writes mount mappings.
 
-The first nonempty line is `-- @gsts:lua`. Files without the marker are skipped individually; other files are still written and cleaned up. The result lists skipped paths and counts. Rename or move your hand-written Lua file if it conflicts with generated output. To authorize overwriting, add the marker as its first nonempty line. Old three-line generated headers remain accepted. skipSafeCheck cannot disable Lua protection.
+### Protection, manifests and obsolete files
 
-Unchanged content is not rewritten. Files use temporary-file replacement, not a game-level atomic transaction. Project manifests control cleanup: only owned, still-marked obsolete files are removed. Single-file builds do not clean other entries; other projects' referenced files are kept. Path escapes, symlinks/junctions and conflicting names are rejected. Use separate module subdirectories for independent projects. Partial failures report completed and pending changes.
+Only files whose first nonempty line is -- @gsts:lua may be overwritten; old three-line headers remain valid. Conflicts are skipped individually while other writes/cleanup continue, and logs show paths and skipped counts. Rename/move conflicting handwritten files; add the marker only when overwriting is intended. skipSafeCheck does not bypass this protection.
 
-dev watches TS, native Lua and declarations, preserves previous outputs after failure, and recompiles changed Lua modules and their dependents using one persistent worker. It can run alongside node graph compilation. Declaration/global/config changes may need a full Lua rebuild. Restart dev after changing build configuration. Only changed outputs are prechecked during ordinary saves; a fresh build checks all outputs and restores files modified externally.
+```text
+hud.ts → panel.ts
+Previous manifest: lua/hud.lua
+Current output: lua/panel.lua
+Write panel.lua; remove the owned, still-marked obsolete hud.lua.
+```
 
-After importing and mounting the generated folder, edit code and rerun the game in the editor. There is no additional script-refresh operation.
+`.gsts-lua-<owner>.json` tracks project ownership for cleanup; old files without the marker are retained. Writing a temporary file then renaming prevents interrupted partial writes, a separate concern from obsolete-file cleanup. A whole batch is not a game-level atomic transaction. Single-file builds do not clean other entries; files still referenced by other owners remain. Escaping paths, symlinks/junctions and conflicting names are checked; real I/O errors still fail.
 
-Node graph and Lua builds/injections are independent; failure on one side does not block the other. Final summaries show node graphs first, then Lua. Failure still produces a failure exit code. Pure graph projects do not start a Lua worker/Program or run TSTL, and do not show an empty Lua summary.
+### dev and mixed projects
 
-Entry discovery is automatic. entries exclusions affect entry discovery only; imported dependencies remain compiled and watched. dev can start from an empty directory and discover either kind of entry later, provided the new file matches entries. A .d.ts is never an entry. In a pure graph project, .lua/.d.ts changes do not create empty build rounds.
+Lua uses one persistent worker and can overlap graph compilation. Edits rebuild affected modules and users; native Lua and declaration changes are watched too. Declarations/config changes may cause a full rebuild; restart dev after configuration changes. Pure graph projects create no Lua Program/worker, and .lua/.d.ts edits do not trigger empty rounds.
 
-Set `GSTS_INJECT_PROFILE=1` or --inject-profile for unified `[pipeline-profile]` JSON. The lua field records discovery, Program, transpilation, output and watch work. Ordinary builds do not print this detail. Injection duration excludes earlier compilation/GIA work; save-to-output time also includes debounce.
+```sh
+gsts dev --noinject --lang en
+# Edit src/lua/hud.ts → wait for success → rerun the game in the editor.
+```
+
+entries exclusions affect entry discovery only; imported dependencies still compile and are watched. dev discovers new matching entries even from an initially empty directory. One target's failure does not block the other target's outputs, and final summaries report both; actual failures still produce failure status. Failed builds retain previous outputs. Ordinary saves precheck changed outputs only; run a normal build to restore all externally edited outputs.
+
+For timing use GSTS_INJECT_PROFILE=1 or --inject-profile and the unified [pipeline-profile] lua fields. Injection time excludes earlier compilation/GIA work; save-to-output includes debounce, so compare matching scopes.
 
 ## Validation boundary
 
-Automated tests execute generated code in fengari, simulate controls and maps, and check editor completions and diagnostics. The SDK generator checks 640 host API/enum members against cached official documentation. These checks do **not** establish in-game correctness. Generated lifecycle behavior, two mounts, keys, grids, Tween, signals, Invoke and editor reruns still await the game's acceptance results. Optional source maps and offline lookup are available below; they do not capture game logs automatically.
+Automated tests use fengari to simulate controls, lifecycle and signals, and check types, ESLint, state and output protection. SDK checks cover 640 host API/enum members. User-confirmed native host facts are dated in this page; **they do not validate every script produced by this compiler revision in the game**.
 
-## Shared modules and integers
-
-Modules actually imported by both targets must stay neutral: types, constants, portable functions and defineSignal. Builds, default ESLint and the TS editor plugin check these files across both tsconfigs. Runtime-specific globals/imports and shared bigint literals or BigInt() are rejected. Write shared constants as numbers, then convert at the graph boundary:
-
-```ts
-// shared/rules.ts
-export const INITIAL_SCORE = 10
-// server.ts: node graph int uses bigint
-const score = int(INITIAL_SCORE)
-// Lua uses INITIAL_SCORE directly: Lua integers are numbers
-```
-
-Signal contracts and writer metadata now share one neutral source; each target maps the same contract to its own value types.
-
-## Timers
-
-```ts
-export default g.clientControlScript({ timerClock: 'level' }, () => {
-  return {
-    onEnable() {
-      const repeat = setInterval(() => console.log(self.name), 1000)
-      setTimeout(() => clearInterval(repeat), 5000)
-    }
-  }
-})
-```
-
-Delays are milliseconds. The default level clock accumulates OnLevelUpdate dt; real accumulates OnUpdate dt. Neither is a wall clock: host scheduling controls progress. For entries with managed subscriptions or timers, calls to the current script’s EnableUpdate record whether user OnUpdate should run. Pending timers keep the host update switch enabled independently; turning off user updates does not stop the countdown. Calls to other script instances remain raw host calls. Only calls written in the entry (including local aliases such as `const s = lua.script`) are routed; if you pass `lua.script` into a regular module and call EnableUpdate there, it switches the host directly and can stop pending timers, so keep EnableUpdate calls in the entry.
-
-Disable/Destroy clears every task. Enable does not resume old tasks; create fresh tasks in onEnable when needed. Both clear functions are idempotent. Zero/negative delays wait until the next update. Intervals run at most once per update after a stall, without replaying every missed tick. A throwing task is logged and removed while others continue. Tasks created during a callback wait for the next update.
-
-Timers belong to the entry instance. Ordinary modules should receive a scheduling function from the entry rather than assuming their global script is the caller's script. requestAnimationFrame and queueMicrotask remain unavailable.
-
-## Data imports, error locations and mounting
-
-Static accesses such as CharacterPrefab.Amber or CharacterPrefabZh.丽莎 inline numeric constants without a data module. Dynamic keys include only the accessed export table; using a whole namespace as a value requires its full module.
-
-Source maps are on by default: .lua.map files sit next to local outputs and are not injected into the game. Set `lua: { sourceMap: false }` in gsts.config.ts to disable them. Native Lua maps account for the generated header too.
-
-```sh
-gsts lua locate dist/lua/hud.lua:42
-gsts lua locate --log game-error.log --outDir dist
-```
-
-The command reports the corresponding source file/line/column, recognizes common file.lua:line and [string "..."]:line forms, and rejects stale maps when Lua content changed. Generated framework code may have no source location. Keep matching Lua and map files; this is offline lookup, not a game debugger.
-
-Builds list entry mount paths. When a map is configured, recognized GIL records are inspected read-only. A matching candidate is not proof of successful in-game mounting; no match is not proof of absence. GIL is never modified by this check. Control trees, script-variable extraction and precise mount typing await differential map samples.
-
-## Optional Lua scaffold
-
-```sh
-npm create genshin-ts@latest my-project -- --with-lua
-```
-
-This adds src/lua, its tsconfig, a minimal example, typecheck:lua and Lua guidance in AGENTS.md/CLAUDE.md. The default template remains graph-only.
-
-
-Runtime code at entry-file top level is a shared module: it runs once across mounts and survives teleportation. Callback code and variables belong to each mount. The shared layer cannot use instance capabilities such as self, the script object, timers or listeners. `export default` is optional; retain it when another script needs methods typing through `scriptHandle<typeof Board>`.
-
-```ts
-export let total = 0 // Shared by all mounts
-export function reset() { total = 0 }
-g.clientControlScript(lua => {
-  let own = 0 // Private to each mount
-  return { onStart() { own++; total++; lua.print(own, total) } }
-})
-```
-
-An entry `lua/hud.ts` with runtime top-level code also emits `__gsts_shared/lua/hud.lua`, cached by require. The mount path remains `lua/hud`. Named imports read live shared exports; the default is type-only. Import/type-only top levels emit no extra file. `__gsts_shared` is reserved for compiler output and cannot be a source module directory.
-
-Timers pause when disabled and resume their remaining delay when enabled. Destruction clears them; scheduling while inactive is allowed, while scheduling after destruction fails.
-
-```ts
-setTimeout(() => console.log("ready"), 3000)
-// Disable after one second; it runs two seconds after re-enabling.
-```
-
-Each helper timer selects a clock: real ignores level time stops, while level follows them. Both pause when the script is disabled. Global timers keep using the entry timerClock; the global cancellation functions work with both.
-
-```ts
-const timeout = lua.helper.setTimeout(() => console.log('ready'), 1000, 'real')
-const interval = lua.helper.setInterval(() => console.log('tick'), 1000, 'level')
-clearTimeout(timeout)
-clearInterval(interval)
-```
+Control trees, script variables and exact mount-type extraction await differential map samples.

@@ -1,14 +1,67 @@
 [
-  { "type": "dir", "name": "overview", "label": "Overview" },
-  { "type": "dir", "name": "quick-start", "label": "Quick Start" },
-  { "type": "dir", "name": "writing", "label": "Writing Rules" },
-  { "type": "file", "name": "lua", "label": "Client Lua" },
-  { "type": "dir", "name": "globals", "label": "Globals and Types" },
-  { "type": "dir", "name": "events", "label": "Events and Entry" },
-  { "type": "dir", "name": "timers", "label": "Timers and Closures" },
-  { "type": "dir", "name": "pipeline", "label": "Pipeline and Artifacts" },
-  { "type": "dir", "name": "cli", "label": "CLI and Injection" },
-  { "type": "dir", "name": "optimize", "label": "Optimization" },
-  { "type": "dir", "name": "examples", "label": "Examples" },
-  { "type": "dir", "name": "troubleshooting", "label": "Troubleshooting" }
+  {
+    "type": "dir",
+    "name": "overview",
+    "label": "Overview"
+  },
+  {
+    "type": "dir",
+    "name": "quick-start",
+    "label": "Quick Start"
+  },
+  {
+    "type": "dir",
+    "name": "writing",
+    "label": "Writing Rules"
+  },
+  {
+    "type": "file",
+    "name": "lua",
+    "label": "Client Lua"
+  },
+  {
+    "type": "file",
+    "name": "lua-debug",
+    "label": "Lua Debugging"
+  },
+  {
+    "type": "dir",
+    "name": "globals",
+    "label": "Globals and Types"
+  },
+  {
+    "type": "dir",
+    "name": "events",
+    "label": "Events and Entry"
+  },
+  {
+    "type": "dir",
+    "name": "timers",
+    "label": "Timers and Closures"
+  },
+  {
+    "type": "dir",
+    "name": "pipeline",
+    "label": "Pipeline and Artifacts"
+  },
+  {
+    "type": "dir",
+    "name": "cli",
+    "label": "CLI and Injection"
+  },
+  {
+    "type": "dir",
+    "name": "optimize",
+    "label": "Optimization"
+  },
+  {
+    "type": "dir",
+    "name": "examples",
+    "label": "Examples"
+  },
+  {
+    "type": "dir",
+    "name": "troubleshooting",
+    "label": "Troubleshooting"
+  }
 ]
