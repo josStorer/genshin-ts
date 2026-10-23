@@ -91,20 +91,51 @@ function validators.vec3(value)
     return type(value) == "table" and validators.float(value.x)
         and validators.float(value.y) and validators.float(value.z)
 end
--- Scalar and list rules share a validator selected by metadata, not by kind spelling.
+-- Select the validation category once; each list loop checks values inline without per-item calls.
 local function validSignalValue(kind, value)
     local spec = signalKinds[kind]
     if not spec then return false end
-    local validate = validators[spec.validation]
-    if not spec.list then return validate(value) end
+    if not spec.list then return validators[spec.validation](value) end
     if type(value) ~= "table" then return false end
-    local count = 0
-    for key, item in pairs(value) do
-        if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > #value then return false end
-        if not validate(item) then return false end
-        count = count + 1
-    end
-    return count == #value
+    local length, count = #value, 0
+    if spec.validation == "integer" then
+        for key, item in pairs(value) do
+            if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > length then return false end
+            if type(item) ~= "number" or item % 1 ~= 0 or item < -9007199254740991 or item > 9007199254740991 then return false end
+            count = count + 1
+        end
+    elseif spec.validation == "float" then
+        for key, item in pairs(value) do
+            if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > length then return false end
+            if type(item) ~= "number" or item ~= item or item == math.huge or item == -math.huge then return false end
+            count = count + 1
+        end
+    elseif spec.validation == "string" then
+        for key, item in pairs(value) do
+            if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > length then return false end
+            if type(item) ~= "string" then return false end
+            count = count + 1
+        end
+    elseif spec.validation == "boolean" then
+        for key, item in pairs(value) do
+            if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > length then return false end
+            if type(item) ~= "boolean" then return false end
+            count = count + 1
+        end
+    elseif spec.validation == "vec3" then
+        for key, item in pairs(value) do
+            if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > length then return false end
+            if type(item) ~= "table" then return false end
+            local x = item.x
+            if type(x) ~= "number" or x ~= x or x == math.huge or x == -math.huge then return false end
+            local y = item.y
+            if type(y) ~= "number" or y ~= y or y == math.huge or y == -math.huge then return false end
+            local z = item.z
+            if type(z) ~= "number" or z ~= z or z == math.huge or z == -math.huge then return false end
+            count = count + 1
+        end
+    else return false end
+    return count == length
 end
 
 -- The send and receive boundaries reject the same count, index and value errors.

@@ -67,6 +67,11 @@ local L={name='List',params={{'values','int_list'}}}
 assert(not pcall(M.send,L,{[1]=1,[3]=3}))
 assert(not pcall(M.send,L,{[0]=0,[1]=1}))
 assert(not pcall(M.send,L,{1,0/0}))
+for _,invalid in ipairs({{1.5}, {9007199254740992}, {-9007199254740992}, {math.huge}, {-math.huge}, {[1]=1,extra=2}, {[1.5]=3}})do
+ assert(not pcall(M.send,L,invalid))
+ local off=scope.onSignal(L,function()error('invalid payload reached subscriber')end)
+ handlers.List('List',{invalid});assert(errors[#errors]:find('List.values',1,true));off()
+end
 scope.dispose()
 assert(sent==${Object.values(signalKinds).filter((kind) => kind.writer).length * 2} and written==sent)
 `

@@ -17,6 +17,7 @@ const suites = {
     'scope-lifecycle',
     'signal-kinds',
     'signal-validation',
+    'signal-list-performance',
     'timers',
     'helper-timers',
     'timer-queue',
