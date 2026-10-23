@@ -9,7 +9,7 @@ const marker = '-- @gsts:lua'
 const isArtifact = (name: string) => name.endsWith('.lua') || name.endsWith('.lua.map')
 const owned = (name: string, text: string) =>
   name.endsWith('.lua.map') ? hasLuaMapMarker(text) : hasLuaMarker(text)
-export function luaManifestName(owner = 'default') {
+function luaManifestName(owner = 'default') {
   if (!/^(default|[a-f0-9]{12})$/.test(owner)) throw new Error(t('lua_manifestOwner'))
   return owner === 'default' ? '.gsts-lua-files.json' : `.gsts-lua-${owner}.json`
 }

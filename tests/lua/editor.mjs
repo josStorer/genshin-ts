@@ -19,7 +19,9 @@ fs.writeFileSync(
   JSON.stringify({ extends: 'genshin-ts/tsconfig/lua.json', include: ['*.ts'] })
 )
 const source = `import {g} from 'genshin-ts/runtime/core';
+import type {LuaTimerHandle} from 'genshin-ts/runtime/lua';
 export default g.clientControlScript(lua=>{
+ const timer: LuaTimerHandle = setTimeout(() => {}, 100); clearTimeout(timer);
  if (0) {}
  const n=lua.tonumber("0") ?? 0; const negated=!n; const fallback=n || 1;
  lua.helper.readParams(lua.script,{Board:{type:'control',kind:'ClientUIContainerControl'}});
@@ -81,6 +83,12 @@ assert.ok(
   'Lua diagnostics must also reach tsserver'
 )
 const semanticDiagnostics = proxy.getSemanticDiagnostics(file)
+assert(
+  !semanticDiagnostics.some(
+    (d) => d.start >= source.indexOf('import type') && d.start < source.indexOf(' if (0)')
+  ),
+  'public LuaTimerHandle import and use must typecheck'
+)
 assert(
   semanticDiagnostics.some((d) => d.code === 2322 && d.start === source.indexOf("type:'control'")),
   'removed control param gets an ordinary TS type error'

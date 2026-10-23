@@ -187,8 +187,8 @@ function M.readParams(script, schema)
     end
     return values
 end
--- Pending in-game confirmation: assume EnableUpdate also gates OnLevelUpdate.
--- Keeping it enabled for level timers is correct under either known host interpretation.
+-- Confirmed in game (2026-10-22): EnableUpdate(false) stops both update hooks.
+-- Level timers therefore need the host update switch even when user OnUpdate is disabled.
 local LEVEL_CLOCK_NEEDS_UPDATE = true
 
 -- One scope belongs to one mount. The ordered list owns every external subscription.

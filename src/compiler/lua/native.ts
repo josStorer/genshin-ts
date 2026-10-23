@@ -6,7 +6,7 @@ import { parse } from 'luaparse'
 import { t } from '../../i18n/index.js'
 
 /** 同时用于复制原生依赖和检查最终 Lua 的顶层加载环；不执行脚本。 */
-export function luaRequires(text: string) {
+function luaRequires(text: string) {
   const functions: [number, number][] = []
   const calls: { name: string | undefined; range: [number, number] }[] = []
   parse(text, {

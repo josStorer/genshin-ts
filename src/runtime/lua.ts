@@ -16,15 +16,15 @@ export type * from './lua_standard.js'
 export { readParams } from './lua_params.js'
 
 export type * from './lua_host.js'
-export type { LuaMultiReturn } from './lua_primitives.js'
+export type { LuaMultiReturn, LuaTimerHandle } from './lua_primitives.js'
 
 /** 官方按名称调用这些函数；不需要全部填写。 */
 export interface ClientScriptHooks {
-  /** 脚本初始化。 */
+  /** 根部执行之后初始化；首次顺序为 Init → Enable → Start，根部已可查找子控件。 */
   onInit?(this: void): void
-  /** 脚本开始运行。 */
+  /** 每个挂载开始时执行一次；首次 Enable 已执行。 */
   onStart?(this: void): void
-  /** 脚本启用。 */
+  /** 每次启用都执行，包括首次 Start 之前。 */
   onEnable?(this: void): void
   /** 脚本停用，可在这里取消监听。 */
   onDisable?(this: void): void
