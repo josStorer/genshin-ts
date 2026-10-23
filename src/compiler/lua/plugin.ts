@@ -9,6 +9,7 @@ import { luaDataConstant, luaDataModule } from './data_modules.js'
 import { analyzeLuaEntry } from './entry_analysis.js'
 import type { LuaEntryModel } from './entry_model.js'
 import {
+  aliasWrites,
   bindSharedState,
   finishSharedEntry,
   rewriteSharedDeclarations,
@@ -366,7 +367,7 @@ export function createLuaPlugin(
       )
     })
   }
-  // 自增/赋值表达式可能先把状态表存进 TSTL 临时变量；从 TS 左值确认导出名。
+  // 以多个名字导出的变量，写入后同步其余名字；自增/赋值表达式可能用 TSTL 临时变量，所以从 TS 左值确认。
   function sharedExportWrites(node: ts.Expression, ctx: lua.TransformationContext) {
     const shared = file(ctx).shared
     if (!shared) return []
@@ -384,13 +385,7 @@ export function createLuaPlugin(
     const visit = (value: ts.Expression) => {
       if (ts.isIdentifier(value)) {
         const binding = shared.bindings.get(ctx.checker.getSymbolAtLocation(value)!)
-        for (const name of binding?.exports ?? [])
-          writes.push(
-            lua.createAssignmentStatement(
-              field(shared.exports, name),
-              field(shared.table, binding!.name.text)
-            )
-          )
+        if (binding) writes.push(...aliasWrites(shared, binding))
       } else if (ts.isArrayLiteralExpression(value)) value.elements.forEach(visit)
       else if (ts.isObjectLiteralExpression(value))
         for (const property of value.properties) {
@@ -399,13 +394,7 @@ export function createLuaPlugin(
             const binding = shared.bindings.get(
               ctx.checker.getShorthandAssignmentValueSymbol(property)!
             )
-            for (const name of binding?.exports ?? [])
-              writes.push(
-                lua.createAssignmentStatement(
-                  field(shared.exports, name),
-                  field(shared.table, binding!.name.text)
-                )
-              )
+            if (binding) writes.push(...aliasWrites(shared, binding))
           } else if (ts.isSpreadAssignment(property)) visit(property.expression)
         }
       else if (ts.isSpreadElement(value) || ts.isParenthesizedExpression(value))
@@ -500,7 +489,7 @@ export function createLuaPlugin(
           if (!lua.isFile(shared)) throw new Error('TSTL did not return a shared Lua file')
           generateReexports(shared, ctx)
           finishSharedEntry(shared, model, ctx, sharedState.shared?.table)
-          if (sharedState.shared)
+          if (sharedState.shared?.table)
             sharedState.prelude.push(
               lua.createVariableDeclarationStatement(
                 sharedState.shared.table,
@@ -522,8 +511,17 @@ export function createLuaPlugin(
           )
           const local = id(ctx.createTempName('shared'))
           state.prelude.push(lua.createVariableDeclarationStatement(local, requireModule(module)))
-          state.shared = bindSharedState(model, ctx, state.bindings, field(local, 'exports'))
-          if (state.shared)
+          const sharedExports = model.shared.bindings.some(
+            (binding) => binding.mutable && binding.exports.length
+          )
+            ? id(ctx.createTempName('sharedExports'))
+            : field(local, 'exports')
+          if (lua.isIdentifier(sharedExports))
+            state.prelude.push(
+              lua.createVariableDeclarationStatement(sharedExports, field(local, 'exports'))
+            )
+          state.shared = bindSharedState(model, ctx, state.bindings, sharedExports)
+          if (state.shared?.table)
             state.prelude.push(
               lua.createVariableDeclarationStatement(state.shared.table, field(local, 'state'))
             )

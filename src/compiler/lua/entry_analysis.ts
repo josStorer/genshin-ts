@@ -178,7 +178,7 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
         const bindName = (name: ts.BindingName, mutable: boolean) => {
           if (ts.isIdentifier(name)) {
             const symbol = checker.getSymbolAtLocation(name)
-            if (symbol) candidates.set(symbol, { name, mutable, exports: [] })
+            if (symbol) candidates.set(symbol, { name, mutable, exports: [], declared: false })
           } else
             for (const element of name.elements)
               if (ts.isBindingElement(element)) bindName(element.name, mutable)
@@ -200,7 +200,9 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
           const target =
             exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported
           const binding = candidates.get(target)
-          if (binding) binding.exports = [...binding.exports, exported.name]
+          if (!binding) continue
+          binding.exports = [...binding.exports, exported.name]
+          if (exported === target) binding.declared = true
         }
         const names = new Set([...candidates.values()].map((binding) => binding.name.text))
         const used = new Set<ts.Symbol>()

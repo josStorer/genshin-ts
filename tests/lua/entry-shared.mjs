@@ -30,6 +30,12 @@ const result = successful(
 )
 assert(result.files.has('__gsts_shared/main.lua'))
 assert.doesNotMatch(result.files.get('main.lua'), /____exports/)
+// export let 只存在 exports 上，没有状态表副本和重复写入；export { hidden as current } 仍从状态表同步。
+assert.doesNotMatch(result.files.get('__gsts_shared/main.lua'), /____state_\d+\.total/)
+assert.match(
+  result.files.get('__gsts_shared/main.lua'),
+  /____exports\.current = ____state_\d+\.hidden/
+)
 const mount = `function mount()
  local env = setmetatable({}, {__index=_G})
  env._ENV=env

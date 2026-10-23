@@ -44,15 +44,22 @@ export function finishSharedEntry(
   last.expressions = [lua.createTableExpression(fields)]
 }
 
-/** 状态是唯一的读写位置；公开导出只在赋值时同步，没有读取函数或元表。 */
+/**
+ * 回调会改写的顶层变量各只有一个存放位置：export let 声明的直接存在 exports 的同名字段上
+ * （与 TSTL 相同），其余放进状态表；通过 export { … } 公开的名字在写入后同步。
+ */
 export interface SharedState {
-  table: lua.Identifier
+  /** 只有存在非 export let 的可变名字时才创建。 */
+  table?: lua.Identifier
   exports: lua.Expression
   bindings: Map<ts.Symbol, LuaSharedBinding>
-  fields: Map<string, LuaSharedBinding>
 }
 const field = (table: lua.Expression, name: string) =>
   lua.createTableIndexExpression(table, lua.createStringLiteral(name))
+
+export function sharedStorage(state: SharedState, binding: LuaSharedBinding) {
+  return field(binding.declared ? state.exports : state.table!, binding.name.text)
+}
 
 export function bindSharedState(
   model: LuaEntryModel,
@@ -62,37 +69,50 @@ export function bindSharedState(
 ): SharedState | undefined {
   const bindings = model.shared.bindings.filter((binding) => binding.mutable)
   if (!bindings.length) return undefined
-  const table = lua.createIdentifier(context.createTempName('state'))
-  const state: SharedState = { table, exports, bindings: new Map(), fields: new Map() }
+  const state: SharedState = {
+    table: bindings.some((binding) => !binding.declared)
+      ? lua.createIdentifier(context.createTempName('state'))
+      : undefined,
+    exports,
+    bindings: new Map()
+  }
   for (const binding of bindings) {
     const symbol = context.checker.getSymbolAtLocation(binding.name)!
     state.bindings.set(symbol, binding)
-    state.fields.set(binding.name.text, binding)
-    reads.set(symbol, field(table, binding.name.text))
+    reads.set(symbol, sharedStorage(state, binding))
   }
   return state
 }
 
-/** 每次实际写入后更新公开字段；私有名字永远不进入 exports。 */
+/** 存放位置以外的公开名字，在每次写入后同步。 */
+export function aliasWrites(state: SharedState, binding: LuaSharedBinding) {
+  return binding.exports
+    .filter((name) => !(binding.declared && name === binding.name.text))
+    .map((name) =>
+      lua.createAssignmentStatement(field(state.exports, name), sharedStorage(state, binding))
+    )
+}
+
+const sameField = (a: lua.Expression, b: lua.Expression): boolean =>
+  (lua.isIdentifier(a) && lua.isIdentifier(b) && a.text === b.text) ||
+  (lua.isTableIndexExpression(a) &&
+    lua.isTableIndexExpression(b) &&
+    lua.isStringLiteral(a.index) &&
+    lua.isStringLiteral(b.index) &&
+    a.index.value === b.index.value &&
+    sameField(a.table, b.table))
+
 export function syncSharedWrites(
   statements: lua.Statement[],
   state?: SharedState
 ): lua.Statement[] {
-  if (!state) return statements
+  const aliased = state && [...state.bindings.values()].filter((b) => aliasWrites(state, b).length)
+  if (!state || !aliased?.length) return statements
   return statements.flatMap((statement) => {
     if (!lua.isAssignmentStatement(statement)) return [statement]
     const writes = statement.left.flatMap((target) => {
-      if (
-        !lua.isTableIndexExpression(target) ||
-        !lua.isIdentifier(target.table) ||
-        target.table.text !== state.table.text ||
-        !lua.isStringLiteral(target.index)
-      )
-        return []
-      const binding = state.fields.get(target.index.value)
-      return (binding?.exports ?? []).map((name) =>
-        lua.createAssignmentStatement(field(state.exports, name), target)
-      )
+      const binding = aliased.find((item) => sameField(sharedStorage(state, item), target))
+      return binding ? aliasWrites(state, binding) : []
     })
     return [statement, ...writes]
   })
@@ -108,7 +128,7 @@ export function rewriteSharedDeclarations(
     if (lua.isIdentifier(value) && value.symbolId !== undefined) {
       const symbol = context.symbolInfoMap.get(value.symbolId)?.symbol
       const binding = symbol && state.bindings.get(symbol)
-      if (binding) return field(state.table, binding.name.text)
+      if (binding) return sharedStorage(state, binding)
     }
     if (
       lua.isTableIndexExpression(value) &&
@@ -117,8 +137,8 @@ export function rewriteSharedDeclarations(
       lua.isStringLiteral(value.index)
     ) {
       const key = value.index.value
-      const binding = [...state.fields.values()].find((binding) => binding.exports.includes(key))
-      if (binding) return field(state.table, binding.name.text)
+      const binding = [...state.bindings.values()].find((item) => item.exports.includes(key))
+      if (binding) return sharedStorage(state, binding)
     }
     return value
   }

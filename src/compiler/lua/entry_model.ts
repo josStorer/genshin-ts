@@ -16,8 +16,10 @@ export interface LuaEntryFunction {
 export interface LuaSharedBinding {
   name: ts.Identifier
   mutable: boolean
-  /** 对外公开的名字；修改状态后同步这些导出，导入方直接读取最新值。 */
+  /** 对外公开的全部名字。 */
   exports: readonly string[]
+  /** 用 export let 声明：变量直接存在 exports 的同名字段上（与 TSTL 相同）；其余公开名字写入后同步。 */
+  declared: boolean
 }
 
 /** Lua 入口的公共模型。分析负责合法性，后续阶段只负责生成和输出。 */
