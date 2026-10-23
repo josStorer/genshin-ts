@@ -67,3 +67,13 @@ assert(!('lua-syntax' in gsts.rules) && !('lua-semantics' in gsts.rules))
 console.log(
   'Lua ESLint: independent rules, standard semantic rules, disabling one rule and local shadows: PASS'
 )
+
+const modulo = entry(`let n=-5;lua.print(n%3);n%=3`)
+const [remainders] = await lint(modulo)
+const warnings = remainders.messages.filter((m) => m.ruleId === 'gsts/lua-modulo')
+assert.equal(warnings.length, 2)
+assert(warnings.every((m) => m.severity === 1 && m.message.includes('fmod')))
+const [withoutModulo] = await lint(modulo, { 'gsts/lua-modulo': 'off' })
+assert.deepEqual(withoutModulo.messages, [])
+assert.equal(gsts.configs.recommended.rules['gsts/lua-modulo'], undefined)
+console.log('Lua modulo: two ESLint-only warnings, individually disabled: PASS')

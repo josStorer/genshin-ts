@@ -22,6 +22,7 @@ import listCallbackSignature from './rules/list-callback-signature.js'
 import listMethodTypeConstraints from './rules/list-method-type-constraints.js'
 import listMethodUsage from './rules/list-method-usage.js'
 import listTypeAnnotation from './rules/list-type-annotation.js'
+import luaModulo from './rules/lua-modulo.js'
 import noGraphFunctionRecursion from './rules/no-graph-function-recursion.js'
 import noGstsFOutsideServer from './rules/no-gsts-f-outside-server.js'
 import noInnerDeclarations from './rules/no-inner-declarations.js'
@@ -49,6 +50,7 @@ import timerOuterCapture from './rules/timer-outer-capture.js'
 import unsupportedBinaryOperator from './rules/unsupported-binary-operator.js'
 
 export const rules = {
+  'lua-modulo': luaModulo,
   ...Object.fromEntries(luaLintRules.map((name) => [name, luaRule(name)])),
   'assignment-restrictions': assignmentRestrictions,
   'builtin-console-log-arity': builtinConsoleLogArity,
@@ -109,6 +111,7 @@ export const configs = {
           luaWarningRules.includes(name) ? ('warn' as const) : ('error' as const)
         ])
       ),
+      'gsts/lua-modulo': 'warn' as const,
       '@typescript-eslint/strict-boolean-expressions': [
         'error',
         {

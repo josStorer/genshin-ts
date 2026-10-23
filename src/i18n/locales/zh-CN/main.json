@@ -175,5 +175,6 @@
   "lua_deleteArray": "不要 delete 数组元素；请用 splice 移除并保持数组连续。",
   "lua_bigint": "客户端 Lua 不支持 bigint/BigInt；请使用 number，并注意安全整数范围。",
   "lua_nativeTuple": "原生 Lua 的多个返回值请声明为 LuaMultiReturn<[...]>；普通元组会被当成一个数组，调用时可能生成错误的 table.unpack。",
-  "lua_nativeThis": "原生 Lua 的函数成员请显式声明 this: void，避免多传 self；如果确实用冒号调用，请显式声明 this: 对象类型。"
+  "lua_nativeThis": "原生 Lua 的函数成员请显式声明 this: void，避免多传 self；如果确实用冒号调用，请显式声明 this: 对象类型。",
+  "lua_modulo": "负数取模与 JS 不同：-5 % 3 在 JS 中为 -2，在 Lua 中为 1。两边都非负时可忽略；需要 JS 结果时用 lua.math.fmod(a, b)（fmod(-5, 3) 为 -2）。不需要提示时，在 ESLint 配置中将 gsts/lua-modulo 设为 'off'。"
 }
