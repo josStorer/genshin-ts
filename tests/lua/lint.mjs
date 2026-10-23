@@ -45,7 +45,6 @@ for (const name of [
   'gsts/lua-no-bigint',
   'gsts/lua-unavailable-global',
   'gsts/lua-standard-library',
-  'eqeqeq',
   '@typescript-eslint/strict-boolean-expressions',
   'no-restricted-syntax'
 ])
@@ -62,6 +61,8 @@ const [good] = await lint(
   )
 )
 assert.deepEqual(good.messages, [])
+const [equality] = await lint(entry(`const n=1;if(n==1)lua.print(n);if(n!=2)lua.print(n)`))
+assert.deepEqual(equality.messages, [])
 assert(!('lua-syntax' in gsts.rules) && !('lua-semantics' in gsts.rules))
 console.log(
   'Lua ESLint: independent rules, standard semantic rules, disabling one rule and local shadows: PASS'

@@ -109,7 +109,6 @@ export const configs = {
           luaWarningRules.includes(name) ? ('warn' as const) : ('error' as const)
         ])
       ),
-      eqeqeq: ['error', 'always'] as const,
       '@typescript-eslint/strict-boolean-expressions': [
         'error',
         {
