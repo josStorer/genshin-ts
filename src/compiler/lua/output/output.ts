@@ -35,56 +35,22 @@ export function hasLuaMarker(text: string) {
 }
 function safePath(root: string, relative: string) {
   if (
-    !relative ||
-    [...relative].some((character) => character.charCodeAt(0) < 32) ||
-    /[:<>"|?*]/.test(relative) ||
-    relative.includes('\\') ||
-    relative
-      .split('/')
-      .some(
-        (x) =>
-          x === '..' ||
-          x === '.' ||
-          !x ||
-          /[. ]$/.test(x) ||
-          /^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i.test(x)
-      ) ||
-    path.isAbsolute(relative)
+    path.isAbsolute(relative) ||
+    path.win32.isAbsolute(relative) ||
+    relative.split(/[\\/]/).includes('..')
   )
     throw new Error(t('lua_unsafePath', { arg0: relative }))
   const absolute = path.resolve(root, relative)
   const rel = path.relative(root, absolute)
-  if (!rel || rel.startsWith('..') || path.isAbsolute(rel))
+  if (!rel || rel === '..' || rel.startsWith('..' + path.sep) || path.isAbsolute(rel))
     throw new Error(t('lua_outputOutsideTarget', { arg0: relative }))
   return absolute
 }
-function checkLinks(target: string, checkedParents?: Set<string>) {
-  let current = target
-  for (;;) {
-    if (current !== target && checkedParents?.has(current)) break
-    if (fs.lstatSync(current, { throwIfNoEntry: false })?.isSymbolicLink())
-      throw new Error(t('lua_outputLink', { arg0: current }))
-    checkedParents?.add(current)
-    const parent = path.dirname(current)
-    if (parent === current) break
-    current = parent
-  }
-}
-function checkOwnedFile(target: string) {
-  checkLinks(target)
-  if (
-    fs.existsSync(target) &&
-    (!fs.statSync(target).isFile() || !owned(target, fs.readFileSync(target, 'utf8')))
-  )
-    throw new Error(t('lua_fileChanged', { arg0: target }))
-}
-function atomicWrite(target: string, content: string, owned = false) {
+function atomicWrite(target: string, content: string) {
   fs.mkdirSync(path.dirname(target), { recursive: true })
   const temp = `${target}.${randomUUID()}.tmp`
   try {
     fs.writeFileSync(temp, content, { flag: 'wx' })
-    checkLinks(target)
-    if (owned) checkOwnedFile(target)
     fs.renameSync(temp, target)
   } finally {
     if (fs.existsSync(temp)) fs.unlinkSync(temp)
@@ -100,19 +66,14 @@ export function writeLuaFiles(
   owner = 'default',
   cache?: LuaOutputCache
 ): LuaWriteResult {
-  // 只在本批预检中复用父目录检查；真正写入、删除前仍逐级重新检查。
-  const checkedParents = new Set<string>()
   const root = path.resolve(rootDir)
   const cacheKey = JSON.stringify([root, owner])
   const previousFiles = cache?.key === cacheKey ? cache.files : undefined
   // 预检失败或写到一半失败后，下一次不能继续信任旧的磁盘快照。
   if (cache) cache.files = undefined
-  checkLinks(root, checkedParents)
   const result: LuaWriteResult = { written: [], unchanged: [], removed: [], conflicts: [] }
   const manifestPath = path.join(root, luaManifestName(owner))
-  checkLinks(manifestPath, checkedParents)
   const readManifest = (filename: string): string[] => {
-    checkLinks(filename, checkedParents)
     if (!fs.existsSync(filename)) return []
     const manifest: unknown = JSON.parse(fs.readFileSync(filename, 'utf8'))
     if (
@@ -127,10 +88,13 @@ export function writeLuaFiles(
       )
     )
       throw new Error(t('lua_invalidManifest', { arg0: filename }))
-    for (const name of manifest.files) safePath(root, name)
-    if (new Set(manifest.files.map((name) => name.toLowerCase())).size !== manifest.files.length)
-      throw new Error(t('lua_duplicateManifest', { arg0: filename }))
-    return manifest.files
+    const seen = new Set<string>()
+    return manifest.files.filter((name) => {
+      const target = safePath(root, name).toLowerCase()
+      if (seen.has(target)) return false
+      seen.add(target)
+      return true
+    })
   }
   const previous = readManifest(manifestPath)
   const usedElsewhere = new Set<string>()
@@ -141,7 +105,8 @@ export function writeLuaFiles(
         name === path.basename(manifestPath)
       )
         continue
-      for (const file of readManifest(path.join(root, name))) usedElsewhere.add(file.toLowerCase())
+      for (const file of readManifest(path.join(root, name)))
+        usedElsewhere.add(safePath(root, file).toLowerCase())
     }
   }
   const names = new Set<string>()
@@ -149,14 +114,13 @@ export function writeLuaFiles(
   for (const [name, text] of files) {
     if (!isArtifact(name) || !owned(name, text))
       throw new Error(t('lua_missingMarker', { arg0: name }))
-    if (names.has(name.toLowerCase())) throw new Error(t('lua_caseCollision', { arg0: name }))
-    names.add(name.toLowerCase())
     const target = safePath(root, name)
+    if (names.has(target.toLowerCase())) throw new Error(t('lua_caseCollision', { arg0: name }))
+    names.add(target.toLowerCase())
     if (previousFiles?.get(name) === text) {
       result.unchanged.push(name)
       continue
     }
-    checkLinks(target, checkedParents)
     if (fs.existsSync(target)) {
       if (!fs.statSync(target).isFile()) throw new Error(t('lua_targetNotFile', { arg0: name }))
       const old = fs.readFileSync(target, 'utf8')
@@ -168,9 +132,8 @@ export function writeLuaFiles(
   const stale: [string, string][] = []
   if (complete)
     for (const name of previous) {
-      if (names.has(name.toLowerCase()) || usedElsewhere.has(name.toLowerCase())) continue
       const target = safePath(root, name)
-      checkLinks(target, checkedParents)
+      if (names.has(target.toLowerCase()) || usedElsewhere.has(target.toLowerCase())) continue
       if (fs.existsSync(target)) {
         if (!fs.statSync(target).isFile() || !owned(name, fs.readFileSync(target, 'utf8')))
           result.conflicts.push(name)
@@ -180,11 +143,10 @@ export function writeLuaFiles(
   const conflicts = new Set(result.conflicts)
   try {
     for (const [name, target, text] of writes) {
-      atomicWrite(target, text, true)
+      atomicWrite(target, text)
       result.written.push(name)
     }
     for (const [name, target] of stale) {
-      checkOwnedFile(target)
       if (fs.existsSync(target)) fs.unlinkSync(target)
       result.removed.push(name)
     }

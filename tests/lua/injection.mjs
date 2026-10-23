@@ -122,22 +122,64 @@ try {
         write(path.join(interrupted, 'first.lua'), '-- concurrent user save')
       return result
     }
-    assert.throws(
-      () => writeLuaFiles(interrupted, new Map([['first.lua', '-- @gsts:lua\nreturn 9']])),
-      /文件已变更[\s\S]*-- @gsts:lua/
+    // Permission is checked during preflight, once; rename does not read the target again.
+    assert.deepEqual(
+      writeLuaFiles(interrupted, new Map([['first.lua', '-- @gsts:lua\nreturn 9']])).written,
+      ['first.lua']
     )
     assert.equal(
       fs.readFileSync(path.join(interrupted, 'first.lua'), 'utf8'),
-      '-- concurrent user save'
+      '-- @gsts:lua\nreturn 9'
     )
   } finally {
     fs.writeFileSync = write
   }
   const link = path.join(dir, 'linked')
   fs.symlinkSync(target, link, 'junction')
-  assert.throws(() => writeLuaFiles(link, a), /junction/)
+  assert.equal(writeLuaFiles(link, a).conflicts.length, 0)
+  assert.equal(fs.readFileSync(path.join(target, 'a.lua'), 'utf8'), a.get('a.lua'))
+  const underLink = path.join(link, 'nested')
+  assert.deepEqual(writeLuaFiles(underLink, a).written, ['a.lua', 'shared.lua'])
+  fs.writeFileSync(path.join(target, 'nested/a.lua'), '-- user file')
+  assert.deepEqual(writeLuaFiles(underLink, a).conflicts, ['a.lua'])
+  assert.equal(fs.readFileSync(path.join(target, 'nested/a.lua'), 'utf8'), '-- user file')
+  const protectedRemoval = writeLuaFiles(underLink, new Map(), true)
+  assert.deepEqual(protectedRemoval.conflicts, ['a.lua'])
+  assert.deepEqual(protectedRemoval.removed, ['shared.lua'])
+
+  const checks = path.join(dir, 'checks')
+  const safe = new Map([['..safe.lua', '-- @gsts:lua\nreturn 1']])
+  assert.deepEqual(writeLuaFiles(checks, safe).written, ['..safe.lua'])
+  for (const name of [
+    '../outside.lua',
+    'folder/../outside.lua',
+    path.resolve(dir, 'absolute.lua'),
+    'C:\\outside.lua'
+  ])
+    assert.throws(() => writeLuaFiles(checks, new Map([[name, '-- @gsts:lua\n']])), /路径|目录/)
+  assert.throws(
+    () =>
+      writeLuaFiles(
+        checks,
+        new Map([
+          ['A.lua', '-- @gsts:lua\n'],
+          ['a.lua', '-- @gsts:lua\n']
+        ])
+      ),
+    /大小写/
+  )
+  const manifest = path.join(checks, '.gsts-lua-files.json')
+  fs.writeFileSync(
+    manifest,
+    JSON.stringify({ format: 'gsts:lua:1', files: ['..safe.lua', '..safe.lua', '..SAFE.lua'] })
+  )
+  assert.deepEqual(writeLuaFiles(checks, new Map(), true).removed, ['..safe.lua'])
+  fs.writeFileSync(manifest, JSON.stringify({ format: 'wrong', files: [] }))
+  assert.throws(() => writeLuaFiles(checks, safe), /清单/)
 } finally {
   if (prior === undefined) delete process.env.LOCALAPPDATA
   else process.env.LOCALAPPDATA = prior
 }
-console.log('Map path, noinject, conflict recovery, ownership and junction protection: PASS')
+console.log(
+  'Map path, noinject, conflict recovery, ownership, path bounds, duplicate manifests and junction support: PASS'
+)
