@@ -6,8 +6,10 @@ import { locateLua } from '../compiler/lua/output/source_maps.js'
 import { t } from '../i18n/index.js'
 
 // 日志每条前有一行标题，文字随界面语言变化（"正常脚本日志 日志_…"、"Standard Script Logs log_…"），
-// 但都带 2026/10/24_12:38:53 这样的时间戳；按它切分条目，标题行本身不参与识别。
-const ENTRY_HEADER = /\d{4}\/\d{1,2}\/\d{1,2}_\d{1,2}:\d{2}:\d{2}/
+// 但都带日期和时间（现在是 2026/10/24_12:38:53）。格式可能随版本或地区变化，只要求"日期 + 时:分"：
+// 2026-10-24 12:38、10/24/2026 1:38 PM、2026年10月24日 12:38 都算。标题没认出来也不会定位错，
+// 只是不能按条目分组：标题里的时间对应不到构建文件，会被跳过。
+const ENTRY_HEADER = /\d{1,4}[/.\-年]\d{1,2}[/.\-月]\d{1,4}日?[\sT_]*\d{1,2}:\d{2}/
 // 位置写法：调用栈 lua/hud:299、宿主报错开头 rt_probe: 23、[string "x.lua"]:12、本地 x.lua:42
 const LOCATION = /(?:\[string ")?((?:[A-Za-z]:)?[^\s:"'<>[\]()]+?)(?:\.lua)?(?:"\])?: ?(\d+)/g
 
@@ -71,13 +73,22 @@ function splitEntries(text: string) {
   return entries.map((lines) => lines.join('\n').trim()).filter(Boolean)
 }
 
-/** 条目里能对应到构建产物的位置，按出现顺序去重。<x:12> 是函数定义处，不是出错行，跳过。 */
-function entryLocations(entry: string, outDir: string | undefined) {
+/**
+ * 条目里能对应到构建产物的位置，按出现顺序去重。<x:12> 是函数定义处，不是出错行，跳过。
+ * 对应不到的报错位置（行首的 "x:12:"）记进 missing，全都找不到时告诉用户找到了什么。
+ */
+function entryLocations(entry: string, outDir: string | undefined, missing: Set<string>) {
   const locations = new Map<string, Location>()
   for (const match of entry.matchAll(LOCATION)) {
     if (entry[match.index - 1] === '<') continue
     const file = resolveLuaFile(match[1], outDir)
-    if (!file) continue
+    if (!file) {
+      const lineStart = entry.lastIndexOf('\n', match.index) + 1
+      const atLineStart = !entry.slice(lineStart, match.index).trim()
+      if (atLineStart && entry[match.index + match[0].length] === ':')
+        missing.add(`${match[1]}:${match[2]}`)
+      continue
+    }
     const line = Number(match[2])
     const key = `${path.resolve(file)}:${line}`
     if (!locations.has(key)) locations.set(key, { label: `${match[1]}:${line}`, file, line })
@@ -95,9 +106,10 @@ export async function runLuaLocate(
   if (!Number.isInteger(column) || column < 1) throw new Error(t('lua_locateInput'))
   const entries = splitEntries(text)
   const seen = new Set<string>()
+  const missing = new Set<string>()
   let printed = false
   for (const entry of entries) {
-    const locations = entryLocations(entry, options.outDir)
+    const locations = entryLocations(entry, options.outDir, missing)
     const key = locations.map((l) => `${l.file}:${l.line}`).join('|')
     if (!locations.length || seen.has(key)) continue // 同一个错误常在日志里重复出现
     seen.add(key)
@@ -123,5 +135,12 @@ export async function runLuaLocate(
     if (user.length && user.length < locations.length)
       console.log(indent + t('lua_locateRuntimeSkipped', { arg0: locations.length - user.length }))
   }
-  if (!printed) throw new Error(t('lua_locateNotFound'))
+  if (printed) return
+  if (!options.outDir || !missing.size) throw new Error(t('lua_locateNotFound'))
+  throw new Error(
+    t('lua_locateNotBuilt', {
+      arg0: [...missing].slice(0, 5).join(', '),
+      arg1: path.relative(process.cwd(), path.resolve(options.outDir, 'lua')) || '.'
+    })
+  )
 }

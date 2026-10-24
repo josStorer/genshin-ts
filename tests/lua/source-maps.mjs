@@ -90,7 +90,8 @@ fs.writeFileSync(
     'Standard Script Logs log_2026/10/24_12:43:10_player_test',
     'board: refresh\t1',
     '',
-    'Error Script Logs log_2026/10/24_12:43:11_player_test',
+    // 时间戳格式可能随版本或地区变化
+    'Error Script Logs 2026-10-24 12:43:11',
     gameError
   ].join('\n')
 )
@@ -119,6 +120,10 @@ assert.match(locate('lualib_bundle:682').stdout, /generated framework code/)
 const missing = locate('other:3', '--outDir', path.join(root, 'nowhere'))
 assert.notEqual(missing.status, 0)
 assert.match(missing.stdout + missing.stderr, /project directory/)
+// 报错来自没经过 gsts 构建的 .lua 时，说清楚找到了什么
+const unbuilt = locate('err_probe: 35: in function <err_probe:35>: lvl1')
+assert.notEqual(unbuilt.status, 0)
+assert.match(unbuilt.stdout + unbuilt.stderr, /err_probe:35, but .* has no such files/)
 fs.writeFileSync(path.join(outDir, 'main.lua'), code + '-- edited\n')
 await assert.rejects(() => locateLua(path.join(outDir, 'main.lua'), line), /映射|map/)
 fs.writeFileSync(path.join(outDir, 'main.lua'), code)

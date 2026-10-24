@@ -11,6 +11,7 @@
   "lua_locateOutDir": "Build output directory containing the lua subdirectory; defaults to outDir in gsts.config.ts",
   "lua_locateInput": "No Lua location found. Provide error text, a log file path, or file.lua:line (the clipboard is read when nothing is given); line and column numbers start at 1.",
   "lua_locateNotFound": "None of the Lua locations in the error match a built file. Run this in the project directory (with gsts.config.ts), or pass --outDir with the build output directory.",
+  "lua_locateNotBuilt": "The error mentions {{arg0}}, but {{arg1}} has no such files. They may not be scripts built by gsts (for example, .lua files placed directly in the game directory); if they are, build first or pass --outDir with the build output directory.",
   "lua_locateRuntimeSkipped": "Skipped {{arg0}} location(s) in runtime code (lualib_bundle, __gsts_helpers, ...), which has no TS source.",
   "lua_mapMissing": "No source map found for {{arg0}}. Make sure lua.sourceMap is not set to false, then rebuild.",
   "lua_mapInvalid": "Invalid Lua source map: {{arg0}}.",

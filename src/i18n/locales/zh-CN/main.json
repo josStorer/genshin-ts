@@ -11,6 +11,7 @@
   "lua_locateOutDir": "构建输出目录（包含 lua 子目录）；不填时用 gsts.config.ts 的 outDir",
   "lua_locateInput": "没有找到 Lua 位置。请提供报错文本、日志文件路径或 文件.lua:行号（不带参数时读取剪贴板）；行列号从 1 开始。",
   "lua_locateNotFound": "报错里的 Lua 位置在构建产物中都找不到。请在项目目录（有 gsts.config.ts）运行，或用 --outDir 指定构建输出目录。",
+  "lua_locateNotBuilt": "报错里有 {{arg0}}，但 {{arg1}} 里没有这些文件。它们可能不是 gsts 构建的脚本（例如直接放进游戏目录的 .lua）；如果是，请先构建，或用 --outDir 指定构建输出目录。",
   "lua_locateRuntimeSkipped": "另有 {{arg0}} 处位于运行库（lualib_bundle、__gsts_helpers 等），没有对应的 TS 源码，已省略。",
   "lua_mapMissing": "找不到 {{arg0}} 的 sourcemap。请确认没有把 lua.sourceMap 设为 false，然后重新构建。",
   "lua_mapInvalid": "Lua 映射格式不正确：{{arg0}}。",
