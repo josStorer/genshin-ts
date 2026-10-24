@@ -26,7 +26,11 @@ export interface LuaMetatable {
   __metatable?: unknown
   __mode?: 'k' | 'v' | 'kv'
 }
-/** 官方沙箱可用的原生基础 API；io、coroutine、string.dump 和 debug.getinfo 不在其中。 */
+/**
+ * 官方沙箱可用的原生基础 API。官方文档列出不可用：string.dump、io、coroutine、
+ * 除 time/date/clock/difftime 外的 os、除 traceback 外的 debug；2026-10-24 实机另外确认没有
+ * _VERSION、string.pack/unpack/packsize、load/loadstring/dofile/loadfile、collectgarbage、package。
+ */
 export interface LuaStandardGlobals {
   print(this: void, ...values: unknown[]): void
   printerr(this: void, ...values: unknown[]): void
@@ -91,14 +95,6 @@ export interface LuaStandardGlobals {
     char(this: void, ...bytes: number[]): string
     reverse(this: void, value: string): string
     gmatch(this: void, value: string, pattern: string): LuaIterable<LuaMultiReturn<string[]>>
-    pack(this: void, format: string, ...values: (string | number)[]): string
-    packsize(this: void, format: string): number
-    unpack(
-      this: void,
-      format: string,
-      value: string,
-      position?: number
-    ): LuaMultiReturn<(string | number)[]>
     /** Lua 从 1 开始；这里保留原生索引规则。普通 TS 字符串方法仍使用 TS 的索引。 */
     sub(this: void, value: string, start: number, end?: number): string
     len(this: void, value: string): number
@@ -171,7 +167,6 @@ export interface LuaStandardGlobals {
     offset(this: void, value: string, count: number, position?: number): number | undefined
   }
   readonly debug: { traceback(this: void, message?: string, level?: number): string }
-  readonly _VERSION: string
   /** 原生 Lua 索引从 1 开始；普通 TS 数组仍从 0 开始。 */
   ipairs<T>(this: void, list: T[]): LuaIterable<LuaMultiReturn<[number, T]>>
   pairs<T extends object>(this: void, value: T): LuaIterable<LuaMultiReturn<[keyof T, T[keyof T]]>>
