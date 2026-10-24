@@ -1,5 +1,5 @@
 /** 校验类别只描述宿主值的形状；实体/GUID 的 TS 类型仍各自保留。 */
-export type SignalValidation = 'integer' | 'float' | 'string' | 'boolean' | 'vec3'
+type SignalValidation = 'integer' | 'float' | 'string' | 'boolean' | 'vec3'
 type SignalKind =
   | { writer: string; validation: SignalValidation }
   | { writer: undefined; validation: undefined }
@@ -17,7 +17,7 @@ export const signalKinds = {
   config_id: { writer: 'AddConfigId', validation: 'integer' },
   faction: { writer: undefined, validation: undefined }
 } as const satisfies Record<string, SignalKind>
-export type SignalScalarType = keyof typeof signalKinds
+type SignalScalarType = keyof typeof signalKinds
 export type LuaSignalKind = {
   [K in SignalScalarType]: (typeof signalKinds)[K]['writer'] extends string ? K : never
 }[SignalScalarType]
