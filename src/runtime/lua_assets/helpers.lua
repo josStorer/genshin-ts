@@ -24,7 +24,17 @@ function M.toBoolean(_, value)
     return value ~= nil and value ~= false and value ~= 0 and value ~= "" and value == value
 end
 function M.multi(...) return ... end
-function M.scriptHandle(script) return script end
+-- A handle to another mount's script: methods.name(...) and Invoke(name, ...) both call the official Invoke.
+-- Method callers are cached per name, so repeated calls allocate nothing.
+function M.scriptHandle(script)
+    if script == nil then return nil end
+    local methods = setmetatable({}, {__index = function(cache, name)
+        local call = function(...) return script:Invoke(name, ...) end
+        rawset(cache, name, call)
+        return call
+    end})
+    return {script = script, methods = methods, Invoke = function(_, name, ...) return script:Invoke(name, ...) end}
+end
 function M.clamp(value, low, high) return math.min(high, math.max(low, value)) end
 function M.lerp(a, b, t) return a + (b - a) * t end
 function M.moveTowards(value, target, delta)
@@ -63,6 +73,12 @@ function M.requireControl(root, path, kind)
     local result = M.findControl(root, path, kind)
     if not result then error("Control not found: " .. path) end
     return result
+end
+-- The compiler passes the entry's script path, derived from findScript<typeof Entry>.
+function M.findScript(scriptPath, control, path)
+    if control ~= nil and path ~= nil then control = M.findControl(control, path, "ClientUIBaseControl") end
+    if control == nil then return nil end
+    return M.scriptHandle(control:GetScriptByPath(scriptPath))
 end
 function M.listenKey(control, event, callback)
     control:AddKeyEventListener(event, callback)

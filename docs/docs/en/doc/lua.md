@@ -118,7 +118,7 @@ control.SetVisible(true) automatically emits control:SetVisible(true). Host decl
 | clamp / lerp / moveTowards          | Numeric limits, interpolation and movement                                    |
 | listenKey(control, event, callback) | Idempotent cancel function; pauses/resumes with the mount                     |
 | readParams(script, schema)          | Checks script variables and returns typed fields                              |
-| multi / scriptHandle                | Multiple returns and methods of a particular mount                            |
+| multi / findScript / scriptHandle   | Multiple returns; find another mount and call its public methods              |
 
 Script parameters support number/string/boolean. The schema does not create editor variables; a variable missing from the editor uses its default, or reports the variable name when there is none. A variable that exists but is left blank is not missing: a string reads as an empty string (confirmed in game, 2026-10-24).
 
@@ -195,15 +195,14 @@ export default g.clientControlScript(() => {
 import type Board from './board'
 
 // Inside hud: Left and Right each mount board
-const left = lua.helper.requireControl(self, 'Left', 'ClientUIContainerControl')
-const script = left.GetScriptByPath('lua/board')
-if (script) {
-  const [score] = lua.helper.scriptHandle<typeof Board>(script).Invoke('push', 2)
-  console.log(score) // Changes Left only, not Right
-}
+const left = lua.helper.findScript<typeof Board>(self, 'Left')
+const score = left?.methods.push(2) // Changes Left only, not Right
+left?.Invoke('push', 2) // The official Invoke style works too and returns all values
 ```
 
-export default is optional. Keep it for import type Board / typeof Board method-name, argument and return hints. The default cannot be imported as a runtime value; named exports can. The caller must still ensure the handle actually mounts that entry; editor mount metadata is not yet used to enforce this.
+`findScript<typeof Board>(control, path?)` finds the board script mounted on control (or on the child at path), or returns undefined. The script path comes from the entry file that `typeof Board` points to (here `lua/board`), so you never write it by hand; a type argument that is not an entry reports `gsts/lua-find-script` in the editor, ESLint and builds. On the handle, `methods.name(...)` is called like an ordinary function and returns the method's result; `Invoke('name', ...)` matches the official call; `script` is the official Script itself. To wrap a Script you already have (for example from `GetScript`), use `lua.helper.scriptHandle<typeof Board>(script)`.
+
+export default is optional. Keep it for import type Board / typeof Board method-name, argument and return hints. The default cannot be imported as a runtime value; named exports can.
 
 Methods accept inline functions, references to callback-local functions and shorthand properties. Class/object methods, non-functions and outside functions are rejected. Use lua.helper.multi(a,b) for multiple returns; ordinary TS arrays return one table.
 

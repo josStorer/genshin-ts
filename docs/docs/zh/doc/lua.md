@@ -118,7 +118,7 @@ if (lua.helper.isControl(candidate, 'ClientUITextBoxControl')) {
 | clamp / lerp / moveTowards          | 数值限制、插值、向目标移动                               |
 | listenKey(control, event, callback) | 返回幂等取消函数，随实例停用暂停、启用恢复               |
 | readParams(script, schema)          | 检查脚本变量，返回带类型字段                             |
-| multi / scriptHandle                | 多返回值、指定挂载的公开方法调用                         |
+| multi / findScript / scriptHandle   | 多返回值；找到另一个挂载并调用它的公开方法               |
 
 脚本变量只支持 number/string/boolean；schema 不创建编辑器变量。编辑器里没有这个变量时使用 default，没有 default 就报出变量名；变量建了但留空不算缺失，字符串会读到空串（2026-10-24 实机确认）。
 
@@ -195,15 +195,14 @@ export default g.clientControlScript(() => {
 import type Board from './board'
 
 // hud 回调内：Left 和 Right 是两个分别挂载 board 的容器
-const left = lua.helper.requireControl(self, 'Left', 'ClientUIContainerControl')
-const script = left.GetScriptByPath('lua/board')
-if (script) {
-  const [score] = lua.helper.scriptHandle<typeof Board>(script).Invoke('push', 2)
-  console.log(score) // 只修改左侧，右侧不变
-}
+const left = lua.helper.findScript<typeof Board>(self, 'Left')
+const score = left?.methods.push(2) // 只修改左侧，右侧不变
+left?.Invoke('push', 2) // 官方 Invoke 写法也可以，返回全部返回值
 ```
 
-export default 可以省略；保留它是为了 `import type Board` / `typeof Board` 提供方法名、参数和返回类型。default 不能作为运行时值导入，具名 export 可以。句柄是否实际挂载了这个入口仍由用户保证，暂不从编辑器数据验证。
+`findScript<typeof Board>(control, path?)` 在 control 上（写了 path 就先按路径找子控件）找到挂载的 board 脚本，找不到返回 undefined。脚本路径由 `typeof Board` 指向的入口文件推出（这里是 `lua/board`），不用手写；类型参数不是入口时编辑器、ESLint、构建都会报 `gsts/lua-find-script`。拿到的句柄上：`methods.方法名(...)` 像普通函数一样调用并返回方法的返回值；`Invoke('方法名', ...)` 与官方相同；`script` 是官方 Script 本身。已经拿到官方 Script 时（例如来自 `GetScript`），用 `lua.helper.scriptHandle<typeof Board>(script)` 包装成同样的句柄。
+
+export default 可以省略；保留它是为了 `import type Board` / `typeof Board` 提供方法名、参数和返回类型。default 不能作为运行时值导入，具名 export 可以。
 
 methods 支持内联函数、回调内函数引用及简写；不接受 class/对象方法、非函数值或回调外函数。多返回值用 `lua.helper.multi(a, b)`；普通 TS 数组仍返回一个 table。
 

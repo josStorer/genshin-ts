@@ -26,6 +26,17 @@ export function entryCall(source: ts.SourceFile): ts.CallExpression | undefined 
   }
   return undefined
 }
+/** findScript<typeof Entry> 的类型参数指向的入口文件；不是客户端控件脚本入口时返回 undefined。 */
+export function scriptEntryOf(call: ts.CallExpression, checker: ts.TypeChecker) {
+  const argument = call.typeArguments?.[0]
+  if (!argument || !ts.isTypeQueryNode(argument)) return undefined
+  let symbol = checker.getSymbolAtLocation(argument.exprName)
+  if (symbol && symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol)
+  const declaration = symbol?.declarations?.find(ts.isExportAssignment)
+  if (!declaration) return undefined
+  const source = declaration.getSourceFile()
+  return entryCall(source) === declaration.expression ? source : undefined
+}
 export function diagnostic(node: ts.Node, messageText: string, warning = false): ts.Diagnostic {
   return {
     file: node.getSourceFile(),

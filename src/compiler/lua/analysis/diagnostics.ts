@@ -8,7 +8,7 @@ import { analyzeLuaEntry, entryDiagnosticRules } from './entry_analysis.js'
 import { nativeDeclarationDiagnostics } from './native_declarations.js'
 import { getSharedModuleDiagnostics } from './shared_modules.js'
 import { standardLibraryDiagnostic } from './standard_library.js'
-import { diagnostic, entryCall, nodeGraphCalls } from './syntax.js'
+import { diagnostic, entryCall, nodeGraphCalls, scriptEntryOf } from './syntax.js'
 
 export { getSharedModuleDiagnostics, resolveSharedProject } from './shared_modules.js'
 export { arrangeLuaCompletions } from './completions.js'
@@ -31,7 +31,8 @@ const ruleByMessage = {
   lua_deleteArray: 'lua-no-array-delete',
   lua_bigint: 'lua-no-bigint',
   lua_caughtObject: 'lua-thrown-value',
-  lua_thrownObject: 'lua-thrown-value'
+  lua_thrownObject: 'lua-thrown-value',
+  lua_findScriptEntry: 'lua-find-script'
 } as const
 
 export const luaLintRules = [
@@ -207,6 +208,8 @@ export function getLuaDiagnostics(
         discarded(node)
       )
         diagnostics.push(issue(node, 'lua_enableSubscription', true))
+      if (member === 'findScript' && !scriptEntryOf(node, checker))
+        diagnostics.push(issue(node, 'lua_findScriptEntry'))
       const argument = node.arguments[0]
       if (member === 'onSignal') {
         const name = argument && checker.getTypeAtLocation(argument).getProperty('name')

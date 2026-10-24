@@ -28,6 +28,7 @@ export const scopedHelperMethods: Readonly<Record<string, string>> = {
   clockInterval: 'setIntervalOnClock'
 }
 const helperMembers: Readonly<Record<string, string>> = {
+  findScript: 'findScript',
   listenKey: 'listenKey',
   setTimeout: 'clockTimeout',
   setInterval: 'clockInterval'

@@ -55,6 +55,11 @@ const cases = [
     0
   ],
   [
+    'find-script',
+    `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>{lua.helper.findScript(self);return{}})`,
+    'lua-find-script'
+  ],
+  [
     'thrown-value',
     `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>{return{onStart(){try{lua.print(1)}catch(e){lua.print((e as Error).message)}}}})`,
     'lua-thrown-value',

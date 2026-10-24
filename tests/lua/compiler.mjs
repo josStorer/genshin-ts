@@ -6,8 +6,12 @@ import path from 'node:path'
 
 import { lauxlib, lua, lualib, to_jsstring, to_luastring } from 'fengari'
 
+import {
+  describeLuaConflicts,
+  hasLuaMarker,
+  writeLuaFiles
+} from '../../src/compiler/lua/output/output.ts'
 import { compileLua, formatLuaDiagnostics } from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
-import { describeLuaConflicts, hasLuaMarker, writeLuaFiles } from '../../src/compiler/lua/output/output.ts'
 
 const root = path.resolve('.tmp/lua-tests')
 fs.mkdirSync(root, { recursive: true })
@@ -270,7 +274,7 @@ const wrongId = build({
 })
 assert.ok(wrongId.diagnostics.some((d) => d.code === 2345))
 const methodTypes = build({
-  'main.ts': `import {g} from 'genshin-ts/runtime/core';import type {TypedScript,ClientScriptDefinition} from 'genshin-ts/runtime/lua';declare const handle:TypedScript<ClientScriptDefinition<{twice:(this:void,n:number)=>number}>>;export default g.clientControlScript(lua=>{handle.Invoke('missing',1);return {}})`
+  'main.ts': `import {g} from 'genshin-ts/runtime/core';import type {ScriptHandle} from 'genshin-ts/runtime/lua';declare const handle:ScriptHandle<{twice:(this:void,n:number)=>number}>;export default g.clientControlScript(lua=>{handle.Invoke('missing',1);return {}})`
 })
 assert.ok(methodTypes.diagnostics.some((d) => d.category === 1))
 const inferredMethods = build({

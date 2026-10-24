@@ -179,6 +179,7 @@
   "lua_nativeThis": "Declare this: void on functions in native Lua objects; otherwise they compile to obj:fn(...) colon calls that pass one extra argument. If it really is a colon method, declare this: YourObjectType.",
   "lua_modulo": "Negative remainders differ from JS: -5 % 3 is -2 in JS but 1 in Lua. You can ignore this when neither side is negative; for the JS result, use lua.math.fmod(a, b). To hide this warning, set gsts/lua-modulo to 'off' in your ESLint config.",
   "lua_completionStandard": "Lua standard library",
+  "lua_findScriptEntry": "Write findScript<typeof Entry>(…): the type argument must be a client control script entry imported with import type; the compiler uses it for the script path and method types.",
   "lua_caughtObject": "In client Lua, catch always receives a string: the host converts thrown values to text, so instanceof is always false and fields such as message cannot be read. Use String(e) for the error text.",
   "lua_thrownObject": "The host converts thrown values to text, so catch receives a string and this value loses its type and fields. Throw an Error and put the details in its message instead, e.g. throw new Error(`...`).",
   "lua_enableSubscription": "This subscribes in onEnable without keeping the cancel function, so every enable adds another listener and the callback runs repeatedly. Subscribe at the callback root instead (paused on disable, resumed on enable), or keep the cancel function and call it in onDisable.",

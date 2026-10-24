@@ -150,17 +150,16 @@ export type ClientScriptSetup<M extends ClientMethods = ClientMethods> = (
 ) => ClientScriptHooks & {
   /**
    * Methods other scripts can call. They run per mount and work on that mount's own state.
-   * The caller gets one mount s with control.GetScriptByPath('lua/board'), then calls
-   * scriptHandle<typeof Board>(s).Invoke('push', ...).
-   * For method names and parameter hints, the entry must be export default g.clientControlScript(...),
-   * and the caller references the type with import type Board from './board'.
-   * Use top-level exports for functions and data shared by all mounts; put only per-mount calls in methods.
+   * The caller finds the mount and calls a method like an ordinary function:
+   * `const board = lua.helper.findScript<typeof Board>(control)`, then `board?.methods.push('x')`.
+   * This entry must be export default g.clientControlScript(...), and the caller imports its type with
+   * import type Board from './board'. Use top-level exports for functions and data shared by all mounts;
+   * put only per-mount calls in methods.
    *
    * 公开给其他脚本的方法，按挂载实例执行，操作那个实例自己的状态。
-   * 对方先用 control.GetScriptByPath('lua/board') 取得某一个挂载 s，
-   * 再用 scriptHandle<typeof Board>(s).Invoke('push', ...) 调用。
-   * 想获得方法名和参数提示，入口需写 export default g.clientControlScript(...)，
-   * 对方用 import type Board from './board' 引用类型。
+   * 对方先找到挂载，再像普通函数一样调用：
+   * `const board = lua.helper.findScript<typeof Board>(control)`，然后 `board?.methods.push('x')`。
+   * 本入口需写 export default g.clientControlScript(...)，对方用 import type Board from './board' 引用类型。
    * 全体共享的函数和数据用顶层 export；按实例调用才放在 methods。
    */
   methods?: M
@@ -171,25 +170,75 @@ type MethodReturns<R> =
     : R extends void
       ? LuaMultiReturn<[]>
       : LuaMultiReturn<[R]>
-export type TypedScript<D extends ClientScriptDefinition> =
-  D extends ClientScriptDefinition<infer M>
-    ? Omit<Script, 'Invoke'> & {
-        Invoke<K extends keyof M & string>(
-          this: Script,
-          name: K,
-          ...args: Parameters<M[K]>
-        ): MethodReturns<ReturnType<M[K]>>
-      }
-    : never
+type MethodResult<R> = R extends LuaMultiReturn<infer V> ? LuaMultiReturn<V> : R
+/** 入口定义里的 methods 类型。 */
+export type MethodsOf<D extends ClientScriptDefinition> =
+  D extends ClientScriptDefinition<infer M> ? M : never
 /**
- * Adds method hints to a script handle you already have; you confirm that the handle really mounts entry D.
+ * Typed handle for another mount's script. Call its public methods with handle.methods.name(...) or
+ * handle.Invoke('name', ...); both use the official Invoke.
  *
- * 为已取得的脚本句柄补充公开方法提示；由你确认这个句柄挂载的确实是 D 对应的入口。
+ * 另一个挂载的脚本句柄。用 handle.methods.方法名(...) 或 handle.Invoke('方法名', ...) 调用它的公开方法，两种写法都走官方 Invoke。
+ */
+export interface ScriptHandle<M extends ClientMethods = ClientMethods> {
+  /**
+   * The other entry's public methods, called like ordinary functions: board.methods.push('x').
+   * Returns the method's return value; a method that returns multi(...) gives multiple values.
+   *
+   * 对方入口的公开方法，像普通函数一样调用：board.methods.push('x')。返回方法的返回值；用 multi(...) 返回多个值的方法得到多返回值。
+   */
+  readonly methods: {
+    readonly [K in keyof M]: (
+      this: void,
+      ...args: Parameters<M[K]>
+    ) => MethodResult<ReturnType<M[K]>>
+  }
+  /**
+   * Same as the official Script:Invoke, with typed method names and arguments; returns all return values.
+   *
+   * 与官方 Script:Invoke 相同，方法名和参数带类型；返回全部返回值。
+   */
+  Invoke<K extends keyof M & string>(
+    this: ScriptHandle<M>,
+    name: K,
+    ...args: Parameters<M[K]>
+  ): MethodReturns<ReturnType<M[K]>>
+  /**
+   * The official Script object itself, for fields such as enabled or path.
+   *
+   * 官方 Script 对象本身，需要 enabled、path 等字段时用。
+   */
+  readonly script: Script
+}
+/**
+ * Finds the script of entry D mounted on a control and returns a typed handle, or undefined when there is
+ * none. Write the type argument as typeof Entry (imported with import type); the compiler derives the script
+ * path from it, so no 'lua/board' string is needed. With path, the control is first looked up by that name
+ * path under control, as in findControl.
+ *
+ * 找到某个控件上挂载的入口 D 的脚本，返回带类型的句柄；没有时返回 undefined。类型参数写 typeof 入口（用 import type 导入），
+ * 编译器据此确定脚本路径，不用手写 'lua/board'。写了 path 时先在 control 下按名称路径找到控件（同 findControl）。
+ *
+ * @example
+ * import type Board from './board'
+ * const board = lua.helper.findScript<typeof Board>(self.parent, 'Board')
+ * board?.methods.push('jump +10')
+ */
+export declare function findScript<D extends ClientScriptDefinition = never>(
+  this: void,
+  control: ClientUIBaseControl | undefined,
+  path?: string
+): ScriptHandle<MethodsOf<D>> | undefined
+/**
+ * Wraps an official Script you already have (for example from GetScript or GetScripts) as a typed handle;
+ * you confirm that it really mounts entry D. To find a mount by control, use findScript.
+ *
+ * 把已经拿到的官方 Script（例如来自 GetScript、GetScripts）包装成带类型的句柄；由你确认它挂载的确实是入口 D。按控件查找请用 findScript。
  */
 export declare function scriptHandle<D extends ClientScriptDefinition>(
   this: void,
   script: Script
-): TypedScript<D>
+): ScriptHandle<MethodsOf<D>>
 /**
  * Reads the editor's script variables and checks their types. default is used when the editor has no such
  * variable; a variable that exists but is left blank is not missing (a string reads as an empty string). Find
@@ -314,6 +363,7 @@ export type ClientHelpers = Pick<
   | 'setInterval'
   | 'multi'
   | 'scriptHandle'
+  | 'findScript'
   | 'readParams'
   | 'clamp'
   | 'lerp'
