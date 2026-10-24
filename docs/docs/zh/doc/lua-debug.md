@@ -71,6 +71,21 @@ try {
 
 需要中断执行时用 `throw` 或 `lua.error`。
 
+### catch 拿到的总是字符串
+
+宿主会把抛出的任何值都转成文字（2026-10-24 实机确认）：`throw new Error('x')` 在 catch 里得到的是 `"Error: x
+stack traceback: …"` 这样的字符串，`throw { code: 7 }` 得到的是 `"<table>"`。所以 `e instanceof Error` 永远为 false，`e.message`、自定义错误类和对象上的字段都读不到。
+
+```ts
+try {
+  risky()
+} catch (e) {
+  console.error(String(e)) // 需要错误信息时这样写
+}
+```
+
+要传额外的信息，请写进 Error 的消息里。对 catch 变量用 `instanceof`、`as` 转成其他类型、读字段，以及 throw 非 Error 的对象或数字，都会收到 `gsts/lua-thrown-value` 警告（编辑器、ESLint、构建一致）。
+
 ## 进关卡卡住时
 
 官方说明：如果脚本里有死循环等问题导致进关卡变慢或卡死，普通日志可能来不及报告，这时看客户端脚本目录下的 `ErrorLog.txt`（只在这种情况下才会生成）。

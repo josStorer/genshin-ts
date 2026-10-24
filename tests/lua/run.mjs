@@ -7,6 +7,7 @@ const suites = {
     'entry-model',
     'entry-expression',
     'enable-subscriptions',
+    'thrown-values',
     'entry-shared',
     'diagnostic-messages',
     'callback-diagnostics',

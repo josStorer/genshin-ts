@@ -453,7 +453,7 @@ strict-boolean-expressions 为 error；null、undefined 字段、数组空洞/�
 | Map                              | `size`, `clear`, `delete`, `entries`, `forEach`, `get`, `has`, `keys`, `set`, `values`                                                                                                                                                                                                           |
 | Set                              | `size`, `add`, `clear`, `delete`, `entries`, `forEach`, `has`, `keys`, `values`                                                                                                                                                                                                                  |
 
-支持普通 class、数组/对象、Map/Set、Number/String、Error/throw/try/catch；标准库方法不支持当值取出或动态访问方法名，请用 `values.map(value => Math.abs(value))`。数字索引仍可用。Promise、Date、RegExp、JSON、WeakMap/WeakSet、requestAnimationFrame、queueMicrotask 等不可用；同名局部自定义函数不误报。正则可考虑宿主 Lua 的 string.match/gsub。
+支持普通 class、数组/对象、Map/Set、Number/String、Error/throw/try/catch（catch 拿到的总是字符串，见 [Lua 调试](./lua-debug.md)）；标准库方法不支持当值取出或动态访问方法名，请用 `values.map(value => Math.abs(value))`。数字索引仍可用。Promise、Date、RegExp、JSON、WeakMap/WeakSet、requestAnimationFrame、queueMicrotask 等不可用；同名局部自定义函数不误报。正则可考虑宿主 Lua 的 string.match/gsub。
 
 包内纯数据白名单只有 prefabs；静态访问直接内联数字，动态键只输出所用的那张表，中文/英文名称提示保留。
 

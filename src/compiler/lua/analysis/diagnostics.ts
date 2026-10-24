@@ -28,7 +28,9 @@ const ruleByMessage = {
   lua_undefinedField: 'lua-no-undefined-field',
   lua_arrayHole: 'lua-no-array-hole',
   lua_deleteArray: 'lua-no-array-delete',
-  lua_bigint: 'lua-no-bigint'
+  lua_bigint: 'lua-no-bigint',
+  lua_caughtObject: 'lua-thrown-value',
+  lua_thrownObject: 'lua-thrown-value'
 } as const
 
 export const luaLintRules = [
@@ -47,7 +49,8 @@ export const luaWarningRules: readonly string[] = [
   'lua-on-enable-subscription',
   'lua-no-undefined-field',
   'lua-no-array-hole',
-  'lua-no-array-delete'
+  'lua-no-array-delete',
+  'lua-thrown-value'
 ]
 const diagnosticCache = new WeakMap<
   LuaDiagnosticContext,
@@ -90,6 +93,20 @@ export function getLuaDiagnostics(
       (part) => !!(part.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null))
     )
   }
+  // 宿主把抛出的任何值都转成文字（2026-10-24 实机），catch 拿到的总是字符串。
+  const caught = (expression: ts.Expression) => {
+    const declaration = ts.isIdentifier(expression)
+      ? checker.getSymbolAtLocation(expression)?.valueDeclaration
+      : undefined
+    return (
+      !!declaration && ts.isVariableDeclaration(declaration) && ts.isCatchClause(declaration.parent)
+    )
+  }
+  const stringMembers = checker.getApparentType(checker.getStringType())
+  const notString = (type: ts.Type) =>
+    (type.isUnion() ? type.types : [type]).some(
+      (part) => !(part.flags & (ts.TypeFlags.StringLike | ts.TypeFlags.Unknown))
+    )
   const managedSignals: (string | undefined)[] = []
   const rawSignals: { name: string | undefined; node: ts.Node }[] = []
   const onEnable = analysis.model?.hooks.get('onEnable')?.definition
@@ -274,6 +291,38 @@ export function getLuaDiagnostics(
       const type = checker.getTypeAtLocation(node.expression.expression)
       if (checker.isArrayType(type) || checker.isTupleType(type))
         diagnostics.push(issue(node, 'lua_deleteArray', true))
+    }
+    if (
+      (ts.isBinaryExpression(node) &&
+        node.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword &&
+        caught(node.left)) ||
+      ((ts.isAsExpression(node) || ts.isTypeAssertionExpression(node)) &&
+        caught(node.expression) &&
+        notString(checker.getTypeFromTypeNode(node.type))) ||
+      (ts.isPropertyAccessExpression(node) &&
+        caught(node.expression) &&
+        !stringMembers.getProperty(node.name.text) &&
+        notString(checker.getTypeAtLocation(node.expression))) ||
+      (ts.isElementAccessExpression(node) &&
+        caught(node.expression) &&
+        notString(checker.getTypeAtLocation(node.expression)))
+    )
+      diagnostics.push(issue(node, 'lua_caughtObject', true))
+    if (
+      ts.isCatchClause(node) &&
+      node.variableDeclaration &&
+      !ts.isIdentifier(node.variableDeclaration.name)
+    )
+      diagnostics.push(issue(node.variableDeclaration, 'lua_caughtObject', true))
+    if (ts.isThrowStatement(node)) {
+      const type = checker.getTypeAtLocation(node.expression)
+      // Error 的消息会留在文字里；其他对象和数字会丢掉类型与字段。
+      const lost = (type.isUnion() ? type.types : [type]).some(
+        (part) =>
+          !(part.flags & (ts.TypeFlags.StringLike | ts.TypeFlags.Any | ts.TypeFlags.Unknown)) &&
+          !(part.getProperty('name') && part.getProperty('message'))
+      )
+      if (lost) diagnostics.push(issue(node.expression, 'lua_thrownObject', true))
     }
     if (
       ts.isBigIntLiteral(node) ||

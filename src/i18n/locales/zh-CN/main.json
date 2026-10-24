@@ -178,6 +178,8 @@
   "lua_nativeTuple": "原生 Lua 函数返回多个值时，请把返回类型写成 LuaMultiReturn<[...]>。写成普通元组会被当成返回一个数组，解构时会出错。",
   "lua_nativeThis": "原生 Lua 对象里的函数请声明 this: void，否则会编译成 obj:fn(...) 的冒号调用，多传一个参数。如果它本来就是冒号方法，请声明 this: 对象类型。",
   "lua_modulo": "负数取余与 JS 不同：-5 % 3 在 JS 里是 -2，在 Lua 里是 1。两边都不为负时可以忽略；需要和 JS 一样的结果，请改用 lua.math.fmod(a, b)。不想看到这条提示，可在 ESLint 配置里把 gsts/lua-modulo 设为 'off'。",
+  "lua_caughtObject": "客户端 Lua 里 catch 拿到的总是字符串：宿主会把抛出的值转成文字，所以 instanceof 永远为 false，也读不到 message 等字段。需要错误信息请用 String(e)。",
+  "lua_thrownObject": "宿主会把抛出的值转成文字，catch 拿到的是字符串，这个值原来的类型和字段都会丢失。请抛出 Error，把需要的信息写进消息里，例如 throw new Error(`…`)。",
   "lua_enableSubscription": "在 onEnable 里订阅却没有保存取消函数：每次启用都会再加一条监听，回调会重复执行。请把订阅写在回调根部（停用时自动暂停，启用后自动恢复）；或者保存取消函数，在 onDisable 里调用。",
   "lua_outputSkip": "已跳过写入 {{file}}：{{reason}}"
 }

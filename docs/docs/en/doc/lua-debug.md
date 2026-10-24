@@ -71,6 +71,21 @@ What each `console` method writes:
 
 Use `throw` or `lua.error` to stop execution.
 
+### catch always receives a string
+
+The host converts every thrown value to text (confirmed in game, 2026-10-24): `throw new Error('x')` arrives in catch as a string such as `"Error: x
+stack traceback: ..."`, and `throw { code: 7 }` arrives as `"<table>"`. So `e instanceof Error` is always false, and `e.message`, custom error classes and object fields cannot be read.
+
+```ts
+try {
+  risky()
+} catch (e) {
+  console.error(String(e)) // use this when you need the error text
+}
+```
+
+Put any extra details in the Error message. Using `instanceof` or `as` other types on a catch variable, reading its fields, and throwing objects or numbers that are not Errors all raise the `gsts/lua-thrown-value` warning (consistently in the editor, ESLint and builds).
+
 ## When level loading hangs
 
 Official guidance: if a script problem such as an infinite loop makes level loading slow or hang, the normal log may not get a chance to report it. Check `ErrorLog.txt` in the client script directory (it is only created in this situation).

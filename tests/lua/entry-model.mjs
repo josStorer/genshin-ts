@@ -55,6 +55,12 @@ const cases = [
     0
   ],
   [
+    'thrown-value',
+    `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>{return{onStart(){try{lua.print(1)}catch(e){lua.print((e as Error).message)}}}})`,
+    'lua-thrown-value',
+    0
+  ],
+  [
     'graph',
     `import {GameObject} from 'genshin-ts/runtime/core'; export const value = GameObject;`,
     'lua-graph-api'
