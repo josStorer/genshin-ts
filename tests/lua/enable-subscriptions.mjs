@@ -11,10 +11,10 @@ const fixture = `import{g,defineSignal}from'genshin-ts/runtime/core';g.clientCon
   onStart(){lua.onSignal(signal,()=>{})},
   onEnable(){
    lua.onSignal(signal,()=>{});
-   lua.helper.listenKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>false);
+   lua.onKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>false);
    subscribe(signal,()=>{});
    off=lua.onSignal(signal,()=>{});
-   const saved=lua.helper.listenKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>false); saved();
+   const saved=lua.onKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>false); saved();
   },
   onDisable(){off?.();rootOff()}
  }

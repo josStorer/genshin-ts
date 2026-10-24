@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 
 import { buildFixture, execute, successful } from './support.mjs'
 
-// 作用域管理的点击、变量监听；按键回调可不写返回值；readParams 可省略 script；requireScript 找不到就报错。
+// lua 上的按键、点击、变量监听随作用域管理；按键回调可不写返回值；readParams 可省略 script；requireScript 找不到就报错。
 const result = successful(
   buildFixture({
     'lua/board.ts':
@@ -13,8 +13,8 @@ export default g.clientControlScript(lua=>{
   const params=lua.helper.readParams({Goal:{type:'number',default:300}})
   const button=lua.helper.requireControl(self,'Button','ClientUIPresetButtonControl')
   let clicks=0, keys=0, stage=0, words=''
-  lua.helper.listenCursor(button,lua.Enum.CursorEventType.CursorClick,()=>{clicks++})
-  lua.helper.listenKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>{keys++})
+  lua.onCursor(button,lua.Enum.CursorEventType.CursorClick,()=>{clicks++})
+  lua.onKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>{keys++})
   lua.onVariable(lua.Enum.CustomVariableEntityType.Level,'Stage','number',(value)=>{stage=value})
   lua.onVariable(lua.Enum.CustomVariableEntityType.Level,'Stage','string',(value)=>{words=value})
   return {methods:{state(){return lua.helper.multi(params.Goal,clicks,keys,stage,words)},
@@ -66,6 +66,20 @@ const main = result.files.get('main.lua')
 assert(main.includes('readParams(_ENV.script,'), main)
 assert(main.includes('requireScript("lua/board"'), main)
 
+// 从 lua 解构出来的监听同样交给作用域，不会去读不存在的 Lua 全局
+const destructured = successful(
+  buildFixture({
+    'main.ts': `import {g} from 'genshin-ts/runtime/core'
+export default g.clientControlScript(lua=>{
+  const {onKey, onSignal} = lua
+  onKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>{})
+  return {}
+})`
+  })
+).files.get('main.lua')
+assert(/local onKey = ____scope_\d+\.onKey\b/.test(destructured), destructured)
+assert(/local onSignal = ____scope_\d+\.onSignal\b/.test(destructured), destructured)
+
 // 诊断：readParams 省略 script 只能写在回调里；变量的两种监听不能混用；onEnable 里丢弃的订阅要提醒
 const diagnosed = buildFixture(
   {
@@ -76,7 +90,7 @@ export default g.clientControlScript(lua=>{
   const button=lua.helper.requireControl(self,'Button','ClientUIPresetButtonControl')
   lua.onVariable(lua.Enum.CustomVariableEntityType.Level,'Stage','number',()=>{})
   lua.script.RegisterCustomVariableChangedHandler(lua.Enum.CustomVariableEntityType.Level,'Stage',()=>{})
-  return {onEnable(){lua.helper.listenCursor(button,lua.Enum.CursorEventType.CursorClick,()=>{})}}
+  return {onEnable(){lua.onCursor(button,lua.Enum.CursorEventType.CursorClick,()=>{})}}
 })`
   },
   false
@@ -85,5 +99,5 @@ const sources = diagnosed.diagnostics.map((d) => d.source)
 for (const rule of ['lua-instance-scope', 'lua-listener-ownership', 'lua-on-enable-subscription'])
   assert(sources.includes(rule), rule + ': ' + sources.join(', '))
 console.log(
-  'Listeners: listenCursor and onVariable follow the scope, listenKey callbacks may return nothing, readParams reads the current script, requireScript throws with the path; misuse is diagnosed: PASS'
+  'Listeners: lua.onKey, lua.onCursor and lua.onVariable follow the scope, onKey callbacks may return nothing, readParams reads the current script, requireScript throws with the path; misuse is diagnosed: PASS'
 )

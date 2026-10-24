@@ -23,17 +23,21 @@ const sdkFileNames = new Set(['lua.d.ts', 'lua_core.d.ts', 'lua_entry.d.ts'])
 
 /** 实例 helper 的名称到作用域方法；声明 symbol 是唯一识别依据。 */
 export const scopedHelperMethods: Readonly<Record<string, string>> = {
-  listenKey: 'listenKey',
-  listenCursor: 'listenCursor',
   clockTimeout: 'setTimeoutOnClock',
   clockInterval: 'setIntervalOnClock'
 }
+/** lua 上随启停管理的订阅：成员名就是作用域方法名，值是入口模型里对应的能力。 */
+export const scopedGlobals: ReadonlyMap<string, 'signals' | 'variables' | 'keys' | 'cursors'> =
+  new Map([
+    ['onSignal', 'signals'],
+    ['onVariable', 'variables'],
+    ['onKey', 'keys'],
+    ['onCursor', 'cursors']
+  ])
 const helperMembers: Readonly<Record<string, string>> = {
   findScript: 'findScript',
   requireScript: 'requireScript',
   readParams: 'readParams',
-  listenKey: 'listenKey',
-  listenCursor: 'listenCursor',
   setTimeout: 'clockTimeout',
   setInterval: 'clockInterval'
 }
@@ -109,7 +113,7 @@ function resolveBuiltins(program: ts.Program) {
       if (kind === 'helpers' && symbol.name === 'ClientGlobals') {
         clientGlobals = symbol
         const type = checker.getDeclaredTypeOfSymbol(symbol)
-        for (const name of ['self', 'script', 'helper', 'require', 'onSignal', 'onVariable']) {
+        for (const name of ['self', 'script', 'helper', 'require', ...scopedGlobals.keys()]) {
           const member = type.getProperty(name)
           if (member) members.set(member, name)
         }

@@ -1,7 +1,7 @@
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
-import { getLuaBuiltins, scopedHelperMethods } from '../analysis/builtins.js'
+import { getLuaBuiltins, scopedGlobals, scopedHelperMethods } from '../analysis/builtins.js'
 import { helpers, type LuaFileContext } from './context.js'
 import { rewriteSharedDeclarations } from './entry_shared.js'
 import { field } from './lua_ast.js'
@@ -80,6 +80,7 @@ export function transformVariables(
     ) {
       if (value.index.value === 'helper') return helpers(ctx, file)
       if (value.index.value === 'self') return field(field(value.table, 'script'), 'object')
+      if (scopedGlobals.has(value.index.value)) return field(scope(ctx, file), value.index.value)
     }
     return value
   }

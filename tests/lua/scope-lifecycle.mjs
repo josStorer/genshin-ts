@@ -9,7 +9,7 @@ const result = successful(
   const signal=defineSignal('Scope',[['n','int']] as const);
   let count=0;
   lua.onSignal(signal,evt=>{count+=evt.params.n});
-  const off=lua.helper.listenKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>{count++;return false});
+  const off=lua.onKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>{count++;return false});
   return {
    onStart(){lua.print('start')},
    onDisable(){setTimeout(()=>{count+=1000},0);off();lua.print('disable');if(count===9)throw new Error('disable failure')},

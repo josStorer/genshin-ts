@@ -1,7 +1,12 @@
 import ts from 'typescript'
 import * as lua from 'typescript-to-lua'
 
-import { getLuaBuiltins, numberConstants, scopedHelperMethods } from '../analysis/builtins.js'
+import {
+  getLuaBuiltins,
+  numberConstants,
+  scopedGlobals,
+  scopedHelperMethods
+} from '../analysis/builtins.js'
 import { luaTimerGlobals } from '../analysis/standard_library.js'
 import { helpers, type LuaFileContext } from './context.js'
 import { dataAccess, dataReference, dataValue } from './data.js'
@@ -76,7 +81,7 @@ export function transformProperty(
   if (data) return data
   const builtins = getLuaBuiltins(ctx.program)
   const member = builtins.member(node.name)
-  if (member === 'onSignal' || member === 'onVariable') return field(scope(ctx, file), member)
+  if (member && scopedGlobals.has(member)) return field(scope(ctx, file), member)
   if (member && scopedHelperMethods[member])
     return field(scope(ctx, file), scopedHelperMethods[member])
   if (member === 'helper') return helpers(ctx, file)
@@ -94,7 +99,7 @@ export function transformElement(
 ) {
   if (scopedUpdate(node, ctx, file)) return updateReference(ctx, file)
   const member = getLuaBuiltins(ctx.program).member(node)
-  if (member === 'onSignal' || member === 'onVariable') return field(scope(ctx, file), member)
+  if (member && scopedGlobals.has(member)) return field(scope(ctx, file), member)
   if (member && scopedHelperMethods[member])
     return field(scope(ctx, file), scopedHelperMethods[member])
   return (

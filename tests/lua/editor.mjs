@@ -87,7 +87,18 @@ const completions = (marker) =>
   proxy.getCompletionsAtPosition(file, source.indexOf(`/*${marker}*/`), {}).entries
 const sorted = completions('env').sort((a, b) => a.sortText.localeCompare(b.sortText))
 const firstStandard = sorted.findIndex((x) => x.name === 'print')
-for (const name of ['self', 'script', 'game', 'Enum', 'Color', 'helper', 'onSignal'])
+for (const name of [
+  'self',
+  'script',
+  'game',
+  'Enum',
+  'Color',
+  'helper',
+  'onSignal',
+  'onVariable',
+  'onKey',
+  'onCursor'
+])
   assert(sorted.findIndex((x) => x.name === name) < firstStandard, name)
 assert.equal(
   sorted.find((x) => x.name === 'print').labelDetails?.description,
@@ -115,7 +126,8 @@ for (const [marker, name] of [
   ['env', 'print'],
   ['env', 'tostring'],
   ['helper', 'findControl'],
-  ['helper', 'listenKey'],
+  ['env', 'onKey'],
+  ['env', 'onCursor'],
   ['helper', 'readParams'],
   ['console', 'log'],
   ['math', 'fmod']

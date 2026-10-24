@@ -87,6 +87,7 @@ function M.requireScript(scriptPath, control, path)
     if handle == nil then error("Script " .. scriptPath .. " is not mounted on " .. (path or control.name)) end
     return handle
 end
+-- Raw host listeners with an idempotent cancel; the scope wraps them for lua.onKey and lua.onCursor.
 -- The host expects a boolean: true marks the key event as handled. No return value means not handled.
 function M.listenKey(control, event, callback)
     local handler = function() return callback() == true end
@@ -455,8 +456,8 @@ function M.createScope(env, clock)
         listener.dispose = listener.deactivate
         return subscribe(listener)
     end
-    function scope.listenKey(control, event, callback) return listen(M.listenKey, control, event, callback) end
-    function scope.listenCursor(control, event, callback) return listen(M.listenCursor, control, event, callback) end
+    function scope.onKey(control, event, callback) return listen(M.listenKey, control, event, callback) end
+    function scope.onCursor(control, event, callback) return listen(M.listenCursor, control, event, callback) end
     -- A custom variable has one host registration; each listener checks the value type it asked for.
     local variables = {}
     function scope.onVariable(entityType, name, valueType, callback)

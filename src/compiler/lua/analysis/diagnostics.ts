@@ -1,7 +1,7 @@
 import ts from 'typescript'
 
 import { getCliLanguage, t } from '../../../i18n/index.js'
-import { getLuaBuiltins } from './builtins.js'
+import { getLuaBuiltins, scopedGlobals } from './builtins.js'
 import type { LuaDiagnosticContext } from './diagnostic_context.js'
 import { unsupportedLuaSyntax } from './diagnostic_messages.js'
 import { analyzeLuaEntry, entryDiagnosticRules } from './entry_analysis.js'
@@ -205,10 +205,8 @@ export function getLuaDiagnostics(
       const member = builtins.member(node.expression)
       const subscribed = subscriptionMember(node.expression)
       if (
-        (subscribed === 'onSignal' ||
-          subscribed === 'onVariable' ||
-          subscribed === 'listenKey' ||
-          subscribed === 'listenCursor') &&
+        subscribed &&
+        scopedGlobals.has(subscribed) &&
         onEnable &&
         ts.findAncestor(node, (parent) => parent === onEnable) &&
         discarded(node)

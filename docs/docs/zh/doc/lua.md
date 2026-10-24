@@ -94,7 +94,7 @@ export default g.clientControlScript((lua) => ({
 
 ## 宿主 API、控件和脚本变量
 
-官方能力通过 `lua.script`、`lua.game`、`lua.Enum`、`lua.Color` 访问；工具用 `lua.helper`，也可从 `genshin-ts/runtime/lua` 按需导入。
+官方能力通过 `lua.script`、`lua.game`、`lua.Enum`、`lua.Color` 访问；工具用 `lua.helper`，也可从 `genshin-ts/runtime/lua` 按需导入。信号、自定义变量、按键和光标的监听直接在 `lua` 上：`lua.onSignal`、`lua.onVariable`、`lua.onKey`、`lua.onCursor`（见“信号与监听”）。
 
 ```ts
 // clientControlScript 回调内
@@ -110,18 +110,16 @@ if (lua.helper.isControl(candidate, 'ClientUITextBoxControl')) {
 
 `control.SetVisible(true)` 自动生成 `control:SetVisible(true)`；官方控件的 self 已在声明里处理，无需手工传参。只在给原生 Lua 写声明时需要区分 `this: void` 与有接收者的方法。
 
-| 工具                                   | 用途                                                         |
-| -------------------------------------- | ------------------------------------------------------------ |
-| findControl(root, path, kind)          | 按名称路径查找；缺失返回 undefined，重名或类型错误时报错     |
-| requireControl(root, path, kind)       | 必须找到的控件；缺失时报出路径                               |
-| isControl(control, kind)               | 类型守卫，收窄后支持 control.xxx 补全                        |
-| clamp / lerp / moveTowards             | 数值限制、插值、向目标移动                                   |
-| listenKey(control, event, callback)    | 按键监听，随实例停用暂停、启用恢复；回调返回 true 表示已处理 |
-| listenCursor(control, event, callback) | 预设按钮、光标检测区域的点击等监听，同样随启停自动管理       |
-| readParams(schema)                     | 检查当前脚本的变量，返回带类型字段                           |
-| multi                                  | 多返回值                                                     |
-| findScript / requireScript             | 找到另一个挂载并调用它的公开方法；require 版找不到就报错     |
-| scriptHandle(script)                   | 把已有的官方 Script 包装成同样的句柄                         |
+| 工具                             | 用途                                                     |
+| -------------------------------- | -------------------------------------------------------- |
+| findControl(root, path, kind)    | 按名称路径查找；缺失返回 undefined，重名或类型错误时报错 |
+| requireControl(root, path, kind) | 必须找到的控件；缺失时报出路径                           |
+| isControl(control, kind)         | 类型守卫，收窄后支持 control.xxx 补全                    |
+| clamp / lerp / moveTowards       | 数值限制、插值、向目标移动                               |
+| readParams(schema)               | 检查当前脚本的变量，返回带类型字段                       |
+| multi                            | 多返回值                                                 |
+| findScript / requireScript       | 找到另一个挂载并调用它的公开方法；require 版找不到就报错 |
+| scriptHandle(script)             | 把已有的官方 Script 包装成同样的句柄                     |
 
 脚本变量只支持 number/string/boolean；schema 不创建编辑器变量。编辑器里没有这个变量时使用 default，没有 default 就报出变量名；变量建了但留空不算缺失，字符串会读到空串（2026-10-24 实机确认）。
 
@@ -248,20 +246,22 @@ return {
 }
 ```
 
-listenKey、listenCursor、lua.onVariable 同理，都写在根部、随启停自动管理：
+按键、光标和自定义变量的监听也在 `lua` 上，和 lua.onSignal 一样写在根部、随启停自动管理：
 
 ```ts
 // 回调根部
-lua.helper.listenKey(self, lua.Enum.KeyEventType.KeyboardJumpKeyDown, () => {
+lua.onKey(self, lua.Enum.KeyEventType.KeyboardJumpKeyDown, () => {
   jump() // 不写返回值：同容器的其他控件照常响应；返回 true 表示已处理，其他控件不再响应
 })
-lua.helper.listenCursor(button, lua.Enum.CursorEventType.CursorClick, (event) => {
+lua.onCursor(button, lua.Enum.CursorEventType.CursorClick, (event) => {
   console.log(event.GetUIPos())
 })
 lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => {
   render(stage) // 每次被设置时给出新值（值没变也会触发）；类型不是 number 时记一条错误并跳过
 })
 ```
+
+lua.onCursor 只接受预设按钮和光标检测区域。四个监听都返回取消函数，也可以先解构再用：`const { onKey, onSignal } = lua`。
 
 lua.onVariable 在变量每次被设置时触发：设成相同的值也会触发，也不受服务器“设置自定义变量”节点“是否触发事件”的影响（该选项只管服务器的“自定义变量变化时”事件）。只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.game.GetGlobalCustomVariableValue` 读取；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
 

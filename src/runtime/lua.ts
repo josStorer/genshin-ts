@@ -9,6 +9,7 @@ import type {
   HostColor,
   HostEnums,
   HostGame,
+  KeyEventType,
   Script
 } from './lua_host.js'
 import type { LuaParam, LuaParamValues } from './lua_params.js'
@@ -72,11 +73,12 @@ export interface ClientScriptHooks {
 }
 /**
  * The callback parameter lua: this script's environment. It compiles to Lua's _ENV, so lua.xxx is the Lua global xxx.
- * Most code uses the official API (script, game, Enum, Color) and gsts tools (helper, onSignal); the rest is the
- * Lua standard library (print, math, string and so on), needed mainly to work with native Lua code.
+ * Most code uses the official API (script, game, Enum, Color), the listeners onSignal, onVariable, onKey and
+ * onCursor, and the tools on helper; the rest is the Lua standard library (print, math, string and so on),
+ * needed mainly to work with native Lua code.
  *
  * 脚本回调参数 lua：这个脚本的运行环境，编译后就是 Lua 的 _ENV，lua.xxx 直接对应 Lua 全局 xxx。
- * 常用的是官方 API（script、game、Enum、Color）和 gsts 工具（helper、onSignal）；
+ * 常用的是官方 API（script、game、Enum、Color）、监听（onSignal、onVariable、onKey、onCursor）和 helper 上的工具；
  * 其余是 Lua 标准库（print、math、string 等），和原生 Lua 代码互相调用时才需要，平时用 TS 自带的写法即可。
  */
 export interface ClientGlobals extends LuaStandardGlobals {
@@ -115,10 +117,12 @@ export interface ClientGlobals extends LuaStandardGlobals {
    */
   readonly Color: HostColor
   /**
-   * gsts tools: finding controls, key listeners, timers, reading script variables, interpolation and more;
-   * the same as the exports of genshin-ts/runtime/lua.
+   * gsts tools: reading script variables, finding controls and scripts, timers with a chosen clock,
+   * interpolation and more; the same as the exports of genshin-ts/runtime/lua. Listeners are on lua itself
+   * (lua.onSignal, lua.onVariable, lua.onKey, lua.onCursor).
    *
-   * gsts 常用工具：查找控件、按键监听、定时器、读脚本变量、数值插值等，和 genshin-ts/runtime/lua 的同名导出相同。
+   * gsts 常用工具：读脚本变量、查找控件和脚本、指定时钟的定时器、数值插值等，和 genshin-ts/runtime/lua 的同名导出相同。
+   * 监听直接在 lua 上（lua.onSignal、lua.onVariable、lua.onKey、lua.onCursor）。
    */
   readonly helper: ClientHelpers
   /**
@@ -147,6 +151,32 @@ export interface ClientGlobals extends LuaStandardGlobals {
    * lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => render(stage))
    */
   readonly onVariable: LuaOnVariable
+  /**
+   * Listens for one key event on a control. Return true from the callback to mark the key as handled: other
+   * controls in the same container then ignore this press (official behavior). Return nothing (or false) to
+   * let them respond too. Write it at the callback root: it pauses while the script is disabled, resumes when
+   * enabled and is released on destroy. Returns a cancel function that is safe to call more than once.
+   *
+   * 监听控件上的一种按键事件。回调返回 true 表示"已处理"：同一容器里的其他控件不再响应这次按键（官方行为）；
+   * 不写返回值（或返回 false）则其他控件照常响应。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
+   *
+   * @example
+   * lua.onKey(self, lua.Enum.KeyEventType.KeyboardJumpKeyDown, () => jump())
+   */
+  readonly onKey: LuaOnKey
+  /**
+   * Listens for one cursor event (click, press, enter and so on) on a preset button or cursor event area. Write
+   * it at the callback root: it pauses while the script is disabled, resumes when enabled and is released on
+   * destroy, so no Add/Remove pair in onEnable/onDisable is needed. Returns a cancel function that is safe to
+   * call more than once.
+   *
+   * 监听预设按钮或光标检测区域上的一种光标事件（点击、按下、进入等）。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放，
+   * 不用再在 onEnable / onDisable 里成对添加、移除。返回取消函数，重复调用无害。
+   *
+   * @example
+   * lua.onCursor(button, lua.Enum.CursorEventType.CursorClick, (event) => console.log(event.GetUIPos()))
+   */
+  readonly onCursor: LuaOnCursor
 }
 type VariableValues = { number: number; string: string; boolean: boolean }
 export type LuaOnVariable = <K extends keyof VariableValues>(
@@ -155,6 +185,18 @@ export type LuaOnVariable = <K extends keyof VariableValues>(
   name: string,
   valueType: K,
   callback: (this: void, value: VariableValues[K]) => void
+) => (this: void) => void
+export type LuaOnKey = (
+  this: void,
+  control: ClientUIBaseControl,
+  event: KeyEventType,
+  callback: (this: void) => boolean | void
+) => (this: void) => void
+export type LuaOnCursor = (
+  this: void,
+  control: ClientUIPresetButtonControl | ClientUICursorEventAreaControl,
+  event: CursorEventType,
+  callback: (this: void, event: CursorEventData) => void
 ) => (this: void) => void
 export interface ClientControlScriptOptions {
   /**
@@ -376,39 +418,6 @@ export declare function requireControl<K extends keyof ControlTypes>(
   kind: K
 ): ControlTypes[K]
 /**
- * Listens for one key event on a control. Return true from the callback to mark the key as handled: other
- * controls in the same container then ignore this press (official behavior). Return nothing (or false) to
- * let them respond too. Write it at the callback root: it pauses while the script is disabled, resumes when
- * enabled and is released on destroy. Returns a cancel function that is safe to call more than once.
- *
- * 监听控件上的一种按键事件。回调返回 true 表示"已处理"：同一容器里的其他控件不再响应这次按键（官方行为）；
- * 不写返回值（或返回 false）则其他控件照常响应。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
- */
-export declare function listenKey(
-  this: void,
-  control: ClientUIBaseControl,
-  event: HostEnums['KeyEventType'][keyof HostEnums['KeyEventType']],
-  callback: (this: void) => boolean | void
-): (this: void) => void
-/**
- * Listens for one cursor event (click, press, enter and so on) on a preset button or cursor event area. Write
- * it at the callback root: it pauses while the script is disabled, resumes when enabled and is released on
- * destroy, so no Add/Remove pair in onEnable/onDisable is needed. Returns a cancel function that is safe to
- * call more than once.
- *
- * 监听预设按钮或光标检测区域上的一种光标事件（点击、按下、进入等）。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放，
- * 不用再在 onEnable / onDisable 里成对添加、移除。返回取消函数，重复调用无害。
- *
- * @example
- * lua.helper.listenCursor(button, lua.Enum.CursorEventType.CursorClick, (event) => console.log(event.GetUIPos()))
- */
-export declare function listenCursor(
-  this: void,
-  control: ClientUIPresetButtonControl | ClientUICursorEventAreaControl,
-  event: CursorEventType,
-  callback: (this: void, event: CursorEventData) => void
-): (this: void) => void
-/**
  * Like the global setTimeout, but picks this timer's clock: 'real' ignores level pauses, 'level' pauses with
  * them. Cancel it with the global clearTimeout.
  *
@@ -447,7 +456,6 @@ export type ClientHelpers = Pick<
   | 'scriptHandle'
   | 'findScript'
   | 'requireScript'
-  | 'listenCursor'
   | 'readParams'
   | 'clamp'
   | 'lerp'
@@ -455,5 +463,4 @@ export type ClientHelpers = Pick<
   | 'isControl'
   | 'findControl'
   | 'requireControl'
-  | 'listenKey'
 >

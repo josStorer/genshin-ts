@@ -537,9 +537,9 @@ export interface HostEnums {
     readonly PrefabIdList: ParamType
   }
   /**
-   * Cursor events such as down, up, entering or leaving the detection area; used by AddCursorEventListener.
+   * Cursor events such as down, up, entering or leaving the detection area; used by lua.onCursor and AddCursorEventListener.
    *
-   * 光标事件：按下、抬起、进入或离开检测区域等，AddCursorEventListener 使用。
+   * 光标事件：按下、抬起、进入或离开检测区域等，lua.onCursor 和 AddCursorEventListener 使用。
    */
   readonly CursorEventType: {
     /**
@@ -1613,9 +1613,9 @@ export interface HostEnums {
     readonly None: ControllerKeyCode
   }
   /**
-   * Key events: a keyboard, mouse or controller key going down or up; used by lua.helper.listenKey and AddKeyEventListener.
+   * Key events: a keyboard, mouse or controller key going down or up; used by lua.onKey and AddKeyEventListener.
    *
-   * 按键事件：某个键鼠或手柄按键的按下、抬起，lua.helper.listenKey 和 AddKeyEventListener 使用。
+   * 按键事件：某个键鼠或手柄按键的按下、抬起，lua.onKey 和 AddKeyEventListener 使用。
    */
   readonly KeyEventType: {
     /**

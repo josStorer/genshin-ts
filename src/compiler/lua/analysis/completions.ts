@@ -12,7 +12,9 @@ const environmentFirst = new Set([
   'Color',
   'helper',
   'onSignal',
-  'onVariable'
+  'onVariable',
+  'onKey',
+  'onCursor'
 ])
 const functionMembers = new Set([
   'apply',

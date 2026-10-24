@@ -282,8 +282,8 @@ const enumDocs: Record<string, [en: string, zh: string]> = {
     '服务器信号的参数类型，ServerSignal:AddParam 使用。'
   ],
   CursorEventType: [
-    'Cursor events such as down, up, entering or leaving the detection area; used by AddCursorEventListener.',
-    '光标事件：按下、抬起、进入或离开检测区域等，AddCursorEventListener 使用。'
+    'Cursor events such as down, up, entering or leaving the detection area; used by lua.onCursor and AddCursorEventListener.',
+    '光标事件：按下、抬起、进入或离开检测区域等，lua.onCursor 和 AddCursorEventListener 使用。'
   ],
   ScrollDirection: ['Scroll direction: horizontal or vertical.', '滚动方向：水平或垂直。'],
   ScrollLayoutConstraint: [
@@ -335,8 +335,8 @@ const enumDocs: Record<string, [en: string, zh: string]> = {
   KeyboardKeyCode: ['Keyboard and mouse keys.', '键鼠按键。'],
   ControllerKeyCode: ['Controller buttons.', '手柄按键。'],
   KeyEventType: [
-    'Key events: a keyboard, mouse or controller key going down or up; used by lua.helper.listenKey and AddKeyEventListener.',
-    '按键事件：某个键鼠或手柄按键的按下、抬起，lua.helper.listenKey 和 AddKeyEventListener 使用。'
+    'Key events: a keyboard, mouse or controller key going down or up; used by lua.onKey and AddKeyEventListener.',
+    '按键事件：某个键鼠或手柄按键的按下、抬起，lua.onKey 和 AddKeyEventListener 使用。'
   ]
 }
 lines.push('export interface HostEnums {')

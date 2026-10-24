@@ -2,7 +2,7 @@ import ts from 'typescript'
 
 import { getCliLanguage, t } from '../../../i18n/index.js'
 import { functionNeedsSelf } from '../ts_to_lua_transform/tstl_compat.js'
-import { getLuaBuiltins } from './builtins.js'
+import { getLuaBuiltins, scopedGlobals } from './builtins.js'
 import type {
   LuaEntryAnalysis,
   LuaEntryFunction,
@@ -362,17 +362,8 @@ function collectCapabilities(
   ) => {
     const clockHelper = member === 'clockTimeout' || member === 'clockInterval'
     const capability =
-      member === 'onSignal'
-        ? 'signals'
-        : member === 'onVariable'
-          ? 'variables'
-          : member === 'listenKey'
-            ? 'keys'
-            : member === 'listenCursor'
-              ? 'cursors'
-              : clockHelper || luaTimerGlobals.some((name) => name === global)
-                ? 'timers'
-                : undefined
+      (member === undefined ? undefined : scopedGlobals.get(member)) ??
+      (clockHelper || luaTimerGlobals.some((name) => name === global) ? 'timers' : undefined)
     // 省略 script 的 readParams 读当前挂载的脚本变量，只能写在回调里
     const call = node.parent
     const currentParams =

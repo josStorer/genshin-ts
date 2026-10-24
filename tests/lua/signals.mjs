@@ -11,7 +11,7 @@ let total=0, calls=0;
 const off=lua.onSignal(Signal,evt=>{total+=evt.params.value;calls++;});
 lua.onSignal(Signal,evt=>{if(evt.params.tags[0]==='throw')throw new Error('listener failed')});
 lua.onSignal(Signal,()=>{calls++});
-lua.helper.listenKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>{calls+=10;return false});
+lua.onKey(self,lua.Enum.KeyEventType.KeyboardJumpKeyDown,()=>{calls+=10;return false});
 return{onDisable(){lua.print('disabled')}, methods:{total(){return total},calls(){return calls},stop(){off();off()}}}
 })`
   })

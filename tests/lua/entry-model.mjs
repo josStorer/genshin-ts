@@ -102,7 +102,7 @@ fs.writeFileSync(
 export default g.clientControlScript({timerClock:'real'}, env=>{
  let count=0; function summary(){return count}
  env.onSignal({name:'changed',params:[]},()=>{});
- env.helper.listenKey(self, env.Enum.KeyEventType.KeyboardMoveForwardKeyDown,()=>false);
+ env.onKey(self, env.Enum.KeyEventType.KeyboardMoveForwardKeyDown,()=>false);
  setTimeout(()=>{count++},1);
  return {onStart(){env.print(count)},methods:{summary,increment(){return ++count}}}
 })`
