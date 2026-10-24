@@ -230,10 +230,12 @@ export declare function findScript<D extends ClientScriptDefinition = never>(
   path?: string
 ): ScriptHandle<MethodsOf<D>> | undefined
 /**
- * Wraps an official Script you already have (for example from GetScript or GetScripts) as a typed handle;
- * you confirm that it really mounts entry D. To find a mount by control, use findScript.
+ * Usually you want findScript instead: it finds the mount and checks the entry for you.
+ * Use scriptHandle only when you already hold an official Script (for example from GetScript or GetScripts)
+ * and want the same typed handle; you confirm that it really mounts entry D.
  *
- * 把已经拿到的官方 Script（例如来自 GetScript、GetScripts）包装成带类型的句柄；由你确认它挂载的确实是入口 D。按控件查找请用 findScript。
+ * 通常请用 findScript：它会找到挂载，并替你核对入口。
+ * 只有手里已经有官方 Script（例如来自 GetScript、GetScripts）、想得到同样的带类型句柄时才用 scriptHandle；由你确认它挂载的确实是入口 D。
  */
 export declare function scriptHandle<D extends ClientScriptDefinition>(
   this: void,
