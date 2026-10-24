@@ -2406,20 +2406,18 @@ async function main() {
   program
     .command('lua')
     .description(t('lua_command'))
-    .command('locate [location]')
+    .command('locate')
     .description(t('lua_locateCommand'))
+    .argument('[input...]', t('lua_locateArgument'))
     .option('--column <number>', t('lua_locateColumn'))
     .option('--log <file>', t('lua_locateLog'))
     .option('--outDir <directory>', t('lua_locateOutDir'))
     .action(
-      async (
-        location: string | undefined,
-        options: { column?: string; log?: string; outDir?: string }
-      ) => {
+      async (input: string[], options: { column?: string; log?: string; outDir?: string }) => {
         const loaded = options.outDir ? null : await loadConfigOrNull(program.opts<GlobalOptions>())
         const outDir = options.outDir ?? (loaded && path.resolve(loaded.cfgDir, loaded.cfg.outDir))
         const { runLuaLocate } = await import('./lua_locate.js')
-        await runLuaLocate(location, { ...options, outDir: outDir || undefined })
+        await runLuaLocate(input, { ...options, outDir: outDir || undefined })
       }
     )
 

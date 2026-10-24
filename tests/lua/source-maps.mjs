@@ -5,17 +5,17 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { writeLuaFiles } from '../../src/compiler/lua/output/output.ts'
+import { locateLua } from '../../src/compiler/lua/output/source_maps.ts'
 import {
   compileLua,
   createLuaCompileCache,
   formatLuaDiagnostics
 } from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
-import { writeLuaFiles } from '../../src/compiler/lua/output/output.ts'
-import { locateLua } from '../../src/compiler/lua/output/source_maps.ts'
 
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/maps-'))
 const entry = path.join(root, 'main.ts'),
-  outDir = path.join(root, 'out')
+  outDir = path.join(root, 'dist', 'lua')
 const source = `import{g}from'genshin-ts/runtime/core'
 import{value}from'./raw'
 export default g.clientControlScript(lua=>{
@@ -69,6 +69,36 @@ const cli = spawnSync(
 )
 assert.equal(cli.status, 0, cli.stdout + cli.stderr)
 assert(cli.stdout.includes('main.ts:6:'), cli.stdout)
+// 游戏日志里的位置写模块名、不带 .lua；运行库位置只计数，重复的错误只输出一次。
+fs.writeFileSync(path.join(outDir, 'lualib_bundle.lua'), 'return {}\n')
+const gameError = [
+  "lualib_bundle:682: bad argument #1 to 'find' (string expected, got nil)",
+  'stack traceback:',
+  "\tlualib_bundle:682: in function '__TS__StringIncludes'",
+  `\tmain:${line}: in function 'OnStart'`
+].join('\n')
+const logFile = path.join(root, 'game log.txt')
+fs.writeFileSync(logFile, ['日志_2026/10/24_12:04:30', gameError, '', gameError].join('\n'))
+const locate = (...args) =>
+  spawnSync(
+    process.execPath,
+    [path.resolve('bin/gsts.mjs'), 'lua', 'locate', ...args, '--lang', 'en'],
+    { cwd: root, encoding: 'utf8', timeout: 30000 }
+  )
+fs.writeFileSync(
+  path.join(root, 'gsts.config.ts'),
+  "export default { compileRoot: '.', entries: ['.'], outDir: './dist' }\n"
+)
+for (const args of [[gameError], [logFile], [`main:${line}:`, 'in', 'function', 'OnStart']]) {
+  const result = locate(...args)
+  assert.equal(result.status, 0, result.stdout + result.stderr)
+  assert.equal(result.stdout.split('main.ts:6:').length, 2, result.stdout)
+}
+assert.match(locate(logFile).stdout, /Skipped 1 location/)
+assert.match(locate('lualib_bundle:682').stdout, /generated framework code/)
+const missing = locate('other:3', '--outDir', path.join(root, 'nowhere'))
+assert.notEqual(missing.status, 0)
+assert.match(missing.stdout + missing.stderr, /project directory/)
 fs.writeFileSync(path.join(outDir, 'main.lua'), code + '-- edited\n')
 await assert.rejects(() => locateLua(path.join(outDir, 'main.lua'), line), /映射|map/)
 fs.writeFileSync(path.join(outDir, 'main.lua'), code)
@@ -82,5 +112,5 @@ assert(!fs.existsSync(path.join(outDir, 'main.lua.map')))
 fs.writeFileSync(path.join(outDir, 'main.lua.map'), '{}')
 assert.deepEqual(writeLuaFiles(outDir, first.files, true).conflicts, ['main.lua.map'])
 console.log(
-  'Source maps: TS/native locations, incremental reuse, CLI, generated lines, stale hashes and protected map ownership: PASS'
+  'Source maps: TS/native locations, incremental reuse, CLI (paths, game logs, log files, config outDir), generated lines, stale hashes and protected map ownership: PASS'
 )

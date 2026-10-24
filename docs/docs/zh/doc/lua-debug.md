@@ -5,24 +5,28 @@
 ## 从游戏报错找到源码
 
 1. 照常构建。输出目录里每个 `.lua` 旁边会有同名的 `.lua.map`。
-2. 在编辑器的日志里勾选"客户端脚本"，运行游戏；出错后双击对应条目，查看完整的报错位置。
-3. 把报错里的 Lua 文件和行号交给 `gsts lua locate`；报错很多时，也可以把日志存成文本文件，一次性解析。
+2. 在编辑器的日志里勾选"客户端脚本"，运行游戏。出错后复制那条报错日志。
+3. 在项目目录（有 `gsts.config.ts` 的地方）运行 `gsts lua locate`。不带参数时它读取剪贴板；也可以把报错文本或日志文件路径作为参数传入。
 4. 按输出的 TS 文件、行、列修改源码，重新构建，再在编辑器里运行游戏。
 
 ```sh
-gsts --noinject --lang zh                           # 构建
-gsts lua locate dist/lua/lua/hud.lua:42             # 换算一个位置
-gsts lua locate --log game-error.txt                # 解析整份日志
+gsts lua locate                          # 读取剪贴板里的报错
+gsts lua locate game-error.txt           # 解析整份日志文件
+gsts lua locate dist/lua/lua/hud.lua:42  # 换算一个本地位置
 ```
 
-上面假设 compileRoot 是 `src`，入口是 `src/lua/hud.ts`。本地存在的路径原样使用；日志里的 `lua/hud.lua:42` 这类路径会到输出目录的 `lua` 子目录下查找。输出目录默认读当前目录 `gsts.config.ts` 的 `outDir`，在别处运行时用 `--outDir` 指定。
-
-`locate` 能识别下面两种写法。游戏日志的实际格式还在确认中；如果它认不出你日志里的位置，把"文件:行号"手动传给它即可。
+游戏日志里的位置写的是模块名，不带 `.lua`（2026-10-24 实机）。例如：
 
 ```text
-lua/hud.lua:42: 报错内容
-[string "lua/hud.lua"]:42: 报错内容
+lua/hud:299: attempt to index a nil value (local 'item')
+stack traceback:
+	__gsts_helpers:120: in function 'findControl'
+	lua/hud:299: in function 'OnStart'
 ```
+
+`locate` 会把 `lua/hud:299` 换算成 TS 位置；`lualib_bundle`、`__gsts_helpers` 这些运行库位置没有对应的 TS 源码，只提示省略了几处。同一个错误在日志里重复出现时只输出一次。`lua/hud.lua:42`、`[string "lua/hud.lua"]:42` 这类写法也能识别。
+
+日志里的位置会到输出目录的 `lua` 子目录下查找。输出目录默认读当前目录 `gsts.config.ts` 的 `outDir`，在别处运行时用 `--outDir` 指定。上面假设 compileRoot 是 `src`，入口是 `src/lua/hud.ts`。
 
 ### 几种特殊情况
 
@@ -72,7 +76,7 @@ try {
 官方说明：如果脚本里有死循环等问题导致进关卡变慢或卡死，普通日志可能来不及报告，这时看客户端脚本目录下的 `ErrorLog.txt`（只在这种情况下才会生成）。
 
 ```sh
-gsts lua locate --log path/to/client-scripts/ErrorLog.txt
+gsts lua locate path/to/client-scripts/ErrorLog.txt
 ```
 
 ## 判断是不是同一个对象

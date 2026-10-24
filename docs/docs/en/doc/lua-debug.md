@@ -5,24 +5,28 @@ When a script fails in game, the log reports a line in the compiled Lua file. Bu
 ## From a game error to your source
 
 1. Build as usual. Each `.lua` in the output directory gets a matching `.lua.map`.
-2. In the editor log, enable "Client Script" and run the map. When an error appears, double-click the entry to see the full location.
-3. Pass the Lua file and line to `gsts lua locate`. For many errors, save the log as a text file and parse it in one go.
+2. In the editor log, enable "Client Script" and run the map. When an error appears, copy that log entry.
+3. Run `gsts lua locate` in the project directory (where `gsts.config.ts` is). With no arguments it reads the clipboard; you can also pass the error text or a log file path.
 4. Fix the reported TS file, line and column, rebuild, and run the map again in the editor.
 
 ```sh
-gsts --noinject --lang en                           # build
-gsts lua locate dist/lua/lua/hud.lua:42             # translate one location
-gsts lua locate --log game-error.txt                # parse a whole log
+gsts lua locate                          # read the error from the clipboard
+gsts lua locate game-error.txt           # parse a whole log file
+gsts lua locate dist/lua/lua/hud.lua:42  # translate one local location
 ```
 
-This assumes compileRoot is `src` and the entry is `src/lua/hud.ts`. A path that exists locally is used as is; a log location such as `lua/hud.lua:42` is looked up under the `lua` subdirectory of the output directory. The output directory defaults to `outDir` in `gsts.config.ts` in the current directory; pass `--outDir` when running elsewhere.
-
-`locate` recognizes the two forms below. The exact format of real game logs is still being confirmed; if it does not recognize a location in your log, pass the "file:line" to it by hand.
+Game logs name modules without the `.lua` extension (confirmed in game, 2026-10-24). For example:
 
 ```text
-lua/hud.lua:42: error message
-[string "lua/hud.lua"]:42: error message
+lua/hud:299: attempt to index a nil value (local 'item')
+stack traceback:
+	__gsts_helpers:120: in function 'findControl'
+	lua/hud:299: in function 'OnStart'
 ```
+
+`locate` translates `lua/hud:299` to a TS location. Runtime locations such as `lualib_bundle` and `__gsts_helpers` have no TS source, so it only reports how many were skipped. An error repeated many times in a log is reported once. Forms such as `lua/hud.lua:42` and `[string "lua/hud.lua"]:42` are recognized too.
+
+Log locations are looked up under the `lua` subdirectory of the output directory. The output directory defaults to `outDir` in `gsts.config.ts` in the current directory; pass `--outDir` when running elsewhere. The examples assume compileRoot is `src` and the entry is `src/lua/hud.ts`.
 
 ### Special cases
 
@@ -72,7 +76,7 @@ Use `throw` or `lua.error` to stop execution.
 Official guidance: if a script problem such as an infinite loop makes level loading slow or hang, the normal log may not get a chance to report it. Check `ErrorLog.txt` in the client script directory (it is only created in this situation).
 
 ```sh
-gsts lua locate --log path/to/client-scripts/ErrorLog.txt
+gsts lua locate path/to/client-scripts/ErrorLog.txt
 ```
 
 ## Telling whether two objects are the same
