@@ -19,6 +19,7 @@ const ruleByMessage = {
   ...entryDiagnosticRules,
   lua_nestedEntry: 'lua-entry-declaration',
   lua_listenerOwnership: 'lua-listener-ownership',
+  lua_variableOwnership: 'lua-listener-ownership',
   lua_enableSubscription: 'lua-on-enable-subscription',
   lua_reservedEnv: 'lua-reserved-env',
   lua_asyncFunction: 'lua-no-async',
@@ -111,6 +112,8 @@ export function getLuaDiagnostics(
     )
   const managedSignals: (string | undefined)[] = []
   const rawSignals: { name: string | undefined; node: ts.Node }[] = []
+  const managedVariables: (string | undefined)[] = []
+  const rawVariables: { name: string | undefined; node: ts.Node }[] = []
   const onEnable = analysis.model?.hooks.get('onEnable')?.definition
   const subscriptionMember = (expression: ts.Expression) => {
     const seen = new Set<ts.Symbol>()
@@ -202,13 +205,16 @@ export function getLuaDiagnostics(
       const member = builtins.member(node.expression)
       const subscribed = subscriptionMember(node.expression)
       if (
-        (subscribed === 'onSignal' || subscribed === 'listenKey') &&
+        (subscribed === 'onSignal' ||
+          subscribed === 'onVariable' ||
+          subscribed === 'listenKey' ||
+          subscribed === 'listenCursor') &&
         onEnable &&
         ts.findAncestor(node, (parent) => parent === onEnable) &&
         discarded(node)
       )
         diagnostics.push(issue(node, 'lua_enableSubscription', true))
-      if (member === 'findScript' && !scriptEntryOf(node, checker))
+      if ((member === 'findScript' || member === 'requireScript') && !scriptEntryOf(node, checker))
         diagnostics.push(issue(node, 'lua_findScriptEntry'))
       const argument = node.arguments[0]
       if (member === 'onSignal') {
@@ -216,6 +222,16 @@ export function getLuaDiagnostics(
         const type = name && checker.getTypeOfSymbolAtLocation(name, argument)
         managedSignals.push(type?.isStringLiteral() ? type.value : undefined)
       }
+      const variable = node.arguments[1]
+      if (member === 'onVariable')
+        managedVariables.push(
+          variable && ts.isStringLiteralLike(variable) ? variable.text : undefined
+        )
+      if (member === 'rawVariableHandler')
+        rawVariables.push({
+          node,
+          name: variable && ts.isStringLiteralLike(variable) ? variable.text : undefined
+        })
       if (member === 'rawSignalHandler' && ts.isPropertyAccessExpression(node.expression)) {
         let receiver: ts.Expression = node.expression.expression
         const seen = new Set<ts.Symbol>()
@@ -379,6 +395,13 @@ export function getLuaDiagnostics(
       )
     )
       diagnostics.push(issue(raw.node, 'lua_listenerOwnership'))
+  for (const raw of rawVariables)
+    if (
+      managedVariables.some(
+        (name) => name === undefined || raw.name === undefined || name === raw.name
+      )
+    )
+      diagnostics.push(issue(raw.node, 'lua_variableOwnership'))
   cached.set(source, { lang, diagnostics })
   return diagnostics
 }

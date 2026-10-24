@@ -143,7 +143,13 @@ assert.equal(analysis.model.environment.text, 'env')
 assert.equal(analysis.model.options.timerClock, 'real')
 assert.deepEqual([...analysis.model.hooks.keys()], ['onStart'])
 assert.deepEqual([...analysis.model.methods.keys()], ['summary', 'increment'])
-assert.deepEqual(analysis.model.scope, { signals: true, keys: true, timers: true })
+assert.deepEqual(analysis.model.scope, {
+  signals: true,
+  keys: true,
+  cursors: false,
+  variables: false,
+  timers: true
+})
 assert(ts.isFunctionDeclaration(analysis.model.methods.get('summary').definition))
 const require = createRequire(import.meta.url)
 const proxy = require('../../configs/ts-plugin/index.cjs')({ typescript: ts }).create({

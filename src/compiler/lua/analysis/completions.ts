@@ -4,7 +4,16 @@ import { t } from '../../../i18n/index.js'
 
 // lua. 同时包含官方 API、gsts 工具和 Lua 标准库。补全时前两类排在前面，标准库排在后面并标注来源；
 // lua.Color 是可调用对象，TS 会附带函数自身的 apply、bind 等成员，这里去掉。
-const environmentFirst = new Set(['self', 'script', 'game', 'Enum', 'Color', 'helper', 'onSignal'])
+const environmentFirst = new Set([
+  'self',
+  'script',
+  'game',
+  'Enum',
+  'Color',
+  'helper',
+  'onSignal',
+  'onVariable'
+])
 const functionMembers = new Set([
   'apply',
   'bind',

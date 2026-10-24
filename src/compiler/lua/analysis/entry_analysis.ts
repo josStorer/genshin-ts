@@ -92,7 +92,7 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
           methods,
           statements: ts.isBlock(setup.body) ? setup.body.statements.slice(0, -1) : [],
           returned: object,
-          scope: { signals: false, keys: false, timers: false },
+          scope: { signals: false, keys: false, cursors: false, variables: false, timers: false },
           timerClocks: new Set()
         }
       }
@@ -364,11 +364,22 @@ function collectCapabilities(
     const capability =
       member === 'onSignal'
         ? 'signals'
-        : member === 'listenKey'
-          ? 'keys'
-          : clockHelper || luaTimerGlobals.some((name) => name === global)
-            ? 'timers'
-            : undefined
+        : member === 'onVariable'
+          ? 'variables'
+          : member === 'listenKey'
+            ? 'keys'
+            : member === 'listenCursor'
+              ? 'cursors'
+              : clockHelper || luaTimerGlobals.some((name) => name === global)
+                ? 'timers'
+                : undefined
+    // 省略 script 的 readParams 读当前挂载的脚本变量，只能写在回调里
+    const call = node.parent
+    const currentParams =
+      member === 'readParams' &&
+      ts.isCallExpression(call) &&
+      call.expression === node &&
+      call.arguments.length === 1
     if (instance && capability && model) {
       model.scope[capability] = true
       if (global === 'setTimeout' || global === 'setInterval') timerClocks.add(timerClock)
@@ -388,6 +399,7 @@ function collectCapabilities(
     if (
       !instance &&
       (capability ||
+        currentParams ||
         global === 'self' ||
         global === 'send' ||
         member === 'script' ||

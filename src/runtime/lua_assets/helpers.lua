@@ -80,13 +80,31 @@ function M.findScript(scriptPath, control, path)
     if control == nil then return nil end
     return M.scriptHandle(control:GetScriptByPath(scriptPath))
 end
+function M.requireScript(scriptPath, control, path)
+    if control == nil then error("Script " .. scriptPath .. " not found: the control is nil") end
+    if path ~= nil then control = M.requireControl(control, path, "ClientUIBaseControl") end
+    local handle = M.scriptHandle(control:GetScriptByPath(scriptPath))
+    if handle == nil then error("Script " .. scriptPath .. " is not mounted on " .. (path or control.name)) end
+    return handle
+end
+-- The host expects a boolean: true marks the key event as handled. No return value means not handled.
 function M.listenKey(control, event, callback)
-    control:AddKeyEventListener(event, callback)
+    local handler = function() return callback() == true end
+    control:AddKeyEventListener(event, handler)
     local listening = true
     return function()
         if not listening then return end
         listening = false
-        if control.alive then control:RemoveKeyEventListener(event, callback) end
+        if control.alive then control:RemoveKeyEventListener(event, handler) end
+    end
+end
+function M.listenCursor(control, event, callback)
+    control:AddCursorEventListener(event, callback)
+    local listening = true
+    return function()
+        if not listening then return end
+        listening = false
+        if control.alive then control:RemoveCursorEventListener(event, callback) end
     end
 end
 function M.defineSignal(name, params) return {__gstsSignal = true, name = name, params = params} end
@@ -422,20 +440,71 @@ function M.createScope(env, clock)
             if #group.listeners == 0 then safe(group.deactivate) end
         end
     end
-    -- Key listeners use the same activation and disposal list as signals and the timer queue.
-    function scope.listenKey(control, event, callback)
+    -- Key and cursor listeners use the same activation and disposal list as signals and the timer queue.
+    local function listen(start, control, event, callback)
         if state == "destroyed" then error("Cannot listen after script destruction") end
-        local key = {}
+        local listener = {}
         -- There is never more than one host callback for this subscription.
-        function key.activate() if not key.off then key.off = M.listenKey(control, event, callback) end end
+        function listener.activate() if not listener.off then listener.off = start(control, event, callback) end end
         -- Removal uses the original callback identity, then clears the active handle.
-        function key.deactivate()
-            local off = key.off
-            key.off = nil
+        function listener.deactivate()
+            local off = listener.off
+            listener.off = nil
             if off then off() end
         end
-        key.dispose = key.deactivate
-        return subscribe(key)
+        listener.dispose = listener.deactivate
+        return subscribe(listener)
+    end
+    function scope.listenKey(control, event, callback) return listen(M.listenKey, control, event, callback) end
+    function scope.listenCursor(control, event, callback) return listen(M.listenCursor, control, event, callback) end
+    -- A custom variable has one host registration; each listener checks the value type it asked for.
+    local variables = {}
+    function scope.onVariable(entityType, name, valueType, callback)
+        if state == "destroyed" then error("Cannot subscribe after script destruction") end
+        local key = tostring(entityType.FullName or entityType) .. "/" .. name
+        local group = variables[key]
+        if not group then
+            group = {listeners={}, registered=false}
+            variables[key] = group
+            function group.activate()
+                if group.registered or #group.listeners == 0 then return end
+                env.script:RegisterCustomVariableChangedHandler(entityType, name, group.dispatch)
+                group.registered = true
+            end
+            function group.deactivate()
+                if not group.registered then return end
+                group.registered = false
+                env.script:UnregisterCustomVariableChangedHandler(entityType, name)
+            end
+            function group.dispose()
+                for _, listener in ipairs(group.listeners) do listener.enabled = false end
+                group.listeners = {}
+                group.deactivate()
+            end
+            -- The host only reports which variable changed; read its current value once per change.
+            function group.dispatch()
+                if state ~= "active" then return end
+                local value = env.game.GetGlobalCustomVariableValue(entityType, name)
+                local snapshot = {}
+                for i, listener in ipairs(group.listeners) do snapshot[i] = listener end
+                for _, listener in ipairs(snapshot) do
+                    if listener.enabled and state == "active" then
+                        if type(value) == listener.valueType then safe(listener.callback, value)
+                        else report("Custom variable " .. name .. " must be " .. listener.valueType .. ", got " .. type(value)) end
+                    end
+                end
+            end
+            subscribe(group)
+        end
+        local listener = {callback=callback, valueType=valueType, enabled=true}
+        group.listeners[#group.listeners + 1] = listener
+        if state == "active" then group.activate() end
+        return function()
+            if not listener.enabled then return end
+            listener.enabled = false
+            for i, item in ipairs(group.listeners) do if item == listener then table.remove(group.listeners, i); break end end
+            if #group.listeners == 0 then safe(group.deactivate) end
+        end
     end
     -- Start/Enable share one transition; repeat calls cannot register twice.
     function scope.activate()
@@ -456,7 +525,7 @@ function M.createScope(env, clock)
         if state == "destroyed" then return end
         state = "destroyed"
         visitSubscriptions("dispose")
-        subscriptions, groups = {}, {}
+        subscriptions, groups, variables = {}, {}, {}
         syncUpdate()
     end
     return scope

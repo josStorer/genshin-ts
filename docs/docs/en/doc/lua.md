@@ -110,20 +110,23 @@ The global self means the current script host: a control (`script.object`) in Lu
 
 control.SetVisible(true) automatically emits control:SetVisible(true). Host declarations already handle self; callers do not pass it manually. Only authors of native Lua declarations need to distinguish this:void from receiver methods.
 
-| Tool                                | Purpose                                                                       |
-| ----------------------------------- | ----------------------------------------------------------------------------- |
-| findControl(root, path, kind)       | Name/path lookup; undefined if absent, error on ambiguous names or wrong type |
-| requireControl(root, path, kind)    | Required lookup; reports the missing path                                     |
-| isControl(control, kind)            | Type guard exposing control.xxx completions                                   |
-| clamp / lerp / moveTowards          | Numeric limits, interpolation and movement                                    |
-| listenKey(control, event, callback) | Idempotent cancel function; pauses/resumes with the mount                     |
-| readParams(script, schema)          | Checks script variables and returns typed fields                              |
-| multi / findScript / scriptHandle   | Multiple returns; find another mount and call its public methods              |
+| Tool                                   | Purpose                                                                                         |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| findControl(root, path, kind)          | Name/path lookup; undefined if absent, error on ambiguous names or wrong type                   |
+| requireControl(root, path, kind)       | Required lookup; reports the missing path                                                       |
+| isControl(control, kind)               | Type guard exposing control.xxx completions                                                     |
+| clamp / lerp / moveTowards             | Numeric limits, interpolation and movement                                                      |
+| listenKey(control, event, callback)    | Key listener that pauses/resumes with the mount; return true to mark the key handled            |
+| listenCursor(control, event, callback) | Click and other cursor listeners on preset buttons and cursor event areas, managed the same way |
+| readParams(schema)                     | Checks the current script's variables and returns typed fields                                  |
+| multi                                  | Multiple returns                                                                                |
+| findScript / requireScript             | Find another mount and call its public methods; the require version throws when missing         |
+| scriptHandle(script)                   | Wrap an official Script you already have as the same handle                                     |
 
 Script parameters support number/string/boolean. The schema does not create editor variables; a variable missing from the editor uses its default, or reports the variable name when there is none. A variable that exists but is left blank is not missing: a string reads as an empty string (confirmed in game, 2026-10-24).
 
 ```ts
-const params = lua.helper.readParams(lua.script, {
+const params = lua.helper.readParams({
   Speed: { type: 'number', default: 20 },
   Caption: { type: 'string', default: 'Speed' },
   Enabled: { type: 'boolean', default: true }
@@ -245,7 +248,22 @@ return {
 }
 ```
 
-The same applies to listenKey. Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
+The same applies to listenKey, listenCursor and lua.onVariable: write them at the root and they follow the mount's enable/disable/destroy:
+
+```ts
+// Callback root
+lua.helper.listenKey(self, lua.Enum.KeyEventType.KeyboardJumpKeyDown, () => {
+  jump() // No return value: other controls in the container still respond; return true to mark it handled
+})
+lua.helper.listenCursor(button, lua.Enum.CursorEventType.CursorClick, (event) => {
+  console.log(event.GetUIPos())
+})
+lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => {
+  render(stage) // Called with the new value on change; a value that is not a number is logged and skipped
+})
+```
+
+lua.onVariable fires on changes only; read the current value with `lua.game.GetGlobalCustomVariableValue` when you need it at start. Do not also use the official RegisterCustomVariableChangedHandler for the same variable (reported as `gsts/lua-listener-ownership`). Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
 
 ### Signal boundary checks
 

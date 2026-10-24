@@ -24,12 +24,16 @@ const sdkFileNames = new Set(['lua.d.ts', 'lua_core.d.ts', 'lua_entry.d.ts'])
 /** 实例 helper 的名称到作用域方法；声明 symbol 是唯一识别依据。 */
 export const scopedHelperMethods: Readonly<Record<string, string>> = {
   listenKey: 'listenKey',
+  listenCursor: 'listenCursor',
   clockTimeout: 'setTimeoutOnClock',
   clockInterval: 'setIntervalOnClock'
 }
 const helperMembers: Readonly<Record<string, string>> = {
   findScript: 'findScript',
+  requireScript: 'requireScript',
+  readParams: 'readParams',
   listenKey: 'listenKey',
+  listenCursor: 'listenCursor',
   setTimeout: 'clockTimeout',
   setInterval: 'clockInterval'
 }
@@ -105,7 +109,7 @@ function resolveBuiltins(program: ts.Program) {
       if (kind === 'helpers' && symbol.name === 'ClientGlobals') {
         clientGlobals = symbol
         const type = checker.getDeclaredTypeOfSymbol(symbol)
-        for (const name of ['self', 'script', 'helper', 'require', 'onSignal']) {
+        for (const name of ['self', 'script', 'helper', 'require', 'onSignal', 'onVariable']) {
           const member = type.getProperty(name)
           if (member) members.set(member, name)
         }
@@ -116,6 +120,12 @@ function resolveBuiltins(program: ts.Program) {
             .getTypeOfSymbolAtLocation(script, source)
             .getProperty('RegisterServerSignalHandler')
         if (handler) members.set(handler, 'rawSignalHandler')
+        const variableHandler =
+          script &&
+          checker
+            .getTypeOfSymbolAtLocation(script, source)
+            .getProperty('RegisterCustomVariableChangedHandler')
+        if (variableHandler) members.set(variableHandler, 'rawVariableHandler')
         const update =
           script && checker.getTypeOfSymbolAtLocation(script, source).getProperty('EnableUpdate')
         if (update) members.set(update, 'enableUpdate')

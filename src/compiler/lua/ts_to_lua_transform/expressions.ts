@@ -76,7 +76,7 @@ export function transformProperty(
   if (data) return data
   const builtins = getLuaBuiltins(ctx.program)
   const member = builtins.member(node.name)
-  if (member === 'onSignal') return field(scope(ctx, file), member)
+  if (member === 'onSignal' || member === 'onVariable') return field(scope(ctx, file), member)
   if (member && scopedHelperMethods[member])
     return field(scope(ctx, file), scopedHelperMethods[member])
   if (member === 'helper') return helpers(ctx, file)
@@ -94,7 +94,7 @@ export function transformElement(
 ) {
   if (scopedUpdate(node, ctx, file)) return updateReference(ctx, file)
   const member = getLuaBuiltins(ctx.program).member(node)
-  if (member === 'onSignal') return field(scope(ctx, file), member)
+  if (member === 'onSignal' || member === 'onVariable') return field(scope(ctx, file), member)
   if (member && scopedHelperMethods[member])
     return field(scope(ctx, file), scopedHelperMethods[member])
   return (

@@ -64,7 +64,14 @@ export function transformCall(
           node
         )
   }
-  if (builtins.member(callee) === 'findScript') {
+  const member = builtins.member(callee)
+  if (member === 'readParams' && node.arguments.length === 1)
+    return lua.createCallExpression(
+      field(helpers(ctx, file), 'readParams'),
+      [field(id('_ENV'), 'script'), ...transformOrderedExpressions(ctx, node.arguments)],
+      node
+    )
+  if (member === 'findScript' || member === 'requireScript') {
     // 脚本路径就是入口相对 compileRoot 的模块路径（与编辑器里挂载的 lua/board 一致）；无效时诊断已报错。
     const entry = scriptEntryOf(node, ctx.checker)
     const scriptPath = entry
@@ -74,7 +81,7 @@ export function transformCall(
           .replace(/\.tsx?$/, '')
       : ''
     return lua.createCallExpression(
-      field(helpers(ctx, file), 'findScript'),
+      field(helpers(ctx, file), member),
       [str(scriptPath), ...transformOrderedExpressions(ctx, node.arguments)],
       node
     )

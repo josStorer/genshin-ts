@@ -1,6 +1,11 @@
 import type {
   ClientUIBaseControl,
+  ClientUICursorEventAreaControl,
+  ClientUIPresetButtonControl,
   ControlTypes,
+  CursorEventData,
+  CursorEventType,
+  CustomVariableEntityType,
   HostColor,
   HostEnums,
   HostGame,
@@ -124,7 +129,30 @@ export interface ClientGlobals extends LuaStandardGlobals {
    * 接收服务器发来的信号，回调里用 evt.params.参数名 读取参数。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
    */
   readonly onSignal: LuaOnSignal
+  /**
+   * Watches a custom variable and calls back with its new value whenever it changes. valueType ('number',
+   * 'string' or 'boolean') is checked on every change; a mismatch is logged and skipped. Write it at the
+   * callback root: it pauses while the script is disabled, resumes when enabled and is released on destroy.
+   * Returns a cancel function that is safe to call more than once. The callback runs on changes only; read the
+   * current value with lua.game.GetGlobalCustomVariableValue when you need it at start.
+   *
+   * 监听一个自定义变量，变化时把新值传给回调。valueType（'number'、'string' 或 'boolean'）每次都会检查，不符时记一条错误并跳过。
+   * 写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
+   * 回调只在变化时触发；开始时需要当前值，请用 lua.game.GetGlobalCustomVariableValue 读取。
+   *
+   * @example
+   * lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => render(stage))
+   */
+  readonly onVariable: LuaOnVariable
 }
+type VariableValues = { number: number; string: string; boolean: boolean }
+export type LuaOnVariable = <K extends keyof VariableValues>(
+  this: void,
+  entityType: CustomVariableEntityType,
+  name: string,
+  valueType: K,
+  callback: (this: void, value: VariableValues[K]) => void
+) => (this: void) => void
 export interface ClientControlScriptOptions {
   /**
    * Which clock this script's setTimeout / setInterval use. 'level' (default) pauses with level time; 'real'
@@ -230,6 +258,22 @@ export declare function findScript<D extends ClientScriptDefinition = never>(
   path?: string
 ): ScriptHandle<MethodsOf<D>> | undefined
 /**
+ * Same as findScript, but the script must exist: throws with the path when the control or the mounted script
+ * is missing, so the result is never undefined.
+ *
+ * 和 findScript 相同，但脚本必须存在：控件或挂载的脚本找不到时直接报错并带上路径，所以返回值不会是 undefined。
+ *
+ * @example
+ * import type Board from './board'
+ * const board = lua.helper.requireScript<typeof Board>(self.parent, 'Board')
+ * board.methods.push('jump +10')
+ */
+export declare function requireScript<D extends ClientScriptDefinition = never>(
+  this: void,
+  control: ClientUIBaseControl | undefined,
+  path?: string
+): ScriptHandle<MethodsOf<D>>
+/**
  * Usually you want findScript instead: it finds the mount and checks the entry for you.
  * Use scriptHandle only when you already hold an official Script (for example from GetScript or GetScripts)
  * and want the same typed handle; you confirm that it really mounts entry D.
@@ -242,11 +286,24 @@ export declare function scriptHandle<D extends ClientScriptDefinition>(
   script: Script
 ): ScriptHandle<MethodsOf<D>>
 /**
- * Reads the editor's script variables and checks their types. default is used when the editor has no such
- * variable; a variable that exists but is left blank is not missing (a string reads as an empty string). Find
- * controls by name path with findControl / requireControl instead.
+ * Reads the current script's variables from the editor and checks their types. default is used when the
+ * editor has no such variable; a variable that exists but is left blank is not missing (a string reads as an
+ * empty string). Find controls by name path with findControl / requireControl instead.
  *
- * 读取编辑器脚本变量并检查类型。编辑器里没有这个变量时用 default；变量建了但留空，字符串会读到空串，不会用 default。控件请用 findControl/requireControl 按名称路径查找。
+ * 读取当前脚本在编辑器里的变量并检查类型。编辑器里没有这个变量时用 default；变量建了但留空，字符串会读到空串，不会用 default。
+ * 控件请用 findControl / requireControl 按名称路径查找。
+ *
+ * @example
+ * const params = lua.helper.readParams({ Title: { type: 'string', default: '标题' } })
+ */
+export declare function readParams<const S extends Record<string, LuaParam>>(
+  this: void,
+  schema: S
+): LuaParamValues<S>
+/**
+ * Same as readParams(schema), but reads another script's variables.
+ *
+ * 与 readParams(schema) 相同，但读取另一个脚本的变量。
  */
 export declare function readParams<const S extends Record<string, LuaParam>>(
   this: void,
@@ -316,17 +373,37 @@ export declare function requireControl<K extends keyof ControlTypes>(
   kind: K
 ): ControlTypes[K]
 /**
- * Listens for one key event on a control. Write it at the callback root: it pauses while the script is
- * disabled, resumes when enabled and is released on destroy. Returns a cancel function that is safe to call
- * more than once.
+ * Listens for one key event on a control. Return true from the callback to mark the key as handled: other
+ * controls in the same container then ignore this press (official behavior). Return nothing (or false) to
+ * let them respond too. Write it at the callback root: it pauses while the script is disabled, resumes when
+ * enabled and is released on destroy. Returns a cancel function that is safe to call more than once.
  *
- * 监听控件上的一种按键事件。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
+ * 监听控件上的一种按键事件。回调返回 true 表示"已处理"：同一容器里的其他控件不再响应这次按键（官方行为）；
+ * 不写返回值（或返回 false）则其他控件照常响应。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
  */
 export declare function listenKey(
   this: void,
   control: ClientUIBaseControl,
   event: HostEnums['KeyEventType'][keyof HostEnums['KeyEventType']],
-  callback: (this: void) => boolean
+  callback: (this: void) => boolean | void
+): (this: void) => void
+/**
+ * Listens for one cursor event (click, press, enter and so on) on a preset button or cursor event area. Write
+ * it at the callback root: it pauses while the script is disabled, resumes when enabled and is released on
+ * destroy, so no Add/Remove pair in onEnable/onDisable is needed. Returns a cancel function that is safe to
+ * call more than once.
+ *
+ * 监听预设按钮或光标检测区域上的一种光标事件（点击、按下、进入等）。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放，
+ * 不用再在 onEnable / onDisable 里成对添加、移除。返回取消函数，重复调用无害。
+ *
+ * @example
+ * lua.helper.listenCursor(button, lua.Enum.CursorEventType.CursorClick, (event) => console.log(event.GetUIPos()))
+ */
+export declare function listenCursor(
+  this: void,
+  control: ClientUIPresetButtonControl | ClientUICursorEventAreaControl,
+  event: CursorEventType,
+  callback: (this: void, event: CursorEventData) => void
 ): (this: void) => void
 /**
  * Like the global setTimeout, but picks this timer's clock: 'real' ignores level pauses, 'level' pauses with
@@ -366,6 +443,8 @@ export type ClientHelpers = Pick<
   | 'multi'
   | 'scriptHandle'
   | 'findScript'
+  | 'requireScript'
+  | 'listenCursor'
   | 'readParams'
   | 'clamp'
   | 'lerp'

@@ -25,7 +25,7 @@ export function scopedUpdate(
   if (builtins.member(node) !== 'enableUpdate' || !builtins.isCurrentScript(node.expression))
     return false
   const model = file.entry
-  return !!model && (model.scope.signals || model.scope.keys || model.scope.timers)
+  return !!model && Object.values(model.scope).some(Boolean)
 }
 
 // 方法引用仍接收 TSTL 的 self 槽，实际开关归属当前挂载的作用域。

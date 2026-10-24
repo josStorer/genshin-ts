@@ -43,7 +43,7 @@ export interface LuaEntryModel {
   /** 两种回调写法都指向最终返回的对象，已去掉括号与类型包装。 */
   returned: ts.ObjectLiteralExpression
   /** 只记录实际引用的实例能力；没有能力时不生成作用域。 */
-  scope: { signals: boolean; keys: boolean; timers: boolean }
+  scope: { signals: boolean; keys: boolean; cursors: boolean; variables: boolean; timers: boolean }
   /** 已确定的定时器时钟；动态选择时保留两个更新钩子。 */
   timerClocks: ReadonlySet<'level' | 'real'>
 }
