@@ -99,5 +99,5 @@ const sources = diagnosed.diagnostics.map((d) => d.source)
 for (const rule of ['lua-instance-scope', 'lua-listener-ownership', 'lua-on-enable-subscription'])
   assert(sources.includes(rule), rule + ': ' + sources.join(', '))
 console.log(
-  'Listeners: lua.onKey, lua.onCursor and lua.onVariable follow the scope, onKey callbacks may return nothing, readParams reads the current script, requireScript throws with the path; misuse is diagnosed: PASS'
+  'Listeners: lua.onKey, lua.onCursor and lua.onVariable follow the scope, also when destructured from lua; onKey callbacks may return nothing, readParams reads the current script, requireScript throws with the path; misuse is diagnosed: PASS'
 )
