@@ -6,11 +6,7 @@ import { hooks } from '../analysis/syntax.js'
 import type { LuaFileContext } from './context.js'
 import { field, id } from './lua_ast.js'
 
-export function finishEntry(
-  result: lua.File,
-  ctx: lua.TransformationContext,
-  file: LuaFileContext
-) {
+export function finishEntry(result: lua.File, file: LuaFileContext) {
   if (file.entry) {
     result.statements = result.statements.filter(
       (s) =>

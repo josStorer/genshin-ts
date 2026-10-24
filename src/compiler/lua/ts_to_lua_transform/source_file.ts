@@ -38,7 +38,7 @@ export function transformSourceFile(
   bindImports(node, ctx, file)
   const result = ctx.superTransformNode(source)[0]
   if (!lua.isFile(result)) throw new Error('TSTL did not return a Lua file')
-  finishEntry(result, ctx, file)
+  finishEntry(result, file)
   generateReexports(result, ctx, file)
   discardAdaptedCallbackDiagnostics(ctx, file.adaptedCallbacks)
   generatePrelude(result, ctx, file)
