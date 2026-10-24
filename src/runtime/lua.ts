@@ -130,15 +130,17 @@ export interface ClientGlobals extends LuaStandardGlobals {
    */
   readonly onSignal: LuaOnSignal
   /**
-   * Watches a custom variable and calls back with its new value whenever it changes. valueType ('number',
-   * 'string' or 'boolean') is checked on every change; a mismatch is logged and skipped. Write it at the
-   * callback root: it pauses while the script is disabled, resumes when enabled and is released on destroy.
-   * Returns a cancel function that is safe to call more than once. The callback runs on changes only; read the
-   * current value with lua.game.GetGlobalCustomVariableValue when you need it at start.
+   * Watches a custom variable and calls back with its new value each time it is set, even when the value is
+   * unchanged; compare with the previous value yourself if only real changes matter. valueType ('number',
+   * 'string' or 'boolean') is checked every time; a mismatch is logged and skipped. Write it at the callback
+   * root: it pauses while the script is disabled, resumes when enabled and is released on destroy. Returns a
+   * cancel function that is safe to call more than once. It does not fire at start; read the current value
+   * with lua.game.GetGlobalCustomVariableValue when you need it.
    *
-   * 监听一个自定义变量，变化时把新值传给回调。valueType（'number'、'string' 或 'boolean'）每次都会检查，不符时记一条错误并跳过。
+   * 监听一个自定义变量，每次被设置时把新值传给回调；设成相同的值也会触发，只关心真正变化时请自己和上次的值比较。
+   * valueType（'number'、'string' 或 'boolean'）每次都会检查，不符时记一条错误并跳过。
    * 写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
-   * 回调只在变化时触发；开始时需要当前值，请用 lua.game.GetGlobalCustomVariableValue 读取。
+   * 开始时不会触发；需要当前值，请用 lua.game.GetGlobalCustomVariableValue 读取。
    *
    * @example
    * lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => render(stage))

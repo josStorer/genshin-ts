@@ -259,11 +259,11 @@ lua.helper.listenCursor(button, lua.Enum.CursorEventType.CursorClick, (event) =>
   console.log(event.GetUIPos())
 })
 lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => {
-  render(stage) // Called with the new value on change; a value that is not a number is logged and skipped
+  render(stage) // Called with the new value each time it is set, even if unchanged; a value that is not a number is logged and skipped
 })
 ```
 
-lua.onVariable fires on changes only; read the current value with `lua.game.GetGlobalCustomVariableValue` when you need it at start. Do not also use the official RegisterCustomVariableChangedHandler for the same variable (reported as `gsts/lua-listener-ownership`). Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
+lua.onVariable fires each time the variable is set, even when the value is unchanged; compare with the previous value yourself if only real changes matter. It does not fire at start; read the current value with `lua.game.GetGlobalCustomVariableValue` when you need it. Do not also use the official RegisterCustomVariableChangedHandler for the same variable (reported as `gsts/lua-listener-ownership`). Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
 
 ### Signal boundary checks
 
