@@ -220,6 +220,15 @@ const local = successful(
   })
 )
 execute(local.files, "require('main');OnStart()")
+// 2026-10-24 实机：官方沙箱没有 _VERSION 和 debug.getinfo，new Error 仍要能构造和打印。
+const errors = successful(
+  buildFixture({
+    'main.ts': entry(
+      `const error=new Error('boom');lua.assert(error.message==='boom');lua.assert(\`\${error}\`.includes('boom'))`
+    )
+  })
+)
+execute(errors.files, "_VERSION=nil;debug.getinfo=nil;require('main');OnStart()")
 console.log(
-  `Lua standard library: ${assertions.length} members executed; Boolean, unavailable members/globals and local shadows: PASS`
+  `Lua standard library: ${assertions.length} members executed; Boolean, unavailable members/globals, local shadows and Error without _VERSION: PASS`
 )

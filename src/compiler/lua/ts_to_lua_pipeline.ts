@@ -671,9 +671,10 @@ function transpileLua(
         const relative = posix(path.relative(outDir, filename))
         if (relative.startsWith('../') || path.isAbsolute(relative))
           throw new Error(t('lua_outputOutsideOutDir', { arg0: relative }))
-        // The official sandbox exposes traceback but not debug.getinfo. Keep Error usable.
+        // The official sandbox exposes traceback but not debug.getinfo or _VERSION
+        // (confirmed in game 2026-10-24). Keep Error usable; the host runs Lua 5.3.
         if (relative === 'lualib_bundle.lua')
-          data = data
+          data = `local _VERSION = _VERSION or "Lua 5.3"\n${data}`
             .replaceAll(
               'debug.getinfo(level, "f")',
               '(debug.getinfo and debug.getinfo(level, "f"))'
