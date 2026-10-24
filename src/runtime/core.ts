@@ -262,6 +262,10 @@ export type ServerGraphOptions<Vars extends VariablesDefinition = VariablesDefin
       mode?: 'beyond'
       /**
        * [ZH] 服务器节点图子类型（默认 `实体节点图`）。
+       * - `entity` 实体节点图：挂在实体或元件上，实体销毁时失效
+       * - `status` 单位状态节点图：挂在单位状态上，状态移除时失效
+       * - `class` 职业节点图：挂在职业上（玩家或角色），切换职业时失效；仅超限模式
+       * - `item` 道具节点图：挂在道具上
        *
        * [EN] Server graph sub type (default: `entity`).
        */
@@ -1337,18 +1341,53 @@ type ServerGraphOptionsBeyond<Vars extends VariablesDefinition> = Exclude<
   { mode: 'classic' }
 >
 
+/**
+ * Defines a server node graph, whose logic runs on the server. It is an entity graph by default;
+ * set `type` for a unit status, class or item graph. Write event logic with `.on('event', (evt, f) => …)`.
+ *
+ * 定义一个服务器节点图，逻辑在服务端运行。默认是挂在实体上的实体节点图，用 `type` 改成单位状态、职业或道具节点图；
+ * 之后用 `.on('事件名', (evt, f) => …)` 编写事件逻辑。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function server<Vars extends VariablesDefinition = VariablesDefinition>(
   options: ServerGraphOptionsClassic<Vars> & { lang: 'zh' }
 ): ServerGraphApi<Vars, 'zh', 'classic'>
+/**
+ * Defines a server node graph, whose logic runs on the server. It is an entity graph by default;
+ * set `type` for a unit status, class or item graph. Write event logic with `.on('event', (evt, f) => …)`.
+ *
+ * 定义一个服务器节点图，逻辑在服务端运行。默认是挂在实体上的实体节点图，用 `type` 改成单位状态、职业或道具节点图；
+ * 之后用 `.on('事件名', (evt, f) => …)` 编写事件逻辑。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function server<Vars extends VariablesDefinition = VariablesDefinition>(
   options: ServerGraphOptionsClassic<Vars>
 ): ServerGraphApi<Vars, 'en', 'classic'>
+/**
+ * Defines a server node graph, whose logic runs on the server. It is an entity graph by default;
+ * set `type` for a unit status, class or item graph. Write event logic with `.on('event', (evt, f) => …)`.
+ *
+ * 定义一个服务器节点图，逻辑在服务端运行。默认是挂在实体上的实体节点图，用 `type` 改成单位状态、职业或道具节点图；
+ * 之后用 `.on('事件名', (evt, f) => …)` 编写事件逻辑。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function server<Vars extends VariablesDefinition = VariablesDefinition>(
   options: ServerGraphOptionsBeyond<Vars> & { lang: 'zh' }
 ): ServerGraphApi<Vars, 'zh', 'beyond'>
+/**
+ * Defines a server node graph, whose logic runs on the server. It is an entity graph by default;
+ * set `type` for a unit status, class or item graph. Write event logic with `.on('event', (evt, f) => …)`.
+ *
+ * 定义一个服务器节点图，逻辑在服务端运行。默认是挂在实体上的实体节点图，用 `type` 改成单位状态、职业或道具节点图；
+ * 之后用 `.on('事件名', (evt, f) => …)` 编写事件逻辑。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function server<Vars extends VariablesDefinition = VariablesDefinition>(
   options?: ServerGraphOptionsBeyond<Vars>
 ): ServerGraphApi<Vars, 'en', 'beyond'>
+/**
+ * Defines a server node graph, whose logic runs on the server. It is an entity graph by default;
+ * set `type` for a unit status, class or item graph. Write event logic with `.on('event', (evt, f) => …)`.
+ *
+ * 定义一个服务器节点图，逻辑在服务端运行。默认是挂在实体上的实体节点图，用 `type` 改成单位状态、职业或道具节点图；
+ * 之后用 `.on('事件名', (evt, f) => …)` 编写事件逻辑。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function server<Vars extends VariablesDefinition = VariablesDefinition>(
   options?: ServerGraphOptions<Vars>
 ): ServerGraphApi<Vars, ServerLang, ServerGraphMode>
@@ -1641,10 +1680,16 @@ function createClientGraphApi<T extends ClientGraphSubType>(
   return api as unknown as ClientGraphApiForSubType<T, ClientLang, ClientGraphMode>
 }
 
-/** Register a character-skill client graph with the default options. / 使用默认配置注册角色技能客户端节点图。 */
+/**
+ * Defines a character skill graph, used as a node graph event on the animation timeline of a custom character skill and run locally for the player; Beyond mode only. Uses the default options.
+ *
+ * 定义一个角色技能节点图：在角色自定义技能的动画编辑时间轴上作为节点图事件使用，在玩家本地运行；仅超限模式。使用默认配置。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function characterSkill(): ClientStartApi<'character_skill', 'en', 'beyond'>
 /**
- * Register a character-skill client graph. / 注册角色技能客户端节点图。
+ * Defines a character skill graph, used as a node graph event on the animation timeline of a custom character skill and run locally for the player; Beyond mode only.
+ *
+ * 定义一个角色技能节点图：在角色自定义技能的动画编辑时间轴上作为节点图事件使用，在玩家本地运行；仅超限模式。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * @param options Client graph options. / 客户端节点图配置。
  * @param options.id Target NodeGraph ID; defaults to `1082130433`. / 目标节点图 ID；默认 `1082130433`。
@@ -1664,10 +1709,16 @@ function characterSkill(
     : createClientGraphApi('character_skill', options)
 }
 
-/** Register a character-control-skill client graph with the default options. / 使用默认配置注册角色控制技能客户端节点图。 */
+/**
+ * Defines a character control skill graph, for special character skills usable only while controlling; configured like a character skill but without skill animation, run locally; Beyond mode only. Uses the default options.
+ *
+ * 定义一个角色操控技能节点图：用于只在操控状态下可用的特殊角色技能，配置方式与角色技能类似，但释放期间没有技能动画，在玩家本地运行；仅超限模式。使用默认配置。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function characterControlSkill(): ClientStartApi<'character_control_skill', 'en', 'beyond'>
 /**
- * Register a character-control-skill client graph. / 注册角色控制技能客户端节点图。
+ * Defines a character control skill graph, for special character skills usable only while controlling; configured like a character skill but without skill animation, run locally; Beyond mode only.
+ *
+ * 定义一个角色操控技能节点图：用于只在操控状态下可用的特殊角色技能，配置方式与角色技能类似，但释放期间没有技能动画，在玩家本地运行；仅超限模式。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * @param options Client graph options. / 客户端节点图配置。
  * @param options.id Target NodeGraph ID; defaults to `1082130433`. / 目标节点图 ID；默认 `1082130433`。
@@ -1689,10 +1740,16 @@ function characterControlSkill(
     : createClientGraphApi('character_control_skill', options)
 }
 
-/** Register a creation-skill client graph with the default options. / 使用默认配置注册造物技能客户端节点图。 */
+/**
+ * Defines a creation skill graph, used as a node graph event on the animation timeline of a custom creation skill and run locally; available in Beyond and Classic modes. Uses the default options.
+ *
+ * 定义一个造物技能节点图：在造物自定义技能的动画编辑时间轴上作为节点图事件使用，在玩家本地运行；超限和经典模式都可用。使用默认配置。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function creationSkill(): ClientStartApi<'creation_skill', 'en', 'beyond'>
 /**
- * Register a creation-skill client graph. / 注册造物技能客户端节点图。
+ * Defines a creation skill graph, used as a node graph event on the animation timeline of a custom creation skill and run locally; available in Beyond and Classic modes.
+ *
+ * 定义一个造物技能节点图：在造物自定义技能的动画编辑时间轴上作为节点图事件使用，在玩家本地运行；超限和经典模式都可用。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * @param options Client graph options. / 客户端节点图配置。
  * @param options.id Target NodeGraph ID; defaults to `1082130433`. / 目标节点图 ID；默认 `1082130433`。
@@ -1713,7 +1770,7 @@ function creationSkill(
 }
 
 /**
- * Register a creation-status client graph with the default options.
+ * Defines a creation status graph, the behavior a complex creation runs while in one autonomous state; a creation status decision graph switches to it. Uses the default options.
  *
  * GSTS Note: `start1`…`start10` map to the editor's ordered-exclusive output pins 1…10 and
  * execute in pin order. They only split and organize code; they do not represent switchable
@@ -1731,7 +1788,7 @@ function creationSkill(
  * when the skill cannot execute because it is on cooldown, but not when the skill succeeds or
  * remains active.
  *
- * 使用默认配置注册造物状态客户端节点图。
+ * 定义一个造物状态节点图：复杂造物处于某个自主逻辑状态时执行的行为，由造物状态决策节点图切换到这个状态时使用。使用默认配置。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * GSTS 注: `start1`…`start10` 分别对应编辑器【按顺序唯一执行】的 1…10 号执行引脚，
  * 并按引脚顺序执行。这些入口仅用于拆分和组织代码，不表示可切换的行为状态。
@@ -1762,7 +1819,9 @@ function creationSkill(
  */
 function creationStatus(): ClientStartApi<'creation_status', 'en', 'beyond'>
 /**
- * Register a creation-status client graph. / 注册造物状态客户端节点图。
+ * Defines a creation status graph, the behavior a complex creation runs while in one autonomous state; a creation status decision graph switches to it.
+ *
+ * 定义一个造物状态节点图：复杂造物处于某个自主逻辑状态时执行的行为，由造物状态决策节点图切换到这个状态时使用。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * GSTS Note: `start1`…`start10` map to the editor's ordered-exclusive output pins 1…10 and
  * execute in pin order. They only split and organize code; they do not represent switchable
@@ -1826,7 +1885,7 @@ function creationStatus(
 }
 
 /**
- * Register a creation-status-decision client graph with the default options.
+ * Defines a creation status decision graph, which decides by condition or priority which autonomous state a complex creation switches to; set in the complex creation’s specialization settings. Uses the default options.
  *
  * GSTS Note: `start1`…`start10` map to the editor's ordered-exclusive output pins 1…10 and
  * execute in pin order. They only split and organize code; they do not represent switchable
@@ -1846,7 +1905,7 @@ function creationStatus(
  * in order, the following statement is not executed unconditionally and runs only if the
  * preceding action fails.
  *
- * 使用默认配置注册造物状态决策客户端节点图。
+ * 定义一个造物状态决策节点图：按条件或优先级决定复杂造物切换到哪个自主逻辑状态；配置在复杂造物的特化配置里。使用默认配置。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * GSTS 注: `start1`…`start10` 分别对应编辑器【按顺序唯一执行】的 1…10 号执行引脚，
  * 并按引脚顺序执行。这些入口仅用于拆分和组织代码，不表示可切换的行为状态。
@@ -1881,7 +1940,9 @@ function creationStatus(
  */
 function creationStatusDecision(): ClientStartApi<'creation_status_decision', 'en', 'beyond'>
 /**
- * Register a creation-status-decision client graph. / 注册造物状态决策客户端节点图。
+ * Defines a creation status decision graph, which decides by condition or priority which autonomous state a complex creation switches to; set in the complex creation’s specialization settings.
+ *
+ * 定义一个造物状态决策节点图：按条件或优先级决定复杂造物切换到哪个自主逻辑状态；配置在复杂造物的特化配置里。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * GSTS Note: `start1`…`start10` map to the editor's ordered-exclusive output pins 1…10 and
  * execute in pin order. They only split and organize code; they do not represent switchable
@@ -1952,10 +2013,16 @@ function creationStatusDecision(
     : createClientGraphApi('creation_status_decision', options)
 }
 
-/** Register a bool-filter client graph with the default options. / 使用默认配置注册布尔过滤器客户端节点图。 */
+/**
+ * Defines a boolean filter graph, a rule run locally that returns yes or no; the feature referencing it applies only on yes (for example, a hit detection component checking whether a target is valid). Uses the default options.
+ *
+ * 定义一个布尔过滤器节点图：在玩家本地执行的判定规则，返回是或否；为是时引用它的功能才生效（例如命中检测组件判断目标是否合法）。使用默认配置。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function boolFilter(): ClientBoolFilterApi<'en', 'beyond'>
 /**
- * Register a bool-filter client graph. / 注册布尔过滤器客户端节点图。
+ * Defines a boolean filter graph, a rule run locally that returns yes or no; the feature referencing it applies only on yes (for example, a hit detection component checking whether a target is valid).
+ *
+ * 定义一个布尔过滤器节点图：在玩家本地执行的判定规则，返回是或否；为是时引用它的功能才生效（例如命中检测组件判断目标是否合法）。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * @param options Client filter graph options. / 客户端过滤器节点图配置。
  * @param options.id Target NodeGraph ID; defaults to `1082130433`. / 目标节点图 ID；默认 `1082130433`。
@@ -1976,10 +2043,16 @@ function boolFilter(
     : createClientGraphApi('bool_filter', options)
 }
 
-/** Register an int-filter client graph with the default options. / 使用默认配置注册整数过滤器客户端节点图。 */
+/**
+ * Defines an integer filter graph, run locally and returning an integer; the feature referencing it applies when the result is in its configured integer list (for example, a tab component). Uses the default options.
+ *
+ * 定义一个整数过滤器节点图：在玩家本地执行，返回一个整数；结果在引用它的功能所配置的整数列表里时，该功能才生效（例如选项卡组件）。使用默认配置。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+ */
 function intFilter(): ClientIntFilterApi<'en', 'beyond'>
 /**
- * Register an int-filter client graph. / 注册整数过滤器客户端节点图。
+ * Defines an integer filter graph, run locally and returning an integer; the feature referencing it applies when the result is in its configured integer list (for example, a tab component).
+ *
+ * 定义一个整数过滤器节点图：在玩家本地执行，返回一个整数；结果在引用它的功能所配置的整数列表里时，该功能才生效（例如选项卡组件）。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
  *
  * @param options Client filter graph options. / 客户端过滤器节点图配置。
  * @param options.id Target NodeGraph ID; defaults to `1082130433`. / 目标节点图 ID；默认 `1082130433`。
@@ -2001,14 +2074,59 @@ function intFilter(
 }
 
 export const g = {
+  /**
+   * Defines a client control script, compiled to Lua and attached to a client control in the editor.
+   *
+   * 定义一个客户端控件脚本：编译成 Lua，在编辑器里挂到客户端控件上，控件激活且可见时运行。官方说明：[客户端控件和客户端脚本](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhbgxf0nynww)
+   */
   clientControlScript,
+  /**
+   * Defines a server node graph (entity graph by default; `type` selects unit status, class or item).
+   *
+   * 定义一个服务器节点图（默认实体节点图，用 `type` 改成单位状态、职业或道具节点图）。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+   */
   server,
+  /**
+   * Defines a character skill graph, used as a node graph event on the animation timeline of a custom character skill and run locally for the player; Beyond mode only.
+   *
+   * 定义一个角色技能节点图：在角色自定义技能的动画编辑时间轴上作为节点图事件使用，在玩家本地运行；仅超限模式。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+   */
   characterSkill,
+  /**
+   * Defines a character control skill graph, for special character skills usable only while controlling; configured like a character skill but without skill animation, run locally; Beyond mode only.
+   *
+   * 定义一个角色操控技能节点图：用于只在操控状态下可用的特殊角色技能，配置方式与角色技能类似，但释放期间没有技能动画，在玩家本地运行；仅超限模式。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+   */
   characterControlSkill,
+  /**
+   * Defines a creation skill graph, used as a node graph event on the animation timeline of a custom creation skill and run locally; available in Beyond and Classic modes.
+   *
+   * 定义一个造物技能节点图：在造物自定义技能的动画编辑时间轴上作为节点图事件使用，在玩家本地运行；超限和经典模式都可用。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+   */
   creationSkill,
+  /**
+   * Defines a creation status graph, the behavior a complex creation runs while in one autonomous state; a creation status decision graph switches to it.
+   *
+   * 定义一个造物状态节点图：复杂造物处于某个自主逻辑状态时执行的行为，由造物状态决策节点图切换到这个状态时使用。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+   */
   creationStatus,
+  /**
+   * Defines a creation status decision graph, which decides by condition or priority which autonomous state a complex creation switches to; set in the complex creation’s specialization settings.
+   *
+   * 定义一个造物状态决策节点图：按条件或优先级决定复杂造物切换到哪个自主逻辑状态；配置在复杂造物的特化配置里。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+   */
   creationStatusDecision,
+  /**
+   * Defines a boolean filter graph, a rule run locally that returns yes or no; the feature referencing it applies only on yes (for example, a hit detection component checking whether a target is valid).
+   *
+   * 定义一个布尔过滤器节点图：在玩家本地执行的判定规则，返回是或否；为是时引用它的功能才生效（例如命中检测组件判断目标是否合法）。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+   */
   boolFilter,
+  /**
+   * Defines an integer filter graph, run locally and returning an integer; the feature referencing it applies when the result is in its configured integer list (for example, a tab component).
+   *
+   * 定义一个整数过滤器节点图：在玩家本地执行，返回一个整数；结果在引用它的功能所配置的整数列表里时，该功能才生效（例如选项卡组件）。官方说明：[节点图](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhjwjrr5n73i)
+   */
   intFilter
 }
 
