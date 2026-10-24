@@ -197,13 +197,30 @@ export type GstsInjectConfig = {
 }
 
 export type GstsConfig = {
-  /** 客户端 Lua 的编译选项。 */
+  /**
+   * [ZH] 客户端 Lua 的编译选项。
+   *
+   * [EN] Compile options for client Lua.
+   */
   lua?: {
-    /** 动态 require 可能加载、但没有被 import 的文件；路径和 glob 相对 compileRoot。普通 import 不需要填写。 */
+    /**
+     * [ZH] 动态 require 可能加载、但没有被 import 的文件；路径和 glob 相对 compileRoot。普通 import 不需要填写。
+     *
+     * [EN] Files that a dynamic require may load but nothing imports; paths and globs are relative to
+     * compileRoot. Ordinary imports need no entry here.
+     */
     include?: string[]
-    /** 编译时额外检查完整 TS 类型。默认关闭；编辑器仍正常提示类型错误。 */
+    /**
+     * [ZH] 编译时额外检查完整 TS 类型。默认关闭；编辑器仍正常提示类型错误。
+     *
+     * [EN] Also run the full TS type check while compiling. Off by default; the editor still reports type errors.
+     */
     typeCheck?: boolean
-    /** 输出本地 .lua.map，供 gsts lua locate 定位；默认开启，不复制到游戏目录。 */
+    /**
+     * [ZH] 输出本地 .lua.map，供 gsts lua locate 定位；默认开启，不复制到游戏目录。
+     *
+     * [EN] Write local .lua.map files for gsts lua locate. On by default; they are never copied to the game directory.
+     */
     sourceMap?: boolean
   }
   /**
