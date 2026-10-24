@@ -263,7 +263,7 @@ lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stag
 })
 ```
 
-lua.onVariable 在变量每次被设置时触发，设成相同的值也会触发，只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.game.GetGlobalCustomVariableValue` 读取；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
+lua.onVariable 在变量每次被设置时触发：设成相同的值也会触发，也不受服务器“设置自定义变量”节点“是否触发事件”的影响（该选项只管服务器的“自定义变量变化时”事件）。只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.game.GetGlobalCustomVariableValue` 读取；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
 
 ### 信号边界检查
 
