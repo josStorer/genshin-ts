@@ -28,6 +28,10 @@ export default g.clientControlScript(lua=>{
  const unavailable=queueMicrotask; new Boolean(0); Math.cosh(1);
  lua./*env*/;
  lua.game./*game*/;
+ lua.Color./*color*/;
+ lua.helper./*helper*/;
+ console./*console*/;
+ lua.math./*math*/;
  if(lua.helper.isControl(self,'ClientUITextBoxControl')) {self./*control*/;}
  return { /*hooks*/ onUpdate(dt){dt./*delta*/;} }
 })`
@@ -78,6 +82,45 @@ for (const name of ['setTimeout', 'setInterval', 'clearTimeout', 'clearInterval'
 const require = createRequire(import.meta.url)
 const plugin = require('../../configs/ts-plugin/index.cjs')({ typescript: ts })
 const proxy = plugin.create({ languageService: service })
+// lua. 补全：官方 API 和 gsts 工具排在 Lua 标准库前面，标准库标注来源；lua.Color 不带函数自身的成员。
+const completions = (marker) =>
+  proxy.getCompletionsAtPosition(file, source.indexOf(`/*${marker}*/`), {}).entries
+const sorted = completions('env').sort((a, b) => a.sortText.localeCompare(b.sortText))
+const firstStandard = sorted.findIndex((x) => x.name === 'print')
+for (const name of ['self', 'script', 'game', 'Enum', 'Color', 'helper', 'onSignal'])
+  assert(sorted.findIndex((x) => x.name === name) < firstStandard, name)
+assert.equal(
+  sorted.find((x) => x.name === 'print').labelDetails?.description,
+  'Lua standard library'
+)
+assert.equal(sorted.find((x) => x.name === 'script').labelDetails?.description, undefined)
+const colors = completions('color').map((x) => x.name)
+assert(colors.includes('FromRGB') && !colors.includes('apply') && !colors.includes('prototype'))
+// 用户最常接触的成员，补全时都要有说明
+const documented = (marker, name) =>
+  service.getCompletionEntryDetails(
+    file,
+    source.indexOf(`/*${marker}*/`),
+    name,
+    {},
+    undefined,
+    undefined,
+    undefined
+  )?.documentation?.length > 0
+for (const [marker, name] of [
+  ['env', 'script'],
+  ['env', 'game'],
+  ['env', 'Enum'],
+  ['env', 'Color'],
+  ['env', 'print'],
+  ['env', 'tostring'],
+  ['helper', 'findControl'],
+  ['helper', 'listenKey'],
+  ['helper', 'readParams'],
+  ['console', 'log'],
+  ['math', 'fmod']
+])
+  assert(documented(marker, name), `${marker}: ${name} has no doc`)
 assert.ok(
   proxy.getSemanticDiagnostics(file).some((d) => d.code === 97001),
   'Lua diagnostics must also reach tsserver'
@@ -101,4 +144,6 @@ for (const start of [source.indexOf('!n') + 1, source.indexOf('n ||')])
     'truthiness error must reach the editor at the tested operand'
   )
 service.dispose()
-console.log('Lua language service: globals, hooks, dt and narrowed controls: PASS')
+console.log(
+  'Lua language service: globals, hooks, dt, narrowed controls, lua. completion order and member docs: PASS'
+)

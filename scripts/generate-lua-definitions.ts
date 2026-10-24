@@ -40,15 +40,13 @@ for (const line of fs
     if (!interfaces.has(owner)) interfaces.set(owner, new Map())
     for (const field of cells[0].split(',')) {
       const name = field.trim()
-      interfaces
-        .get(owner)!
-        .set(name, {
-          kind: 'field',
-          name,
-          type: cells[1],
-          readonly: cells[2] === '只读',
-          doc: cells[3]
-        })
+      interfaces.get(owner)!.set(name, {
+        kind: 'field',
+        name,
+        type: cells[1],
+        readonly: cells[2] === '只读',
+        doc: cells[3]
+      })
     }
   } else if (cells[0].includes('(') && cells.length >= 3) {
     const m = /^(?:(\w+)[.:])?(\w+)\((.*)\)$/.exec(cells[0])
@@ -211,8 +209,41 @@ const lines = [
   'export type TweenProperties = Partial<Record<TweenField, number | ColorValue>>'
 ]
 for (const name of enums.keys()) lines.push(`export type ${name} = EnumItem<"${name}">`)
+// 官方文档只给枚举名，没有中文标题；这里补一句用途，补全 lua.Enum. 时能看到。
+const enumDocs: Record<string, string> = {
+  EaseType: '补间动画的缓动曲线，例如 Tween:SetEase(lua.Enum.EaseType.OutQuad)。',
+  CustomVariableEntityType:
+    '自定义变量属于谁：关卡、玩家自身或角色自身；读取和监听自定义变量时使用。',
+  Device: '玩家正在使用的输入设备：键鼠、移动端触屏、手柄等。',
+  StageMode: '关卡模式：超限模式或经典模式。',
+  LanguageType: '游戏语言，例如 game.GetLanguageType() === lua.Enum.LanguageType.LanguageChs。',
+  ParamType: '服务器信号的参数类型，ServerSignal:AddParam 使用。',
+  CursorEventType: '光标事件：按下、抬起、进入或离开检测区域等，AddCursorEventListener 使用。',
+  ScrollDirection: '滚动方向：水平或垂直。',
+  ScrollLayoutConstraint: '列表的排布方式：自动换行，或固定行数、列数。',
+  ScrollAlignType: '滚动到某一项后的对齐位置，ScrollToItemAt 使用。',
+  ControllerNavigationDir: '手柄导航的方向。',
+  ControllerNavigationEventType: '手柄导航事件：确认、取消、获得或失去聚焦、摇杆方向等。',
+  ControllerNavigationMode: '手柄导航方式：不导航、导航到最近的控件或指定控件。',
+  TextHorizontalAlignment: '文本的水平对齐。',
+  TextVerticalAlignment: '文本的垂直对齐。',
+  ImageType: '图片的显示方式：基础或拉伸。',
+  ImageSource: '图片来源：静态引用、道具、装备、技能等，SetImage 使用。',
+  ImageFillType: '图片的填充方式：不填充、水平、垂直或环绕；配合 fillAmount 表示进度。',
+  ImageFillHorizontalType: '水平填充从哪一侧开始。',
+  ImageFillVerticalType: '垂直填充从哪一侧开始。',
+  ImageFillRadial90Type: '90 度环绕填充从哪个角开始。',
+  ImageFillRadialType: '180 度和 360 度环绕填充从哪一侧开始。',
+  ImageMaskSoftEdgeMode: '遮罩边缘羽化按比例还是按像素设置。',
+  UIAnimationLayer: '界面动画显示在所有控件之上还是之下。',
+  KeyboardKeyCode: '键鼠按键。',
+  ControllerKeyCode: '手柄按键。',
+  KeyEventType:
+    '按键事件：某个键鼠或手柄按键的按下、抬起，lua.helper.listenKey 和 AddKeyEventListener 使用。'
+}
 lines.push('export interface HostEnums {')
 for (const [name, members] of enums) {
+  if (enumDocs[name]) lines.push(`/** ${enumDocs[name]} */`)
   lines.push(`readonly ${name}: {`)
   for (const [member, doc] of members) {
     lines.push(`/** ${doc.replaceAll('*/', '* /')} */`, `readonly ${member}: ${name}`)

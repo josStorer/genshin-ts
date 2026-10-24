@@ -50,6 +50,7 @@ export type KeyboardKeyCode = EnumItem<'KeyboardKeyCode'>
 export type ControllerKeyCode = EnumItem<'ControllerKeyCode'>
 export type KeyEventType = EnumItem<'KeyEventType'>
 export interface HostEnums {
+  /** 补间动画的缓动曲线，例如 Tween:SetEase(lua.Enum.EaseType.OutQuad)。 */
   readonly EaseType: {
     /** 线性 */
     readonly Linear: EaseType
@@ -114,6 +115,7 @@ export interface HostEnums {
     /** 弹跳缓入缓出 */
     readonly InOutBounce: EaseType
   }
+  /** 自定义变量属于谁：关卡、玩家自身或角色自身；读取和监听自定义变量时使用。 */
   readonly CustomVariableEntityType: {
     /** 关卡 */
     readonly Level: CustomVariableEntityType
@@ -122,6 +124,7 @@ export interface HostEnums {
     /** 角色自身 */
     readonly AvatarSelf: CustomVariableEntityType
   }
+  /** 玩家正在使用的输入设备：键鼠、移动端触屏、手柄等。 */
   readonly Device: {
     /** 键鼠 */
     readonly KeyboardAndMouse: Device
@@ -132,12 +135,14 @@ export interface HostEnums {
     /** 移动端手柄 */
     readonly MobileController: Device
   }
+  /** 关卡模式：超限模式或经典模式。 */
   readonly StageMode: {
     /** 超限模式 */
     readonly Beyond: StageMode
     /** 经典模式 */
     readonly Classic: StageMode
   }
+  /** 游戏语言，例如 game.GetLanguageType() === lua.Enum.LanguageType.LanguageChs。 */
   readonly LanguageType: {
     /** 未指定 */
     readonly LanguageNone: LanguageType
@@ -172,6 +177,7 @@ export interface HostEnums {
     /** 意大利语 */
     readonly LanguageIta: LanguageType
   }
+  /** 服务器信号的参数类型，ServerSignal:AddParam 使用。 */
   readonly ParamType: {
     /** 实体 */
     readonly Entity: ParamType
@@ -210,6 +216,7 @@ export interface HostEnums {
     /** 元件 ID 列表 */
     readonly PrefabIdList: ParamType
   }
+  /** 光标事件：按下、抬起、进入或离开检测区域等，AddCursorEventListener 使用。 */
   readonly CursorEventType: {
     /** 光标按下 */
     readonly CursorDown: CursorEventType
@@ -228,18 +235,21 @@ export interface HostEnums {
     /** 完成点击 */
     readonly CursorClick: CursorEventType
   }
+  /** 滚动方向：水平或垂直。 */
   readonly ScrollDirection: {
     /** 水平滚动 */
     readonly Horizontal: ScrollDirection
     /** 垂直滚动 */
     readonly Vertical: ScrollDirection
   }
+  /** 列表的排布方式：自动换行，或固定行数、列数。 */
   readonly ScrollLayoutConstraint: {
     /** 自动换行布局 */
     readonly AutoWrap: ScrollLayoutConstraint
     /** 固定行数或列数布局 */
     readonly Fixed: ScrollLayoutConstraint
   }
+  /** 滚动到某一项后的对齐位置，ScrollToItemAt 使用。 */
   readonly ScrollAlignType: {
     /** 底部对齐 */
     readonly Bottom: ScrollAlignType
@@ -248,6 +258,7 @@ export interface HostEnums {
     /** 顶部对齐 */
     readonly Top: ScrollAlignType
   }
+  /** 手柄导航的方向。 */
   readonly ControllerNavigationDir: {
     /** 向上 */
     readonly Up: ControllerNavigationDir
@@ -258,6 +269,7 @@ export interface HostEnums {
     /** 向右 */
     readonly Right: ControllerNavigationDir
   }
+  /** 手柄导航事件：确认、取消、获得或失去聚焦、摇杆方向等。 */
   readonly ControllerNavigationEventType: {
     /** 确认 */
     readonly Confirm: ControllerNavigationEventType
@@ -284,6 +296,7 @@ export interface HostEnums {
     /** 左摇杆向左 */
     readonly LeftStickLeft: ControllerNavigationEventType
   }
+  /** 手柄导航方式：不导航、导航到最近的控件或指定控件。 */
   readonly ControllerNavigationMode: {
     /** 无导航 */
     readonly None: ControllerNavigationMode
@@ -292,6 +305,7 @@ export interface HostEnums {
     /** 导航至指定控件 */
     readonly Specified: ControllerNavigationMode
   }
+  /** 文本的水平对齐。 */
   readonly TextHorizontalAlignment: {
     /** 左对齐 */
     readonly Left: TextHorizontalAlignment
@@ -300,6 +314,7 @@ export interface HostEnums {
     /** 右对齐 */
     readonly Right: TextHorizontalAlignment
   }
+  /** 文本的垂直对齐。 */
   readonly TextVerticalAlignment: {
     /** 顶部对齐 */
     readonly Top: TextVerticalAlignment
@@ -308,12 +323,14 @@ export interface HostEnums {
     /** 底部对齐 */
     readonly Bottom: TextVerticalAlignment
   }
+  /** 图片的显示方式：基础或拉伸。 */
   readonly ImageType: {
     /** 基础 */
     readonly Basic: ImageType
     /** 拉伸 */
     readonly Stretch: ImageType
   }
+  /** 图片来源：静态引用、道具、装备、技能等，SetImage 使用。 */
   readonly ImageSource: {
     /** 静态引用 */
     readonly StaticReference: ImageSource
@@ -332,6 +349,7 @@ export interface HostEnums {
     /** 元件 */
     readonly Prefab: ImageSource
   }
+  /** 图片的填充方式：不填充、水平、垂直或环绕；配合 fillAmount 表示进度。 */
   readonly ImageFillType: {
     /** 不使用填充 */
     readonly Unused: ImageFillType
@@ -346,18 +364,21 @@ export interface HostEnums {
     /** 360度环绕 */
     readonly Radial360: ImageFillType
   }
+  /** 水平填充从哪一侧开始。 */
   readonly ImageFillHorizontalType: {
     /** 从左侧开始 */
     readonly Left: ImageFillHorizontalType
     /** 从右侧开始 */
     readonly Right: ImageFillHorizontalType
   }
+  /** 垂直填充从哪一侧开始。 */
   readonly ImageFillVerticalType: {
     /** 从底部开始 */
     readonly Bottom: ImageFillVerticalType
     /** 从顶部开始 */
     readonly Top: ImageFillVerticalType
   }
+  /** 90 度环绕填充从哪个角开始。 */
   readonly ImageFillRadial90Type: {
     /** 左下 */
     readonly BottomLeft: ImageFillRadial90Type
@@ -368,6 +389,7 @@ export interface HostEnums {
     /** 右下 */
     readonly BottomRight: ImageFillRadial90Type
   }
+  /** 180 度和 360 度环绕填充从哪一侧开始。 */
   readonly ImageFillRadialType: {
     /** 底部 */
     readonly Bottom: ImageFillRadialType
@@ -378,18 +400,21 @@ export interface HostEnums {
     /** 右侧 */
     readonly Right: ImageFillRadialType
   }
+  /** 遮罩边缘羽化按比例还是按像素设置。 */
   readonly ImageMaskSoftEdgeMode: {
     /** 按比例设置边缘羽化 */
     readonly Percentage: ImageMaskSoftEdgeMode
     /** 按像素设置边缘羽化 */
     readonly Pixel: ImageMaskSoftEdgeMode
   }
+  /** 界面动画显示在所有控件之上还是之下。 */
   readonly UIAnimationLayer: {
     /** 所有控件之上 */
     readonly AboveAllControls: UIAnimationLayer
     /** 所有控件之下 */
     readonly BelowAllControls: UIAnimationLayer
   }
+  /** 键鼠按键。 */
   readonly KeyboardKeyCode: {
     /** 奇匠按键1 */
     readonly CraftspersonKey1: KeyboardKeyCode
@@ -510,6 +535,7 @@ export interface HostEnums {
     /** 无 */
     readonly None: KeyboardKeyCode
   }
+  /** 手柄按键。 */
   readonly ControllerKeyCode: {
     /** 奇匠按键1 */
     readonly CraftspersonKey1: ControllerKeyCode
@@ -562,6 +588,7 @@ export interface HostEnums {
     /** 无 */
     readonly None: ControllerKeyCode
   }
+  /** 按键事件：某个键鼠或手柄按键的按下、抬起，lua.helper.listenKey 和 AddKeyEventListener 使用。 */
   readonly KeyEventType: {
     /** 键鼠：奇匠按键1（按下） */
     readonly KeyboardCraftspersonKey1Down: KeyEventType

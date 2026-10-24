@@ -6,14 +6,12 @@ import type {
   HostGame,
   Script
 } from './lua_host.js'
-import type { readParams } from './lua_params.js'
+import type { LuaParam, LuaParamValues } from './lua_params.js'
 import type { LuaMulti, LuaMultiReturn, LuaTimerHandle } from './lua_primitives.js'
 import type { LuaOnSignal } from './lua_signals.js'
 import type { LuaStandardGlobals } from './lua_standard.js'
 
 export type * from './lua_standard.js'
-
-export { readParams } from './lua_params.js'
 
 export type * from './lua_host.js'
 export type { LuaMultiReturn, LuaTimerHandle } from './lua_primitives.js'
@@ -35,14 +33,29 @@ export interface ClientScriptHooks {
   /** 脚本销毁，释放自己创建的资源。 */
   onDestroy?(this: void): void
 }
+/**
+ * 脚本回调参数 lua：这个脚本的运行环境，编译后就是 Lua 的 _ENV，lua.xxx 直接对应 Lua 全局 xxx。
+ * 常用的是官方 API（script、game、Enum、Color）和 gsts 工具（helper、onSignal）；
+ * 其余是 Lua 标准库（print、math、string 等），和原生 Lua 代码互相调用时才需要，平时用 TS 自带的写法即可。
+ */
 export interface ClientGlobals extends LuaStandardGlobals {
-  /** 当前挂载控件；等价于 script.object。 */
+  /** 当前脚本挂载的客户端控件，等价于 lua.script.object；回调里也可以直接写 self。 */
   readonly self: ClientUIBaseControl
+  /**
+   * 当前脚本（官方 Script）：EnableUpdate 开关逐帧更新，GetParam 读取脚本变量，
+   * object 是挂载的控件；Invoke 和信号、变量监听等官方接口也在这里。
+   */
   readonly script: Script
+  /**
+   * 官方全局对象 game：查找、创建、销毁客户端控件，Tween 补间动画，ServerSignal 构造服务器信号，
+   * 读取关卡变量、语言、画布大小、光标位置等。
+   */
   readonly game: HostGame
+  /** 官方枚举，例如 lua.Enum.KeyEventType.KeyboardJumpKeyDown、lua.Enum.EaseType.OutQuad。 */
   readonly Enum: HostEnums
+  /** 创建颜色：lua.Color(r, g, b, a?)，各分量 0–255，a 省略时不透明；也有 FromRGB、ToRGBA 等。 */
   readonly Color: HostColor
-  /** 常用工具，与 genshin-ts/runtime/lua 的导出相同。 */
+  /** gsts 常用工具：查找控件、按键监听、定时器、读脚本变量、数值插值等，和 genshin-ts/runtime/lua 的同名导出相同。 */
   readonly helper: ClientHelpers
   /** 接收服务器发来的信号，回调里用 evt.params.参数名 读取参数。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。 */
   readonly onSignal: LuaOnSignal
@@ -92,6 +105,12 @@ export declare function scriptHandle<D extends ClientScriptDefinition>(
   this: void,
   script: Script
 ): TypedScript<D>
+/** 读取编辑器脚本变量并检查类型。编辑器里没有这个变量时用 default；变量建了但留空，字符串会读到空串，不会用 default。控件请用 findControl/requireControl 按名称路径查找。 */
+export declare function readParams<const S extends Record<string, LuaParam>>(
+  this: void,
+  script: Script,
+  schema: S
+): LuaParamValues<S>
 /** 让函数一次返回多个 Lua 值（Lua 的多返回值），用于和原生 Lua 互相调用，以及 methods 里的公开方法。 */
 export declare const multi: LuaMulti
 /** 将数值限制在 min 到 max 之间。 */
@@ -148,17 +167,19 @@ export declare function setInterval<A extends unknown[]>(
   clock: 'real' | 'level',
   ...args: A
 ): LuaTimerHandle
-export interface ClientHelpers {
-  setTimeout: typeof setTimeout
-  setInterval: typeof setInterval
-  multi: LuaMulti
-  scriptHandle: typeof scriptHandle
-  readParams: typeof readParams
-  clamp: typeof clamp
-  lerp: typeof lerp
-  moveTowards: typeof moveTowards
-  isControl: typeof isControl
-  findControl: typeof findControl
-  requireControl: typeof requireControl
-  listenKey: typeof listenKey
-}
+/** lua.helper 上的工具，就是本模块的同名导出；取自模块本身，补全时能看到每个函数的说明。 */
+export type ClientHelpers = Pick<
+  typeof import('./lua.js'),
+  | 'setTimeout'
+  | 'setInterval'
+  | 'multi'
+  | 'scriptHandle'
+  | 'readParams'
+  | 'clamp'
+  | 'lerp'
+  | 'moveTowards'
+  | 'isControl'
+  | 'findControl'
+  | 'requireControl'
+  | 'listenKey'
+>

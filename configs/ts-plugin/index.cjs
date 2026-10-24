@@ -205,6 +205,19 @@ function init(modules) {
       return filtered.concat(getSharedModuleDiagnostics(sourceFile, diagnosticContext))
     }
 
+    // Lua 工程里整理 lua. 的补全顺序；节点图工程不受影响。
+    proxy.getCompletionsAtPosition = (fileName, position, options, formatting) => {
+      const info = languageService.getCompletionsAtPosition(fileName, position, options, formatting)
+      const program = languageService.getProgram()
+      if (!info || !program) return info
+      if (!program.getCompilerOptions().types?.includes('genshin-ts/runtime/lua_globals'))
+        return info
+      const sourceFile = program.getSourceFile(fileName)
+      if (!sourceFile) return info
+      const { arrangeLuaCompletions } = require('../../dist/src/compiler/lua/editor.cjs')
+      return arrangeLuaCompletions(info, sourceFile, position, program)
+    }
+
     return proxy
   }
 

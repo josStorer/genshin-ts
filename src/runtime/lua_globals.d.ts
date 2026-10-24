@@ -31,12 +31,19 @@ declare global {
     signal: LuaSignalDefinition<N, P>,
     ...values: LuaSignalValues<P>
   ): void
+  /** 写日志：在编辑器日志里勾选"客户端脚本"后可见。多个值之间用制表符分隔；普通表显示为 `<table>`。 */
   const console: {
+    /** 普通日志（官方 print）。 */
     log(this: void, ...values: unknown[]): void
+    /** 同 console.log。 */
     info(this: void, ...values: unknown[]): void
+    /** 普通日志，开头带 `[warn]`。 */
     warn(this: void, ...values: unknown[]): void
+    /** 错误级别日志（官方 printerr），不会中断执行；要中断请用 throw。 */
     error(this: void, ...values: unknown[]): void
+    /** condition 为 false 时写一条错误日志，不会中断执行。 */
     assert(this: void, condition: boolean, ...values: unknown[]): void
+    /** 写日志并附上当前调用栈。 */
     trace(this: void, ...values: unknown[]): void
   }
 }

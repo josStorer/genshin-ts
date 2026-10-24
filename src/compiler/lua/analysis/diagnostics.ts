@@ -11,6 +11,7 @@ import { standardLibraryDiagnostic } from './standard_library.js'
 import { diagnostic, entryCall, nodeGraphCalls } from './syntax.js'
 
 export { getSharedModuleDiagnostics, resolveSharedProject } from './shared_modules.js'
+export { arrangeLuaCompletions } from './completions.js'
 
 const ruleByMessage = {
   lua_importGraphEntry: 'lua-no-graph-entry',
