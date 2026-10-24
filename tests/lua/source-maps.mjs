@@ -77,8 +77,23 @@ const gameError = [
   "\tlualib_bundle:682: in function '__TS__StringIncludes'",
   `\tmain:${line}: in function 'OnStart'`
 ].join('\n')
+// 宿主自己的报错开头是 "main: 6: in function <main:3>: …"；<main:3> 是函数定义处，不算出错位置。
+const hostError = `main: ${line}: in function <main:3>: boom`
+// 日志条目标题随界面语言变化，按时间戳切分；标题里的时间不能当成位置。
 const logFile = path.join(root, 'game log.txt')
-fs.writeFileSync(logFile, ['日志_2026/10/24_12:04:30', gameError, '', gameError].join('\n'))
+fs.writeFileSync(
+  logFile,
+  [
+    '报错脚本日志 日志_2026/10/24_12:04:30_玩家_测试',
+    gameError,
+    '',
+    'Standard Script Logs log_2026/10/24_12:43:10_player_test',
+    'board: refresh\t1',
+    '',
+    'Error Script Logs log_2026/10/24_12:43:11_player_test',
+    gameError
+  ].join('\n')
+)
 const locate = (...args) =>
   spawnSync(
     process.execPath,
@@ -89,7 +104,12 @@ fs.writeFileSync(
   path.join(root, 'gsts.config.ts'),
   "export default { compileRoot: '.', entries: ['.'], outDir: './dist' }\n"
 )
-for (const args of [[gameError], [logFile], [`main:${line}:`, 'in', 'function', 'OnStart']]) {
+for (const args of [
+  [gameError],
+  [logFile],
+  [hostError],
+  [`main:${line}:`, 'in', 'function', 'OnStart']
+]) {
   const result = locate(...args)
   assert.equal(result.status, 0, result.stdout + result.stderr)
   assert.equal(result.stdout.split('main.ts:6:').length, 2, result.stdout)
