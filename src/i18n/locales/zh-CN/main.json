@@ -7,7 +7,7 @@
   "lua_locateCommand": "将 Lua 报错行号定位到源码",
   "lua_locateColumn": "Lua 列号，从 1 开始",
   "lua_locateLog": "读取报错日志文件",
-  "lua_locateOutDir": "构建输出目录（包含 lua 子目录）",
+  "lua_locateOutDir": "构建输出目录（包含 lua 子目录）；不填时用 gsts.config.ts 的 outDir",
   "lua_locateInput": "请提供 file.lua:行号，或 --log 日志文件；行列号从 1 开始。",
   "lua_mapMissing": "找不到 {{arg0}} 的 sourcemap。请确认没有把 lua.sourceMap 设为 false，然后重新构建。",
   "lua_mapInvalid": "Lua 映射格式不正确：{{arg0}}。",

@@ -12,10 +12,10 @@ When a script fails in game, the log reports a line in the compiled Lua file. Bu
 ```sh
 gsts --noinject --lang en                           # build
 gsts lua locate dist/lua/lua/hud.lua:42             # translate one location
-gsts lua locate --log game-error.txt --outDir dist  # parse a whole log
+gsts lua locate --log game-error.txt                # parse a whole log
 ```
 
-This assumes compileRoot is `src` and the entry is `src/lua/hud.ts`. A direct location is a local file path. When parsing a log, a location such as `lua/hud.lua:42` is looked up under the `lua` subdirectory of `--outDir`.
+This assumes compileRoot is `src` and the entry is `src/lua/hud.ts`. A path that exists locally is used as is; a log location such as `lua/hud.lua:42` is looked up under the `lua` subdirectory of the output directory. The output directory defaults to `outDir` in `gsts.config.ts` in the current directory; pass `--outDir` when running elsewhere.
 
 `locate` recognizes the two forms below. The exact format of real game logs is still being confirmed; if it does not recognize a location in your log, pass the "file:line" to it by hand.
 
@@ -72,7 +72,7 @@ Use `throw` or `lua.error` to stop execution.
 Official guidance: if a script problem such as an infinite loop makes level loading slow or hang, the normal log may not get a chance to report it. Check `ErrorLog.txt` in the client script directory (it is only created in this situation).
 
 ```sh
-gsts lua locate --log path/to/client-scripts/ErrorLog.txt --outDir dist
+gsts lua locate --log path/to/client-scripts/ErrorLog.txt
 ```
 
 ## Telling whether two objects are the same

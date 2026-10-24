@@ -17,7 +17,9 @@ export async function runLuaLocate(
   for (const match of matches) {
     let file = match[1].trim()
     const line = Number(match[2])
-    if (!path.isAbsolute(file) && options.outDir) file = path.resolve(options.outDir, 'lua', file)
+    // 本地存在的路径原样使用；游戏日志里的 lua/hud.lua 这类路径到输出目录的 lua 子目录下找
+    if (!path.isAbsolute(file) && options.outDir && !fs.existsSync(file))
+      file = path.resolve(options.outDir, 'lua', file)
     const position = await locateLua(file, line, column)
     console.log(
       position

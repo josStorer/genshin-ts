@@ -7,7 +7,7 @@
   "lua_locateCommand": "Map a Lua error line back to source",
   "lua_locateColumn": "Lua column, starting at 1",
   "lua_locateLog": "Read an error log file",
-  "lua_locateOutDir": "Build output directory containing the lua subdirectory",
+  "lua_locateOutDir": "Build output directory containing the lua subdirectory; defaults to outDir in gsts.config.ts",
   "lua_locateInput": "Provide file.lua:line or --log file; line and column numbers start at 1.",
   "lua_mapMissing": "No source map found for {{arg0}}. Make sure lua.sourceMap is not set to false, then rebuild.",
   "lua_mapInvalid": "Invalid Lua source map: {{arg0}}.",

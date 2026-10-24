@@ -2416,8 +2416,10 @@ async function main() {
         location: string | undefined,
         options: { column?: string; log?: string; outDir?: string }
       ) => {
+        const loaded = options.outDir ? null : await loadConfigOrNull(program.opts<GlobalOptions>())
+        const outDir = options.outDir ?? (loaded && path.resolve(loaded.cfgDir, loaded.cfg.outDir))
         const { runLuaLocate } = await import('./lua_locate.js')
-        await runLuaLocate(location, options)
+        await runLuaLocate(location, { ...options, outDir: outDir || undefined })
       }
     )
 

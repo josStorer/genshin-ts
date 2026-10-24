@@ -12,10 +12,10 @@
 ```sh
 gsts --noinject --lang zh                           # 构建
 gsts lua locate dist/lua/lua/hud.lua:42             # 换算一个位置
-gsts lua locate --log game-error.txt --outDir dist  # 解析整份日志
+gsts lua locate --log game-error.txt                # 解析整份日志
 ```
 
-上面假设 compileRoot 是 `src`，入口是 `src/lua/hud.ts`。直接换算时写本地文件路径；解析日志时，日志里的 `lua/hud.lua:42` 会在 `--outDir` 指定目录的 `lua` 子目录下查找。
+上面假设 compileRoot 是 `src`，入口是 `src/lua/hud.ts`。本地存在的路径原样使用；日志里的 `lua/hud.lua:42` 这类路径会到输出目录的 `lua` 子目录下查找。输出目录默认读当前目录 `gsts.config.ts` 的 `outDir`，在别处运行时用 `--outDir` 指定。
 
 `locate` 能识别下面两种写法。游戏日志的实际格式还在确认中；如果它认不出你日志里的位置，把"文件:行号"手动传给它即可。
 
@@ -72,7 +72,7 @@ try {
 官方说明：如果脚本里有死循环等问题导致进关卡变慢或卡死，普通日志可能来不及报告，这时看客户端脚本目录下的 `ErrorLog.txt`（只在这种情况下才会生成）。
 
 ```sh
-gsts lua locate --log path/to/client-scripts/ErrorLog.txt --outDir dist
+gsts lua locate --log path/to/client-scripts/ErrorLog.txt
 ```
 
 ## 判断是不是同一个对象
