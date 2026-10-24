@@ -81,6 +81,7 @@ function validators.float(value)
     return type(value) == "number" and value == value and math.abs(value) ~= math.huge
 end
 -- Integers preserve the shared contract's exact, safe numeric range.
+-- Confirmed in game (2026-10-24): AddInt sends 2.0 as 2, but silently sends 1.5 as 0.
 function validators.integer(value)
     return validators.float(value) and value % 1 == 0 and math.abs(value) <= 9007199254740991
 end

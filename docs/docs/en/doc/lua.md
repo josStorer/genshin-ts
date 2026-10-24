@@ -261,7 +261,7 @@ Lua sends and receives share validation; server graphs do not perform these clie
 send(Signal.Input, 20, true) // Contract selects AddFloat and AddBool
 ```
 
-Each valid send creates a new host signal. Arguments evaluate once in source order. Checks cover counts, types, finite numbers, safe integer range, list shape and vec3. Lua TS int is a number; Lua 5.3 distinguishes integer/float, and 4 / 2 is floating-point 2.0. Whether the official AddInt accepts an integral float such as 2.0 has not been confirmed in game yet, so pass real integers to int parameters, e.g. `Math.floor(total / 2)` (math.floor returns an integer in Lua 5.3). Entities/GUIDs remain official raw values (LuaEntityValue/LuaGuidValue), not graph entity wrappers.
+Each valid send creates a new host signal. Arguments evaluate once in source order. Checks cover counts, types, finite numbers, safe integer range, list shape and vec3. Lua TS int is a number; Lua 5.3 distinguishes integer/float, and 4 / 2 is floating-point 2.0. **Confirmed in game, 2026-10-24:** when the official AddInt gets 2.0, the server receives 2; when it gets 1.5, there is no error, but the server receives 0. So send accepts integral floats such as 2.0 and rejects values with a fractional part; round explicitly when needed, e.g. `Math.floor(total / 2)`. Entities/GUIDs remain official raw values (LuaEntityValue/LuaGuidValue), not graph entity wrappers.
 
 Each parameter takes a few comparisons; list checks scale with length. Measured with wasmoon (Lua 5.4) on a PC, a 100,000-int list takes about 20 ms; the usual tens to hundreds of elements are negligible.
 

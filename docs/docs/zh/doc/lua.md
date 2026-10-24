@@ -261,7 +261,7 @@ Lua 发送前、接收后共用一套检查，服务器节点图不参与这些�
 send(Signal.Input, 20, true) // 按契约写 AddFloat、AddBool
 ```
 
-每次有效发送新建官方信号对象，参数按顺序只求值一次。检查数量、类型、有限数值、整数安全范围、列表形状和 vec3。int 在 Lua TS 中是 number；Lua 5.3 区分整数/浮点，`4 / 2` 为浮点 2.0。官方 AddInt 是否接受 2.0 这样的浮点整数还没有实机确认，int 参数请传整数，例如用 `Math.floor(total / 2)`（Lua 5.3 的 math.floor 返回整数）。实体/GUID 是官方原值（LuaEntityValue/LuaGuidValue），不是节点图实体包装。
+每次有效发送新建官方信号对象，参数按顺序只求值一次。检查数量、类型、有限数值、整数安全范围、列表形状和 vec3。int 在 Lua TS 中是 number；Lua 5.3 区分整数/浮点，`4 / 2` 为浮点 2.0。**2026-10-24 实机确认：**官方 AddInt 收到 2.0 时，服务器得到 2；收到 1.5 时不报错，服务器却得到 0。所以 send 放行 2.0 这样的浮点整数，拒绝带小数的值；需要取整时自己写，例如 `Math.floor(total / 2)`。实体/GUID 是官方原值（LuaEntityValue/LuaGuidValue），不是节点图实体包装。
 
 每个参数只需几次比较；列表的检查耗时与长度成正比。在 PC 上用 wasmoon（Lua 5.4）模拟测量，10 万个 int 元素约 20 ms；常见的几十到几百个元素可以忽略。
 
