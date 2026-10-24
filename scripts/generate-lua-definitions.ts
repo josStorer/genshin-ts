@@ -76,6 +76,55 @@ for (const line of fs
       .set(m[2], { kind: 'method', name: m[2], args: m[3], result: cells[1], doc: cells[2] })
   }
 }
+// 官方英文版（mhn6th9wsw7e）只提供英文说明；类型、只读等仍以中文版为准。
+// 英文页有些方法签名缺了括号（如 script:InvokefuncName: string），按中文版已知的成员名取最长前缀匹配。
+const english = new Map<string, string>()
+let englishOwner = ''
+for (const line of fs
+  .readFileSync(path.join(root, 'resources/lua/official-api.en.txt'), 'utf8')
+  .split(/\r?\n/)) {
+  const heading = /^\d+\.([A-Za-z][A-Za-z0-9]*)$/.exec(line)
+  if (heading) englishOwner = heading[1]
+  if (!line.startsWith('|')) continue
+  const cells = line
+    .replace(/^\|+|\|+$/g, '')
+    .split('|')
+    .map((c) => c.trim())
+  if (cells[0].startsWith('Enum.') && cells.length >= 3) {
+    english.set(`${cells[0]}.${cells[1]}`, cells[2])
+    continue
+  }
+  const owned = interfaces.get(englishOwner)
+  if (cells.length >= 4 && owned && /^[\w, ]+$/.test(cells[0])) {
+    for (const field of cells[0].split(',').map((f) => f.trim()))
+      if (owned.get(field)?.kind === 'field') english.set(`${englishOwner}.${field}`, cells[3])
+    continue
+  }
+  const m = /^(?:(\w+)[.:])?(\w+)/.exec(cells[0])
+  if (!m || cells.length < 3) continue
+  const scope = m[1] === 'script' ? 'Script' : m[1] || englishOwner
+  // 去掉成员名后剩下的部分应是中文版里的参数开头：GetScriptscriptMappingId 是 GetScript，不是 GetScripts
+  const name = [...(interfaces.get(scope)?.values() ?? [])]
+    .filter((member) => {
+      const rest = m[2].slice(member.name.length)
+      return (
+        m[2].startsWith(member.name) &&
+        (!rest || (member.kind === 'method' && member.args.replace(/\s/g, '').startsWith(rest)))
+      )
+    })
+    .sort((a, b) => b.name.length - a.name.length)[0]?.name
+  if (name) english.set(`${scope}.${name}`, cells[2])
+}
+// 官方英文版漏掉的行
+english.set('ClientUIBaseControl.id', 'Runtime ID')
+const comment = (text: string) => text.replaceAll('*/', '* /')
+/** 英文在前、中文在后，与节点图定义的注释一致；没有英文时只写中文。 */
+function bilingual(en: string | undefined, zh: string) {
+  return en
+    ? ['/**', ` * ${comment(en)}`, ' *', ` * ${comment(zh)}`, ' */']
+    : [`/** ${comment(zh)} */`]
+}
+
 // 官方表格省略的参数类型在这里补全；未知项会列入 coverage，不能静默丢弃。
 const paramTypes: Record<string, string> = {
   eventType: 'CursorEventType',
@@ -209,44 +258,96 @@ const lines = [
   'export type TweenProperties = Partial<Record<TweenField, number | ColorValue>>'
 ]
 for (const name of enums.keys()) lines.push(`export type ${name} = EnumItem<"${name}">`)
-// 官方文档只给枚举名，没有中文标题；这里补一句用途，补全 lua.Enum. 时能看到。
-const enumDocs: Record<string, string> = {
-  EaseType: '补间动画的缓动曲线，例如 Tween:SetEase(lua.Enum.EaseType.OutQuad)。',
-  CustomVariableEntityType:
-    '自定义变量属于谁：关卡、玩家自身或角色自身；读取和监听自定义变量时使用。',
-  Device: '玩家正在使用的输入设备：键鼠、移动端触屏、手柄等。',
-  StageMode: '关卡模式：超限模式或经典模式。',
-  LanguageType: '游戏语言，例如 game.GetLanguageType() === lua.Enum.LanguageType.LanguageChs。',
-  ParamType: '服务器信号的参数类型，ServerSignal:AddParam 使用。',
-  CursorEventType: '光标事件：按下、抬起、进入或离开检测区域等，AddCursorEventListener 使用。',
-  ScrollDirection: '滚动方向：水平或垂直。',
-  ScrollLayoutConstraint: '列表的排布方式：自动换行，或固定行数、列数。',
-  ScrollAlignType: '滚动到某一项后的对齐位置，ScrollToItemAt 使用。',
-  ControllerNavigationDir: '手柄导航的方向。',
-  ControllerNavigationEventType: '手柄导航事件：确认、取消、获得或失去聚焦、摇杆方向等。',
-  ControllerNavigationMode: '手柄导航方式：不导航、导航到最近的控件或指定控件。',
-  TextHorizontalAlignment: '文本的水平对齐。',
-  TextVerticalAlignment: '文本的垂直对齐。',
-  ImageType: '图片的显示方式：基础或拉伸。',
-  ImageSource: '图片来源：静态引用、道具、装备、技能等，SetImage 使用。',
-  ImageFillType: '图片的填充方式：不填充、水平、垂直或环绕；配合 fillAmount 表示进度。',
-  ImageFillHorizontalType: '水平填充从哪一侧开始。',
-  ImageFillVerticalType: '垂直填充从哪一侧开始。',
-  ImageFillRadial90Type: '90 度环绕填充从哪个角开始。',
-  ImageFillRadialType: '180 度和 360 度环绕填充从哪一侧开始。',
-  ImageMaskSoftEdgeMode: '遮罩边缘羽化按比例还是按像素设置。',
-  UIAnimationLayer: '界面动画显示在所有控件之上还是之下。',
-  KeyboardKeyCode: '键鼠按键。',
-  ControllerKeyCode: '手柄按键。',
-  KeyEventType:
+// 官方文档只给枚举名，没有标题；这里补一句用途，补全 lua.Enum. 时能看到。
+const enumDocs: Record<string, [en: string, zh: string]> = {
+  EaseType: [
+    'Easing curve of a tween, e.g. Tween:SetEase(lua.Enum.EaseType.OutQuad).',
+    '补间动画的缓动曲线，例如 Tween:SetEase(lua.Enum.EaseType.OutQuad)。'
+  ],
+  CustomVariableEntityType: [
+    'Who a custom variable belongs to: the level, the player or the character; used when reading and watching custom variables.',
+    '自定义变量属于谁：关卡、玩家自身或角色自身；读取和监听自定义变量时使用。'
+  ],
+  Device: [
+    'The input device the player is using: keyboard and mouse, touch screen, controller and so on.',
+    '玩家正在使用的输入设备：键鼠、移动端触屏、手柄等。'
+  ],
+  StageMode: ['Level mode: Beyond or Classic.', '关卡模式：超限模式或经典模式。'],
+  LanguageType: [
+    'Game language, e.g. game.GetLanguageType() === lua.Enum.LanguageType.LanguageChs.',
+    '游戏语言，例如 game.GetLanguageType() === lua.Enum.LanguageType.LanguageChs。'
+  ],
+  ParamType: [
+    'Parameter type of a server signal, used by ServerSignal:AddParam.',
+    '服务器信号的参数类型，ServerSignal:AddParam 使用。'
+  ],
+  CursorEventType: [
+    'Cursor events such as down, up, entering or leaving the detection area; used by AddCursorEventListener.',
+    '光标事件：按下、抬起、进入或离开检测区域等，AddCursorEventListener 使用。'
+  ],
+  ScrollDirection: ['Scroll direction: horizontal or vertical.', '滚动方向：水平或垂直。'],
+  ScrollLayoutConstraint: [
+    'How a list lays out items: wrap automatically, or a fixed number of rows or columns.',
+    '列表的排布方式：自动换行，或固定行数、列数。'
+  ],
+  ScrollAlignType: [
+    'Where an item is aligned after scrolling to it; used by ScrollToItemAt.',
+    '滚动到某一项后的对齐位置，ScrollToItemAt 使用。'
+  ],
+  ControllerNavigationDir: ['Direction of controller navigation.', '手柄导航的方向。'],
+  ControllerNavigationEventType: [
+    'Controller navigation events: confirm, cancel, gaining or losing focus, stick directions and so on.',
+    '手柄导航事件：确认、取消、获得或失去聚焦、摇杆方向等。'
+  ],
+  ControllerNavigationMode: [
+    'Controller navigation mode: none, to the nearest control, or to a specified control.',
+    '手柄导航方式：不导航、导航到最近的控件或指定控件。'
+  ],
+  TextHorizontalAlignment: ['Horizontal text alignment.', '文本的水平对齐。'],
+  TextVerticalAlignment: ['Vertical text alignment.', '文本的垂直对齐。'],
+  ImageType: ['How an image is displayed: basic or stretched.', '图片的显示方式：基础或拉伸。'],
+  ImageSource: [
+    'Where an image comes from: a static reference, an item, equipment, a skill and so on; used by SetImage.',
+    '图片来源：静态引用、道具、装备、技能等，SetImage 使用。'
+  ],
+  ImageFillType: [
+    'How an image is filled: not at all, horizontally, vertically or radially; used with fillAmount to show progress.',
+    '图片的填充方式：不填充、水平、垂直或环绕；配合 fillAmount 表示进度。'
+  ],
+  ImageFillHorizontalType: ['Which side a horizontal fill starts from.', '水平填充从哪一侧开始。'],
+  ImageFillVerticalType: ['Which side a vertical fill starts from.', '垂直填充从哪一侧开始。'],
+  ImageFillRadial90Type: [
+    'Which corner a 90-degree radial fill starts from.',
+    '90 度环绕填充从哪个角开始。'
+  ],
+  ImageFillRadialType: [
+    'Which side a 180- or 360-degree radial fill starts from.',
+    '180 度和 360 度环绕填充从哪一侧开始。'
+  ],
+  ImageMaskSoftEdgeMode: [
+    'Whether the mask soft edge is set as a percentage or in pixels.',
+    '遮罩边缘羽化按比例还是按像素设置。'
+  ],
+  UIAnimationLayer: [
+    'Whether a UI animation is shown above or below all controls.',
+    '界面动画显示在所有控件之上还是之下。'
+  ],
+  KeyboardKeyCode: ['Keyboard and mouse keys.', '键鼠按键。'],
+  ControllerKeyCode: ['Controller buttons.', '手柄按键。'],
+  KeyEventType: [
+    'Key events: a keyboard, mouse or controller key going down or up; used by lua.helper.listenKey and AddKeyEventListener.',
     '按键事件：某个键鼠或手柄按键的按下、抬起，lua.helper.listenKey 和 AddKeyEventListener 使用。'
+  ]
 }
 lines.push('export interface HostEnums {')
 for (const [name, members] of enums) {
-  if (enumDocs[name]) lines.push(`/** ${enumDocs[name]} */`)
+  if (enumDocs[name]) lines.push(...bilingual(...enumDocs[name]))
   lines.push(`readonly ${name}: {`)
   for (const [member, doc] of members) {
-    lines.push(`/** ${doc.replaceAll('*/', '* /')} */`, `readonly ${member}: ${name}`)
+    lines.push(
+      ...bilingual(english.get(`Enum.${name}.${member}`), doc),
+      `readonly ${member}: ${name}`
+    )
     rows.push(`Enum.${name}.${member}`)
   }
   lines.push('}')
@@ -263,13 +364,28 @@ for (const [scope, members] of interfaces) {
   lines.push(`export interface ${exportName}${parent} {`)
   for (const [name, item] of members) {
     rows.push(`${scope}.${name}`)
-    let doc = item.doc.replaceAll('*/', '* /')
+    const doc = item.doc
+    let en = english.get(`${scope}.${name}`),
+      zh = doc
+    // gsts 补充的实测说明，两种语言各写一份
+    // 官方说明常常没有句末标点，补上再接 gsts 的说明
+    const note = (enNote: string, zhNote: string) => {
+      if (en) en = en.replace(/[^.!?]$/, '$&.') + ' ' + enNote
+      zh = zh.replace(/[^。！？.]$/, '$&。') + zhNote
+    }
     if (scope === 'game' && name === 'GetClientUIControl')
-      doc += ' 参数是运行时 id，不是编辑器的控件索引。'
-    if (name === 'prefabIndex') doc += ' 用于模板实例化，不是运行时 id。'
+      note(
+        'The argument is a runtime id, not the control index from the editor.',
+        '参数是运行时 id，不是编辑器的控件索引。'
+      )
+    if (name === 'prefabIndex')
+      note('Used to instantiate templates; not a runtime id.', '用于模板实例化，不是运行时 id。')
     if (scope === 'Script' && name === 'GetParam')
-      doc += ' 返回值需检查类型；实测未观察到控件索引自动转对象，不作隐式转换。'
-    lines.push(`/** ${doc} */`)
+      note(
+        'Check the type of the result; in game, control indexes were not turned into objects, so nothing is converted implicitly.',
+        '返回值需检查类型；实测未观察到控件索引自动转对象，不作隐式转换。'
+      )
+    lines.push(...bilingual(en, zh))
     if (item.kind === 'field') {
       let t = typ(item.type)
       if (scope === 'Script' && name === 'object') t = 'ClientUIBaseControl'
@@ -347,5 +463,14 @@ for (const [rel, data] of [
       throw new Error(`${rel} needs regeneration`)
   } else fs.writeFileSync(file, data)
 }
-console.log('Host API members:', coverage.members.length, 'unresolved:', coverage.unresolved.length)
+const withoutEnglish = coverage.members.filter((row) => !english.has(row))
+console.log(
+  'Host API members:',
+  coverage.members.length,
+  'unresolved:',
+  coverage.unresolved.length,
+  'without English docs:',
+  withoutEnglish.length
+)
+if (process.argv.includes('--verbose')) console.log(withoutEnglish.join('\n'))
 if (unresolved.length) throw new Error(coverage.unresolved.join('\n'))

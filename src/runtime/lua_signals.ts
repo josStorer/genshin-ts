@@ -10,11 +10,23 @@ export type LuaSignalDefinition<
   N extends string = string,
   P extends LuaSignalParams = LuaSignalParams
 > = SignalDefinition<N, P>
-/** 官方传递的实体标识值，不是节点图的实体对象。 */
+/**
+ * Entity identifier value passed by the host; not a node-graph entity object.
+ *
+ * 官方传递的实体标识值，不是节点图的实体对象。
+ */
 export type LuaEntityValue = number & { readonly __gstsHostEntity?: unique symbol }
-/** 官方传递的 GUID 数值；不转换成节点图的值封装。 */
+/**
+ * GUID number passed by the host; not converted to a node-graph value wrapper.
+ *
+ * 官方传递的 GUID 数值；不转换成节点图的值封装。
+ */
 export type LuaGuidValue = number & { readonly __gstsHostGuid?: unique symbol }
-/** 每个 Lua 种类的 TS 值。新增或删除种类时，下方的完整性约束会报错。 */
+/**
+ * TS value of each Lua kind. Adding or removing a kind makes the completeness check below fail.
+ *
+ * 每个 Lua 种类的 TS 值。新增或删除种类时，下方的完整性约束会报错。
+ */
 export interface LuaKindValues {
   int: number
   float: number
@@ -44,7 +56,11 @@ export type LuaSignalEvent<S extends LuaSignalDefinition> = {
   readonly name: S['name']
   readonly params: { [P in S['params'][number] as P[0]]: Value<P[1]> }
 }
-/** 根级声明监听；Start/Enable 注册，Disable 暂停，Destroy 释放。取消函数可重复调用。 */
+/**
+ * Declare listeners at the root: registered on Start/Enable, paused on Disable, released on Destroy. The cancel function is safe to call more than once.
+ *
+ * 根级声明监听；Start/Enable 注册，Disable 暂停，Destroy 释放。取消函数可重复调用。
+ */
 export type LuaOnSignal = <S extends LuaSignalDefinition>(
   this: void,
   signal: S,
