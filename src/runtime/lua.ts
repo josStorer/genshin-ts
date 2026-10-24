@@ -132,11 +132,10 @@ export interface ClientGlobals extends LuaStandardGlobals {
   /**
    * Watches a custom variable and calls back with its new value each time it is set, even when the value is
    * unchanged and whatever the server's Trigger Event option is; compare with the previous value yourself if
-   * only real changes matter. valueType ('number',
-   * 'string' or 'boolean') is checked every time; a mismatch is logged and skipped. Write it at the callback
-   * root: it pauses while the script is disabled, resumes when enabled and is released on destroy. Returns a
-   * cancel function that is safe to call more than once. It does not fire at start; read the current value
-   * with lua.game.GetGlobalCustomVariableValue when you need it.
+   * only real changes matter. valueType ('number', 'string' or 'boolean') is checked every time; a mismatch
+   * is logged and skipped. Write it at the callback root: it pauses while the script is disabled, resumes when
+   * enabled and is released on destroy. Returns a cancel function that is safe to call more than once. It
+   * does not fire at start; read the current value with lua.game.GetGlobalCustomVariableValue when you need it.
    *
    * 监听一个自定义变量，每次被设置时把新值传给回调；设成相同的值也会触发，与服务器设置时的“是否触发事件”无关。
    * 只关心真正变化时，请自己和上次的值比较。
