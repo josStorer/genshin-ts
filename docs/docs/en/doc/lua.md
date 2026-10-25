@@ -492,6 +492,8 @@ const remainder = lua.math.fmod(-5, 3) // -2
 
 The template's `export { default } from 'genshin-ts/configs/eslint/full.mjs'` detects lua_globals in the owning tsconfig, independent of folder names, and excludes graph-only rules from Lua files. Custom configs may use gsts.configs.lua.rules with the typescript-eslint parser/project setup.
 
+In the editor, Lua errors come from the ESLint extension or the TypeScript plugin with the same content, so nothing is missed without the plugin; the plugin adds conveniences such as `lua.` completion order and the "Lua standard library" label, see [TypeScript Plugin](./quick-start/ts-plugin.md).
+
 strict-boolean-expressions is an error; null, undefined fields, array holes/deletions have separate guidance; bigint is unsupported. Default builds check unresolved names/members in affected files without full typecheck. Editors still check ordinary TS types. Enable lua: { typeCheck: true } for complete build-time type checking.
 
 `gsts lua check` only checks and writes nothing: a full TS type check plus every Lua rule, including the checks on native `.d.ts` files (plain `tsc` does not know these rules). It first looks for a Lua tsconfig in the project and exits at once when there is none, so the template chains it after `typecheck` at almost no cost for graph-only projects.

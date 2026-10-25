@@ -1,6 +1,7 @@
 # Install
 
 ## Recommended
+
 ```bash
 npm create genshin-ts@latest
 ```
@@ -11,10 +12,12 @@ genshin-ts includes a TypeScript plugin for more advanced TypeScript support enh
 `https://gsts.moe/doc/quick-start/install.html#typescript-plugin`
 
 ## Requirements
+
 - Node.js (LTS recommended)
 - Windows (map injection paths)
 
 ## TypeScript Plugin
+
 - genshin-ts includes a TypeScript Language Service plugin for enhanced TypeScript support.
 - Even if the plugin is not enabled, it does not affect project build, runtime behavior, or overall type-system experience, but enabling it is recommended for more advanced TypeScript support enhancements.
 - Most mainstream editors support it, and JetBrains IDEA is usually zero-config.
@@ -25,6 +28,8 @@ genshin-ts includes a TypeScript plugin for more advanced TypeScript support enh
   - `"typescript.tsdk": "node_modules/typescript/lib"`
   - `"typescript.enablePromptUseWorkspaceTsdk": true`
   - Then run: `TypeScript: Select TypeScript Version` -> `Use Workspace Version`
+- What the plugin improves, what happens without it, how to pick up an upgrade and how to troubleshoot: see [TypeScript Plugin](./ts-plugin.md).
 
 ## Next
+
 Read the template README first.

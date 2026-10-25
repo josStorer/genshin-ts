@@ -1,6 +1,7 @@
 # 安装与准备
 
 ## 推荐方式
+
 ```bash
 npm create genshin-ts@latest
 ```
@@ -11,10 +12,12 @@ genshin-ts 内置 TypeScript 插件以获得更高级的TypeScript支持增强�
 `https://gsts.moe/zh/doc/quick-start/install.html#typescript-plugin`
 
 ## 依赖环境
+
 - Node.js (建议 LTS)
 - Windows (涉及地图注入路径)
 
 ## TypeScript Plugin
+
 - genshin-ts 项目内置 TypeScript Language Service 插件，用于提供更高级的 TypeScript 支持增强。
 - 即使不启用插件，也不影响项目编译、运行和类型系统体验, 但推荐启用, 以获得更高级的TypeScript支持增强。
 - 多数主流编辑器支持该插件，IDEA 系列通常开箱即用。
@@ -25,6 +28,8 @@ genshin-ts 内置 TypeScript 插件以获得更高级的TypeScript支持增强�
   - `"typescript.tsdk": "node_modules/typescript/lib"`
   - `"typescript.enablePromptUseWorkspaceTsdk": true`
   - 然后执行：`TypeScript: Select TypeScript Version` -> `Use Workspace Version`
+- 插件具体改善了什么、不开插件时的情况、升级后如何生效和排错，见 [TypeScript 插件](./ts-plugin.md)。
 
 ## 下一步
+
 进入模板后请先阅读 `README_ZH.md` 了解使用边界。

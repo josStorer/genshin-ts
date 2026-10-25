@@ -1,1 +1,1 @@
-["install", "template", "inject", "dev"]
+["install", "ts-plugin", "template", "inject", "dev"]
