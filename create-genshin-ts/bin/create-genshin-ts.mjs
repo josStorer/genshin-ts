@@ -99,10 +99,6 @@ const run = async () => {
     const config = JSON.parse(await fs.readFile(configPath, 'utf8'))
     config.exclude = [...(config.exclude ?? []), 'src/lua']
     await fs.writeFile(configPath, JSON.stringify(config, null, 2) + '\n')
-    const packagePath = path.join(targetDir, 'package.json')
-    const manifest = JSON.parse(await fs.readFile(packagePath, 'utf8'))
-    manifest.scripts['typecheck:lua'] = 'tsc -p src/lua/tsconfig.json --noEmit'
-    await fs.writeFile(packagePath, JSON.stringify(manifest, null, 2) + '\n')
     const guide = await fs.readFile(path.join(targetDir, 'docs/LUA.md'), 'utf8')
     for (const name of ['AGENTS.md', 'CLAUDE.md'])
       await fs.appendFile(path.join(targetDir, name), '\n\n' + guide)

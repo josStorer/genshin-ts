@@ -8,10 +8,10 @@
 - Send with `send(Signal.X, ...)`, receive with `lua.onSignal(Signal.X, evt => evt.params.x)`. Listeners pause on Disable and release on Destroy. Timers use milliseconds and default to level time; Disable/Destroy clears them.
 - No browser/Node APIs, promises or bigint in Lua. Use explicit boolean conditions and `undefined`; prefer dense arrays. Follow editor and build diagnostics rather than suppressing unsupported operations.
 
-Run `npm run typecheck`, `npm run typecheck:lua`, `npm run lint`, then `npm run build` or `npm run dev`.
+Run `npm run typecheck` (it also runs `gsts lua check`: full types and every Lua rule, including native `.d.ts`), `npm run lint`, then `npm run build` or `npm run dev`.
 
 Build output: `dist/lua/src/lua/hud.lua`. In the editor, add the output folder and mount **`src/lua/hud`** on a client control container. With map injection configured, files are copied into `external_lua_file`; **mounting remains manual**. Edit TS, wait for dev output, then run the game again in the editor.
 
-中文操作：根目录类型检查用于节点图，`typecheck:lua` 用于 Lua。编辑器批量导入生成的 Lua 文件夹，给客户端容器挂载 `src/lua/hud`。配置地图后“注入”只复制文件，不自动挂载。源码保存编译后，在编辑器重新运行游戏即可。Lua 的 `self` 是当前控件，不是节点图实体。
+中文操作：`npm run typecheck` 同时检查节点图和 Lua（Lua 部分由 `gsts lua check` 完成，含原生 `.d.ts` 检查）。编辑器批量导入生成的 Lua 文件夹，给客户端容器挂载 `src/lua/hud`。配置地图后“注入”只复制文件，不自动挂载。源码保存编译后，在编辑器重新运行游戏即可。Lua 的 `self` 是当前控件，不是节点图实体。
 
 Reference / 完整说明：[English](https://gsts.moe/en/doc/lua) · [中文](https://gsts.moe/zh/doc/lua)

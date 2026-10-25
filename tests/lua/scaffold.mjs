@@ -42,7 +42,7 @@ for (const name of ['AGENTS.md', 'CLAUDE.md'])
   assert(fs.readFileSync(path.join(project, name), 'utf8').includes('lua.onSignal'))
 for (const [command, args] of [
   ['node_modules/typescript/bin/tsc', ['-p', 'tsconfig.json', '--noEmit']],
-  ['node_modules/typescript/bin/tsc', ['-p', 'src/lua/tsconfig.json', '--noEmit']],
+  ['bin/gsts.mjs', ['lua', 'check', '--lang', 'zh']],
   ['bin/gsts.mjs', ['--noinject', '--lang', 'zh']],
   ['node_modules/eslint/bin/eslint.js', ['src']]
 ]) {
@@ -55,6 +55,18 @@ for (const [command, args] of [
   assert.equal(result.status, 0, result.stdout + result.stderr)
 }
 assert(fs.existsSync(path.join(project, 'dist/lua/src/lua/hud.lua')))
+// 模板的 typecheck 顺带检查 Lua；纯节点图项目里 gsts lua check 直接结束、不输出
+assert.match(
+  JSON.parse(fs.readFileSync(path.join(project, 'package.json'), 'utf8')).scripts.typecheck,
+  /tsc -p tsconfig.json --noEmit && gsts lua check/
+)
+const plainCheck = spawnSync(process.execPath, [path.join(repo, 'bin/gsts.mjs'), 'lua', 'check'], {
+  cwd: path.join(root, 'plain'),
+  encoding: 'utf8',
+  timeout: 30000
+})
+assert.equal(plainCheck.status, 0, plainCheck.stderr)
+assert.equal(plainCheck.stdout + plainCheck.stderr, '')
 console.log(
-  'Scaffold: default template bytes unchanged; optional Lua template passes both typechecks, build, lint and force checks: PASS'
+  'Scaffold: default template bytes unchanged; optional Lua template passes typecheck, gsts lua check, build, lint and force checks; graph-only projects skip the Lua check silently: PASS'
 )

@@ -127,6 +127,41 @@ export async function buildClientLua({
   return reportClientLua(context, discovered, compiled, mountedGil)
 }
 
+/** gsts lua check：发现入口后做完整类型检查和全部 Lua 规则检查（含原生 .d.ts），不写产物、不注入。 */
+export async function checkClientLua(cfgDir: string, cfg: GstsConfig) {
+  const rootDir = path.resolve(cfgDir, cfg.compileRoot)
+  const context: ClientLuaBuildContext = {
+    cfgDir,
+    cfg,
+    noinject: true,
+    complete: true,
+    profile: false,
+    rootDir,
+    timer: createBuildTimer(false),
+    report: { active: false, compilation: '', injection: '', log: console.log }
+  }
+  const { entries, candidates, additionalFiles, sharedProjectKey } =
+    await discoverClientLua(context)
+  if (!entries.length) return { entries: 0, hasErrors: false }
+  const { compileLua, formatLuaDiagnostics } = await import('../compiler/lua/ts_to_lua_pipeline.js')
+  const { diagnostics } = compileLua({
+    sharedProjectFiles: candidates,
+    sharedProjectKey,
+    entries,
+    rootDir,
+    outDir: path.resolve(cfgDir, cfg.outDir, LUA_OUTPUT_DIRECTORY),
+    additionalFiles,
+    typeCheck: true,
+    sourceMap: false
+  })
+  const text = formatLuaDiagnostics(diagnostics)
+  if (text) console.log(text)
+  return {
+    entries: entries.length,
+    hasErrors: diagnostics.some((d) => d.category === ts.DiagnosticCategory.Error)
+  }
+}
+
 /** 发现候选及额外文件；缓存只复用确认未改动的文件。 */
 async function discoverClientLua({
   cfg,

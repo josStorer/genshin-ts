@@ -193,5 +193,9 @@
   "lua_graphHintMath": "数学函数用 Math.*，限制和插值用 lua.helper.clamp / lerp / moveTowards。",
   "lua_graphHintRandom": "随机数用 Math.random()。",
   "lua_graphHintValue": "Lua 不需要这些取值函数：整数、小数、GUID、各种 ID 都直接是 number（不区分 int 和 float）；转换用 String(x)、Boolean(x)。",
-  "lua_graphHintCollection": "数组直接写 [...]，键值数据用普通对象或 Map。"
+  "lua_graphHintCollection": "数组直接写 [...]，键值数据用普通对象或 Map。",
+  "lua_checkCommand": "检查客户端 Lua：完整类型检查和全部 Lua 规则（含原生 .d.ts），不写文件；没有 Lua 的项目直接跳过",
+  "lua_checkPassed": "[TS→Lua] 检查：通过（{{arg0}} 个入口）。",
+  "lua_checkFailed": "[TS→Lua] 检查：发现错误，详见上方。",
+  "lua_checkNoEntries": "[TS→Lua] 检查：项目里有 Lua 的 tsconfig，但没有找到 Lua 入口。"
 }

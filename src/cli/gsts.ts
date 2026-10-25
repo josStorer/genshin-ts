@@ -2403,9 +2403,16 @@ async function main() {
       await runDev(opts)
     })
 
-  program
-    .command('lua')
-    .description(t('lua_command'))
+  const lua = program.command('lua').description(t('lua_command'))
+  lua
+    .command('check')
+    .description(t('lua_checkCommand'))
+    .action(async () => {
+      // 平时由 bin/gsts.mjs 直接走轻量入口；这里供帮助信息和直接调用 gsts.js 时使用
+      const { runLuaCheck } = await import('./lua_check.js')
+      process.exitCode = await runLuaCheck(process.argv.slice(2))
+    })
+  lua
     .command('locate')
     .description(t('lua_locateCommand'))
     .argument('[input...]', t('lua_locateArgument'))

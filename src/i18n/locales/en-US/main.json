@@ -193,5 +193,9 @@
   "lua_graphHintMath": "Use Math.* for math, and lua.helper.clamp / lerp / moveTowards for limits and interpolation.",
   "lua_graphHintRandom": "Use Math.random() for random numbers.",
   "lua_graphHintValue": "Lua needs no value constructors: integers, decimals, GUIDs and IDs are all plain numbers (no int/float distinction); use String(x) and Boolean(x) for conversions.",
-  "lua_graphHintCollection": "Write arrays as [...] and key-value data as plain objects or a Map."
+  "lua_graphHintCollection": "Write arrays as [...] and key-value data as plain objects or a Map.",
+  "lua_checkCommand": "Check client Lua: full type check and every Lua rule (including native .d.ts), without writing files; projects without Lua are skipped at once",
+  "lua_checkPassed": "[TS→Lua] Check: passed ({{arg0}} entries).",
+  "lua_checkFailed": "[TS→Lua] Check: errors found, see above.",
+  "lua_checkNoEntries": "[TS→Lua] Check: the project has a Lua tsconfig but no Lua entries."
 }

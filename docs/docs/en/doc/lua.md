@@ -30,7 +30,7 @@ In `src/lua/tsconfig.json`:
 
 Exclude src/lua from the root graph tsconfig. Keep importing g from genshin-ts/runtime/core: the inherited paths mapping selects Lua declarations without loading the graph runtime. Preserve that mapping when adding aliases. The CLI reads baseUrl/paths from the nearest tsconfig of the first entry; entries should share the same mappings, and dependencies must remain inside compileRoot.
 
-The optional `npm create genshin-ts@latest my-project -- --with-lua` scaffold adds the Lua directory, config, example, typecheck:lua and AGENTS.md/CLAUDE.md guidance. The default template stays graph-only.
+The optional `npm create genshin-ts@latest my-project -- --with-lua` scaffold adds the Lua directory, config, example and AGENTS.md/CLAUDE.md guidance. The template's `npm run typecheck` also runs `gsts lua check`. The default template stays graph-only.
 
 ## Entries and where code belongs
 
@@ -482,6 +482,8 @@ const remainder = lua.math.fmod(-5, 3) // -2
 The template's `export { default } from 'genshin-ts/configs/eslint/full.mjs'` detects lua_globals in the owning tsconfig, independent of folder names, and excludes graph-only rules from Lua files. Custom configs may use gsts.configs.lua.rules with the typescript-eslint parser/project setup.
 
 strict-boolean-expressions is an error; null, undefined fields, array holes/deletions have separate guidance; bigint is unsupported. Default builds check unresolved names/members in affected files without full typecheck. Editors still check ordinary TS types. Enable lua: { typeCheck: true } for complete build-time type checking.
+
+`gsts lua check` only checks and writes nothing: a full TS type check plus every Lua rule, including the checks on native `.d.ts` files (plain `tsc` does not know these rules). It first looks for a Lua tsconfig in the project and exits at once when there is none, so the template chains it after `typecheck` at almost no cost for graph-only projects.
 
 ## Standard library and package data
 

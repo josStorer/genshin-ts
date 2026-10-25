@@ -30,7 +30,7 @@ src/
 
 根 tsconfig 排除 `src/lua`。导入 `g` 仍用 `genshin-ts/runtime/core`；继承配置中的 paths 将它解析为 Lua 声明，不加载节点图运行库。添加自己的路径别名时要保留这项映射。CLI 使用首个入口最近的 tsconfig 的 baseUrl/paths，多个入口应使用相同映射，依赖须位于 compileRoot 内。
 
-可选脚手架 `npm create genshin-ts@latest my-project -- --with-lua` 会创建 Lua 子目录、tsconfig、最小示例和 `typecheck:lua`，并补充 AGENTS.md/CLAUDE.md。默认模板仍为纯节点图。
+可选脚手架 `npm create genshin-ts@latest my-project -- --with-lua` 会创建 Lua 子目录、tsconfig 和最小示例，并补充 AGENTS.md/CLAUDE.md。模板的 `npm run typecheck` 会顺带运行 `gsts lua check`。默认模板仍为纯节点图。
 
 ## 入口与代码位置
 
@@ -482,6 +482,8 @@ const remainder = lua.math.fmod(-5, 3) // -2
 模板默认 `export { default } from 'genshin-ts/configs/eslint/full.mjs'` 按所属 tsconfig 的 lua_globals 类型启用 Lua 规则，不依赖目录名；节点图专属规则不运行在这些文件上。自定义配置可取 gsts.configs.lua.rules，配合 typescript-eslint 的 parser/project。
 
 strict-boolean-expressions 为 error；null、undefined 字段、数组空洞/删除有独立提示；bigint 不支持。默认构建仅对受影响文件检查名称/成员无法解析等错误，不做完整 typecheck。编辑器仍检查所有普通 TS 类型；需要构建完整检查可设置 `lua: { typeCheck: true }`。
+
+`gsts lua check` 只做检查、不写文件：完整 TS 类型检查加全部 Lua 规则，包括原生 `.d.ts` 的写法检查（普通 `tsc` 不认识这些规则）。它先看项目里有没有 Lua 的 tsconfig，没有就立即结束，所以模板把它接在 `typecheck` 后面，纯节点图项目几乎没有额外开销。
 
 ## 标准库与包内数据
 

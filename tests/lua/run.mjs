@@ -20,6 +20,7 @@ const suites = {
     'signals',
     'signal-names',
     'graph-hints',
+    'lua-check',
     'scope-lifecycle',
     'signal-kinds',
     'signal-validation',

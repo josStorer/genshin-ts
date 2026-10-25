@@ -352,7 +352,7 @@ g.server({ id: 1073741825 }).on('whenEntityIsCreated', (evt, f) => {
 - `npm run dev`：增量编译（配置 inject 后会自动注入）
 - `npm run maps`：列出最近编辑的地图
 - `npm run backup`：打开注入备份目录
-- `npm run typecheck`：TypeScript 类型检查
+- `npm run typecheck`：TypeScript 类型检查；项目里有客户端 Lua 时同时用 `gsts lua check` 检查 Lua，没有时直接跳过
 - `npm run lint`：ESLint
 
 补充说明：

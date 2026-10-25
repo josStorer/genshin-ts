@@ -339,7 +339,7 @@ Rules:
 - `npm run dev`: incremental compile (auto inject if configured)
 - `npm run maps`: list recent maps
 - `npm run backup`: open backup directory
-- `npm run typecheck`: TypeScript type check
+- `npm run typecheck`: TypeScript type check; also checks client Lua with `gsts lua check` when the project has it (skipped at once otherwise)
 - `npm run lint`: ESLint
 
 Notes:
