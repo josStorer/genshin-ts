@@ -231,6 +231,26 @@ send(Signal.Input, 20, true)
 // off() cancels early; repeated calls are harmless
 ```
 
+`evt.params` reads parameters by name and `evt.values` reads the same parameters in definition order; both are typed and checked:
+
+```ts
+lua.onSignal(Signal.Input, (evt) => {
+  const [speed, fire] = evt.values // speed: number, fire: boolean
+})
+```
+
+As in node graphs, you can also write just the signal name. There is no definition then: the callback gets only `evt.name` and `evt.values` (the raw values in the order the server sent them, typed as unknown, so check them before use), and parameters are not checked. Sending by name only works for signals without parameters:
+
+```ts
+lua.onSignal('GameStart', (evt) => {
+  const [round] = evt.values
+  if (typeof round === 'number') console.log('round', round)
+})
+send('Ready') // no parameters
+```
+
+A signal with parameters must be sent with its definition (`Signal.X` or `defineSignal(...)`). Node graphs tell int (bigint) from float (number) by the value, but a Lua number has no such distinction, and entities and GUIDs are numbers too, so the type to write cannot be inferred. `send('Name', value)` reports `gsts/lua-signal-argument`. Within one script, once any listener of a signal uses its definition, listeners by name also receive only payloads that pass the check.
+
 Prefer subscribing at the root. The root and onStart run once per instance, and the framework pauses/resumes subscriptions. onEnable adds a new subscription every time; discarding its cancel function produces gsts/lua-on-enable-subscription in the editor, ESLint and builds. When repeated registration is intentional, store and cancel it in onDisable:
 
 ```ts

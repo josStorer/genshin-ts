@@ -113,7 +113,7 @@
   "lua_dependencyOutsideRoot": "Lua dependencies must be inside compileRoot: {{arg0}}",
   "lua_reservedFilename": "The compiler reserves the filename {{arg0}}. Choose another name.",
   "lua_unresolvedDependency": "Cannot resolve Lua dependency {{arg0}} (from {{arg1}}).",
-  "lua_importEntry": "An entry's export default only provides a type (for scriptHandle) and has no runtime value. Write import type X from '...' and call a specific mount's methods with scriptHandle<typeof X>(s).Invoke(...); use named exports for shared functions and data.",
+  "lua_importEntry": "An entry's export default only provides a type (for findScript) and has no runtime value. Write import type X from '...' and call a mount's methods with lua.helper.findScript<typeof X>(control)?.methods.name(...); use named exports for shared functions and data.",
   "lua_nativeModuleMissing": "Typed Lua module has no matching .lua file: {{arg0}}",
   "lua_sourceInOutput": "Lua source files cannot be placed in the generated outDir/lua directory. Keep source and output separate.",
   "lua_dynamicRequire": "Dynamic require needs the possible files listed in lua.include in gsts.config.ts.",
@@ -184,5 +184,7 @@
   "lua_thrownObject": "The host converts thrown values to text, so catch receives a string and this value loses its type and fields. Throw an Error and put the details in its message instead, e.g. throw new Error(`...`).",
   "lua_enableSubscription": "This subscribes in onEnable without keeping the cancel function, so every enable adds another listener and the callback runs repeatedly. Subscribe at the callback root instead (paused on disable, resumed on enable), or keep the cancel function and call it in onDisable.",
   "lua_outputSkip": "Skipped writing {{file}}: {{reason}}",
-  "lua_variableOwnership": "Within one script, a custom variable cannot be watched by both lua.onVariable and the official RegisterCustomVariableChangedHandler; they would override or cancel each other. Use only one of them."
+  "lua_variableOwnership": "Within one script, a custom variable cannot be watched by both lua.onVariable and the official RegisterCustomVariableChangedHandler; they would override or cancel each other. Use only one of them.",
+  "lua_signalArgument": "Pass a signal definition (Signal.X or defineSignal(...)) or a signal name string.",
+  "lua_sendByName": "A signal sent by name cannot carry parameters: a Lua number cannot tell int from float, so the parameter types cannot be inferred. Pass the signal definition instead (Signal.X or defineSignal(...))."
 }

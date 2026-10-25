@@ -53,16 +53,58 @@ export type LuaSignalValues<P extends LuaSignalParams> = {
     : never
 }
 export type LuaSignalEvent<S extends LuaSignalDefinition> = {
+  /**
+   * Signal name.
+   *
+   * 信号名。
+   */
   readonly name: S['name']
+  /**
+   * Parameters by name, typed from the signal definition.
+   *
+   * 按参数名读取的参数，类型来自信号定义。
+   */
   readonly params: { [P in S['params'][number] as P[0]]: Value<P[1]> }
+  /**
+   * The same parameters in definition order, e.g. const [text, count] = evt.values.
+   *
+   * 按定义顺序排列的同一组参数，例如 const [text, count] = evt.values。
+   */
+  readonly values: Readonly<LuaSignalValues<S['params']>>
+}
+/**
+ * Event of a signal listened to by name only: there is no definition, so parameters are neither named nor checked.
+ *
+ * 只按信号名监听时收到的事件：没有信号定义，参数没有名字，也不做检查。
+ */
+export type LuaNamedSignalEvent<N extends string = string> = {
+  /**
+   * Signal name.
+   *
+   * 信号名。
+   */
+  readonly name: N
+  /**
+   * Parameter values in the order the server sent them; check each value's type before use.
+   *
+   * 按服务器发送顺序排列的参数值；使用前请自行判断类型。
+   */
+  readonly values: readonly unknown[]
 }
 /**
  * Declare listeners at the root: registered on Start/Enable, paused on Disable, released on Destroy. The cancel function is safe to call more than once.
  *
  * 根级声明监听；Start/Enable 注册，Disable 暂停，Destroy 释放。取消函数可重复调用。
  */
-export type LuaOnSignal = <S extends LuaSignalDefinition>(
-  this: void,
-  signal: S,
-  callback: (this: void, evt: LuaSignalEvent<S>) => void
-) => (this: void) => void
+export interface LuaOnSignal {
+  <S extends LuaSignalDefinition>(
+    this: void,
+    signal: S,
+    callback: (this: void, evt: LuaSignalEvent<S>) => void
+  ): (this: void) => void
+  <N extends string>(
+    this: void,
+    signalName: N,
+    callback: (this: void, evt: LuaNamedSignalEvent<N>) => void
+  ): (this: void) => void
+}

@@ -231,6 +231,26 @@ send(Signal.Input, 20, true)
 // off() 可提前取消；重复调用没有额外效果
 ```
 
+`evt.params` 按参数名读取，`evt.values` 按定义顺序读取同一组参数，两者都有类型、都经过检查：
+
+```ts
+lua.onSignal(Signal.Input, (evt) => {
+  const [speed, fire] = evt.values // speed: number, fire: boolean
+})
+```
+
+和节点图一样，也可以只写信号名。这时没有信号定义：回调里只有 `evt.name` 和 `evt.values`（按服务器发送顺序排列的原始值，类型是 unknown，使用前请自行判断），不做参数检查。按名字发送只能用于不带参数的信号：
+
+```ts
+lua.onSignal('GameStart', (evt) => {
+  const [round] = evt.values
+  if (typeof round === 'number') console.log('第', round, '回合')
+})
+send('Ready') // 不带参数
+```
+
+带参数的信号必须传信号定义（`Signal.X` 或 `defineSignal(...)`）：节点图按值区分 int（bigint）和 float（number），Lua 的数字没有这个区别，实体、GUID 也都是数字，无法推断该写入哪种类型。`send('名字', 参数)` 会报 `gsts/lua-signal-argument`；同一个脚本里，同名信号只要有一处用了信号定义，按名字的监听也只会收到检查合格的消息。
+
 推荐在根部订阅；根部和 onStart 每个实例只执行一次，框架负责暂停/恢复。onEnable 每次启用都再增加一条，丢弃返回的取消函数会收到 `gsts/lua-on-enable-subscription` 警告（编辑器、ESLint、构建一致）。确实需要每次重新订阅时，保存取消函数并在 onDisable 取消：
 
 ```ts

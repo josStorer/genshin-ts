@@ -113,7 +113,7 @@
   "lua_dependencyOutsideRoot": "Lua 依赖必须位于 compileRoot 内：{{arg0}}",
   "lua_reservedFilename": "文件名 {{arg0}} 为编译器保留，请换一个名称。",
   "lua_unresolvedDependency": "无法解析 Lua 依赖 {{arg0}}（来自 {{arg1}}）。",
-  "lua_importEntry": "入口的 export default 只提供类型（给 scriptHandle 用），运行时没有值。请写 import type X from '...'，再用 scriptHandle<typeof X>(s).Invoke(...) 调用某个挂载的方法；要共享的函数和数据请用具名导出。",
+  "lua_importEntry": "入口的 export default 只提供类型（给 findScript 用），运行时没有值。请写 import type X from '...'，再用 lua.helper.findScript<typeof X>(控件)?.methods.方法名(...) 调用某个挂载的方法；要共享的函数和数据请用具名导出。",
   "lua_nativeModuleMissing": "带类型的 Lua 模块缺少同名 .lua 文件：{{arg0}}",
   "lua_sourceInOutput": "Lua 源文件不能放在生成的 outDir/lua 目录中，请分开源码和产物。",
   "lua_dynamicRequire": "动态 require 需要在 gsts.config.ts 的 lua.include 中列出可能加载的文件。",
@@ -184,5 +184,7 @@
   "lua_thrownObject": "宿主会把抛出的值转成文字，catch 拿到的是字符串，这个值原来的类型和字段都会丢失。请抛出 Error，把需要的信息写进消息里，例如 throw new Error(`…`)。",
   "lua_enableSubscription": "在 onEnable 里订阅却没有保存取消函数：每次启用都会再加一条监听，回调会重复执行。请把订阅写在回调根部（停用时自动暂停，启用后自动恢复）；或者保存取消函数，在 onDisable 里调用。",
   "lua_outputSkip": "已跳过写入 {{file}}：{{reason}}",
-  "lua_variableOwnership": "同一个脚本里，同一个自定义变量不能既用 lua.onVariable 又用官方的 RegisterCustomVariableChangedHandler，两者会互相覆盖或取消。请只用其中一种。"
+  "lua_variableOwnership": "同一个脚本里，同一个自定义变量不能既用 lua.onVariable 又用官方的 RegisterCustomVariableChangedHandler，两者会互相覆盖或取消。请只用其中一种。",
+  "lua_signalArgument": "信号要写成信号定义（Signal.X 或 defineSignal(...)）或字符串信号名。",
+  "lua_sendByName": "按信号名发送时不能带参数：Lua 的数字分不清 int 和 float，无法推断参数类型。带参数的信号请传信号定义（Signal.X 或 defineSignal(...)）。"
 }

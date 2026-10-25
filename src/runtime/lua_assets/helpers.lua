@@ -195,6 +195,14 @@ local function signalValueError(signal, values, count)
 end
 -- Validate the entire payload before creating a host signal or writing any fields.
 function M.send(signal, ...)
+    if type(signal) == "string" then
+        -- A plain name carries no parameter kinds, and a Lua number cannot tell int from float.
+        if select('#', ...) > 0 then
+            error("Signal " .. signal .. " is sent by name, so it cannot carry parameters: pass its definition (Signal.X or defineSignal) instead", 2)
+        end
+        game.ServerSignal(signal):SendSignal()
+        return
+    end
     local values = {...}
     local message = signalValueError(signal, values, select('#', ...))
     if message then error(message, 2) end
@@ -383,24 +391,27 @@ function M.createScope(env, clock)
         syncUpdate()
     end
 
-    -- A signal name has one host registration; all listeners share its validated payload.
+    -- A signal name has one host registration; all listeners share its payload.
+    -- A plain name has no contract. Once a definition joins the group, every payload is validated against it.
     function scope.onSignal(signal, callback)
         if state == "destroyed" then error("Cannot subscribe after script destruction") end
-        local group = groups[signal.name]
+        local name, contract = signal, nil
+        if type(signal) ~= "string" then name, contract = signal.name, signal end
+        local group = groups[name]
         if not group then
-            group = {signal=signal, listeners={}, registered=false}
-            groups[signal.name] = group
+            group = {listeners={}, registered=false}
+            groups[name] = group
             -- Activation is idempotent, including when a listener is added while already active.
             function group.activate()
                 if group.registered or #group.listeners == 0 then return end
-                env.script:RegisterServerSignalHandler(signal.name, group.dispatch)
+                env.script:RegisterServerSignalHandler(name, group.dispatch)
                 group.registered = true
             end
             -- The exact name registered by this group is the only registration it removes.
             function group.deactivate()
                 if not group.registered then return end
                 group.registered = false
-                env.script:UnregisterServerSignalHandler(signal.name)
+                env.script:UnregisterServerSignalHandler(name)
             end
             -- Old cancellation handles become no-ops after destruction.
             function group.dispose()
@@ -409,28 +420,36 @@ function M.createScope(env, clock)
                 group.deactivate()
             end
             -- Validate before invoking users, and isolate failures between listeners.
-            function group.dispatch(name, values)
+            function group.dispatch(received, values)
                 if state ~= "active" then return end
-                local message = name ~= signal.name and ("Unexpected signal name: " .. tostring(name) .. " (expected " .. signal.name .. ")")
-                    or signalValueError(signal, values)
+                local defined = group.contract
+                local message = received ~= name and ("Unexpected signal name: " .. tostring(received) .. " (expected " .. name .. ")")
+                    or (defined and signalValueError(defined, values))
                 if message then report(message); return end
+                values = values or {}
                 local params = {}
-                for i, param in ipairs(signal.params) do params[param[1]] = values[i] end
+                if defined then for i, param in ipairs(defined.params) do params[param[1]] = values[i] end end
                 local snapshot = {}
                 for i, listener in ipairs(group.listeners) do snapshot[i] = listener end
                 for _, listener in ipairs(snapshot) do
-                    if listener.enabled and state == "active" then safe(listener.callback, {name=name, params=params}) end
+                    if listener.enabled and state == "active" then
+                        safe(listener.callback, {name=received, params=listener.typed and params or nil, values=values})
+                    end
                 end
             end
             subscribe(group)
-        else
-            if #group.signal.params ~= #signal.params then error("Conflicting signal contract: " .. signal.name) end
-            for i, param in ipairs(signal.params) do
-                local previous = group.signal.params[i]
-                if previous[1] ~= param[1] or previous[2] ~= param[2] then error("Conflicting signal contract: " .. signal.name) end
+        end
+        if contract then
+            local previous = group.contract
+            if not previous then group.contract = contract
+            elseif #previous.params ~= #contract.params then error("Conflicting signal contract: " .. name)
+            else
+                for i, param in ipairs(contract.params) do
+                    if previous.params[i][1] ~= param[1] or previous.params[i][2] ~= param[2] then error("Conflicting signal contract: " .. name) end
+                end
             end
         end
-        local listener = {callback=callback, enabled=true}
+        local listener = {callback=callback, enabled=true, typed=contract ~= nil}
         group.listeners[#group.listeners + 1] = listener
         if state == "active" then group.activate() end
         -- Cancelling one listener leaves the others registered; repeated cancellation is harmless.

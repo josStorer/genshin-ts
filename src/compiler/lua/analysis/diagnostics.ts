@@ -33,7 +33,9 @@ const ruleByMessage = {
   lua_bigint: 'lua-no-bigint',
   lua_caughtObject: 'lua-thrown-value',
   lua_thrownObject: 'lua-thrown-value',
-  lua_findScriptEntry: 'lua-find-script'
+  lua_findScriptEntry: 'lua-find-script',
+  lua_signalArgument: 'lua-signal-argument',
+  lua_sendByName: 'lua-signal-argument'
 } as const
 
 export const luaLintRules = [
@@ -115,6 +117,15 @@ export function getLuaDiagnostics(
   const managedVariables: (string | undefined)[] = []
   const rawVariables: { name: string | undefined; node: ts.Node }[] = []
   const onEnable = analysis.model?.hooks.get('onEnable')?.definition
+  // 信号参数只能是信号定义或字符串信号名；any 无法判断，交给运行时
+  const signalArgumentKind = (argument: ts.Expression) => {
+    const type = checker.getTypeAtLocation(argument)
+    if (type.flags & ts.TypeFlags.Any) return 'unknown'
+    const parts = type.isUnion() ? type.types : [type]
+    if (parts.every((part) => part.flags & ts.TypeFlags.StringLike)) return 'name'
+    if (parts.every((part) => part.getProperty('__gstsSignal'))) return 'definition'
+    return 'invalid'
+  }
   const subscriptionMember = (expression: ts.Expression) => {
     const seen = new Set<ts.Symbol>()
     let node = expression
@@ -215,10 +226,21 @@ export function getLuaDiagnostics(
       if ((member === 'findScript' || member === 'requireScript') && !scriptEntryOf(node, checker))
         diagnostics.push(issue(node, 'lua_findScriptEntry'))
       const argument = node.arguments[0]
+      const sending = builtins.global(node.expression) === 'send'
+      if ((member === 'onSignal' || sending) && argument) {
+        const kind = signalArgumentKind(argument)
+        if (kind === 'invalid') diagnostics.push(issue(argument, 'lua_signalArgument'))
+        // 按名字发送时没有参数类型可写：Lua 的数字分不清 int 和 float
+        if (kind === 'name' && sending && node.arguments.length > 1)
+          diagnostics.push(issue(node.arguments[1], 'lua_sendByName'))
+      }
       if (member === 'onSignal') {
-        const name = argument && checker.getTypeAtLocation(argument).getProperty('name')
-        const type = name && checker.getTypeOfSymbolAtLocation(name, argument)
-        managedSignals.push(type?.isStringLiteral() ? type.value : undefined)
+        const type = argument && checker.getTypeAtLocation(argument)
+        const property = type?.getProperty('name')
+        const name = type?.isStringLiteral()
+          ? type
+          : property && argument && checker.getTypeOfSymbolAtLocation(property, argument)
+        managedSignals.push(name?.isStringLiteral() ? name.value : undefined)
       }
       const variable = node.arguments[1]
       if (member === 'onVariable')

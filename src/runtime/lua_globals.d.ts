@@ -56,6 +56,13 @@ declare global {
     ...values: LuaSignalValues<P>
   ): void
   /**
+   * Sends a signal without parameters by name. A signal with parameters needs its definition (Signal.X or
+   * defineSignal): a Lua number cannot tell int from float, so the value types cannot be inferred.
+   *
+   * 按信号名发送不带参数的信号。带参数的信号需要传信号定义（Signal.X 或 defineSignal）：Lua 的数字分不清 int 和 float，无法推断参数类型。
+   */
+  function send(this: void, signalName: string): void
+  /**
    * Writes logs, visible after enabling "Client Script" in the editor log. Values are separated by tabs; plain tables show as `<table>`.
    *
    * 写日志：在编辑器日志里勾选"客户端脚本"后可见。多个值之间用制表符分隔；普通表显示为 `<table>`。

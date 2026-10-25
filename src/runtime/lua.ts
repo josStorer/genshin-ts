@@ -126,11 +126,19 @@ export interface ClientGlobals extends LuaStandardGlobals {
    */
   readonly helper: ClientHelpers
   /**
-   * Receives a signal from the server; read parameters with evt.params.name. Write it at the callback root: it
-   * pauses while the script is disabled, resumes when enabled and is released on destroy. Returns a cancel
-   * function that is safe to call more than once.
+   * Receives a signal from the server. With a signal definition (Signal.X), read parameters by name with
+   * evt.params.name or in order with evt.values, both typed and checked. With only a name ('Name'), there is
+   * no definition: evt.values holds the raw values in order. Write it at the callback root: it pauses while the
+   * script is disabled, resumes when enabled and is released on destroy. Returns a cancel function that is
+   * safe to call more than once.
    *
-   * 接收服务器发来的信号，回调里用 evt.params.参数名 读取参数。写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
+   * 接收服务器发来的信号。传信号定义（Signal.X）时，用 evt.params.参数名 按名字读取，或用 evt.values 按顺序读取，都有类型并经过检查；
+   * 只传信号名（'名字'）时没有定义，evt.values 是按顺序排列的原始值。
+   * 写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
+   *
+   * @example
+   * lua.onSignal(Signal.ChatEcho, (evt) => console.log(evt.params.text, evt.params.count))
+   * lua.onSignal('GameStart', (evt) => console.log(evt.name, evt.values.length))
    */
   readonly onSignal: LuaOnSignal
   /**

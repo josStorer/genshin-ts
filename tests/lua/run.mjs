@@ -18,6 +18,7 @@ const suites = {
     'sdk-paths',
     'native-declarations',
     'signals',
+    'signal-names',
     'scope-lifecycle',
     'signal-kinds',
     'signal-validation',

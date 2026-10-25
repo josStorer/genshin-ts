@@ -55,6 +55,11 @@ const cases = [
     0
   ],
   [
+    'signal-name',
+    `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>{send('Ping',1);return{}})`,
+    'lua-signal-argument'
+  ],
+  [
     'find-script',
     `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>{lua.helper.findScript(self);return{}})`,
     'lua-find-script'
