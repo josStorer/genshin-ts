@@ -88,7 +88,30 @@ const proxy = plugin.create({ languageService: service })
 // lua. 补全：官方 API 和 gsts 工具排在 Lua 标准库前面，标准库标注来源；lua.Color 不带函数自身的成员。
 const completions = (marker) =>
   proxy.getCompletionsAtPosition(file, source.indexOf(`/*${marker}*/`), {}).entries
-const sorted = completions('env').sort((a, b) => a.sortText.localeCompare(b.sortText))
+const bySortText = (entries) => entries.sort((a, b) => a.sortText.localeCompare(b.sortText))
+const sorted = bySortText(completions('env'))
+// 按常用程度：game、helper、script 在前，监听其次，Color、Enum 再后；lua.helper. 最常用的工具在前
+assert.deepEqual(
+  sorted.slice(0, 10).map((x) => x.name),
+  [
+    'game',
+    'helper',
+    'script',
+    'self',
+    'onSignal',
+    'onVariable',
+    'onKey',
+    'onCursor',
+    'Color',
+    'Enum'
+  ]
+)
+assert.deepEqual(
+  bySortText(completions('helper'))
+    .slice(0, 6)
+    .map((x) => x.name),
+  ['findControl', 'findScript', 'readParams', 'readVariable', 'setTimeout', 'setInterval']
+)
 const firstStandard = sorted.findIndex((x) => x.name === 'print')
 for (const name of [
   'self',
