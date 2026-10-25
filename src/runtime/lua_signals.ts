@@ -97,11 +97,28 @@ export type LuaNamedSignalEvent<N extends string = string> = {
  * 根级声明监听；Start/Enable 注册，Disable 暂停，Destroy 释放。取消函数可重复调用。
  */
 export interface LuaOnSignal {
+  /**
+   * Receives a signal from the server by its definition (Signal.X or defineSignal): read parameters by name with
+   * evt.params.name or in order with evt.values; both are typed and checked. Write it at the callback root: it
+   * pauses while the script is disabled, resumes when enabled and is released on destroy. Returns a cancel
+   * function that is safe to call more than once.
+   *
+   * 按信号定义（Signal.X 或 defineSignal）接收服务器信号：用 evt.params.参数名 按名字读取，或用 evt.values 按顺序读取，都有类型并经过检查。
+   * 写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
+   */
   <S extends LuaSignalDefinition>(
     this: void,
     signal: S,
     callback: (this: void, evt: LuaSignalEvent<S>) => void
   ): (this: void) => void
+  /**
+   * Receives a signal by name only, as in node graphs. There is no definition, so evt.values holds the raw values
+   * in the order the server sent them (unknown, not checked) and there is no evt.params. Lifecycle and cancel
+   * function work as with a definition.
+   *
+   * 只按信号名接收，和节点图的字符串写法一样。没有信号定义，所以 evt.values 是按服务器发送顺序排列的原始值（unknown，不做检查），也没有 evt.params。
+   * 启停管理和取消函数与传信号定义时相同。
+   */
   <N extends string>(
     this: void,
     signalName: N,

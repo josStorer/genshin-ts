@@ -18,7 +18,7 @@ fs.writeFileSync(
   config,
   JSON.stringify({ extends: 'genshin-ts/tsconfig/lua.json', include: ['*.ts'] })
 )
-const source = `import {g} from 'genshin-ts/runtime/core';
+const source = `import {g, defineSignal} from 'genshin-ts/runtime/core';
 import type {LuaTimerHandle} from 'genshin-ts/runtime/lua';
 export default g.clientControlScript(lua=>{
  const timer: LuaTimerHandle = setTimeout(() => {}, 100); clearTimeout(timer);
@@ -33,6 +33,8 @@ export default g.clientControlScript(lua=>{
  console./*console*/;
  lua.math./*math*/;
  if(lua.helper.isControl(self,'ClientUITextBoxControl')) {self./*control*/;}
+ lua.onSignal(defineSignal('Typed',[['n','int']] as const), (evt) => { const [n] = evt.values; lua.print(n + evt.params.n) });
+ lua.onSignal('Named', (evt) => { lua.print(evt.name, evt.values.length) });
  return { /*hooks*/ onUpdate(dt){dt./*delta*/;} }
 })`
 fs.writeFileSync(file, source)
@@ -155,7 +157,12 @@ for (const start of [source.indexOf('!n') + 1, source.indexOf('n ||')])
     semanticDiagnostics.some((d) => d.code === 97001 && d.category === 1 && d.start === start),
     'truthiness error must reach the editor at the tested operand'
   )
+// 两种 lua.onSignal 写法在调用处悬停都有说明（重载各自带注释）
+for (const call of ['onSignal(defineSignal', "onSignal('Named'"]) {
+  const info = service.getQuickInfoAtPosition(file, source.indexOf(call) + 2)
+  assert(ts.displayPartsToString(info?.documentation).length > 0, call + ' hover has no doc')
+}
 service.dispose()
 console.log(
-  'Lua language service: globals, hooks, dt, narrowed controls, lua. completion order and member docs: PASS'
+  'Lua language service: globals, hooks, dt, narrowed controls, lua. completion order, member docs and onSignal call hovers: PASS'
 )
