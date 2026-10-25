@@ -126,7 +126,7 @@
   "lua_optionsEmpty": "入口配置请使用对象字面量；timerClock 只接受 'level' 或 'real'，也可以省略配置只传回调。",
   "lua_invalidCallback": "脚本回调需要直接返回生命周期对象。请写成 (lua) => { …; return { … } } 或 (lua) => ({ … })。",
   "lua_returnHooks": "回调最后必须直接返回生命周期对象。",
-  "lua_publicMethodThis": "methods 里的函数会被其他脚本用 Invoke 当作普通函数调用，this 不指向任何对象。请直接使用回调里的变量；class 里的方法仍可正常使用 this。",
+  "lua_publicMethodThis": "methods 里的函数会被其他脚本当作普通函数调用（findScript 句柄的 methods.方法名(...)，或官方 Invoke），this 不指向任何对象。请直接使用回调里的变量；class 里的方法仍可正常使用 this。",
   "lua_publicMethodName": "methods 里只能放函数：直接写在这里的函数，或回调里声明的函数；不能放 class 的方法或其他值。方法名也不能和官方生命周期函数或全局 API 重名。",
   "lua_dynamicHooks": "请直接声明 onStart、onUpdate 等生命周期函数，不支持展开或动态生成生命周期。",
   "lua_earlyReturn": "入口回调只能在结尾返回生命周期对象。",
@@ -141,7 +141,7 @@
   "lua_unsupportedSyntax": "客户端 Lua 暂不支持异步调度、生成器、动态 import 或 bigint；请使用生命周期和普通 number。",
   "lua_truthiness": "Lua 中 0 和空字符串也是真值。请显式比较，例如 count !== 0、name !== ''；需要 JS 转换时使用 Boolean(value)。",
   "lua_nil": "Lua 的 nil 会删除 table 中的字段；用于数组时可能形成空洞，影响长度与遍历。",
-  "lua_graphApi": "Lua 脚本不能使用节点图 API {{arg0}}。",
+  "lua_graphApi": "Lua 脚本不能使用节点图 API {{arg0}}。{{arg1}}",
   "lua_literalHooks": "没有找到直接返回的生命周期对象。请在回调最后写 return { onStart() { … }, onUpdate(dt) { … } }，或简写成 (lua) => ({ … })。",
   "lua_hookFunction": "生命周期 {{arg0}} 必须直接声明为函数。",
   "lua_requireSeparator": "require 路径请使用 /，不使用转义字符。",
@@ -186,5 +186,12 @@
   "lua_outputSkip": "已跳过写入 {{file}}：{{reason}}",
   "lua_variableOwnership": "同一个脚本里，同一个自定义变量不能既用 lua.onVariable 又用官方的 RegisterCustomVariableChangedHandler，两者会互相覆盖或取消。请只用其中一种。",
   "lua_signalArgument": "信号要写成信号定义（Signal.X 或 defineSignal(...)）或字符串信号名。",
-  "lua_sendByName": "按信号名发送时不能带参数：Lua 的数字分不清 int 和 float，无法推断参数类型。带参数的信号请传信号定义（Signal.X 或 defineSignal(...)）。"
+  "lua_sendByName": "按信号名发送时不能带参数：Lua 的数字分不清 int 和 float，无法推断参数类型。带参数的信号请传信号定义（Signal.X 或 defineSignal(...)）。",
+  "lua_graphHintEntity": "客户端 Lua 没有实体 API，拿不到也改不了实体；界面控件请用 lua.helper.findControl / requireControl 按名称路径查找。",
+  "lua_graphHintVariable": "客户端只能读取变量：lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level, 变量名, 'number')，变化用 lua.onVariable 监听；要修改变量，请发信号让服务器改。",
+  "lua_graphHintVector": "三维向量在 Lua 里写成 { x, y, z } 表，和信号的 vec3 参数一样。",
+  "lua_graphHintMath": "数学函数用 Math.*，限制和插值用 lua.helper.clamp / lerp / moveTowards。",
+  "lua_graphHintRandom": "随机数用 Math.random()。",
+  "lua_graphHintValue": "Lua 不需要这些取值函数：整数、小数、GUID、各种 ID 都直接是 number（不区分 int 和 float）；转换用 String(x)、Boolean(x)。",
+  "lua_graphHintCollection": "数组直接写 [...]，键值数据用普通对象或 Map。"
 }

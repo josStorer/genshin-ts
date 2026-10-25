@@ -76,6 +76,11 @@ const cases = [
     'lua-graph-api'
   ],
   [
+    'graph-global',
+    `import{g}from'genshin-ts/runtime/core';g.clientControlScript(lua=>{lua.print(stage);return{}})`,
+    'lua-graph-api'
+  ],
+  [
     'hook',
     `import {g} from 'genshin-ts/runtime/core'; export default g.clientControlScript(lua=>{return {onStart:3}})`,
     'lua-hook-function'

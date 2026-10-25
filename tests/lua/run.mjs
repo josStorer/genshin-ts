@@ -19,6 +19,7 @@ const suites = {
     'native-declarations',
     'signals',
     'signal-names',
+    'graph-hints',
     'scope-lifecycle',
     'signal-kinds',
     'signal-validation',

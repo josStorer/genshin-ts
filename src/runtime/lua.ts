@@ -117,11 +117,11 @@ export interface ClientGlobals extends LuaStandardGlobals {
    */
   readonly Color: HostColor
   /**
-   * gsts tools: reading script variables, finding controls and scripts, timers with a chosen clock,
+   * gsts tools: reading script and custom variables, finding controls and scripts, timers with a chosen clock,
    * interpolation and more; the same as the exports of genshin-ts/runtime/lua. Listeners are on lua itself
    * (lua.onSignal, lua.onVariable, lua.onKey, lua.onCursor).
    *
-   * gsts 常用工具：读脚本变量、查找控件和脚本、指定时钟的定时器、数值插值等，和 genshin-ts/runtime/lua 的同名导出相同。
+   * gsts 常用工具：读脚本变量和自定义变量、查找控件和脚本、指定时钟的定时器、数值插值等，和 genshin-ts/runtime/lua 的同名导出相同。
    * 监听直接在 lua 上（lua.onSignal、lua.onVariable、lua.onKey、lua.onCursor）。
    */
   readonly helper: ClientHelpers
@@ -147,13 +147,13 @@ export interface ClientGlobals extends LuaStandardGlobals {
    * only real changes matter. valueType ('number', 'string' or 'boolean') is checked every time; a mismatch
    * is logged and skipped. Write it at the callback root: it pauses while the script is disabled, resumes when
    * enabled and is released on destroy. Returns a cancel function that is safe to call more than once. It
-   * does not fire at start; read the current value with lua.game.GetGlobalCustomVariableValue when you need it.
+   * does not fire at start; read the current value with lua.helper.readVariable when you need it.
    *
    * 监听一个自定义变量，每次被设置时把新值传给回调；设成相同的值也会触发，与服务器设置时的“是否触发事件”无关。
    * 只关心真正变化时，请自己和上次的值比较。
    * valueType（'number'、'string' 或 'boolean'）每次都会检查，不符时记一条错误并跳过。
    * 写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
-   * 开始时不会触发；需要当前值，请用 lua.game.GetGlobalCustomVariableValue 读取。
+   * 开始时不会触发；需要当前值，请用 lua.helper.readVariable 读取。
    *
    * @example
    * lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => render(stage))
@@ -364,6 +364,26 @@ export declare function readParams<const S extends Record<string, LuaParam>>(
   schema: S
 ): LuaParamValues<S>
 /**
+ * Reads a global custom variable now and checks its type, the reading counterpart of lua.onVariable: read the
+ * value at start, then follow changes with onVariable. valueType is 'number', 'string' or 'boolean'. Returns
+ * undefined when the variable has no value, and throws when it holds another type. The client can only read
+ * variables; to change one, send a signal and let the server set it. For lists, dictionaries and structs use
+ * lua.game.GetGlobalCustomVariableValue.
+ *
+ * 立即读取一个全局自定义变量并检查类型，是 lua.onVariable 的读取版：开始时读当前值，之后用 onVariable 跟进变化。
+ * valueType 为 'number'、'string' 或 'boolean'。变量没有值时返回 undefined，类型不符时直接报错。
+ * 客户端只能读取变量；要修改，请发信号让服务器改。列表、字典、结构体请用 lua.game.GetGlobalCustomVariableValue。
+ *
+ * @example
+ * const stage = lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number') ?? 0
+ */
+export declare function readVariable<K extends keyof VariableValues>(
+  this: void,
+  entityType: CustomVariableEntityType,
+  name: string,
+  valueType: K
+): VariableValues[K] | undefined
+/**
  * Returns several Lua values at once (Lua multiple returns), for working with native Lua and for methods.
  *
  * 让函数一次返回多个 Lua 值（Lua 的多返回值），用于和原生 Lua 互相调用，以及 methods 里的公开方法。
@@ -465,6 +485,7 @@ export type ClientHelpers = Pick<
   | 'findScript'
   | 'requireScript'
   | 'readParams'
+  | 'readVariable'
   | 'clamp'
   | 'lerp'
   | 'moveTowards'

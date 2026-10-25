@@ -106,20 +106,30 @@ if (lua.helper.isControl(candidate, 'ClientUITextBoxControl')) {
 }
 ```
 
-The global self means the current script host: a control (`script.object`) in Lua, an entity in node graphs. send, console and the four timer functions remain globals. Lua does not expose graph f, GameObject, stage or level, nor Node/DOM globals.
+The global self means the current script host: a control (`script.object`) in Lua, an entity in node graphs. send, console and the four timer functions remain globals. Lua does not expose graph f, GameObject, stage, level, Vector3 or value constructors such as int/str, nor Node/DOM globals. Writing them out of node-graph habit reports `gsts/lua-graph-api` with the client way to do it:
+
+| Node graph                       | Client Lua                                                                                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GameObject, player, entity       | No entity API on the client; find UI controls with lua.helper.findControl / requireControl                                                                      |
+| stage, level                     | Read only: lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level, name, type); lua.onVariable for changes; send a signal to have the server change it |
+| Vector3, vec3                    | A `{ x, y, z }` table                                                                                                                                           |
+| Mathf, Random                    | Math.\*, Math.random(), and lua.helper.clamp / lerp / moveTowards                                                                                               |
+| int, float, str, bool, guid etc. | Not needed: numbers are plain numbers (no int/float distinction); convert with String(x), Boolean(x)                                                            |
+| list, dict                       | Arrays as `[...]`, key-value data as plain objects or a Map                                                                                                     |
 
 control.SetVisible(true) automatically emits control:SetVisible(true). Host declarations already handle self; callers do not pass it manually. Only authors of native Lua declarations need to distinguish this:void from receiver methods.
 
-| Tool                             | Purpose                                                                                 |
-| -------------------------------- | --------------------------------------------------------------------------------------- |
-| findControl(root, path, kind)    | Name/path lookup; undefined if absent, error on ambiguous names or wrong type           |
-| requireControl(root, path, kind) | Required lookup; reports the missing path                                               |
-| isControl(control, kind)         | Type guard exposing control.xxx completions                                             |
-| clamp / lerp / moveTowards       | Numeric limits, interpolation and movement                                              |
-| readParams(schema)               | Checks the current script's variables and returns typed fields                          |
-| multi                            | Multiple returns                                                                        |
-| findScript / requireScript       | Find another mount and call its public methods; the require version throws when missing |
-| scriptHandle(script)             | Wrap an official Script you already have as the same handle                             |
+| Tool                                 | Purpose                                                                                 |
+| ------------------------------------ | --------------------------------------------------------------------------------------- |
+| findControl(root, path, kind)        | Name/path lookup; undefined if absent, error on ambiguous names or wrong type           |
+| requireControl(root, path, kind)     | Required lookup; reports the missing path                                               |
+| isControl(control, kind)             | Type guard exposing control.xxx completions                                             |
+| clamp / lerp / moveTowards           | Numeric limits, interpolation and movement                                              |
+| readParams(schema)                   | Checks the current script's variables and returns typed fields                          |
+| readVariable(entityType, name, type) | Reads a global custom variable now and checks its type; undefined when it has no value  |
+| multi                                | Multiple returns                                                                        |
+| findScript / requireScript           | Find another mount and call its public methods; the require version throws when missing |
+| scriptHandle(script)                 | Wrap an official Script you already have as the same handle                             |
 
 Script parameters support number/string/boolean. The schema does not create editor variables; a variable missing from the editor uses its default, or reports the variable name when there is none. A variable that exists but is left blank is not missing: a string reads as an empty string (confirmed in game, 2026-10-24).
 
@@ -276,6 +286,7 @@ lua.onKey(self, lua.Enum.KeyEventType.KeyboardJumpKeyDown, () => {
 lua.onCursor(button, lua.Enum.CursorEventType.CursorClick, (event) => {
   console.log(event.GetUIPos())
 })
+render(lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number') ?? 0) // Read the current value at start
 lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => {
   render(stage) // Called with the new value each time it is set, even if unchanged; a value that is not a number is logged and skipped
 })
@@ -283,7 +294,7 @@ lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stag
 
 lua.onCursor accepts preset buttons and cursor event areas. All four listeners return a cancel function and can also be destructured first: `const { onKey, onSignal } = lua`.
 
-lua.onVariable fires each time the variable is set: even when the value is unchanged, and regardless of the Trigger Event option on the server Set Custom Variable node (that option only controls the server On Custom Variable Change event). Compare with the previous value yourself if only real changes matter. It does not fire at start; read the current value with `lua.game.GetGlobalCustomVariableValue` when you need it. Do not also use the official RegisterCustomVariableChangedHandler for the same variable (reported as `gsts/lua-listener-ownership`). Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
+lua.onVariable fires each time the variable is set: even when the value is unchanged, and regardless of the Trigger Event option on the server Set Custom Variable node (that option only controls the server On Custom Variable Change event). Compare with the previous value yourself if only real changes matter. It does not fire at start; read the current value with `lua.helper.readVariable` (same arguments as onVariable; undefined when the variable has no value, an error when it holds another type). The client can only read variables; send a signal to have the server change one. Do not also use the official RegisterCustomVariableChangedHandler for the same variable (reported as `gsts/lua-listener-ownership`). Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
 
 ### Signal boundary checks
 

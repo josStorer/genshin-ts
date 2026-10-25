@@ -144,6 +144,36 @@ export const unavailableLuaGlobals = [
   'Buffer'
 ] as const
 
+/** 节点图专属的全局和 core 导出；Lua 里报 lua-graph-api，并按名字给出客户端的写法。 */
+const graphApiHints: Readonly<Record<string, string | undefined>> = {
+  GameObject: 'lua_graphHintEntity',
+  player: 'lua_graphHintEntity',
+  entity: 'lua_graphHintEntity',
+  clientEntity: 'lua_graphHintEntity',
+  stage: 'lua_graphHintVariable',
+  level: 'lua_graphHintVariable',
+  Vector3: 'lua_graphHintVector',
+  vec3: 'lua_graphHintVector',
+  Mathf: 'lua_graphHintMath',
+  Random: 'lua_graphHintRandom',
+  int: 'lua_graphHintValue',
+  float: 'lua_graphHintValue',
+  str: 'lua_graphHintValue',
+  bool: 'lua_graphHintValue',
+  guid: 'lua_graphHintValue',
+  prefabId: 'lua_graphHintValue',
+  configId: 'lua_graphHintValue',
+  faction: 'lua_graphHintValue',
+  list: 'lua_graphHintCollection',
+  dict: 'lua_graphHintCollection',
+  raw: undefined,
+  idx: undefined
+}
+export function graphApiHint(name: string) {
+  const hint = Object.hasOwn(graphApiHints, name) ? graphApiHints[name] : undefined
+  return hint ? t(hint) : ''
+}
+
 function valueReference(node: ts.Identifier) {
   const parent = node.parent
   if (ts.isPropertyAccessExpression(parent) && parent.name === node) return false
@@ -180,6 +210,20 @@ export function standardLibraryDiagnostic(
         source: 'lua-unavailable-global'
       }
   }
+  // 照节点图习惯写的 stage、GameObject 等：没有声明时说明客户端该怎么写
+  if (
+    ts.isIdentifier(node) &&
+    valueReference(node) &&
+    Object.hasOwn(graphApiHints, node.text) &&
+    !builtins.symbolAt(node)
+  )
+    return {
+      ...diagnostic(
+        node,
+        t('lua_graphApi', { arg0: node.text, arg1: graphApiHint(node.text) }).trim()
+      ),
+      source: 'lua-graph-api'
+    }
   if (ts.isNewExpression(node) && builtins.standardType(node.expression) === 'BooleanConstructor')
     return { ...diagnostic(node, t('lua_booleanObject')), source: 'lua-standard-library' }
   if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {

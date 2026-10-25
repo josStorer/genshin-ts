@@ -126,7 +126,7 @@
   "lua_optionsEmpty": "Use an options object literal; timerClock accepts only 'level' or 'real'. You may also omit options and pass just the callback.",
   "lua_invalidCallback": "The script callback must return a lifecycle object directly. Write (lua) => { ...; return { ... } } or (lua) => ({ ... }).",
   "lua_returnHooks": "Return the lifecycle object directly at the end of the callback.",
-  "lua_publicMethodThis": "Functions in methods are called by other scripts through Invoke as plain functions, so this is not bound to anything. Use the callback variables directly; methods inside a class can still use this.",
+  "lua_publicMethodThis": "Functions in methods are called by other scripts as plain functions (handle.methods.name(...) from findScript, or the official Invoke), so this is not bound to anything. Use the callback variables directly; methods inside a class can still use this.",
   "lua_publicMethodName": "methods may only contain functions written inline or declared in the callback, not class methods or other values. Method names also cannot clash with official lifecycle functions or global APIs.",
   "lua_dynamicHooks": "Declare lifecycle hooks such as onStart and onUpdate directly. Spreads and dynamically generated hooks are not supported.",
   "lua_earlyReturn": "The entry callback can only return its lifecycle object at the end.",
@@ -141,7 +141,7 @@
   "lua_unsupportedSyntax": "Client Lua does not support async scheduling, generators, dynamic import or bigint. Use lifecycle hooks and regular numbers.",
   "lua_truthiness": "In Lua, 0 and empty strings are truthy. Compare explicitly, e.g. count !== 0 or name !== ''; use Boolean(value) for JavaScript conversion.",
   "lua_nil": "Lua nil removes table fields. In arrays it can create holes that affect length and iteration.",
-  "lua_graphApi": "Lua scripts cannot use node graph API {{arg0}}.",
+  "lua_graphApi": "Lua scripts cannot use node graph API {{arg0}}. {{arg1}}",
   "lua_literalHooks": "No directly returned lifecycle object was found. End the callback with return { onStart() { ... }, onUpdate(dt) { ... } }, or use (lua) => ({ ... }).",
   "lua_hookFunction": "Lifecycle hook {{arg0}} must be declared directly as a function.",
   "lua_requireSeparator": "Use / in require paths, without escape characters.",
@@ -186,5 +186,12 @@
   "lua_outputSkip": "Skipped writing {{file}}: {{reason}}",
   "lua_variableOwnership": "Within one script, a custom variable cannot be watched by both lua.onVariable and the official RegisterCustomVariableChangedHandler; they would override or cancel each other. Use only one of them.",
   "lua_signalArgument": "Pass a signal definition (Signal.X or defineSignal(...)) or a signal name string.",
-  "lua_sendByName": "A signal sent by name cannot carry parameters: a Lua number cannot tell int from float, so the parameter types cannot be inferred. Pass the signal definition instead (Signal.X or defineSignal(...))."
+  "lua_sendByName": "A signal sent by name cannot carry parameters: a Lua number cannot tell int from float, so the parameter types cannot be inferred. Pass the signal definition instead (Signal.X or defineSignal(...)).",
+  "lua_graphHintEntity": "Client Lua has no entity API: entities can be neither found nor changed. Find UI controls by name path with lua.helper.findControl / requireControl.",
+  "lua_graphHintVariable": "The client can only read variables: lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level, name, 'number'), and lua.onVariable for changes. To change a variable, send a signal and let the server set it.",
+  "lua_graphHintVector": "Write a 3D vector as a { x, y, z } table, as in vec3 signal parameters.",
+  "lua_graphHintMath": "Use Math.* for math, and lua.helper.clamp / lerp / moveTowards for limits and interpolation.",
+  "lua_graphHintRandom": "Use Math.random() for random numbers.",
+  "lua_graphHintValue": "Lua needs no value constructors: integers, decimals, GUIDs and IDs are all plain numbers (no int/float distinction); use String(x) and Boolean(x) for conversions.",
+  "lua_graphHintCollection": "Write arrays as [...] and key-value data as plain objects or a Map."
 }

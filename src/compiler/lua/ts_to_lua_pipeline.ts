@@ -11,7 +11,7 @@ import {
   localizeLuaTranspileDiagnostic,
   removeDuplicateTruthiness
 } from './analysis/diagnostic_messages.js'
-import { getLuaDiagnostics } from './analysis/diagnostics.js'
+import { dropExplainedNameErrors, getLuaDiagnostics } from './analysis/diagnostics.js'
 import { analyzeLuaEntry } from './analysis/entry_analysis.js'
 import { isNativeLuaDeclaration } from './analysis/native_declarations.js'
 import { isNodeGraphEntry } from './analysis/syntax.js'
@@ -471,7 +471,10 @@ function diagnoseLua(
       if (!input.typeCheck && !source.isDeclarationFile) {
         nameCheckedFiles++
         localDiagnostics.push(
-          ...program.getSemanticDiagnostics(source).filter((d) => unresolvedNameCodes.has(d.code))
+          ...dropExplainedNameErrors(
+            program.getSemanticDiagnostics(source).filter((d) => unresolvedNameCodes.has(d.code)),
+            localDiagnostics
+          )
         )
       }
       const fromOutput = path.relative(outDir, source.fileName)

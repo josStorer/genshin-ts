@@ -50,6 +50,18 @@ export const luaLintRules = [
   'lua-unavailable-global',
   'lua-shared-module'
 ] as const
+// 同一位置已有说明（节点图 API、不可用的全局）时，TypeScript 的"找不到名称"类报错不再重复
+const explainingRules = new Set(['lua-graph-api', 'lua-unavailable-global'])
+const explainedNameCodes = new Set([2304, 2305, 2552, 2724])
+export function dropExplainedNameErrors(
+  typescript: readonly ts.Diagnostic[],
+  lua: readonly ts.Diagnostic[]
+) {
+  const explained = new Set(
+    lua.filter((d) => explainingRules.has(String(d.source))).map((d) => d.start)
+  )
+  return typescript.filter((d) => !(explainedNameCodes.has(d.code) && explained.has(d.start)))
+}
 export const luaWarningRules: readonly string[] = [
   'lua-on-enable-subscription',
   'lua-no-undefined-field',
@@ -187,7 +199,7 @@ export function getLuaDiagnostics(
     return ts.isIdentifier(root) && namespaceNames.has(root.text)
   }
   const visit = (node: ts.Node) => {
-    // 类型查询和 import 声明本身不读取运行时值；默认入口只用于 scriptHandle 的类型。
+    // 类型查询和 import 声明本身不读取运行时值；默认入口只用于 findScript 的类型参数。
     if (
       importedValue(node) &&
       !ts.findAncestor(

@@ -106,20 +106,30 @@ if (lua.helper.isControl(candidate, 'ClientUITextBoxControl')) {
 }
 ```
 
-全局 self 表示“当前脚本挂载的宿主”：Lua 是控件（`script.object`），节点图是实体。send、console 和四个定时器函数也保持全局写法。Lua 中没有节点图的 f、GameObject、stage、level，也没有 Node/DOM 全局。
+全局 self 表示“当前脚本挂载的宿主”：Lua 是控件（`script.object`），节点图是实体。send、console 和四个定时器函数也保持全局写法。Lua 中没有节点图的 f、GameObject、stage、level、Vector3、int/str 等取值函数，也没有 Node/DOM 全局；照节点图习惯写时会报 `gsts/lua-graph-api` 并给出客户端的写法：
+
+| 节点图                         | 客户端 Lua                                                                                                                              |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| GameObject、player、entity     | 客户端没有实体 API；界面控件用 lua.helper.findControl / requireControl                                                                  |
+| stage、level                   | 只能读取：lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level, 名称, 类型)；变化用 lua.onVariable；要修改请发信号让服务器改 |
+| Vector3、vec3                  | 写成 `{ x, y, z }` 表                                                                                                                   |
+| Mathf、Random                  | Math.\*、Math.random()，以及 lua.helper.clamp / lerp / moveTowards                                                                      |
+| int、float、str、bool、guid 等 | 不需要：数字都是 number（不区分 int 和 float），转换用 String(x)、Boolean(x)                                                            |
+| list、dict                     | 数组写 `[...]`，键值数据用普通对象或 Map                                                                                                |
 
 `control.SetVisible(true)` 自动生成 `control:SetVisible(true)`；官方控件的 self 已在声明里处理，无需手工传参。只在给原生 Lua 写声明时需要区分 `this: void` 与有接收者的方法。
 
-| 工具                             | 用途                                                     |
-| -------------------------------- | -------------------------------------------------------- |
-| findControl(root, path, kind)    | 按名称路径查找；缺失返回 undefined，重名或类型错误时报错 |
-| requireControl(root, path, kind) | 必须找到的控件；缺失时报出路径                           |
-| isControl(control, kind)         | 类型守卫，收窄后支持 control.xxx 补全                    |
-| clamp / lerp / moveTowards       | 数值限制、插值、向目标移动                               |
-| readParams(schema)               | 检查当前脚本的变量，返回带类型字段                       |
-| multi                            | 多返回值                                                 |
-| findScript / requireScript       | 找到另一个挂载并调用它的公开方法；require 版找不到就报错 |
-| scriptHandle(script)             | 把已有的官方 Script 包装成同样的句柄                     |
+| 工具                               | 用途                                                       |
+| ---------------------------------- | ---------------------------------------------------------- |
+| findControl(root, path, kind)      | 按名称路径查找；缺失返回 undefined，重名或类型错误时报错   |
+| requireControl(root, path, kind)   | 必须找到的控件；缺失时报出路径                             |
+| isControl(control, kind)           | 类型守卫，收窄后支持 control.xxx 补全                      |
+| clamp / lerp / moveTowards         | 数值限制、插值、向目标移动                                 |
+| readParams(schema)                 | 检查当前脚本的变量，返回带类型字段                         |
+| readVariable(实体类型, 名称, 类型) | 立即读取一个全局自定义变量并检查类型；没有值时为 undefined |
+| multi                              | 多返回值                                                   |
+| findScript / requireScript         | 找到另一个挂载并调用它的公开方法；require 版找不到就报错   |
+| scriptHandle(script)               | 把已有的官方 Script 包装成同样的句柄                       |
 
 脚本变量只支持 number/string/boolean；schema 不创建编辑器变量。编辑器里没有这个变量时使用 default，没有 default 就报出变量名；变量建了但留空不算缺失，字符串会读到空串（2026-10-24 实机确认）。
 
@@ -276,6 +286,7 @@ lua.onKey(self, lua.Enum.KeyEventType.KeyboardJumpKeyDown, () => {
 lua.onCursor(button, lua.Enum.CursorEventType.CursorClick, (event) => {
   console.log(event.GetUIPos())
 })
+render(lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number') ?? 0) // 开始时先读当前值
 lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => {
   render(stage) // 每次被设置时给出新值（值没变也会触发）；类型不是 number 时记一条错误并跳过
 })
@@ -283,7 +294,7 @@ lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stag
 
 lua.onCursor 只接受预设按钮和光标检测区域。四个监听都返回取消函数，也可以先解构再用：`const { onKey, onSignal } = lua`。
 
-lua.onVariable 在变量每次被设置时触发：设成相同的值也会触发，也不受服务器“设置自定义变量”节点“是否触发事件”的影响（该选项只管服务器的“自定义变量变化时”事件）。只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.game.GetGlobalCustomVariableValue` 读取；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
+lua.onVariable 在变量每次被设置时触发：设成相同的值也会触发，也不受服务器“设置自定义变量”节点“是否触发事件”的影响（该选项只管服务器的“自定义变量变化时”事件）。只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.helper.readVariable` 读取（参数和 onVariable 相同，没有值时返回 undefined，类型不符直接报错）；客户端只能读变量，要修改请发信号让服务器改；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
 
 ### 信号边界检查
 

@@ -219,6 +219,14 @@ function M.console.warn(...) print("[warn]", ...) end
 function M.console.error(...) printerr(...) end
 function M.console.assert(condition, ...) if not condition then printerr("Assertion failed", ...) end end
 function M.console.trace(...) print(...); print(debug.traceback()) end
+-- Reads a global custom variable now: nil when it has no value, an error when it holds another type.
+function M.readVariable(entityType, name, valueType)
+    local value = game.GetGlobalCustomVariableValue(entityType, name)
+    if value ~= nil and type(value) ~= valueType then
+        error("Custom variable " .. name .. " must be " .. valueType .. ", got " .. type(value), 2)
+    end
+    return value
+end
 function M.readParams(script, schema)
     local values = {}
     for name, spec in pairs(schema) do

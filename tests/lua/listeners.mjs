@@ -18,6 +18,8 @@ export default g.clientControlScript(lua=>{
   lua.onVariable(lua.Enum.CustomVariableEntityType.Level,'Stage','number',(value)=>{stage=value})
   lua.onVariable(lua.Enum.CustomVariableEntityType.Level,'Stage','string',(value)=>{words=value})
   return {methods:{state(){return lua.helper.multi(params.Goal,clicks,keys,stage,words)},
+    read(){return lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level,'Stage','number')},
+    readText(){return lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level,'Stage','string')},
     board(){return lua.helper.requireScript<typeof Board>(self,'Missing').methods.ping()}}}
 })`
   })
@@ -56,6 +58,11 @@ execute(
  assert(next(cursors) == nil and next(keys) == nil and next(variables) == nil, 'disable pauses every listener')
  OnEnable()
  assert(next(cursors) and next(keys) and variables.Stage, 'enable resumes them')
+ assert(read() == 2)
+ local wrong, message = pcall(readText)
+ assert(not wrong and tostring(message):find('Custom variable Stage must be string, got number', 1, true), tostring(message))
+ value = nil
+ assert(read() == nil)
  local ok, err = pcall(board)
  assert(not ok and tostring(err):find('Control not found: Missing', 1, true), tostring(err))
  OnDestroy()
@@ -99,5 +106,5 @@ const sources = diagnosed.diagnostics.map((d) => d.source)
 for (const rule of ['lua-instance-scope', 'lua-listener-ownership', 'lua-on-enable-subscription'])
   assert(sources.includes(rule), rule + ': ' + sources.join(', '))
 console.log(
-  'Listeners: lua.onKey, lua.onCursor and lua.onVariable follow the scope, also when destructured from lua; onKey callbacks may return nothing, readParams reads the current script, requireScript throws with the path; misuse is diagnosed: PASS'
+  'Listeners: lua.onKey, lua.onCursor and lua.onVariable follow the scope, also when destructured from lua; onKey callbacks may return nothing, readParams reads the current script, readVariable checks the type, requireScript throws with the path; misuse is diagnosed: PASS'
 )

@@ -190,6 +190,7 @@ function init(modules) {
       const checker = program.getTypeChecker()
       const filtered = base.filter((d) => !shouldSuppress2538(d, sourceFile, checker))
       const {
+        dropExplainedNameErrors,
         getLuaDiagnostics,
         getSharedModuleDiagnostics,
         resolveSharedProject
@@ -200,7 +201,9 @@ function init(modules) {
         luaContexts.set(program, diagnosticContext)
       }
       if (program.getCompilerOptions().types?.includes('genshin-ts/runtime/lua_globals')) {
-        return filtered.concat(getLuaDiagnostics(sourceFile, diagnosticContext))
+        // Lua 诊断已解释的位置（如节点图 API），不再重复 TypeScript 的"找不到名称"
+        const lua = getLuaDiagnostics(sourceFile, diagnosticContext)
+        return dropExplainedNameErrors(filtered, lua).concat(lua)
       }
       return filtered.concat(getSharedModuleDiagnostics(sourceFile, diagnosticContext))
     }

@@ -35,6 +35,7 @@ export default g.clientControlScript(lua=>{
  if(lua.helper.isControl(self,'ClientUITextBoxControl')) {self./*control*/;}
  lua.onSignal(defineSignal('Typed',[['n','int']] as const), (evt) => { const [n] = evt.values; lua.print(n + evt.params.n) });
  lua.onSignal('Named', (evt) => { lua.print(evt.name, evt.values.length) });
+ lua.print(stage);
  return { /*hooks*/ onUpdate(dt){dt./*delta*/;} }
 })`
 fs.writeFileSync(file, source)
@@ -162,6 +163,15 @@ for (const call of ['onSignal(defineSignal', "onSignal('Named'"]) {
   const info = service.getQuickInfoAtPosition(file, source.indexOf(call) + 2)
   assert(ts.displayPartsToString(info?.documentation).length > 0, call + ' hover has no doc')
 }
+const stageAt = source.indexOf('stage);')
+assert(
+  semanticDiagnostics.some((d) => d.source === 'lua-graph-api' && d.start === stageAt),
+  'node-graph global gets the Lua hint'
+)
+assert(
+  !semanticDiagnostics.some((d) => d.code === 2304 && d.start === stageAt),
+  'the explained name is not reported twice'
+)
 service.dispose()
 console.log(
   'Lua language service: globals, hooks, dt, narrowed controls, lua. completion order, member docs and onSignal call hovers: PASS'

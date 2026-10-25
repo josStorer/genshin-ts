@@ -9,7 +9,7 @@ import type {
   LuaEntryModel,
   LuaSharedBinding
 } from './entry_model.js'
-import { luaTimerGlobals } from './standard_library.js'
+import { graphApiHint, luaTimerGlobals } from './standard_library.js'
 import { diagnostic, entryCall, hooks } from './syntax.js'
 
 const analyses = new WeakMap<
@@ -67,8 +67,11 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
     return result
   }
   const diagnostics: ts.Diagnostic[] = []
-  const issue: EntryIssue = (node, key, arg0) => {
-    diagnostics.push({ ...diagnostic(node, t(key, { arg0 })), source: entryDiagnosticRules[key] })
+  const issue: EntryIssue = (node, key, arg0, arg1) => {
+    diagnostics.push({
+      ...diagnostic(node, t(key, { arg0, arg1 }).trim()),
+      source: entryDiagnosticRules[key]
+    })
   }
   const call = entryCall(source)
   let model: LuaEntryModel | undefined
@@ -105,7 +108,12 @@ export function analyzeLuaEntry(source: ts.SourceFile, program: ts.Program): Lua
   return result
 }
 
-type EntryIssue = (node: ts.Node, key: keyof typeof entryDiagnosticRules, arg0?: string) => void
+type EntryIssue = (
+  node: ts.Node,
+  key: keyof typeof entryDiagnosticRules,
+  arg0?: string,
+  arg1?: string
+) => void
 
 function readEntryOptions(call: ts.CallExpression, program: ts.Program, issue: EntryIssue) {
   const builtins = getLuaBuiltins(program)
@@ -412,7 +420,7 @@ function collectCapabilities(
         for (const item of named.elements) {
           const name = (item.propertyName ?? item.name).text
           if (!item.isTypeOnly && name !== 'g' && name !== 'defineSignal')
-            issue(item, 'lua_graphApi', name)
+            issue(item, 'lua_graphApi', name, graphApiHint(name))
         }
       return
     }
