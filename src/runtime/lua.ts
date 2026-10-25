@@ -304,27 +304,6 @@ export declare function findControl<K extends keyof ControlTypes>(
   kind: K
 ): ControlTypes[K] | undefined
 /**
- * Same as findControl, but the control must exist: throws with the full path when it is not found.
- *
- * 和 findControl 相同，但控件必须存在：找不到时直接报错，错误信息带完整路径。
- */
-export declare function requireControl<K extends keyof ControlTypes>(
-  this: void,
-  root: ClientUIBaseControl,
-  path: string,
-  kind: K
-): ControlTypes[K]
-/**
- * Checks the real control type; when it passes, the control's own properties are offered in completions.
- *
- * 检查真实控件类型，成功后可补全该控件的专属属性。
- */
-export declare function isControl<K extends keyof ControlTypes>(
-  this: void,
-  control: unknown,
-  kind: K
-): control is ControlTypes[K]
-/**
  * Finds the script of entry D mounted on a control and returns a typed handle, or undefined when there is
  * none. Write the type argument as typeof Entry (imported with import type); the compiler derives the script
  * path from it, so no 'lua/board' string is needed. With path, the control is first looked up by that name
@@ -343,34 +322,6 @@ export declare function findScript<D extends ClientScriptDefinition = never>(
   control: ClientUIBaseControl | undefined,
   path?: string
 ): ScriptHandle<MethodsOf<D>> | undefined
-/**
- * Same as findScript, but the script must exist: throws with the path when the control or the mounted script
- * is missing, so the result is never undefined.
- *
- * 和 findScript 相同，但脚本必须存在：控件或挂载的脚本找不到时直接报错并带上路径，所以返回值不会是 undefined。
- *
- * @example
- * import type Board from './board'
- * const board = lua.helper.requireScript<typeof Board>(self.parent, 'Board')
- * board.methods.push('jump +10')
- */
-export declare function requireScript<D extends ClientScriptDefinition = never>(
-  this: void,
-  control: ClientUIBaseControl | undefined,
-  path?: string
-): ScriptHandle<MethodsOf<D>>
-/**
- * Usually you want findScript instead: it finds the mount and checks the entry for you.
- * Use scriptHandle only when you already hold an official Script (for example from GetScript or GetScripts)
- * and want the same typed handle; you confirm that it really mounts entry D.
- *
- * 通常请用 findScript：它会找到挂载，并替你核对入口。
- * 只有手里已经有官方 Script（例如来自 GetScript、GetScripts）、想得到同样的带类型句柄时才用 scriptHandle；由你确认它挂载的确实是入口 D。
- */
-export declare function scriptHandle<D extends ClientScriptDefinition>(
-  this: void,
-  script: Script
-): ScriptHandle<MethodsOf<D>>
 /**
  * Reads the current script's variables from the editor and checks their types. default is used when the
  * editor has no such variable; a variable that exists but is left blank is not missing (a string reads as an
@@ -443,6 +394,55 @@ export declare function setInterval<A extends unknown[]>(
   ...args: A
 ): LuaTimerHandle
 /**
+ * Same as findControl, but the control must exist: throws with the full path when it is not found.
+ *
+ * 和 findControl 相同，但控件必须存在：找不到时直接报错，错误信息带完整路径。
+ */
+export declare function requireControl<K extends keyof ControlTypes>(
+  this: void,
+  root: ClientUIBaseControl,
+  path: string,
+  kind: K
+): ControlTypes[K]
+/**
+ * Checks the real control type; when it passes, the control's own properties are offered in completions.
+ *
+ * 检查真实控件类型，成功后可补全该控件的专属属性。
+ */
+export declare function isControl<K extends keyof ControlTypes>(
+  this: void,
+  control: unknown,
+  kind: K
+): control is ControlTypes[K]
+/**
+ * Same as findScript, but the script must exist: throws with the path when the control or the mounted script
+ * is missing, so the result is never undefined.
+ *
+ * 和 findScript 相同，但脚本必须存在：控件或挂载的脚本找不到时直接报错并带上路径，所以返回值不会是 undefined。
+ *
+ * @example
+ * import type Board from './board'
+ * const board = lua.helper.requireScript<typeof Board>(self.parent, 'Board')
+ * board.methods.push('jump +10')
+ */
+export declare function requireScript<D extends ClientScriptDefinition = never>(
+  this: void,
+  control: ClientUIBaseControl | undefined,
+  path?: string
+): ScriptHandle<MethodsOf<D>>
+/**
+ * Usually you want findScript instead: it finds the mount and checks the entry for you.
+ * Use scriptHandle only when you already hold an official Script (for example from GetScript or GetScripts)
+ * and want the same typed handle; you confirm that it really mounts entry D.
+ *
+ * 通常请用 findScript：它会找到挂载，并替你核对入口。
+ * 只有手里已经有官方 Script（例如来自 GetScript、GetScripts）、想得到同样的带类型句柄时才用 scriptHandle；由你确认它挂载的确实是入口 D。
+ */
+export declare function scriptHandle<D extends ClientScriptDefinition>(
+  this: void,
+  script: Script
+): ScriptHandle<MethodsOf<D>>
+/**
  * Returns several Lua values at once (Lua multiple returns), for working with native Lua and for methods.
  *
  * 让函数一次返回多个 Lua 值（Lua 的多返回值），用于和原生 Lua 互相调用，以及 methods 里的公开方法。
@@ -484,12 +484,12 @@ export type ClientHelpers = Pick<
   | 'readVariable'
   | 'setTimeout'
   | 'setInterval'
-  | 'clamp'
-  | 'isControl'
-  | 'lerp'
-  | 'moveTowards'
-  | 'multi'
   | 'requireControl'
+  | 'isControl'
   | 'requireScript'
   | 'scriptHandle'
+  | 'multi'
+  | 'clamp'
+  | 'lerp'
+  | 'moveTowards'
 >

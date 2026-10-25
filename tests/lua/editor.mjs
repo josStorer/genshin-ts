@@ -108,9 +108,24 @@ assert.deepEqual(
 )
 assert.deepEqual(
   bySortText(completions('helper'))
-    .slice(0, 6)
+    .slice(0, 14)
     .map((x) => x.name),
-  ['findControl', 'findScript', 'readParams', 'readVariable', 'setTimeout', 'setInterval']
+  [
+    'findControl',
+    'findScript',
+    'readParams',
+    'readVariable',
+    'setTimeout',
+    'setInterval',
+    'requireControl',
+    'isControl',
+    'requireScript',
+    'scriptHandle',
+    'multi',
+    'clamp',
+    'lerp',
+    'moveTowards'
+  ]
 )
 const firstStandard = sorted.findIndex((x) => x.name === 'print')
 for (const name of [

@@ -22,7 +22,15 @@ const helperOrder = [
   'readParams',
   'readVariable',
   'setTimeout',
-  'setInterval'
+  'setInterval',
+  'requireControl',
+  'isControl',
+  'requireScript',
+  'scriptHandle',
+  'multi',
+  'clamp',
+  'lerp',
+  'moveTowards'
 ]
 const functionMembers = new Set([
   'apply',
