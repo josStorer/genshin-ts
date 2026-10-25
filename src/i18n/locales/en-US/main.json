@@ -197,5 +197,6 @@
   "lua_checkCommand": "Check client Lua: full type check and every Lua rule (including native .d.ts), without writing files; projects without Lua are skipped at once",
   "lua_checkPassed": "[TS→Lua] Check: passed ({{arg0}} entries).",
   "lua_checkFailed": "[TS→Lua] Check: errors found, see above.",
-  "lua_checkNoEntries": "[TS→Lua] Check: the project has a Lua tsconfig but no Lua entries."
+  "lua_checkNoEntries": "[TS→Lua] Check: the project has a Lua tsconfig but no Lua entries.",
+  "err_runtimeValueInJs": "A node graph runtime value ({{type}}) was used in a plain JS operation (such as * + < or Number()). Ordinary functions run at compile time and cannot see values that only exist in the game, so the result would be wrong. To compute it in the node graph, rename the function so it starts with gstsServer (it is then compiled into nodes), or write the operation directly in the .on(...) callback."
 }

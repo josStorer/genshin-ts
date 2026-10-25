@@ -21,6 +21,7 @@ const suites = {
     'signal-names',
     'graph-hints',
     'lua-check',
+    'shared-runtime-values',
     'scope-lifecycle',
     'signal-kinds',
     'signal-validation',

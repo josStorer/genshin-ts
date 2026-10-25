@@ -8,6 +8,7 @@ import type {
   StageEntity
 } from '../definitions/entity_helpers.js'
 import { EnumerationType } from '../definitions/enum.js'
+import { t } from '../i18n/index.js'
 import { CLIENT_ERROR_CODES, clientNodegraphError } from '../shared/client_capability_errors.js'
 import { callActiveGraphFunction } from './active_graph_functions.js'
 import {
@@ -163,6 +164,16 @@ export abstract class value {
 
   getMetadata() {
     return this.metadata
+  }
+
+  /**
+   * 节点图的值在游戏运行时才有。普通函数在编译期执行，对它做 JS 运算（* + < Number() 等）
+   * 只会得到 NaN 或 "[object Object]"，到后面的节点才报出难懂的错误；这里当场说明。
+   * 只把值传来传去（例如普通函数再调用 gstsServer 函数）不会触发；转成字符串不受影响。
+   */
+  [Symbol.toPrimitive](hint: string) {
+    if (hint === 'string') return Object.prototype.toString.call(this)
+    throw new Error(t('err_runtimeValueInJs', { type: this.constructor.name }))
   }
 
   abstract toIRLiteral(): Argument

@@ -315,6 +315,17 @@ Each parameter takes a few comparisons; list checks scale with length. Measured 
 
 Files reachable from both targets must stay neutral: types, constants, portable functions and defineSignal. Builds, default ESLint and the TS plugin check actual cross-tsconfig dependencies. Write shared constants as number, convert with int() at the graph boundary; shared bigint is rejected.
 
+A shared function runs differently on each side: in Lua it is an ordinary function called at run time, while in a node graph an ordinary function runs at **compile time**. Called with literals (such as `score(2, false)`), a graph computes it into a constant during compilation. To compute with values that exist only in the game (such as `evt.params.combo`), name the function with the `gstsServer` prefix: it is compiled into nodes, and Lua still sees an ordinary function:
+
+```ts
+// shared/calc.ts, callable at run time from node graphs and Lua
+export function gstsServerScore(combo: number, perfect: boolean) {
+  return perfect ? combo * 20 : combo * 10
+}
+```
+
+When an ordinary function applies a JS operation (`*`, `+`, `<`, `Number()` and so on) to a runtime value, the build stops with an error that suggests this fix. Ordinary helpers that receive `f` and only call node functions are not affected.
+
 ```ts
 // shared/rules.ts
 export const INITIAL_SCORE = 10

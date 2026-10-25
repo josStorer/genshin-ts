@@ -315,6 +315,17 @@ send(Signal.Input, 20, true) // 按契约写 AddFloat、AddBool
 
 两侧共同导入的文件只写类型、常量、纯函数、defineSignal。构建、默认 ESLint、TS 插件按实际依赖检查跨 tsconfig 共享模块。共享常量写 number，节点图在边界用 int()，共享 bigint 会报错。
 
+共享的计算函数在两边的执行方式不同：Lua 里是普通函数，运行时调用；节点图里普通函数在**编译期**执行。所以节点图传字面量（如 `score(2, false)`）会在编译时直接算成常量；要用游戏运行时的值（如 `evt.params.combo`）计算，请把函数命名为 `gstsServer` 开头，它会被编译成节点，Lua 侧照常是普通函数：
+
+```ts
+// shared/calc.ts，节点图和 Lua 都能在运行时调用
+export function gstsServerScore(combo: number, perfect: boolean) {
+  return perfect ? combo * 20 : combo * 10
+}
+```
+
+如果普通函数拿到运行时的值做了 JS 运算（`*`、`+`、`<`、`Number()` 等），构建会直接报错并给出上面的改法。普通函数接收 `f`、只调用节点函数的写法不受影响。
+
 ```ts
 // shared/rules.ts
 export const INITIAL_SCORE = 10

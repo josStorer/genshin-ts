@@ -197,5 +197,6 @@
   "lua_checkCommand": "检查客户端 Lua：完整类型检查和全部 Lua 规则（含原生 .d.ts），不写文件；没有 Lua 的项目直接跳过",
   "lua_checkPassed": "[TS→Lua] 检查：通过（{{arg0}} 个入口）。",
   "lua_checkFailed": "[TS→Lua] 检查：发现错误，详见上方。",
-  "lua_checkNoEntries": "[TS→Lua] 检查：项目里有 Lua 的 tsconfig，但没有找到 Lua 入口。"
+  "lua_checkNoEntries": "[TS→Lua] 检查：项目里有 Lua 的 tsconfig，但没有找到 Lua 入口。",
+  "err_runtimeValueInJs": "节点图运行时的值（{{type}}）被当作普通 JS 值参与了运算（如 * + < 或 Number()）。普通函数在编译期执行，拿不到只在游戏运行时才有的值，结果会出错。需要在节点图里计算时，请把这个函数改名为 gstsServer 开头（会编译成节点），或把运算直接写在 .on(...) 回调里。"
 }
