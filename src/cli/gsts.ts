@@ -34,7 +34,7 @@ import { detectLang, initCliI18n, type Lang } from '../i18n/index.js'
 import { createInjector } from '../injector/index.js'
 import type { ParsedGilPayload } from '../injector/types.js'
 import { resolveGraphIdForGraph } from '../runtime/graph_defaults.js'
-import { formatBuildSummary } from './build_summary.js'
+import { idleGraph, printBuildSummary, type GraphOutcome } from './build_summary.js'
 import { maybeCheckRemoteMarkdown } from './checks.js'
 import { ensureDataDirs } from './data.js'
 import { extractGilArtifacts } from './gil_artifacts.js'
@@ -985,7 +985,8 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks): Promise<Run
     })
     .catch(() => undefined)
   const luaSources = await luaTask.prepared
-  const summary = { compilation: t('summary_failed'), injection: t('summary_compileFailed') }
+  // 编译中途出错时视为节点图参与了这一轮且失败
+  const graph: GraphOutcome = { ran: true, ok: false, gia: 0 }
   try {
     const compileStart = profiling ? performance.now() : 0
     const compileResult = await compileTsToGs({
@@ -1075,18 +1076,11 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks): Promise<Run
       mergeResults: lastMergeResults
     })
 
-    summary.compilation = entryOutFiles.length
-      ? t('summary_generatedGia', { arg0: giaAll.length })
-      : t('summary_noEntry')
-    summary.injection = opts.noinject
-      ? t('summary_disabled')
-      : cfg.inject
-        ? t('summary_noInjection')
-        : t('summary_noMap')
+    Object.assign(graph, { ran: entryOutFiles.length > 0, ok: true, gia: giaAll.length })
     let injectMs = 0
     // 批量模式：忽略 config.inject.nodeGraphId，使用 GIA 内的 graph id 推断
     if (entryOutFiles.length && !opts.noinject && cfg.inject) {
-      summary.injection = t('summary_failed')
+      graph.ok = false
       const injectStart = profiling ? performance.now() : 0
       const stat = runInjectionAttempt(
         () =>
@@ -1101,11 +1095,8 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks): Promise<Run
         hooks
       )
       injectMs = profiling ? performance.now() - injectStart : 0
-      summary.injection = t('summary_injected', {
-        arg0: stat.ok,
-        arg1: stat.skipped,
-        arg2: stat.fail
-      })
+      graph.injection = { ok: stat.ok, skipped: stat.skipped, fail: stat.fail }
+      graph.ok = !stat.fail
       if (stat.fail) process.exitCode = 1
       parsedGil = stat.parsedGil
       ui.info(
@@ -1173,12 +1164,11 @@ async function runBatch(opts: GlobalOptions, hooks?: RunBatchHooks): Promise<Run
     return { graphCompleted: true, data }
   } catch (error) {
     const message = errorText(error)
-    ui.error(message)
+    ui.error(message.replace('[error]', '').trim())
     process.exitCode = 1
     return { graphCompleted: false, error: message }
   } finally {
-    console.log(formatBuildSummary('graph', summary))
-    await luaTask.finish()
+    printBuildSummary(graph, await luaTask.finish())
   }
 }
 
@@ -1472,10 +1462,9 @@ async function runDev(opts: GlobalOptions) {
   }
 
   // dev 按轮次串行执行；这里只保存本轮节点图结果，统一输出交给外层。
-  const graphResult: {
-    summary: { compilation: string; injection: string }
-    runtimeSourceFiles?: string[]
-  } = { summary: { compilation: '', injection: '' } }
+  const graphResult: { graph: GraphOutcome; runtimeSourceFiles?: string[] } = {
+    graph: idleGraph()
+  }
   const runGraphChanges = async (
     excludeFiles: string[],
     { removed: removedRels, changed: rels }: { removed: string[]; changed: string[] }
@@ -1617,8 +1606,7 @@ async function runDev(opts: GlobalOptions) {
 
     const compileRels = [...new Set([...rels, ...impactedEntryRels])]
     if (compileRels.length) {
-      graphResult.summary.compilation = t('summary_failed')
-      graphResult.summary.injection = t('summary_compileFailed')
+      graphResult.graph = { ran: true, ok: false, gia: 0 }
       ui.info(t('startCompile'))
       const compileResult = await compileTsToGs({
         cfgDir,
@@ -1649,8 +1637,7 @@ async function runDev(opts: GlobalOptions) {
     }
 
     if (pendingEntryGs.size || retiredSources.size) {
-      graphResult.summary.compilation = t('summary_failed')
-      graphResult.summary.injection = t('summary_compileFailed')
+      graphResult.graph = { ran: true, ok: false, gia: 0 }
     }
     await processEntryOutputs([...pendingEntryGs].filter((p) => fs.existsSync(p)))
 
@@ -1679,15 +1666,8 @@ async function runDev(opts: GlobalOptions) {
       }
     }
     if (!tasks.length || all.length) {
-      graphResult.summary.compilation =
-        compileRels.length || retiredSources.size
-          ? t('summary_generatedGia', { arg0: all.length })
-          : t('summary_unchanged')
-      graphResult.summary.injection = opts.noinject
-        ? t('summary_disabled')
-        : cfg.inject
-          ? t('summary_noInjection')
-          : t('summary_noMap')
+      graphResult.graph.ok = true
+      graphResult.graph.gia = all.length
     }
     if (all.length) {
       for (const item of all) pendingGiaGraphIds.delete(item.graphId)
@@ -1700,7 +1680,7 @@ async function runDev(opts: GlobalOptions) {
     }
 
     if (all.length && !opts.noinject && cfg.inject) {
-      graphResult.summary.injection = t('summary_failed')
+      graphResult.graph.ok = false
       const stat = runInjectionAttempt(
         () =>
           injectMany({
@@ -1713,11 +1693,8 @@ async function runDev(opts: GlobalOptions) {
           }),
         injectionHooks
       )
-      graphResult.summary.injection = t('summary_injected', {
-        arg0: stat.ok,
-        arg1: stat.skipped,
-        arg2: stat.fail
-      })
+      graphResult.graph.injection = { ok: stat.ok, skipped: stat.skipped, fail: stat.fail }
+      graphResult.graph.ok = !stat.fail
       if (stat.fail) process.exitCode = 1
       ui.info(
         t('injectAllDone', {
@@ -1758,10 +1735,7 @@ async function runDev(opts: GlobalOptions) {
       session: luaSession,
       changedFiles: [...removedBatch, ...changedBatch].map((rel) => path.resolve(compileRoot, rel))
     })
-    graphResult.summary = {
-      compilation: t('summary_unchanged'),
-      injection: t('summary_noInjection')
-    }
+    graphResult.graph = idleGraph()
     graphResult.runtimeSourceFiles = undefined
     try {
       const luaSources = await luaTask.prepared
@@ -1782,15 +1756,13 @@ async function runDev(opts: GlobalOptions) {
     } catch (error) {
       for (const rel of removedBatch) removed.add(rel)
       for (const rel of changedBatch) changed.add(rel)
-      ui.error(errorText(error))
-      process.exitCode = 1
+      reportDevTaskError(error)
     } finally {
       if (graphResult.runtimeSourceFiles)
         luaSession.graphFiles = new Set(graphResult.runtimeSourceFiles)
       const luaResult = await luaTask.result.catch(() => undefined)
       await watchLuaSources(luaSession.dependencies ?? [], !!luaResult)
-      console.log(formatBuildSummary('graph', graphResult.summary))
-      await luaTask.finish()
+      printBuildSummary(graphResult.graph, await luaTask.finish())
     }
   }
 
@@ -2202,28 +2174,14 @@ async function runSingle(file: string, opts: GlobalOptions) {
   await runCliChecks(lang)
   applyIrToGiaOptimizeEnv(loadedForChecks?.cfg)
   const injectCfg = loadedForChecks?.cfg.inject
-  const summary = { compilation: t('summary_failed'), injection: t('summary_compileFailed') }
   let luaTask: ReturnType<typeof startClientLua> | undefined
   const inject = (items: GiaInjectionItem[]) => {
-    summary.injection = opts.noinject
-      ? t('summary_disabled')
-      : injectCfg
-        ? t('summary_failed')
-        : t('summary_noMap')
     const stat = maybeInjectGias(items, opts, injectCfg, true, lang)
-    if (stat) {
-      summary.injection = t('summary_injected', {
-        arg0: stat.ok,
-        arg1: stat.skipped,
-        arg2: stat.fail
-      })
-      if (stat.fail) process.exitCode = 1
-    }
+    if (stat?.fail) process.exitCode = 1
   }
   try {
     if (isGiaPath(abs)) {
       // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-      summary.compilation = t('summary_directGia')
       inject([{ giaPath: abs }])
       return
     }
@@ -2234,7 +2192,6 @@ async function runSingle(file: string, opts: GlobalOptions) {
         ui.ok(`${x.giaPath} (id=${x.graphId})`)
       )
       // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-      summary.compilation = t('summary_generatedGia', { arg0: out.length })
       inject(out.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })))
       return
     }
@@ -2247,7 +2204,6 @@ async function runSingle(file: string, opts: GlobalOptions) {
         ui.ok(`${x.giaPath} (id=${x.graphId})`)
       )
       // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-      summary.compilation = t('summary_generatedGia', { arg0: out.length })
       inject(out.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })))
       return
     } catch {
@@ -2283,11 +2239,7 @@ async function runSingle(file: string, opts: GlobalOptions) {
       complete: false
     })
     await luaTask.prepared
-    if (luaTask.report.active) {
-      summary.compilation = t('summary_noEntry')
-      summary.injection = t('summary_noInjection')
-      return
-    }
+    if (luaTask.report.active) return
     ui.info(t('startCompile'))
     const compileResult = await compileTsToGs({
       cfgDir,
@@ -2298,8 +2250,6 @@ async function runSingle(file: string, opts: GlobalOptions) {
 
     const gsFile = entryOutFiles[0]
     if (!gsFile) {
-      summary.compilation = t('summary_noEntry')
-      summary.injection = t('summary_noInjection')
       ui.warn(t('warnNotEntry'))
       return
     }
@@ -2321,14 +2271,13 @@ async function runSingle(file: string, opts: GlobalOptions) {
       ui.ok(`${x.giaPath} (id=${x.graphId})`)
     )
     // 单文件模式：允许使用 config.inject.nodeGraphId 覆盖目标 id
-    summary.compilation = t('summary_generatedGia', { arg0: giaOut.length })
     inject(giaOut.map((item) => ({ giaPath: item.giaPath, targetId: item.graphId })))
   } catch (error) {
-    ui.error(errorText(error))
+    ui.error(errorText(error).replace('[error]', '').trim())
     process.exitCode = 1
   } finally {
-    console.log(formatBuildSummary('graph', summary))
-    await luaTask?.finish()
+    // 单文件只会是 Lua 入口或节点图入口之一，不需要整体结果行
+    printBuildSummary(idleGraph(), await luaTask?.finish())
   }
 }
 

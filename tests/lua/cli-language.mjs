@@ -33,7 +33,7 @@ function run(name, code) {
     [cli, '-c', 'gsts.config.mjs', '--noinject', '--lang', 'en'],
     {
       cwd: root,
-      env: { ...process.env, APPDATA: path.dirname(app) },
+      env: { ...process.env, APPDATA: path.dirname(app), NO_COLOR: '1' },
       encoding: 'utf8',
       timeout: 90000
     }
@@ -42,12 +42,14 @@ function run(name, code) {
   fs.writeFileSync(path.join(root, name + '.log'), log)
   assert.equal(result.status, code, log)
   assert.doesNotMatch(log, /\p{Script=Han}/u, log)
-  assert.match(log, /\[TS→NodeGraph\] Compilation:/)
   return log
 }
-assert.doesNotMatch(run('pure', 0), /\[TS→Lua\]/)
+// 纯节点图项目没有 Lua 输出，也没有整体结果行
+assert.doesNotMatch(run('pure', 0), /Lua|All done/)
 fs.writeFileSync(path.join(root, 'src/hud.ts'), good)
-assert.match(run('mixed', 0), /\[TS→Lua\] Compilation: Succeeded/)
+const mixed = run('mixed', 0)
+assert.match(mixed, /\[ok\] Lua compiled: 1 entries, \d+ files \(\d+ updated\) -> /)
+assert.match(mixed, /\[ok\] All done: node graph \d+ GIA; Lua \d+ files/)
 fs.writeFileSync(
   path.join(root, 'src/hud.ts'),
   "import {GREETING} from './graph';" + good.replace("'hello'", 'GREETING')

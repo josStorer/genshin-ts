@@ -48,13 +48,13 @@ export async function runLuaCheck(argv: string[]) {
   const { detectLang, initCliI18n } = await import('../i18n/index.js')
   const { loadGstsConfig } = await import('../compiler/config_loader.js')
   const { checkClientLua } = await import('./lua.js')
+  const { createUi } = await import('./ui.js')
+  const ui = createUi()
   const cfg = await loadGstsConfig(configPath)
   const { t } = initCliI18n(detectLang(option(argv, '--lang') ?? cfg.lang))
   const result = await checkClientLua(projectDir, cfg)
-  if (!result.entries) console.log(t('lua_checkNoEntries'))
-  else
-    console.log(
-      result.hasErrors ? t('lua_checkFailed') : t('lua_checkPassed', { arg0: result.entries })
-    )
+  if (!result.entries) ui.info(t('lua_checkNoEntries'))
+  else if (result.hasErrors) ui.error(t('lua_checkFailed'))
+  else ui.ok(t('lua_checkPassed', { arg0: result.entries }))
   return result.hasErrors ? 1 : 0
 }

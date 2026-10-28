@@ -24,6 +24,7 @@ const check = () =>
     [path.join(repo, 'bin/gsts.mjs'), 'lua', 'check', '-c', 'gsts.config.mjs', '--lang', 'en'],
     {
       cwd: project,
+      env: { ...process.env, NO_COLOR: '1' },
       encoding: 'utf8',
       timeout: 120000
     }
@@ -52,7 +53,7 @@ write(
 write('src/lua/main.ts', entry('  const [q, r] = divmod(7, 2)\n  lua.print(q, r)'))
 const passed = check()
 assert.equal(passed.status, 0, passed.stdout + passed.stderr)
-assert.match(passed.stdout, /Check: passed \(1 entries\)/)
+assert.match(passed.stdout, /\[ok\] Lua check passed: 1 entries/)
 fs.rmSync(path.join(project, 'node_modules/genshin-ts'))
 console.log(
   'Lua check: type errors and native .d.ts rules fail with exit code 1, nothing is written, a tsconfig extending a custom Lua base is found, clean projects pass: PASS'

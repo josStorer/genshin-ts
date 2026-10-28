@@ -63,19 +63,19 @@ child.on('exit', (code) => {
   exitCode = code
 })
 try {
-  await wait(() => log.includes('[TS→节点图]'))
+  await wait(() => log.includes('--noinject 已启用'))
   await delay(800)
   const gia = path.join(root, 'out/graph.gia')
   fs.unlinkSync(gia)
   fs.mkdirSync(gia)
   const start = log.length
   write('graph.ts', graph.replace("'hi'", "'blocked-output'"))
-  await wait(() => log.slice(start).includes('[TS→节点图] 编译：失败'))
+  await wait(() => log.slice(start).includes('[error]'))
   await delay(400)
   fs.rmdirSync(gia)
   const recovery = log.length
   write('graph.ts', graph.replace("'hi'", "'recovered'"))
-  await wait(() => log.slice(recovery).includes('[TS→节点图] 编译：成功'))
+  await wait(() => /graph.gia/.test(log.slice(recovery)))
   assert(fs.statSync(gia).isFile(), log)
 } finally {
   fs.writeFileSync(path.join(root, 'dev.log'), log)

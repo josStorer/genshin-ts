@@ -567,7 +567,7 @@ external_lua_file/
   …other dependencies
 ```
 
-With inject.mapId configured, omit --noinject to copy files to the map; local dist remains. After editing Lua, rerun the game in the editor; no separate script-refresh step is needed. For TS, wait for dev compilation/copying first. CLI mount checks inspect recognized GIL records read-only; a candidate match does not prove a working mount, and the check never writes mount mappings.
+With inject.mapId configured, omit --noinject to copy files to the map; local dist remains. After editing Lua, rerun the game in the editor; no separate script-refresh step is needed. For TS, wait for dev compilation/copying first. After injecting, the CLI prints `[ok] Lua injected: … -> …external_lua_file`, the folder the files were copied to; the CLI does not check mounts, so confirm them in the editor.
 
 ### Protection, manifests and obsolete files
 

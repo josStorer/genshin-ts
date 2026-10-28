@@ -13,13 +13,29 @@ import type { LuaCompileCache, LuaPrepared } from '../compiler/lua/ts_to_lua_pip
 import { createBuildTimer } from '../compiler/lua/worker/profile.js'
 import { createLuaWorker, type LuaWorker } from '../compiler/lua/worker/worker_client.js'
 import { t } from '../i18n/index.js'
-import { formatBuildSummary } from './build_summary.js'
+import type { LuaOutcome } from './build_summary.js'
 import { resolveGilTarget } from './gil_paths.js'
+import { createUi, uiTags } from './ui.js'
+
+const ui = createUi()
+
+/** 写出或注入一组文件的结果，用于结尾的一行说明。 */
+interface LuaWriteSummary {
+  dir: string
+  files: number
+  written: number
+  unchanged: number
+  removed: number
+  skipped: number
+}
 
 export interface ClientLuaReport {
+  /** 发现了 Lua 入口；dev 据此决定是否处理 Lua 文件的监听事件。 */
   active: boolean
-  compilation: string
-  injection: string
+  /** 这一轮真的编译了 Lua（复用上次结果或没有入口时为 false）。 */
+  ran?: boolean
+  local?: LuaWriteSummary & { entries: number }
+  injected?: LuaWriteSummary
   log: (...values: unknown[]) => void
 }
 
@@ -35,7 +51,6 @@ export interface ClientLuaSession {
   localOutput?: LuaOutputCache
   injectedOutput?: LuaOutputCache
   graphFiles?: Set<string>
-  mountReportKey?: string
   discovery?: {
     key: string
     candidates: Map<string, DiscoveredFile>
@@ -102,10 +117,8 @@ export async function buildClientLua({
   onPrepared,
   reporting
 }: ClientLuaOptions) {
-  const report = reporting ?? {
+  const report: ClientLuaReport = reporting ?? {
     active: false,
-    compilation: t('summary_failed'),
-    injection: t('summary_compileOrWriteFailed'),
     log: (...values: unknown[]) => console.log(...values)
   }
   const timer = createBuildTimer(profile)
@@ -131,8 +144,8 @@ export async function buildClientLua({
   }
   const compiled = await compilePlannedLua(context, discovered, plan)
   writeClientLua(context, compiled)
-  const mountedGil = injectClientLua(context, compiled)
-  return reportClientLua(context, discovered, compiled, mountedGil)
+  injectClientLua(context, compiled)
+  return reportClientLua(context, discovered, compiled)
 }
 
 /** gsts lua check：发现入口后做完整类型检查和全部 Lua 规则检查（含原生 .d.ts），不写产物、不注入。 */
@@ -146,7 +159,7 @@ export async function checkClientLua(cfgDir: string, cfg: GstsConfig) {
     profile: false,
     rootDir,
     timer: createBuildTimer(false),
-    report: { active: false, compilation: '', injection: '', log: console.log }
+    report: { active: false, log: console.log }
   }
   const { entries, candidates, additionalFiles, sharedProjectKey } =
     await discoverClientLua(context)
@@ -386,8 +399,6 @@ function planClientLua(
         !/\.(lua|json)$|\.d\.ts$/i.test(file)
     )
   ) {
-    report.compilation = t('summary_reused')
-    report.injection = t('summary_noUpdate')
     return {
       kind: 'reused' as const,
       summary: last,
@@ -429,6 +440,7 @@ function planClientLua(
     }
   }
   report.active = true
+  report.ran = true
   if (session) session.active = true
   return { kind: 'compile' as const, key, last, outDir, owner }
 }
@@ -516,10 +528,12 @@ function reportLuaConflicts(
   injectionStartedAt?: number
 ) {
   if (!result.conflicts.length) return
-  log(describe(result, injectionStartedAt !== undefined))
+  for (const line of describe(result, injectionStartedAt !== undefined).split('\n'))
+    log(uiTags.warn, line)
   if (injectionStartedAt === undefined) return
   const ok = result.written.length + result.unchanged.length + result.removed.length
   log(
+    uiTags.info,
     t('injectAllDone', {
       ok,
       skipped: result.conflicts.length,
@@ -532,33 +546,29 @@ function reportLuaConflicts(
 
 /** 本地写出后进入注入；两处独立跳过没有授权标记的文件。 */
 function writeClientLua(
-  { session, complete, noinject, report, timer }: ClientLuaBuildContext,
+  { session, complete, report, timer }: ClientLuaBuildContext,
   { plan, result, writer }: CompiledClientLua
 ) {
   const { outDir, owner } = plan
   const { writeLuaFiles, describeLuaConflicts } = writer
   const { mark } = timer
-  const log = report.log
-  report.compilation = t('summary_writeFailed')
   const local = writeLuaFiles(outDir, result.files, complete, owner, session?.localOutput)
-  reportLuaConflicts(local, describeLuaConflicts, log)
-  report.compilation = t('lua_outputSummary', {
-    arg0: result.files.size,
-    arg1: local.written.length,
-    arg2: local.unchanged.length,
-    arg3: local.removed.length
-  })
-  report.injection = noinject ? t('summary_disabled') : t('summary_noMap')
+  reportLuaConflicts(local, describeLuaConflicts, report.log)
+  report.local = {
+    ...writeSummary(outDir, result.files.size, local),
+    entries: result.entries.length
+  }
   mark('localWrite')
-  log(
-    t('lua_outputWritten', {
-      arg0: result.files.size,
-      arg1: local.written.length,
-      arg2: local.unchanged.length,
-      arg3: local.removed.length
-    })
-  )
 }
+
+const writeSummary = (dir: string, files: number, result: LuaWriteResult): LuaWriteSummary => ({
+  dir,
+  files,
+  written: result.written.length,
+  unchanged: result.unchanged.length,
+  removed: result.removed.length,
+  skipped: result.conflicts.length
+})
 
 /** 注入只复制 Lua 文件，保持既有的标记保护和错误状态。 */
 function injectClientLua(
@@ -567,36 +577,15 @@ function injectClientLua(
 ) {
   const { owner } = plan
   const { writeLuaFiles, describeLuaConflicts } = writer
-  const log = report.log
-  let mountedGil: string | undefined
   if (cfg.inject?.mapId !== undefined && !noinject) {
-    report.injection = t('summary_failed')
     try {
       const target = resolveGilTarget(cfg.inject)
-      mountedGil = target.gilPath
       const destination = path.join(target.saveLevelDir, String(target.mapId), 'external_lua_file')
       const started = performance.now()
-      const injected = writeLuaFiles(
-        destination,
-        new Map([...result.files].filter(([name]) => name.endsWith('.lua'))),
-        complete,
-        owner,
-        session?.injectedOutput
-      )
-      reportLuaConflicts(injected, describeLuaConflicts, log, started)
-      report.injection = t('lua_injectionSummary', {
-        arg0: injected.written.length,
-        arg1: injected.unchanged.length,
-        arg2: injected.removed.length
-      })
-      log(
-        t('lua_injectionWritten', {
-          arg0: target.mapId,
-          arg1: injected.written.length,
-          arg2: injected.unchanged.length,
-          arg3: injected.removed.length
-        })
-      )
+      const files = new Map([...result.files].filter(([name]) => name.endsWith('.lua')))
+      const injected = writeLuaFiles(destination, files, complete, owner, session?.injectedOutput)
+      reportLuaConflicts(injected, describeLuaConflicts, report.log, started)
+      report.injected = writeSummary(destination, files.size, injected)
     } catch (error) {
       throw new Error(
         t('lua_injectionFailed', { arg0: error instanceof Error ? error.message : String(error) }),
@@ -604,15 +593,13 @@ function injectClientLua(
       )
     }
   }
-  return mountedGil
 }
 
-/** 挂载提示、性能信息和会话结果统一在写出/注入之后收尾。 */
-async function reportClientLua(
+/** 性能信息和会话结果统一在写出/注入之后收尾。 */
+function reportClientLua(
   { session, report, timer }: ClientLuaBuildContext,
   discovered: DiscoveredClientLua,
-  { plan, result }: CompiledClientLua,
-  mountedGil: string | undefined
+  { plan, result }: CompiledClientLua
 ) {
   const {
     entries,
@@ -625,17 +612,6 @@ async function reportClientLua(
   } = discovered
   const { key } = plan
   const { mark } = timer
-  const log = report.log
-  const mountKey = JSON.stringify([
-    result.entries,
-    mountedGil,
-    mountedGil ? fs.statSync(mountedGil).mtimeMs : undefined
-  ])
-  if (!session || session.mountReportKey !== mountKey) {
-    const { luaMountMessages } = await import('./lua_mounts.js')
-    for (const message of luaMountMessages(result.entries, mountedGil)) log(message)
-    if (session) session.mountReportKey = mountKey
-  }
   mark('injectionAndReport')
   timer.report(
     {
@@ -647,7 +623,7 @@ async function reportClientLua(
       entries: entries.length,
       compiler: 'profile' in result ? result.profile : undefined
     },
-    log
+    report.log
   )
   const summary = { key, dependencies: result.dependencies, entries: result.entries, candidates }
   if (session) session.last = summary
@@ -657,6 +633,16 @@ async function reportClientLua(
     )
   )
   return summary
+}
+
+/** 写出结果的变化说明，例如“更新 2，删除 1”；什么都没变时为“没有变化”。 */
+function describeChanges({ written, removed, skipped }: LuaWriteSummary) {
+  const parts = [
+    written ? t('lua_changeWritten', { count: written }) : '',
+    removed ? t('lua_changeRemoved', { count: removed }) : '',
+    skipped ? t('lua_changeSkipped', { count: skipped }) : ''
+  ].filter(Boolean)
+  return parts.length ? parts.join(t('lua_changeSeparator')) : t('lua_changeNone')
 }
 
 /** 依赖分组完成后即可开始节点图编译；两种目标各用自己的类型环境。 */
@@ -688,8 +674,6 @@ export function startClientLua({
   const logs: unknown[][] = []
   const report: ClientLuaReport = {
     active: false,
-    compilation: t('summary_failed'),
-    injection: t('summary_compileOrWriteFailed'),
     log: (...values) => logs.push(values)
   }
   const result = buildClientLua({
@@ -730,20 +714,47 @@ export function startClientLua({
     prepared,
     result,
     report,
-    // 编译和写出可以并行；普通日志与总结留到节点图输出结束后统一显示。
-    async finish() {
-      let value: Awaited<typeof result> | undefined
+    // 编译和写出可以并行；日志和结果行留到节点图输出结束后统一显示。
+    async finish(): Promise<LuaOutcome> {
       let failure: string | undefined
       try {
-        value = await result
+        await result
       } catch (error) {
         process.exitCode = 1
         failure = error instanceof Error ? error.message : String(error)
       }
       for (const values of logs.splice(0)) console.log(...values)
-      if (failure) console.log(`[Lua] ${failure}`)
-      if (report.active || failure) console.log(formatBuildSummary('lua', report))
-      return value
+      const { local, injected } = report
+      if (local) {
+        ui.ok(
+          t('lua_compiled', {
+            entries: local.entries,
+            files: local.files,
+            changes: describeChanges(local),
+            dir: local.dir
+          })
+        )
+      }
+      if (injected) {
+        ui.ok(
+          t('lua_injected', {
+            files: injected.files,
+            changes: describeChanges(injected),
+            dir: injected.dir
+          })
+        )
+      }
+      // 编译错误已经逐条列出，结尾不再重复；写出、注入等失败在这里说明一次。
+      const compileFailed = failure === t('lua_compileFailed')
+      if (failure && !compileFailed) ui.error(failure)
+      return {
+        ran: !!report.ran || !!failure,
+        ok: !failure,
+        files: local?.files ?? 0,
+        overwritten: injected?.written,
+        skipped: injected?.skipped,
+        compileFailed
+      }
     }
   }
 }

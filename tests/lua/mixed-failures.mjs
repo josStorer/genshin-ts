@@ -31,6 +31,7 @@ const env = {
   ...process.env,
   APPDATA: path.join(app, 'Roaming'),
   LOCALAPPDATA: path.join(app, 'Local'),
+  NO_COLOR: '1',
   NODE_OPTIONS: `--import=${pathToFileURL(hook).href}`
 }
 const proto = loadGiaProto()
@@ -71,22 +72,40 @@ const server = (value) =>
 const lua = (value) =>
   `import{g}from'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{return{onStart(){lua.print(${value})}}})`
 const badLua = lua(1).replace('return{', 'const bad = ;return{')
+
+// 整体结果行的几种写法
+const graphInjected = '节点图 1 个 GIA 已注入'
+const luaUpdated = String.raw`\d+ 个 Lua 文件已覆盖更新`
+const luaFailedRound = new RegExp(String.raw`\[error\] 未全部完成：${graphInjected}，Lua 编译失败`)
+const graphFailedRound = new RegExp(String.raw`\[error\] 未全部完成：节点图失败，${luaUpdated}`)
+const luaInjectedLine = /\[ok\] 已注入 Lua：\d+ 个文件（更新 \d+）-> .*external_lua_file/
+const graphOnlyDone = '注入全部完成（成功 1，'
+
+// 节点图输出全部结束后才输出 Lua，整体结果在最后一行
 function ordered(log) {
   const lines = log.trim().split(/\r?\n/)
-  assert.match(lines.at(-1), /^\[TS→Lua\]/, log)
-  assert(log.indexOf('[TS→节点图]') < log.indexOf('[Lua]'), log)
+  assert.match(lines.at(-1), /^\[(?:ok|error)\] (?:全部完成|未全部完成)：/, log)
+  graphBeforeLua(lines.slice(0, -1), log)
+}
+function graphBeforeLua(body, log) {
+  const lastGraph = body.findLastIndex((line) => /\.gia\b|missingMethod/.test(line))
+  const firstLua = body.findIndex((line) => /Lua|\.lua\b|hud\.ts|value\.ts/.test(line))
+  assert(firstLua >= 0 && lastGraph < firstLua, log)
 }
 function batch(label, expectedCode) {
+  // stdout 和 stderr 写进同一个文件，保留真实顺序
+  const file = path.join(root, label + '.log')
+  const fd = fs.openSync(file, 'w')
   const p = spawnSync(process.execPath, [cli, '-c', 'gsts.config.mjs', '--lang', 'zh'], {
     cwd: root,
     env,
-    encoding: 'utf8',
+    stdio: ['ignore', fd, fd],
     timeout: 90000
   })
-  const log = p.stdout + p.stderr
-  fs.writeFileSync(path.join(root, label + '.log'), log)
+  fs.closeSync(fd)
+  const log = fs.readFileSync(file, 'utf8')
   assert.equal(p.status, expectedCode, log)
-  ordered(p.stdout)
+  ordered(log)
   return log
 }
 write('server.ts', server('graph-despite-lua-error'))
@@ -94,15 +113,17 @@ write('hud.ts', badLua)
 fs.writeFileSync(gil, map())
 let log = batch('lua-compile-failure', 1)
 assert(!fs.readFileSync(gil).equals(map()), log)
-assert.match(log, /\[TS→节点图\] 编译：成功.*注入：成功 1/)
-assert.match(log, /\[TS→Lua\] 编译：失败.*注入：未执行/)
+assert.match(log, luaFailedRound)
+// Lua 编译失败只在结果行说明一次
+assert.equal(log.match(/Lua 编译失败/g).length, 1, log)
 
 write('server.ts', server('broken').replace('f.printString', 'f.missingMethod'))
 write('hud.ts', lua(2))
 log = batch('graph-compile-failure', 1)
 assert.match(fs.readFileSync(path.join(luaDir, 'hud.lua'), 'utf8'), /2/)
-assert.match(log, /\[TS→节点图\] 编译：失败/)
-assert.match(log, /\[TS→Lua\] 编译：成功.*注入：成功/)
+assert.match(log, graphFailedRound)
+assert.match(log, luaInjectedLine)
+assert.doesNotMatch(log, /\[error\] \[error\]/)
 
 write('server.ts', server('graph-despite-lua-conflict'))
 write('hud.ts', lua(3))
@@ -113,7 +134,10 @@ assert(!fs.readFileSync(gil).equals(map()), log)
 assert.equal(fs.readFileSync(path.join(luaDir, 'hud.lua'), 'utf8'), '-- user file')
 assert.match(log, /-- @gsts:lua/)
 assert.match(log, /跳过 1，失败 0/)
-assert.match(log, /\[TS→Lua\] 编译：成功.*注入：成功/)
+assert.match(
+  log,
+  new RegExp(`\\[ok\\] 全部完成：${graphInjected}，Lua 覆盖更新 0 个文件、跳过 1 个`)
+)
 fs.writeFileSync(path.join(luaDir, 'hud.lua'), '-- @gsts:lua\nreturn {}')
 
 // Block only nodegraph injection with an invalid GIL; the Lua directory is still resolvable.
@@ -121,8 +145,12 @@ fs.writeFileSync(gil, 'invalid-gil')
 write('hud.ts', lua(4))
 log = batch('graph-injection-failure', 1)
 assert.match(fs.readFileSync(path.join(luaDir, 'hud.lua'), 'utf8'), /4/)
-assert.match(log, /\[TS→节点图\] 编译：成功.*(?:注入：失败|失败 [1-9])/)
-assert.match(log, /\[TS→Lua\] 编译：成功.*注入：成功/)
+assert.match(
+  log,
+  new RegExp(
+    String.raw`\[error\] 未全部完成：节点图(?:失败|注入成功 0、跳过 0、失败 [1-9])，${luaUpdated}`
+  )
+)
 
 fs.mkdirSync(path.join(src, 'private'))
 write('private/value.ts', 'export const value=missingAtStartup')
@@ -136,8 +164,10 @@ const child = fork(cli, ['dev', '-c', 'gsts.config.mjs', '--lang', 'zh'], {
   stdio: ['ignore', 'pipe', 'pipe', 'ipc']
 })
 let output = '',
+  stdout = '',
   exited = false
 for (const stream of [child.stdout, child.stderr]) stream.on('data', (d) => (output += d))
+child.stdout.on('data', (d) => (stdout += d))
 child.on('exit', () => (exited = true))
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 async function wait(check) {
@@ -147,84 +177,96 @@ async function wait(check) {
     await sleep(40)
   }
 }
-let start = 0
+let start = 0,
+  stdoutStart = 0
 const round = () => output.slice(start)
+// dev 的两路输出分开到达，先后只核对标准输出（Lua 的诊断和结果行都在标准输出）
+const orderedRound = () => {
+  const text = stdout.slice(stdoutStart)
+  graphBeforeLua(text.trim().split(/\r?\n/), text)
+}
+const nextRound = () => {
+  start = output.length
+  stdoutStart = stdout.length
+}
 try {
-  await wait(() => output.includes('[TS→Lua]'))
-  assert.match(output, /\[TS→Lua\] 编译：失败/)
-  assert.match(output, /\[TS→节点图\] 编译：成功.*注入：成功 1/)
+  await wait(() => output.includes('未全部完成'))
+  assert.match(output, luaFailedRound)
   await sleep(600)
-  start = output.length
+  nextRound()
   write('private/value.ts', 'export const value=5')
-  await wait(() => /\[TS→Lua\] 编译：成功.*注入：成功/.test(round()))
+  await wait(() => round().includes('[ok] 已注入 Lua：'))
+  // 只改了 Lua 依赖：没有节点图输出，也没有整体结果行
   await sleep(300)
-  start = output.length
+  assert.doesNotMatch(round(), /\.gia\b|全部完成：/)
+  nextRound()
   write('private/value.ts', 'export const value=missingName')
   write('server.ts', server('dev-lua-failed'))
-  await wait(() => /\[TS→Lua\] 编译：失败/.test(round()))
-  assert.match(round(), /\[TS→节点图\] 编译：成功.*注入：成功 1/)
+  await wait(() => round().includes('未全部完成'))
+  assert.match(round(), luaFailedRound)
   assert(fs.readFileSync(path.join(root, 'out/server.json'), 'utf8').includes('dev-lua-failed'))
-  ordered(round())
+  orderedRound()
   await sleep(300)
-  start = output.length
+  nextRound()
   write('server.ts', server('dev-lua-still-failed'))
-  await wait(() => /\[TS→Lua\] 编译：失败/.test(round()))
-  assert.match(round(), /\[TS→节点图\] 编译：成功.*注入：成功 1/)
+  await wait(() => round().includes('未全部完成'))
+  assert.match(round(), luaFailedRound)
   await sleep(300)
-  start = output.length
+  nextRound()
   write('private/value.ts', 'export const value=6')
-  await wait(() => /\[TS→Lua\] 编译：成功.*注入：成功/.test(round()))
+  await wait(() => round().includes('[ok] 已注入 Lua：'))
   assert.match(fs.readFileSync(path.join(luaDir, 'private/value.lua'), 'utf8'), /6/)
   await sleep(300)
-  start = output.length
+  nextRound()
   write('server.ts', server('broken').replace('f.printString', 'f.missingMethod'))
   write('private/value.ts', 'export const value=7')
-  await wait(() => /\[TS→Lua\] 编译：成功.*注入：成功/.test(round()))
-  assert.match(round(), /\[TS→节点图\] 编译：失败/)
+  await wait(() => round().includes('未全部完成'))
+  assert.match(round(), graphFailedRound)
   assert.match(fs.readFileSync(path.join(luaDir, 'private/value.lua'), 'utf8'), /7/)
-  ordered(round())
+  orderedRound()
   await sleep(300)
-  start = output.length
+  nextRound()
   write('server.ts', server('dev-recovered'))
-  await wait(() => /\[TS→节点图\] 编译：成功.*注入：成功 1/.test(round()))
+  await wait(() => round().includes(graphOnlyDone))
   assert(fs.readFileSync(path.join(root, 'out/server.json'), 'utf8').includes('dev-recovered'))
   // 超过 20 个文件走完整构建；节点图失败不能丢掉新 Lua 依赖的监听。
   await sleep(300)
-  start = output.length
+  nextRound()
   write('private/new.ts', 'export const value=8')
   write('hud.ts', `import{value}from'./private/new';${lua('value')}`)
   write('server.ts', server('broken-batch').replace('f.printString', 'f.missingMethod'))
   for (let i = 0; i < 21; i++) write(`extra${i}.ts`, `export const n=${i}`)
-  await wait(() => /\[TS→Lua\] 编译：成功.*注入：成功/.test(round()))
-  assert.match(round(), /\[TS→节点图\] 编译：失败/)
+  await wait(() => round().includes('未全部完成'))
+  assert.match(round(), graphFailedRound)
   await sleep(300)
-  start = output.length
+  nextRound()
   write('private/new.ts', 'export const value=9')
-  await wait(() => /\[TS→Lua\] 编译：成功.*注入：成功/.test(round()))
+  await wait(() => round().includes('[ok] 已注入 Lua：'))
   assert.match(fs.readFileSync(path.join(luaDir, 'private/new.lua'), 'utf8'), /9/)
   await sleep(300)
-  start = output.length
+  nextRound()
   write('server.ts', server('full-batch-recovered'))
-  await wait(() => /\[TS→节点图\] 编译：成功.*注入：成功 1/.test(round()))
+  await wait(() => round().includes(graphOnlyDone))
   // 删除 Lua 入口后，同样验证纯节点图的负向入口规则不会屏蔽依赖。
   await sleep(300)
-  start = output.length
+  nextRound()
   fs.unlinkSync(path.join(src, 'hud.ts'))
-  await wait(() => /\[TS→Lua\] 编译：成功/.test(round()))
+  await wait(() => round().includes('Lua 编译完成：0 个入口'))
   await sleep(300)
   write('private/graph.ts', "export const message='private-before'")
-  start = output.length
+  nextRound()
   write(
     'server.ts',
     `import{message}from'./private/graph';${server('placeholder').replace("'placeholder'", 'message')}`
   )
-  await wait(() => /\[TS→节点图\] 编译：成功.*注入：成功 1/.test(round()))
+  await wait(() => round().includes(graphOnlyDone))
   await sleep(300)
-  start = output.length
+  nextRound()
   write('private/graph.ts', "export const message='private-after'")
-  await wait(() => /\[TS→节点图\] 编译：成功.*注入：成功 1/.test(round()))
+  await wait(() => round().includes(graphOnlyDone))
   assert(fs.readFileSync(path.join(root, 'out/server.json'), 'utf8').includes('private-after'))
-  assert(!round().includes('[TS→Lua]'), round())
+  await sleep(300)
+  assert.doesNotMatch(round(), /Lua|全部完成：/)
 } finally {
   fs.writeFileSync(path.join(root, 'dev.log'), output)
   if (!exited) {
@@ -234,5 +276,5 @@ try {
   }
 }
 console.log(
-  'Mixed batch/dev: independent compile and injection failures, recovery, and ordered summaries: PASS'
+  'Mixed batch/dev: independent compile and injection failures, recovery, ordered output and one-line results: PASS'
 )

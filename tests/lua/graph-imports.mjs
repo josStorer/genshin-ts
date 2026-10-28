@@ -68,22 +68,23 @@ for (const initiallyBad of [true, false]) {
     }
   }
   try {
-    await wait(() => log.includes('[TS→Lua]'))
+    // 节点图和 Lua 都参与时，整体结果行（全部完成/未全部完成）标记一轮结束
+    await wait(() => log.includes('全部完成：'))
     assert(fs.existsSync(path.join(root, 'out/graph.gia')), log)
     if (initiallyBad) assert.match(log, /节点图入口不能作为 Lua 模块导入/)
     else {
       await delay(700)
       const start = log.length
       write('hud.ts', bad)
-      await wait(() => log.slice(start).includes('[TS→Lua]'))
+      await wait(() => log.slice(start).includes('Lua 编译失败'))
       assert.match(log.slice(start), /节点图入口不能作为 Lua 模块导入/)
-      assert.match(log.slice(start), /编译：失败/)
+      assert.doesNotMatch(log.slice(start), /全部完成：/)
     }
     assert(!fs.existsSync(path.join(root, 'out/lua/graph.lua')), log)
     await delay(400)
     const start = log.length
     write('graph.ts', graph.replace("'hi'", "'changed'"))
-    await wait(() => log.slice(start).includes('[TS→Lua]'))
+    await wait(() => log.slice(start).includes('未全部完成：'))
     assert.match(log.slice(start), /节点图入口不能作为 Lua 模块导入/)
     assert.match(fs.readFileSync(path.join(root, 'out/graph.json'), 'utf8'), /changed/)
     assert(fs.statSync(path.join(root, 'out/graph.gia')).size > 0)

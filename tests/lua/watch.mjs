@@ -58,10 +58,10 @@ try {
   await wait(() => fs.existsSync(output))
   // Wait until initial compilation has installed dependency watchers.
   await new Promise((r) => setTimeout(r, 800))
-  const initialRuns = (log.match(/\[Lua\] 本地产物/g) ?? []).length
+  const initialRuns = (log.match(/Lua 编译完成/g) ?? []).length
   fs.writeFileSync(path.join(source, 'unrelated.ts'), 'export const value = 2')
   await wait(() => log.includes('unrelated-change'))
-  assert.equal((log.match(/\[Lua\] 本地产物/g) ?? []).length, initialRuns)
+  assert.equal((log.match(/Lua 编译完成/g) ?? []).length, initialRuns)
   fs.writeFileSync(path.join(source, 'raw.lua'), 'return {double=function(n)return n*3 end}')
   await wait(() => fs.readFileSync(output, 'utf8').includes('n*3'))
   const before = fs.readFileSync(path.join(source, 'build/lua/main.lua'), 'utf8')
@@ -84,7 +84,7 @@ try {
   await wait(() => fs.readFileSync(output, 'utf8').includes('n*4'))
   // 分组完成后再保存一次，验证正在编译时的新事件不会被本轮清空。
   await new Promise((r) => setTimeout(r, 250))
-  const runsBefore = (log.match(/\[Lua\] 本地产物/g) ?? []).length
+  const runsBefore = (log.match(/Lua 编译完成/g) ?? []).length
   const main = path.join(source, 'main.ts')
   const text = fs.readFileSync(main, 'utf8')
   const preparedCount = (log.match(/"phase":"prepared"/g) ?? []).length
@@ -95,10 +95,10 @@ try {
     fs.readFileSync(path.join(source, 'build/lua/main.lua'), 'utf8').includes('(22)')
   )
   // 文件先写出，末尾日志随后到达；等两次保存各自完成再检查是否有额外构建。
-  await wait(() => (log.match(/\[Lua\] 本地产物/g) ?? []).length >= runsBefore + 2)
+  await wait(() => (log.match(/Lua 编译完成/g) ?? []).length >= runsBefore + 2)
   await new Promise((r) => setTimeout(r, 800))
   assert.equal(
-    (log.match(/\[Lua\] 本地产物/g) ?? []).length,
+    (log.match(/Lua 编译完成/g) ?? []).length,
     runsBefore + 2,
     'generated Lua must not trigger another build'
   )

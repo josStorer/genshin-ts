@@ -1,10 +1,8 @@
 import './locale.mjs'
 
 import assert from 'node:assert/strict'
-import fs from 'node:fs'
-import path from 'node:path'
 
-import { inspectLuaMounts, luaMountMessages } from '../../src/cli/lua_mounts.ts'
+import { inspectLuaMounts } from '../../src/cli/lua_mounts.ts'
 import { encodeVarint } from '../../src/injector/binary.ts'
 
 const v = (field, value) => Buffer.concat([encodeVarint(field * 8), encodeVarint(value)])
@@ -23,24 +21,9 @@ const payload = Buffer.concat([
 assert.deepEqual(inspectLuaMounts({ payload, fields: [] }), [
   { path: 'lua/hud', controlIndex: 456, controlName: 'HUD' }
 ])
-const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/mounts-')),
-  file = path.join(root, 'fixture.gil')
-const header = Buffer.alloc(20),
-  tail = Buffer.alloc(4)
-header.writeUInt32BE(0x0326, 8)
-tail.writeUInt32BE(0x0679)
-const bytes = Buffer.concat([header, payload, tail])
-fs.writeFileSync(file, bytes)
-const messages = luaMountMessages(['lua/hud.lua', 'lua/board.lua'], file)
-assert(messages.some((text) => text.includes('HUD (456)')))
-assert(messages.some((text) => text.includes('lua/board')))
-assert(fs.readFileSync(file).equals(bytes), 'mount inspection must never write the map')
-assert.deepEqual(luaMountMessages([], file), [])
-assert(
-  luaMountMessages(['lua/hud.lua'], path.join(root, 'missing.gil')).some((text) =>
-    text.includes('lua/hud')
-  )
-)
-console.log(
-  'Mount inspection: known field paths, unknown mounts, read failure and byte-unchanged GIL: PASS'
-)
+// 没有挂载记录的脚本不出现在结果里
+const orphan = nest([50, 1], Buffer.concat([v(1, 124), b(3, Buffer.from('lua/board.lua'))]))
+assert.deepEqual(inspectLuaMounts({ payload: Buffer.concat([payload, orphan]), fields: [] }), [
+  { path: 'lua/hud', controlIndex: 456, controlName: 'HUD' }
+])
+console.log('Mount inspection: known field paths and scripts without mounts: PASS')

@@ -43,8 +43,9 @@ for (const [initial, added] of [
     }
   }
   try {
-    await wait(() => log.includes(initial === 'lua' ? '[TS→Lua]' : '[TS→节点图]'))
-    // The first summary precedes watcher setup; allow the watcher to finish its initial scan.
+    // 首轮：只有 Lua 时以 Lua 结果行结束，否则以 --noinject 提示结束
+    await wait(() => log.includes(initial === 'lua' ? 'Lua 编译完成' : '--noinject 已启用'))
+    // The first round's output precedes watcher setup; allow the watcher to finish its initial scan.
     await sleep(700)
     const initialOutput =
       initial === 'empty'
@@ -58,7 +59,7 @@ for (const [initial, added] of [
     if (initial === 'empty') {
       // Editors commonly create an empty TS file before saving the entry body.
       fs.writeFileSync(file, '')
-      await wait(() => log.slice(from).includes('[TS→节点图]'))
+      await wait(() => log.slice(from).includes('开始编译'))
       await sleep(250)
     }
     const offset = log.length
@@ -67,9 +68,7 @@ for (const [initial, added] of [
     await wait(
       () =>
         fs.existsSync(result) &&
-        log
-          .slice(offset)
-          .includes(added === 'lua' ? '[TS→Lua] 编译：成功' : '[TS→节点图] 编译：成功')
+        log.slice(offset).includes(added === 'lua' ? 'Lua 编译完成' : 'added.gia')
     )
     if (added === 'lua') {
       assert.match(fs.readFileSync(result, 'utf8'), /function _ENV\.OnStart/)

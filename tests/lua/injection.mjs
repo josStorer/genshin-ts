@@ -60,8 +60,6 @@ try {
     changedFiles: [path.join(dir, 'main.ts')],
     reporting: {
       active: false,
-      compilation: '',
-      injection: '',
       log: (...values) => logs.push(values.join(' '))
     }
   })

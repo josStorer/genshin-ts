@@ -58,7 +58,7 @@ const wait = async (check) => {
   }
 }
 try {
-  await wait(() => log.includes('[TS→节点图]'))
+  await wait(() => log.includes('--noinject 已启用'))
   await delay(800)
   for (const [file, value] of [
     ['unused.d.ts', 'export declare const value: string'],
@@ -79,11 +79,11 @@ try {
   await delay(800)
   assert.equal(log, previous, 'pure TS dev must also ignore add/unlink')
   write('hud.ts', good)
-  await wait(() => log.includes('[TS→Lua]'))
+  await wait(() => log.includes('Lua 编译完成'))
   await delay(400)
   const offset = log.length
   write('unused.d.ts', 'export declare const value: boolean')
-  await wait(() => log.slice(offset).includes('[TS→Lua]'))
+  await wait(() => log.slice(offset).includes('Lua 编译完成'))
   console.log(
     'PASS: pure TS dev ignores .d.ts/.lua changes without output; adding Lua activates these events'
   )

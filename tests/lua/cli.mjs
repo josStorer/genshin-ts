@@ -17,6 +17,7 @@ const cli = path.resolve('bin/gsts.mjs')
 function run(args) {
   const res = spawnSync(process.execPath, [cli, ...args, '--lang', 'zh'], {
     cwd: path.resolve('.'),
+    env: { ...process.env, NO_COLOR: '1' },
     encoding: 'utf8',
     timeout: 120000
   })
@@ -24,7 +25,7 @@ function run(args) {
   return res.stdout
 }
 const out = run(['-c', path.join(root, 'gsts.config.ts'), '--noinject'])
-assert.match(out, /本地产物/)
+assert.match(out, /\[ok\] Lua 编译完成：1 个入口，\d+ 个文件（[^）]+）-> /)
 assert.match(fs.readFileSync(path.join(root, 'out/lua/main.lua'), 'utf8'), /^-- @gsts:lua/)
 assert.equal(fs.existsSync(path.join(root, 'out/main.gs.ts')), false)
 run([path.join(root, 'main.ts'), '-c', path.join(root, 'gsts.config.ts'), '--noinject'])
