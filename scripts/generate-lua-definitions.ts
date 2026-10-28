@@ -382,8 +382,8 @@ for (const [scope, members] of interfaces) {
       note('Used to instantiate templates; not a runtime id.', '用于模板实例化，不是运行时 id。')
     if (scope === 'Script' && name === 'GetParam')
       note(
-        'Check the type of the result; in game, control indexes were not turned into objects, so nothing is converted implicitly.',
-        '返回值需检查类型；实测未观察到控件索引自动转对象，不作隐式转换。'
+        'Check the type of the result. A Client Control ID variable returns the editor index (prefabIndex), not a control (confirmed in game); find controls by name with lua.helper.findControl.',
+        '返回值需检查类型。“客户端控件ID”变量返回的是编辑器索引（prefabIndex），不是控件（已在游戏内确认）；控件请用 lua.helper.findControl 按名称查找。'
       )
     lines.push(...bilingual(en, zh))
     if (item.kind === 'field') {

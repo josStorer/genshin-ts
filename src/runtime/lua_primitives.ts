@@ -6,9 +6,9 @@
 export type LuaMultiReturn<T extends unknown[]> = T & { readonly __tstlMultiReturn: unknown }
 
 /**
- * Native iterator; TSTL turns for...of over it into Lua for...in.
+ * Native iterator; for...of over it compiles to Lua for...in.
  *
- * 原生迭代器；用于 for...of 时由 TSTL 转成 Lua 的 for...in。
+ * 原生迭代器；对它写 for...of 会编译成 Lua 的 for...in。
  */
 export type LuaIterable<T> = Iterable<T> & { readonly __tstlIterable: 'Iterable' }
 /**

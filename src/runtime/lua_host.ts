@@ -2642,9 +2642,9 @@ export interface Script {
    */
   enabled: boolean
   /**
-   * Loads the parameter of the corresponding variable in the current Script by the variable name paramName. Check the type of the result; in game, control indexes were not turned into objects, so nothing is converted implicitly.
+   * Loads the parameter of the corresponding variable in the current Script by the variable name paramName. Check the type of the result. A Client Control ID variable returns the editor index (prefabIndex), not a control (confirmed in game); find controls by name with lua.helper.findControl.
    *
-   * 按变量名称 paramName 读取当前脚本内对应变量的参数。返回值需检查类型；实测未观察到控件索引自动转对象，不作隐式转换。
+   * 按变量名称 paramName 读取当前脚本内对应变量的参数。返回值需检查类型。“客户端控件ID”变量返回的是编辑器索引（prefabIndex），不是控件（已在游戏内确认）；控件请用 lua.helper.findControl 按名称查找。
    */
   GetParam(this: Script, paramName: string): unknown
   /**
