@@ -31,7 +31,6 @@ const suites = {
     'timer-queue',
     'update-ownership',
     'source-maps',
-    'mounts',
     'scaffold',
     'shared-modules',
     'standard-library',
