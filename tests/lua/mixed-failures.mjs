@@ -152,6 +152,17 @@ assert.match(
   )
 )
 
+// 删掉最后一个 Lua 入口：旧文件被清理，整体结果说删除了几个，而不是"没有变化"
+fs.writeFileSync(gil, map())
+fs.unlinkSync(path.join(src, 'hud.ts'))
+log = batch('lua-entry-removed', 0)
+assert(!fs.existsSync(path.join(luaDir, 'hud.lua')), log)
+assert.match(log, /\[ok\] 已注入 Lua：0 个文件（删除 \d+）/)
+assert.match(
+  log,
+  new RegExp(String.raw`\[ok\] 全部完成：${graphInjected}，已删除 \d+ 个旧 Lua 文件`)
+)
+
 fs.mkdirSync(path.join(src, 'private'))
 write('private/value.ts', 'export const value=missingAtStartup')
 write('hud.ts', `import{value}from'./private/value';${lua('value')}`)

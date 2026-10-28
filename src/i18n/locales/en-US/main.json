@@ -193,5 +193,7 @@
   "build_luaFailed": "Lua compilation failed",
   "build_luaWriteFailed": "Lua output or injection failed",
   "lua_changeSkipped": "{{count}} skipped",
-  "build_luaInjectPartial": "Lua {{written}} files overwritten, {{skipped}} skipped"
+  "build_luaInjectPartial": "Lua {{written}} files overwritten, {{skipped}} skipped",
+  "build_luaRemoved": "{{count}} old Lua files removed",
+  "build_luaOverwrittenRemoved": "{{count}} Lua files overwritten, {{removed}} old files removed"
 }

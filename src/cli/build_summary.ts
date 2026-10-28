@@ -18,6 +18,8 @@ export interface LuaOutcome {
   files: number
   /** 注入时覆盖更新到游戏目录的文件数；没有注入时为 undefined。 */
   overwritten?: number
+  /** 注入时从游戏目录删除的旧文件数（例如删掉了入口）。 */
+  removed?: number
   /** 注入时因为不是 gsts 生成而跳过的同名文件数。 */
   skipped?: number
   compileFailed: boolean
@@ -51,9 +53,13 @@ export function printBuildSummary(graph: GraphOutcome, lua: LuaOutcome | undefin
       ? t('build_luaFiles', { count: lua.files })
       : lua.skipped
         ? t('build_luaInjectPartial', { written: lua.overwritten, skipped: lua.skipped })
-        : lua.overwritten
-          ? t('build_luaOverwritten', { count: lua.overwritten })
-          : t('build_luaUnchanged')
+        : lua.overwritten && lua.removed
+          ? t('build_luaOverwrittenRemoved', { count: lua.overwritten, removed: lua.removed })
+          : lua.overwritten
+            ? t('build_luaOverwritten', { count: lua.overwritten })
+            : lua.removed
+              ? t('build_luaRemoved', { count: lua.removed })
+              : t('build_luaUnchanged')
   if (graph.ok && lua.ok) ui.ok(t('build_allDone', { graph: graphText, lua: luaText }))
   else ui.error(t('build_notAllDone', { graph: graphText, lua: luaText }))
 }

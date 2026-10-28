@@ -752,6 +752,7 @@ export function startClientLua({
         ok: !failure,
         files: local?.files ?? 0,
         overwritten: injected?.written,
+        removed: injected?.removed,
         skipped: injected?.skipped,
         compileFailed
       }

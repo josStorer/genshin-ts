@@ -193,5 +193,7 @@
   "build_luaFailed": "Lua 编译失败",
   "build_luaWriteFailed": "Lua 写出或注入失败",
   "lua_changeSkipped": "跳过 {{count}}",
-  "build_luaInjectPartial": "Lua 覆盖更新 {{written}} 个文件、跳过 {{skipped}} 个"
+  "build_luaInjectPartial": "Lua 覆盖更新 {{written}} 个文件、跳过 {{skipped}} 个",
+  "build_luaRemoved": "已删除 {{count}} 个旧 Lua 文件",
+  "build_luaOverwrittenRemoved": "{{count}} 个 Lua 文件已覆盖更新、删除 {{removed}} 个旧文件"
 }
