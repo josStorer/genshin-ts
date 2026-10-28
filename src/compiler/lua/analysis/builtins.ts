@@ -151,6 +151,52 @@ function resolveBuiltins(program: ts.Program) {
     }
     return symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
   }
+  // 每个源文件里被重新赋值过的变量；let 别名只有从未重新赋值时，初始化值才代表调用时的对象。
+  const assignedByFile = new Map<ts.SourceFile, Set<ts.Symbol>>()
+  function assignedSymbols(file: ts.SourceFile) {
+    const cached = assignedByFile.get(file)
+    if (cached) return cached
+    const assigned = new Set<ts.Symbol>()
+    // a = …、[a, b] = …、({ a, b: c } = …)
+    const target = (node: ts.Expression): void => {
+      if (ts.isIdentifier(node)) {
+        const symbol = checker.getSymbolAtLocation(node)
+        if (symbol) assigned.add(symbol)
+      } else if (ts.isParenthesizedExpression(node)) target(node.expression)
+      else if (ts.isArrayLiteralExpression(node)) {
+        for (const element of node.elements)
+          target(ts.isSpreadElement(element) ? element.expression : element)
+      } else if (ts.isObjectLiteralExpression(node)) {
+        for (const property of node.properties) {
+          if (ts.isShorthandPropertyAssignment(property)) {
+            const symbol = checker.getShorthandAssignmentValueSymbol(property)
+            if (symbol) assigned.add(symbol)
+          } else if (ts.isPropertyAssignment(property)) target(property.initializer)
+          else if (ts.isSpreadAssignment(property)) target(property.expression)
+        }
+      }
+    }
+    const visit = (node: ts.Node): void => {
+      if (
+        ts.isBinaryExpression(node) &&
+        node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+        node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
+      )
+        target(node.left)
+      else if (
+        (ts.isForOfStatement(node) || ts.isForInStatement(node)) &&
+        !ts.isVariableDeclarationList(node.initializer)
+      )
+        target(node.initializer)
+      ts.forEachChild(node, visit)
+    }
+    visit(file)
+    assignedByFile.set(file, assigned)
+    return assigned
+  }
+  const fixedBinding = (symbol: ts.Symbol, declaration: ts.Node) =>
+    (ts.getCombinedNodeFlags(declaration) & ts.NodeFlags.Const) !== 0 ||
+    !assignedSymbols(declaration.getSourceFile()).has(symbol)
   function standardMemberSymbol(symbol: ts.Symbol | undefined) {
     if (!symbol) return undefined
     const direct = standardMembers.get(symbol)
@@ -191,7 +237,7 @@ function resolveBuiltins(program: ts.Program) {
           (name ? checker.getTypeAtLocation(node.expression).getProperty(name) : undefined)
       )
     },
-    /** 只接管当前入口的 script；查询到的其他脚本仍调用官方方法。 */
+    /** 只接管当前入口的 script；查询到的其他脚本、重新赋值过的 let 别名仍调用官方方法。 */
     isCurrentScript(node: ts.Expression): boolean {
       const seen = new Set<ts.Symbol>()
       let current = node
@@ -201,6 +247,7 @@ function resolveBuiltins(program: ts.Program) {
         if (!symbol || seen.has(symbol)) return false
         seen.add(symbol)
         const declaration = symbol.valueDeclaration
+        if (declaration && !fixedBinding(symbol, declaration)) return false
         if (declaration && ts.isVariableDeclaration(declaration) && declaration.initializer) {
           current = declaration.initializer
           continue

@@ -30,6 +30,34 @@ execute(
  env.OnDisable();env.OnDestroy()
 `
 )
+// let 别名之后被改成其他脚本：调用时指向谁就调用谁；从未重新赋值的 let 别名仍归当前作用域
+const reassigned = successful(
+  buildFixture({
+    'main.ts': `import{g}from'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{
+ let target=lua.script;let steady=lua.script;let {script:picked}=lua;
+ const other=self.GetScriptByPath('other');
+ setTimeout(()=>{},100);
+ return {onStart(){if(other){target=other;[picked]=[other]};target.EnableUpdate(true);picked.EnableUpdate(false);steady.EnableUpdate(true)}}
+})`
+  })
+)
+const reassignedLua = reassigned.files.get('main.lua')
+assert.match(reassignedLua, /target:EnableUpdate\(true\)/)
+assert.match(reassignedLua, /picked:EnableUpdate\(false\)/)
+assert.doesNotMatch(reassignedLua, /steady:EnableUpdate/)
+execute(
+  reassigned.files,
+  `
+ local updates,foreign={},{}
+ local other={EnableUpdate=function(self,enabled)foreign[#foreign+1]=enabled end}
+ local script={object={GetScriptByPath=function()return other end}}
+ function script:EnableUpdate(enabled)updates[#updates+1]=enabled end
+ local env=setmetatable({script=script,printerr=function(message)error(message)end},{__index=_G})
+ assert(load(${JSON.stringify(reassignedLua)},'reassigned.lua','t',env))()
+ env.OnStart();assert(foreign[1]==true and foreign[2]==false and updates[1]==true and #updates==1)
+ env.OnDisable();env.OnDestroy()
+`
+)
 const plain = successful(
   buildFixture({
     'main.ts': `import{g}from'genshin-ts/runtime/core';export default g.clientControlScript(lua=>{return{onStart(){lua.script.EnableUpdate(true)}}})`
@@ -38,5 +66,5 @@ const plain = successful(
 assert.match(plain.files.get('main.lua'), /:EnableUpdate\(true\)/)
 assert(!plain.files.get('main.lua').includes('createScope'))
 console.log(
-  'Update ownership: current script and aliases route through scope; foreign and unscoped script calls remain native: PASS'
+  'Update ownership: current script and fixed aliases route through scope; foreign scripts, reassigned let aliases and unscoped calls remain native: PASS'
 )
