@@ -27,6 +27,7 @@ successful(
   buildFixture({ 'main.ts': entry('const value:number="not a number";lua.print(value)') }, false)
 )
 
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/names-'))
 const main = path.join(root, 'main.ts'),
   helper = path.join(root, 'helper.ts'),

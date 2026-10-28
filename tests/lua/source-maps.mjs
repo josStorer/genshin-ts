@@ -13,6 +13,7 @@ import {
   formatLuaDiagnostics
 } from '../../src/compiler/lua/ts_to_lua_pipeline.ts'
 
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/maps-'))
 const entry = path.join(root, 'main.ts'),
   outDir = path.join(root, 'dist', 'lua')

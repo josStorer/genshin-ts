@@ -8,6 +8,7 @@ import path from 'node:path'
 // 普通函数拿运行时的值做 JS 运算时，报出说明（而不是后面节点里的 Generic parameter not matched）；
 // 包在普通函数里的节点调用自己出错时，保留原来的节点报错，不误报成改名提示。
 const repo = path.resolve('.')
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const base = fs.mkdtempSync(path.resolve('.tmp/lua-tests/shared-runtime-'))
 function project(name, serverBody) {
   const dir = path.join(base, name)

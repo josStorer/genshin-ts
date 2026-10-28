@@ -16,6 +16,7 @@ import {
 } from '../../src/compiler/lua/analysis/shared_modules.ts'
 import gsts from '../../src/eslint/index.ts'
 
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/shared-'))
 fs.writeFileSync(path.join(root, 'gsts.config.ts'), "export default {compileRoot:'.'}")
 fs.writeFileSync(

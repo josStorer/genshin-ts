@@ -32,6 +32,7 @@ execute(
   "print=function(a,b,c,d)assert(a==4 and b==5 and c==3 and d==21)end;require('main');OnStart()"
 )
 
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/native-types-'))
 fs.mkdirSync(path.join(root, 'node_modules'))
 fs.symlinkSync(path.resolve('.'), path.join(root, 'node_modules/genshin-ts'), 'junction')

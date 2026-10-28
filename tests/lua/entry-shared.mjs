@@ -109,6 +109,7 @@ assert(
 const twice = buildFixture({ 'main.ts': simple + ';g.clientControlScript(lua=>{return{}})' }, false)
 assert(twice.diagnostics.some((d) => d.source === 'lua-entry-declaration'))
 // A shared output must be reused, rebuilt or removed with its original entry in dev.
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/shared-incremental-'))
 const filename = path.join(root, 'main.ts')
 const input = { entries: [filename], rootDir: root, outDir: path.join(root, 'out') }

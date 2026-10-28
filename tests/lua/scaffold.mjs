@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const repo = path.resolve('.'),
   root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/scaffold-'))
 function create(name, ...args) {

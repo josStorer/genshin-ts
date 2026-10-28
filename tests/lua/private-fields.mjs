@@ -58,6 +58,7 @@ assert(
 )
 assert.equal(unsupported.files.size, 0)
 // An actual thrown visitor error must retain its innermost source location as it unwinds.
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/visitor-error-'))
 const file = path.join(root, 'fail.ts')
 fs.writeFileSync(file, 'function boom() { return 1 }\n\nboom()\n')

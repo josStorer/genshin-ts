@@ -66,6 +66,7 @@ for (const module of [
   )
   assert.equal(failed.files.size, 0)
 }
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-tests/data-incremental-'))
 const entry = path.join(root, 'main.ts')
 fs.writeFileSync(

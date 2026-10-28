@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import { ESLint } from 'eslint'
 
+fs.mkdirSync(path.resolve('.tmp/lua-lint'), { recursive: true })
 const root = fs.mkdtempSync(path.resolve('.tmp/lua-lint/default-'))
 fs.mkdirSync(path.join(root, 'ordinary-name'))
 fs.writeFileSync(

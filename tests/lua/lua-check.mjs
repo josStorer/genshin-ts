@@ -5,6 +5,7 @@ import path from 'node:path'
 
 // gsts lua check：完整类型检查加全部 Lua 规则（含原生 .d.ts），不写文件；有错误时退出码为 1
 const repo = path.resolve('.')
+fs.mkdirSync(path.resolve('.tmp/lua-tests'), { recursive: true })
 const project = fs.mkdtempSync(path.resolve('.tmp/lua-tests/check-'))
 fs.mkdirSync(path.join(project, 'src/lua'), { recursive: true })
 fs.mkdirSync(path.join(project, 'node_modules'))
