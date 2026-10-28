@@ -32,12 +32,12 @@ export interface LuaMetatable {
 }
 /**
  * Native base API available in the official sandbox. The official docs list as unavailable: string.dump, io,
- * coroutine, os except time/date/clock/difftime, and debug except traceback; in game (2026-10-24) _VERSION,
+ * coroutine, os except time/date/clock/difftime, and debug except traceback; in game _VERSION,
  * string.pack/unpack/packsize, load/loadstring/dofile/loadfile, collectgarbage and package were missing too.
  * These are the Lua standard library, mainly for working with native Lua code; use TS's own features otherwise.
  *
  * 官方沙箱可用的原生基础 API。官方文档列出不可用：string.dump、io、coroutine、
- * 除 time/date/clock/difftime 外的 os、除 traceback 外的 debug；2026-10-24 实机另外确认没有
+ * 除 time/date/clock/difftime 外的 os、除 traceback 外的 debug；实机另外确认没有
  * _VERSION、string.pack/unpack/packsize、load/loadstring/dofile/loadfile、collectgarbage、package。
  * 这些都是 Lua 标准库，主要用于和原生 Lua 代码互相调用；平时用 TS 自带的写法即可。
  */

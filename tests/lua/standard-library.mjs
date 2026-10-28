@@ -220,7 +220,7 @@ const local = successful(
   })
 )
 execute(local.files, "require('main');OnStart()")
-// 2026-10-24 实机：官方沙箱没有 _VERSION 和 debug.getinfo，new Error 仍要能构造和打印。
+// 实机确认：官方沙箱没有 _VERSION 和 debug.getinfo，new Error 仍要能构造和打印。
 const errors = successful(
   buildFixture({
     'main.ts': entry(

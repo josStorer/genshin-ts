@@ -126,6 +126,6 @@ See the template guide for the full list and best practices.
 
 - The work is excellent and MIT-licensed. Please consider supporting the project as well.
 
-### 客户端控件 Lua 脚本
+## Client Lua
 
-已增加独立的 TS → Lua 编译目标，使用 `g.clientControlScript`，沿用现有构建与注入配置。参见 [使用说明](https://gsts.moe/doc/lua)。
+Write client control scripts with `g.clientControlScript`; see the [guide](https://gsts.moe/doc/lua).

@@ -110,7 +110,7 @@ export function getLuaDiagnostics(
       (part) => !!(part.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null))
     )
   }
-  // 宿主把抛出的任何值都转成文字（2026-10-24 实机），catch 拿到的总是字符串。
+  // 宿主把抛出的任何值都转成文字（已在游戏内确认），catch 拿到的总是字符串。
   const caught = (expression: ts.Expression) => {
     const declaration = ts.isIdentifier(expression)
       ? checker.getSymbolAtLocation(expression)?.valueDeclaration

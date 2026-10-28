@@ -82,7 +82,7 @@ export default g.clientControlScript((lua) => ({
 | onStart      | 每个实例一次                             | 初次显示、开启用户更新、只排一次的定时器 |
 | onEnable     | 每次启用                                 | 每次恢复都要重做的事                     |
 
-首次顺序是 **根部 → OnInit → OnEnable → OnStart**，OnEnable 在 OnStart 之前；根部执行时子控件已存在（2026-10-22 实机确认）。通常无需 onInit，初始化可以直接写在根部。
+首次顺序是 **根部 → OnInit → OnEnable → OnStart**，OnEnable 在 OnStart 之前；根部执行时子控件已存在（已在游戏内确认）。通常无需 onInit，初始化可以直接写在根部。
 
 回调参数名可用 `lua`、`env` 等；`_ENV` 是保留名。一个文件只允许一个入口。回调中可写函数、class、对象、数组和普通 TS 运算，用上面的任一种写法直接返回钩子对象；不接受动态拼接/展开钩子对象或提前返回。class 的 this 正常使用；`#value` 改写为不冲突的普通字段，不提供 Lua 访问控制，私有字段的 in 品牌检查不支持。
 
@@ -131,7 +131,7 @@ if (lua.helper.isControl(candidate, 'ClientUITextBoxControl')) {
 | findScript / requireScript         | 找到另一个挂载并调用它的公开方法；require 版找不到就报错   |
 | scriptHandle(script)               | 把已有的官方 Script 包装成同样的句柄                       |
 
-脚本变量只支持 number/string/boolean；schema 不创建编辑器变量。编辑器里没有这个变量时使用 default，没有 default 就报出变量名；变量建了但留空不算缺失，字符串会读到空串（2026-10-24 实机确认）。
+脚本变量只支持 number/string/boolean；schema 不创建编辑器变量。编辑器里没有这个变量时使用 default，没有 default 就报出变量名；变量建了但留空不算缺失，字符串会读到空串（已在游戏内确认）。
 
 ```ts
 const params = lua.helper.readParams({
@@ -142,7 +142,7 @@ const params = lua.helper.readParams({
 console.log(params.Speed, params.Caption, params.Enabled)
 ```
 
-**2026-09-24 实机确认：**编辑器“客户端控件ID”变量原样返回填写的索引 prefabIndex，不是控件或运行时 ID；改成整数、GUID，或写死数字都不会转换。GetClientUIControl 只接受运行时 ID，官方没有“按索引找已有控件”的接口。控件按名称/层级查找是官方推荐且实测可用的方式，不要把控件放进 readParams schema。prefabIndex 用于 InstantiateClientUIControl 等模板创建场景，self.id 才是运行时查询值。
+**已在游戏内确认：**编辑器“客户端控件ID”变量原样返回填写的索引 prefabIndex，不是控件或运行时 ID；改成整数、GUID，或写死数字都不会转换。GetClientUIControl 只接受运行时 ID，官方没有“按索引找已有控件”的接口。控件按名称/层级查找是官方推荐且实测可用的方式，不要把控件放进 readParams schema。prefabIndex 用于 InstantiateClientUIControl 等模板创建场景，self.id 才是运行时查询值。
 
 ## 模块、传送与状态恢复
 
@@ -165,7 +165,7 @@ export function addScore(amount: number) {
 // 回调内：addScore(1); console.log(score)
 ```
 
-传送实测（2026-10-22）：旧实例先停用、销毁；新控件重新创建，回调根部重跑，之后 Init → Enable → Start；require 模块不重新加载。根部必须能从头建立完整界面，读取共享数据恢复显示。共享模块不要长期保存控件对象，传送后重新查找；共享数据是所有挂载共用的，需要区分玩家/面板时自己按稳定的业务键保存。
+传送的实测结果：旧实例先停用、销毁；新控件重新创建，回调根部重跑，之后 Init → Enable → Start；require 模块不重新加载。根部必须能从头建立完整界面，读取共享数据恢复显示。共享模块不要长期保存控件对象，传送后重新查找；共享数据是所有挂载共用的，需要区分玩家/面板时自己按稳定的业务键保存。
 
 断线重连暂按同一恢复模型编写，**尚未实测**。不能把传送结果当成客户端彻底退出后仍持久化的承诺。
 
@@ -309,7 +309,7 @@ Lua 发送前、接收后共用一套检查，服务器节点图不参与这些�
 send(Signal.Input, 20, true) // 按契约写 AddFloat、AddBool
 ```
 
-每次有效发送新建官方信号对象，参数按顺序只求值一次。检查数量、类型、有限数值、整数安全范围、列表形状和 vec3。int 在 Lua TS 中是 number；Lua 5.3 区分整数/浮点，`4 / 2` 为浮点 2.0。**2026-10-24 实机确认：**官方 AddInt 收到 2.0 时，服务器得到 2；收到 1.5 时不报错，服务器却得到 0。所以 send 放行 2.0 这样的浮点整数，拒绝带小数的值；需要取整时自己写，例如 `Math.floor(total / 2)`。实体/GUID 是官方原值（LuaEntityValue/LuaGuidValue），不是节点图实体包装。
+每次有效发送新建官方信号对象，参数按顺序只求值一次。检查数量、类型、有限数值、整数安全范围、列表形状和 vec3。int 在 Lua TS 中是 number；Lua 5.3 区分整数/浮点，`4 / 2` 为浮点 2.0。**已在游戏内确认：**官方 AddInt 收到 2.0 时，服务器得到 2；收到 1.5 时不报错，服务器却得到 0。所以 send 放行 2.0 这样的浮点整数，拒绝带小数的值；需要取整时自己写，例如 `Math.floor(total / 2)`。实体/GUID 是官方原值（LuaEntityValue/LuaGuidValue），不是节点图实体包装。
 
 每个参数只需几次比较；列表的检查耗时与长度成正比。在 PC 上用 wasmoon（Lua 5.4）模拟测量，10 万个 int 元素约 20 ms；常见的几十到几百个元素可以忽略。
 
@@ -394,7 +394,7 @@ return {
 }
 ```
 
-只在最终结果变化时调用官方开关，频繁 true/false 不会多余地切换它。当前实例的开关调用应写在入口内；其他脚本的官方开关不会被接管。2026-10-22 实机确认：官方 EnableUpdate(false) 同时停止两个更新钩子，因此关卡定时器也需要保持开关。
+只在最终结果变化时调用官方开关，频繁 true/false 不会多余地切换它。当前实例的开关调用应写在入口内；其他脚本的官方开关不会被接管。已在游戏内确认：官方 EnableUpdate(false) 同时停止两个更新钩子，因此关卡定时器也需要保持开关。
 
 ## 原生 Lua 互操作
 
@@ -556,7 +556,7 @@ lua: { sourceMap: true } // 默认已开；只影响本地映射
 
 `__gsts_shared` 是编译器保留目录，不能作为源码模块目录。无配置的单文件构建默认输出 dist/lua。
 
-注入只是把 .lua 文件复制到地图的 external_lua_file，**不会自动挂载**。首次通过编辑器批量添加整个输出文件夹并手动挂载入口。手动添加时保持相对目录：require 按磁盘文件路径找模块，不认编辑器映射名（2026-09-24 实测）；自动注入会保持目录结构。
+注入只是把 .lua 文件复制到地图的 external_lua_file，**不会自动挂载**。首次通过编辑器批量添加整个输出文件夹并手动挂载入口。手动添加时保持相对目录：require 按磁盘文件路径找模块，不认编辑器映射名（已在游戏内确认）；自动注入会保持目录结构。
 
 ```text
 external_lua_file/
@@ -595,8 +595,8 @@ entries 排除只影响入口发现，被导入的依赖仍编译和监听。dev
 
 排查耗时用 `GSTS_INJECT_PROFILE=1` 或 --inject-profile，统一输出 [pipeline-profile] 的 lua 字段。注入耗时不包含此前编译/GIA，保存到输出还含防抖，不应直接比较两种范围。
 
-## 实机验证状态
+## 测试与已知限制
 
-自动测试在模拟环境（fengari）中运行生成的 Lua，覆盖类型、ESLint、模块状态和输出保护；SDK 检查覆盖 640 个官方 API 和枚举成员。本文中注明日期的游戏行为都已在游戏里实测。
+自动测试在模拟环境（fengari）中运行生成的 Lua，覆盖类型、ESLint、模块状态和输出保护；SDK 检查覆盖 640 个官方 API 和枚举成员。本文写明"已在游戏内确认"的宿主行为都经过实机测试。
 
 暂不支持：从地图文件自动提取控件树、脚本变量和挂载位置。

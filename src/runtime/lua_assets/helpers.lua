@@ -116,7 +116,7 @@ function validators.float(value)
     return type(value) == "number" and value == value and math.abs(value) ~= math.huge
 end
 -- Integers preserve the shared contract's exact, safe numeric range.
--- Confirmed in game (2026-10-24): AddInt sends 2.0 as 2, but silently sends 1.5 as 0.
+-- Confirmed in game: AddInt sends 2.0 as 2, but silently sends 1.5 as 0.
 function validators.integer(value)
     return validators.float(value) and value % 1 == 0 and math.abs(value) <= 9007199254740991
 end
@@ -239,7 +239,7 @@ function M.readParams(script, schema)
     end
     return values
 end
--- Confirmed in game (2026-10-22): EnableUpdate(false) stops both update hooks.
+-- Confirmed in game: EnableUpdate(false) stops both update hooks.
 -- Level timers therefore need the host update switch even when user OnUpdate is disabled.
 local LEVEL_CLOCK_NEEDS_UPDATE = true
 

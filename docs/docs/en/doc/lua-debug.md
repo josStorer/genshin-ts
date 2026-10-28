@@ -15,7 +15,7 @@ gsts lua locate game-error.txt           # parse a whole log file
 gsts lua locate dist/lua/lua/hud.lua:42  # translate one local location
 ```
 
-Game logs name modules without the `.lua` extension (confirmed in game, 2026-10-24). For example:
+Game logs name modules without the `.lua` extension (confirmed in game). For example:
 
 ```text
 lua/hud:299: attempt to index a nil value (local 'item')
@@ -73,7 +73,7 @@ Use `throw` or `lua.error` to stop execution.
 
 ### catch always receives a string
 
-The host converts every thrown value to text (confirmed in game, 2026-10-24): `throw new Error('x')` arrives in catch as a string such as `"Error: x
+The host converts every thrown value to text (confirmed in game): `throw new Error('x')` arrives in catch as a string such as `"Error: x
 stack traceback: ..."`, and `throw { code: 7 }` arrives as `"<table>"`. So `e instanceof Error` is always false, and `e.message`, custom error classes and object fields cannot be read.
 
 ```ts

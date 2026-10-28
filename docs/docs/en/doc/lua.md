@@ -82,7 +82,7 @@ These are framework recommendations, not official guidance about code placement:
 | onStart              | Once per instance                                                        | Initial display, user update switch, one-time timer setup |
 | onEnable             | On every enable                                                          | Work that must repeat on each activation                  |
 
-The initial order is **root → OnInit → OnEnable → OnStart**. OnEnable precedes OnStart, and child controls already exist at the root (user-confirmed in game, 2026-10-22). Initialization can normally go at the root without onInit.
+The initial order is **root → OnInit → OnEnable → OnStart**. OnEnable precedes OnStart, and child controls already exist at the root (confirmed in game). Initialization can normally go at the root without onInit.
 
 The callback parameter can be named lua, env, or another identifier; \_ENV is reserved. One file has one entry. Functions, classes, objects, arrays and ordinary TS expressions work inside the callback, which returns a literal hook object in either form above. Dynamically assembled/spread hook objects and early returns are unsupported. Class this works normally; #value becomes a distinct ordinary Lua field, without Lua access control. Private-field in brand checks are unsupported.
 
@@ -131,7 +131,7 @@ control.SetVisible(true) automatically emits control:SetVisible(true). Host decl
 | findScript / requireScript           | Find another mount and call its public methods; the require version throws when missing |
 | scriptHandle(script)                 | Wrap an official Script you already have as the same handle                             |
 
-Script parameters support number/string/boolean. The schema does not create editor variables; a variable missing from the editor uses its default, or reports the variable name when there is none. A variable that exists but is left blank is not missing: a string reads as an empty string (confirmed in game, 2026-10-24).
+Script parameters support number/string/boolean. The schema does not create editor variables; a variable missing from the editor uses its default, or reports the variable name when there is none. A variable that exists but is left blank is not missing: a string reads as an empty string (confirmed in game).
 
 ```ts
 const params = lua.helper.readParams({
@@ -142,7 +142,7 @@ const params = lua.helper.readParams({
 console.log(params.Speed, params.Caption, params.Enabled)
 ```
 
-**User-confirmed in game, 2026-09-24:** a Client Control ID variable returns the entered editor index (prefabIndex), not a control or runtime ID. Integer/GUID variables and hardcoded numbers do not convert it either. GetClientUIControl accepts runtime IDs only; there is no official API to find an existing control by editor index. Officially recommended name/hierarchy lookup works in the tested game. Use it instead of a control parameter schema. prefabIndex is for template creation such as InstantiateClientUIControl; self.id is a runtime lookup value.
+**Confirmed in game:** a Client Control ID variable returns the entered editor index (prefabIndex), not a control or runtime ID. Integer/GUID variables and hardcoded numbers do not convert it either. GetClientUIControl accepts runtime IDs only; there is no official API to find an existing control by editor index. Officially recommended name/hierarchy lookup works in the tested game. Use it instead of a control parameter schema. prefabIndex is for template creation such as InstantiateClientUIControl; self.id is a runtime lookup value.
 
 ## Modules, teleportation and restoring state
 
@@ -165,7 +165,7 @@ export function addScore(amount: number) {
 // Inside its callback: addScore(1); console.log(score)
 ```
 
-The teleport probe (2026-10-22) observed old instances receiving Disable/Destroy, new controls and roots being created, followed by Init → Enable → Start. Required modules were retained. The root must rebuild a complete UI and restore its display from shared data. Do not retain control objects in long-lived shared state; find them again after teleportation. Shared state belongs to all mounts, so use stable application keys when panels/players need separate stored values.
+Teleporting in game showed old instances receiving Disable/Destroy, new controls and roots being created, followed by Init → Enable → Start. Required modules were retained. The root must rebuild a complete UI and restore its display from shared data. Do not retain control objects in long-lived shared state; find them again after teleportation. Shared state belongs to all mounts, so use stable application keys when panels/players need separate stored values.
 
 Reconnection provisionally uses the same recovery model, **but has not been tested**. Retention across teleportation does not imply persistence after the client exits.
 
@@ -309,7 +309,7 @@ Lua sends and receives share validation; server graphs do not perform these clie
 send(Signal.Input, 20, true) // Contract selects AddFloat and AddBool
 ```
 
-Each valid send creates a new host signal. Arguments evaluate once in source order. Checks cover counts, types, finite numbers, safe integer range, list shape and vec3. Lua TS int is a number; Lua 5.3 distinguishes integer/float, and 4 / 2 is floating-point 2.0. **Confirmed in game, 2026-10-24:** when the official AddInt gets 2.0, the server receives 2; when it gets 1.5, there is no error, but the server receives 0. So send accepts integral floats such as 2.0 and rejects values with a fractional part; round explicitly when needed, e.g. `Math.floor(total / 2)`. Entities/GUIDs remain official raw values (LuaEntityValue/LuaGuidValue), not graph entity wrappers.
+Each valid send creates a new host signal. Arguments evaluate once in source order. Checks cover counts, types, finite numbers, safe integer range, list shape and vec3. Lua TS int is a number; Lua 5.3 distinguishes integer/float, and 4 / 2 is floating-point 2.0. **Confirmed in game:** when the official AddInt gets 2.0, the server receives 2; when it gets 1.5, there is no error, but the server receives 0. So send accepts integral floats such as 2.0 and rejects values with a fractional part; round explicitly when needed, e.g. `Math.floor(total / 2)`. Entities/GUIDs remain official raw values (LuaEntityValue/LuaGuidValue), not graph entity wrappers.
 
 Each parameter takes a few comparisons; list checks scale with length. Measured with wasmoon (Lua 5.4) on a PC, a 100,000-int list takes about 20 ms; the usual tens to hundreds of elements are negligible.
 
@@ -394,7 +394,7 @@ return {
 }
 ```
 
-The real host call occurs only when the final switch value changes. Keep the current instance's update calls inside the entry; calls to other scripts remain raw host calls. Confirmed in game on 2026-10-22: official EnableUpdate(false) stops both update hooks, so level timers need that switch too.
+The real host call occurs only when the final switch value changes. Keep the current instance's update calls inside the entry; calls to other scripts remain raw host calls. Confirmed in game: official EnableUpdate(false) stops both update hooks, so level timers need that switch too.
 
 ## Native Lua interoperability
 
@@ -556,7 +556,7 @@ lua: { sourceMap: true } // Already the default; maps stay local
 
 \_\_gsts_shared is reserved for compiler output, not source module names. Unconfigured single-file builds default to dist/lua.
 
-Injection only copies .lua files into external_lua_file; **it does not mount entries**. Import the entire output folder and mount entries manually in the editor. Preserve relative directories when adding files manually: require resolves disk paths, not editor mapping names (game-tested 2026-09-24). Automatic injection preserves this layout.
+Injection only copies .lua files into external_lua_file; **it does not mount entries**. Import the entire output folder and mount entries manually in the editor. Preserve relative directories when adding files manually: require resolves disk paths, not editor mapping names (confirmed in game). Automatic injection preserves this layout.
 
 ```text
 external_lua_file/
@@ -595,8 +595,8 @@ entries exclusions affect entry discovery only; imported dependencies still comp
 
 For timing use GSTS_INJECT_PROFILE=1 or --inject-profile and the unified [pipeline-profile] lua fields. Injection time excludes earlier compilation/GIA work; save-to-output includes debounce, so compare matching scopes.
 
-## In-game verification status
+## Tests and known limits
 
-Automated tests run the generated Lua in a simulated runtime (fengari), covering types, ESLint, module state and output protection; the SDK check covers 640 official API and enum members. Game behavior marked with a date on this page was tested in game.
+Automated tests run the generated Lua in a simulated runtime (fengari), covering types, ESLint, module state and output protection; the SDK check covers 640 official API and enum members. Host behavior this page describes as confirmed in game was tested in the game.
 
 Not supported yet: extracting control trees, script variables and mount locations from map files.

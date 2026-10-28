@@ -15,7 +15,7 @@ gsts lua locate game-error.txt           # 解析整份日志文件
 gsts lua locate dist/lua/lua/hud.lua:42  # 换算一个本地位置
 ```
 
-游戏日志里的位置写的是模块名，不带 `.lua`（2026-10-24 实机）。例如：
+游戏日志里的位置写的是模块名，不带 `.lua`（已在游戏内确认）。例如：
 
 ```text
 lua/hud:299: attempt to index a nil value (local 'item')
@@ -73,7 +73,7 @@ try {
 
 ### catch 拿到的总是字符串
 
-宿主会把抛出的任何值都转成文字（2026-10-24 实机确认）：`throw new Error('x')` 在 catch 里得到的是 `"Error: x
+宿主会把抛出的任何值都转成文字（已在游戏内确认）：`throw new Error('x')` 在 catch 里得到的是 `"Error: x
 stack traceback: …"` 这样的字符串，`throw { code: 7 }` 得到的是 `"<table>"`。所以 `e instanceof Error` 永远为 false，`e.message`、自定义错误类和对象上的字段都读不到。
 
 ```ts

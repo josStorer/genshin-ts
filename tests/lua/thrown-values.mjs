@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 
 import { buildFixture, successful } from './support.mjs'
 
-// 2026-10-24 实机：宿主把抛出的任何值都转成文字，catch 拿到的总是字符串。
+// 实机确认：宿主把抛出的任何值都转成文字，catch 拿到的总是字符串。
 const fixture = `import{g}from'genshin-ts/runtime/core'
 class GameError extends Error{}
 export default g.clientControlScript(lua=>{return{onStart(){
