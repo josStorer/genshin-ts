@@ -89,9 +89,40 @@ try {
   p = await build()
   assert.equal(p.discoveryReads, 3)
   assert.match(fs.readFileSync(path.join(root, 'out/lua/a.lua'), 'utf8'), /5/)
+
+  // 纯节点图阶段只读文本、不解析；出现 Lua 入口后，之前只筛查过的文件补上解析
+  const pure = fs.mkdtempSync(path.join(base, 'pure-')),
+    pureSession = {}
+  const pureCfg = { compileRoot: '.', entries: ['*.ts'], outDir: 'out' }
+  const writePure = (name, text) => fs.writeFileSync(path.join(pure, name), text)
+  writePure(
+    'graph.ts',
+    `import{g}from'genshin-ts/runtime/core';g.server({id:1073742911,name:'G'}).on('whenEntityIsCreated',(_evt,f)=>{f.printString('x')})`
+  )
+  writePure('helper.ts', 'export const n=1')
+  const buildPure = (names) =>
+    buildClientLua({
+      cfgDir: pure,
+      cfg: pureCfg,
+      noinject: true,
+      complete: true,
+      session: pureSession,
+      changedFiles: names?.map((n) => path.join(pure, n))
+    })
+  await buildPure()
+  const screened = [...pureSession.discovery.candidates.values()]
+  assert(screened.length === 2 && screened.every((item) => !item.parsed && !item.entry))
+  writePure('hud.ts', entry(6))
+  await buildPure(['hud.ts'])
+  const record = (name) =>
+    [...pureSession.discovery.candidates.values()].find((item) => path.basename(item.file) === name)
+  assert(record('hud.ts').entry && record('hud.ts').parsed)
+  assert(record('graph.ts').parsed && record('graph.ts').graph, JSON.stringify(record('graph.ts')))
+  assert(record('helper.ts').parsed && !record('helper.ts').graph)
+  assert.ok(fs.existsSync(path.join(pure, 'out/lua/hud.lua')))
 } finally {
   console.log = log
 }
 console.log(
-  'Lua entry discovery: changed-only reads, entry migration, add/remove, include and config: PASS'
+  'Lua entry discovery: changed-only reads, entry migration, add/remove, include and config; graph-only projects are screened without parsing until a Lua entry appears: PASS'
 )

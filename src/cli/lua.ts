@@ -38,12 +38,20 @@ export interface ClientLuaSession {
   mountReportKey?: string
   discovery?: {
     key: string
-    candidates: Map<string, { file: string; entry: boolean; imports: string; graph: boolean }>
+    candidates: Map<string, DiscoveredFile>
     additionalFiles: string[]
     knownFiles: Set<string>
     graphImports?: Map<string, string>
   }
   last?: { key: string; dependencies: string[]; entries: string[]; candidates: string[] }
+}
+/** 入口识别对每个候选文件的结论；parsed 为 false 时只做过文本筛查，graph 和 imports 还没算。 */
+interface DiscoveredFile {
+  file: string
+  entry: boolean
+  imports: string
+  graph: boolean
+  parsed: boolean
 }
 const normalize = (file: string) => {
   const absolute = path.resolve(file)
@@ -207,19 +215,38 @@ async function discoverClientLua({
       onlyFiles: true
     })
   }
-  const classified = new Map<
-    string,
-    { file: string; entry: boolean; imports: string; graph: boolean }
-  >()
-  const entries = candidates.filter((file) => {
+  const classified = new Map<string, DiscoveredFile>()
+  // 先只读文本：没有任何文件写到 clientControlScript 时不可能有 Lua 入口，
+  // 纯节点图项目就不用逐个解析（大项目能省下上百毫秒）。
+  const texts = new Map<string, string>()
+  let mayHaveLua = false
+  for (const file of candidates) {
     const key = normalize(file)
     const prior = changed && !changed.has(key) ? priorDiscovery?.candidates.get(key) : undefined
     if (prior) {
       classified.set(key, prior)
-      return prior.entry
+      if (prior.entry) mayHaveLua = true
+      continue
     }
     discoveryReads++
     const text = fs.readFileSync(file, 'utf8')
+    texts.set(key, text)
+    if (text.includes('clientControlScript')) mayHaveLua = true
+  }
+  for (const file of candidates) {
+    const key = normalize(file)
+    const prior = classified.get(key)
+    if (prior && (prior.parsed || !mayHaveLua)) continue
+    if (!mayHaveLua) {
+      classified.set(key, { file, entry: false, graph: false, imports: '', parsed: false })
+      continue
+    }
+    // 之前只做过文本筛查的文件，出现 Lua 入口后要补读、补解析
+    let text = texts.get(key)
+    if (text === undefined) {
+      discoveryReads++
+      text = fs.readFileSync(file, 'utf8')
+    }
     let entry = false
     let graph = false
     if (text.includes('clientControlScript') || text.includes('genshin-ts/runtime/core')) {
@@ -234,10 +261,11 @@ async function discoverClientLua({
       imports: ts
         .preProcessFile(text, true, true)
         .importedFiles.map((item) => item.fileName)
-        .join('\n')
+        .join('\n'),
+      parsed: true
     })
-    return entry
-  })
+  }
+  const entries = candidates.filter((file) => classified.get(normalize(file))?.entry)
   report.active = entries.length > 0
   if (session) session.active = report.active
   mark('discover')
