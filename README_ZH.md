@@ -49,6 +49,7 @@ npm run dev
 ## 核心亮点
 
 - TS -> NodeGraph 编译：入口事件、控制流、函数复用。
+- TS -> Lua 编译：用 `g.clientControlScript` 编写客户端控件脚本，与节点图共用同一套构建与注入，详见[使用说明](https://gsts.moe/zh/doc/lua)。
 - 全量类型提示与中英文别名：事件/函数/API/实体子类型。
 - `g.server(...).on(...)` 链式注册，多入口同 ID 自动合并。
 - `gstsServer*` 函数编译支持（可复用逻辑，受控 return）。
@@ -125,7 +126,3 @@ npm run dev
 - 尽管在发现此项目前, 我前后也已经花了近一个月时间处理gia和gil的逆向工作, 但这个项目的逆向方案比我的方案更完善, 最终我将其作为三方模块引入了本项目, 并整合了一些我逆向得到的数据.
 
 - 这个项目的工作非常卓越, 且同样MIT协议开源, 因此也强烈建议大家支持.
-
-## 客户端 Lua
-
-使用 `g.clientControlScript` 编写客户端控件脚本，参见[使用说明](https://gsts.moe/zh/doc/lua)。

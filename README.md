@@ -49,6 +49,7 @@ For detailed usage and constraints, see the template guide and docs:
 ## Highlights
 
 - TS -> NodeGraph compilation: event entry points, control flow, reusable functions.
+- TS -> Lua compilation: write client control scripts with `g.clientControlScript`, built and injected alongside node graphs; see the [guide](https://gsts.moe/doc/lua).
 - Full type hints with Chinese/English aliases: events, functions, APIs, entity subtypes.
 - `g.server(...).on(...)` chaining, multi-entry merge by identical ID.
 - `gstsServer*` function compilation (reusable logic, controlled returns).
@@ -125,7 +126,3 @@ See the template guide for the full list and best practices.
 - Before discovering this project, I spent nearly a month reversing GIA/GIL; their approach was more complete. I integrated it as a third-party module and merged some of my reverse-engineered data.
 
 - The work is excellent and MIT-licensed. Please consider supporting the project as well.
-
-## Client Lua
-
-Write client control scripts with `g.clientControlScript`; see the [guide](https://gsts.moe/doc/lua).
