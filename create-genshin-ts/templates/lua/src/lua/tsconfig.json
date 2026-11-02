@@ -1,4 +1,0 @@
-{
-  "extends": "genshin-ts/tsconfig/lua.json",
-  "include": ["."]
-}

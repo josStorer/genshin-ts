@@ -5,25 +5,12 @@ import { pathToFileURL } from 'node:url'
 
 import { build } from 'esbuild'
 
+import { existsDir, existsFile } from '../shared/fs_exists.js'
 import type { GstsConfig } from './gsts_config.js'
 
+export { existsDir, existsFile }
+
 let configBundleId = 0
-
-export function existsFile(p: string) {
-  try {
-    return fs.statSync(p).isFile()
-  } catch {
-    return false
-  }
-}
-
-export function existsDir(p: string) {
-  try {
-    return fs.statSync(p).isDirectory()
-  } catch {
-    return false
-  }
-}
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object' && !Array.isArray(v)

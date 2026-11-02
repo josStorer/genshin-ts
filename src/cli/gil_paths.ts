@@ -1,8 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { existsDir, existsFile } from '../compiler/config_loader.js'
 import type { GstsGameRegion, GstsInjectConfig } from '../compiler/gsts_config.js'
+import { existsDir, existsFile } from '../shared/fs_exists.js'
 
 function listNumericDirs(parent: string): number[] {
   if (!existsDir(parent)) return []
@@ -108,6 +108,35 @@ export function resolveGilTarget(cfg: GstsInjectConfig): ResolvedGilTarget {
 
 export function resolveGilFolder(cfg: GstsInjectConfig): ResolvedGilFolder {
   return resolveBase(cfg)
+}
+
+export type LocalSave = {
+  region: GstsGameRegion
+  playerId: number
+  maps: { mapId: number; gilPath: string; mtimeMs: number }[]
+}
+
+/** 本机各区服、各账号下的地图存档，地图按最近修改排在前面；找不到存档目录时返回空数组。 */
+export function listLocalSaves(): LocalSave[] {
+  if (!process.env.LOCALAPPDATA) return []
+  const saves: LocalSave[] = []
+  for (const region of ['China', 'Global'] as const) {
+    const root = getBeyondLocalRoot(region)
+    for (const playerId of listNumericDirs(root)) {
+      const saveLevelDir = path.join(root, String(playerId), 'Beyond_Local_Save_Level')
+      if (!existsDir(saveLevelDir)) continue
+      const maps = listGilFiles(saveLevelDir)
+        .map((gilPath) => ({
+          mapId: Number(path.basename(gilPath, path.extname(gilPath))),
+          gilPath,
+          mtimeMs: fs.statSync(gilPath).mtimeMs
+        }))
+        .filter((map) => Number.isFinite(map.mapId))
+        .sort((a, b) => b.mtimeMs - a.mtimeMs)
+      saves.push({ region, playerId, maps })
+    }
+  }
+  return saves
 }
 
 export function listGilFiles(saveLevelDir: string): string[] {
