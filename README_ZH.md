@@ -14,7 +14,7 @@
 
 [English](README.md) · 简体中文
 
-[文档站](https://gsts.moe/zh) · [介绍视频](https://www.bilibili.com/video/BV1qdrTBpEQw) · [模板文档和使用细节](create-genshin-ts/templates/start/README_ZH.md) · QQ群: 283430436
+[文档站](https://gsts.moe/zh) · [介绍视频](https://www.bilibili.com/video/BV1qdrTBpEQw) · [模板文档和使用细节](create-genshin-ts/templates/_shared/README_ZH.md) · QQ群: 283430436
 
 </div>
 
@@ -42,8 +42,8 @@ npm install
 npm run dev
 ```
 
-更详细的操作与边界规则见[模板文档](create-genshin-ts/templates/start/README_ZH.md)和[文档站](https://gsts.moe/zh)：
-- [`create-genshin-ts/templates/start/README_ZH.md`](create-genshin-ts/templates/start/README_ZH.md)
+更详细的操作与边界规则见[模板文档](create-genshin-ts/templates/_shared/README_ZH.md)和[文档站](https://gsts.moe/zh)：
+- [`create-genshin-ts/templates/_shared/README_ZH.md`](create-genshin-ts/templates/_shared/README_ZH.md)
 - [https://gsts.moe](https://gsts.moe/zh)
 
 ## 核心亮点
@@ -95,8 +95,8 @@ npm run dev
 
 ## 详细用法与 AI 指引
 
-- 模板使用说明（中文）：`create-genshin-ts/templates/start/README_ZH.md`
-- AI 协作指引：`create-genshin-ts/templates/start/CLAUDE.md` / `create-genshin-ts/templates/start/AGENTS.md`
+- 模板使用说明（中文）：`create-genshin-ts/templates/_shared/README_ZH.md`
+- AI 协作指引：`create-genshin-ts/templates/_shared/CLAUDE.md` / `create-genshin-ts/templates/_shared/AGENTS.md`
 - 函数/事件注释：`node_modules/genshin-ts/dist/src/definitions/`
 
 ## TODO (根据实际可行性某些可能会放弃实现, 不分先后顺序)

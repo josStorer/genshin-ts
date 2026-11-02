@@ -25,7 +25,7 @@ The plugin only improves the editing experience. Compilation, runtime behavior, 
 ## Enabling and checking
 
 - **Configuration:** `genshin-ts/tsconfig/base.json` and `genshin-ts/tsconfig/lua.json`, which template projects extend, already list the plugin; no tsconfig change is needed.
-- **VS Code / Cursor:** the plugin needs the workspace TypeScript. The template ships `.vscode/settings.json` (`"typescript.tsdk": "node_modules/typescript/lib"`); accept the "use the workspace TypeScript version" prompt, or run `TypeScript: Select TypeScript Version` → `Use Workspace Version`. Newer VS Code / Cursor versions name this setting `js/ts.tsdk.path`.
+- **VS Code / Cursor:** the plugin needs the workspace TypeScript. The template ships `.vscode/settings.json` with both setting names, `"typescript.tsdk"` and `"js/ts.tsdk.path"` (used by newer VS Code / Cursor), pointing to `node_modules/typescript/lib`. Accept the "use the workspace TypeScript version" prompt, or run `TypeScript: Select TypeScript Version` → `Use Workspace Version`.
 - **JetBrains IDEs:** usually work out of the box.
 - **After upgrading genshin-ts:** run `TypeScript: Restart TS Server`. The TypeScript server loads plugins when it starts and keeps the old version until restarted.
 - **Checking that it is active:** type `lua.Color.` in a Lua file; if apply and bind are not listed, the plugin is loaded. You can also look for `Plugin validation succeeded` in the TypeScript server log.

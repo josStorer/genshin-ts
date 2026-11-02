@@ -8,6 +8,22 @@ npm create genshin-ts@latest
 
 > If the Windows execution policy prevents scripts from running, replace `npm` with `npm.cmd` in all commands.
 
+Use the arrow keys and Enter to go through:
+
+1. the project name;
+2. the template: **Node graphs + Lua** (recommended) or **Node graphs only**; see [Template Structure](./template.md);
+3. the map to inject into: local map saves are found automatically; pick the region, account (user ID) and map as needed and they are written to `inject` in `gsts.config.ts`. You can also skip this;
+4. whether to install dependencies now.
+
+Prompts follow the system language; pass `--lang zh` or `--lang en` to choose. Where arrow keys are not available (CI, for example), pass everything as options and nothing is asked:
+
+```bash
+npm create genshin-ts@latest my-world -- --template graph-lua --yes
+npm create genshin-ts@latest my-world -- --template graph --region China --player 100000000 --map 1073741825 --install
+```
+
+Run `npm create genshin-ts@latest -- --help` for every option.
+
 genshin-ts includes a TypeScript plugin for more advanced TypeScript support enhancements; even if it is not enabled, it does not affect functionality or development workflow, but enabling it is recommended. See:
 `https://gsts.moe/doc/quick-start/install.html#typescript-plugin`
 

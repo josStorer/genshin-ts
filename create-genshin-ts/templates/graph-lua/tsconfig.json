@@ -1,0 +1,11 @@
+{
+  "extends": "genshin-ts/tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "typeRoots": ["./node_modules/genshin-ts/types", "./node_modules/@types"],
+    "types": ["gsts", "node"]
+  },
+  "include": ["src", "gsts.config.ts"],
+  "exclude": ["src/lua"]
+}

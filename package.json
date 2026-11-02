@@ -142,6 +142,7 @@
     }
   },
   "devDependencies": {
+    "@clack/prompts": "1.8.1",
     "@eslint/js": "^10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@types/luaparse": "0.2.12",

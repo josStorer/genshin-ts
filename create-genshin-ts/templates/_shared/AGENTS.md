@@ -9,14 +9,23 @@ This template bootstraps a Genshin-TS project. Maintain it with user workflow an
 - `docs/EDITOR_BOUNDARIES_ZH.md`: Chinese boundary rules and preferred editor terminology.
 
 ## Layout
-- `src/main.ts`: default entry example
+<!-- snippet:LAYOUT -->
+- `src/graphs/main.ts`: server node graph; receives the `HudClicked` signal sent from Lua
+- `src/lua/hud.ts`: client control script (Lua entry) for the HUD container
+- `src/lua/counter.ts`: script for the child container `Counter`; `hud.ts` calls its `methods`
+- `src/lua/lib/`: ordinary TS modules used by Lua entries
+- `src/lua/native/`: native Lua modules with their `.d.ts` declarations
+- `src/lua/tsconfig.json`: Lua type environment (the root `tsconfig.json` excludes `src/lua`)
+- `src/shared/constants.ts`: constants shared by node graphs and Lua
+- `src/resources/signals.ts`: signal definitions shared by both sides; regenerated from the map's signal manager when `inject` runs
+<!-- /snippet -->
 - `gsts.config.ts`: compile config (entries/outDir/inject)
 - `dist/`: build outputs (generated)
 - `README.md`: user guide
 - `CLAUDE.md`: AI rules
 
 ## Typical Workflow
-1. Update the NodeGraph ID in `src/main.ts`
+1. Update the NodeGraph ID in `src/graphs/main.ts`
 2. Add `inject` in `gsts.config.ts` when needed
 3. Run `npm run dev` for incremental compile
 
@@ -53,3 +62,16 @@ This template bootstraps a Genshin-TS project. Maintain it with user workflow an
 
 ## Reference Definitions
 - Search function/event comments in `node_modules/genshin-ts/dist/src/definitions/`.
+
+<!-- snippet:LUA_AGENTS -->
+## Client Lua
+- Lua code lives in `src/lua` with its own tsconfig; the root tsconfig excludes it and the default `full.mjs` ESLint selects the Lua rules there automatically. Never mix Lua code into node graph files.
+- Keep `g` imported from `genshin-ts/runtime/core`. Entry code goes inside `g.clientControlScript(lua => { ...; return { onStart() {}, methods: {} } })`; listeners (`lua.onSignal`, `lua.onVariable`, `lua.onKey`, `lua.onCursor`) are written at the callback root.
+- `self` is the mounted control in Lua (an entity in node graphs). Keep `self`, `send`, `console` and the timer functions as globals. Host APIs are under `lua.script`, `lua.game`, `lua.Enum`, `lua.Color`, `lua.helper`; find controls with `lua.helper.findControl` / `requireControl` and other mounts with `lua.helper.findScript<typeof Entry>(...)`.
+- Signals come from `src/resources/signals.ts`, regenerated from the map's signal manager on injection; add new signals in the editor rather than only in that file. Send with `send(Signal.X, ...)`, receive in node graphs with `g.server(...).onSignal(Signal.X, ...)`. Signals sent by node graphs with `f.sendSignal` do not reach Lua.
+- Shared modules (`src/shared`) hold neutral types, constants and pure functions only; write shared integer constants as numbers and use `int()` at the node graph call site.
+- For native `.lua` modules, keep a matching `.d.ts`; use `this: void` for plain functions and `LuaMultiReturn` for multiple results.
+- No browser/Node APIs, promises or bigint in Lua. Use explicit boolean conditions and `undefined`; prefer dense arrays. Follow the editor and build diagnostics instead of suppressing them.
+- Editor setup the code depends on (controls, signals, mounting `lua/hud` and `lua/counter`) is listed under "Before the first run" in `README.md`. Injection copies Lua files into `external_lua_file` but never mounts them.
+- Check with `npm run typecheck` (includes `gsts lua check`) and `npm run lint`. Full guide: https://gsts.moe/doc/lua (Chinese: https://gsts.moe/zh/doc/lua).
+<!-- /snippet -->

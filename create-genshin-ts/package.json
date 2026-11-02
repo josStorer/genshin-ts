@@ -16,6 +16,9 @@
     "compiler"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20.12"
+  },
   "bin": {
     "create-genshin-ts": "bin/create-genshin-ts.mjs"
   },
@@ -23,5 +26,8 @@
     "bin",
     "templates",
     "README.md"
-  ]
+  ],
+  "scripts": {
+    "prepublishOnly": "node -e \"require('node:fs').accessSync('bin/create-genshin-ts.mjs')\""
+  }
 }

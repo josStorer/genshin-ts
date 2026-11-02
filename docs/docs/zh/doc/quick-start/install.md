@@ -8,6 +8,22 @@ npm create genshin-ts@latest
 
 > 如果执行命令遇到 Windows 执行策略禁止运行脚本，请将所有命令中的 `npm` 改为 `npm.cmd` 执行。
 
+运行后用方向键和回车，依次完成：
+
+1. 项目名称；
+2. 模板：**节点图 + Lua**（推荐）或**仅节点图**，结构见[模板结构](./template.md)；
+3. 注入地图：自动查找本机的地图存档，按需选择区服、账号（用户 ID）和地图，写进 `gsts.config.ts` 的 `inject`；也可以先跳过；
+4. 是否立即安装依赖。
+
+提示语言跟随系统，可以用 `--lang zh` 或 `--lang en` 指定。不能用方向键的环境（例如 CI）可以直接带参数创建，不会再提问：
+
+```bash
+npm create genshin-ts@latest my-world -- --template graph-lua --yes
+npm create genshin-ts@latest my-world -- --template graph --region China --player 100000000 --map 1073741825 --install
+```
+
+全部参数见 `npm create genshin-ts@latest -- --help`。
+
 genshin-ts 内置 TypeScript 插件以获得更高级的TypeScript支持增强；即使不启用也不影响功能与开发流程，但推荐启用。说明见：
 `https://gsts.moe/zh/doc/quick-start/install.html#typescript-plugin`
 

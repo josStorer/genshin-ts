@@ -8,14 +8,16 @@ Lua 与节点图在同一项目开发，但分别使用自己的 tsconfig，避�
 
 ```text
 src/
-  server.ts
-  shared/signals.ts
+  graphs/main.ts
+  shared/constants.ts
+  resources/signals.ts
   lua/
     tsconfig.json
     hud.ts
-    board.ts
-    native.lua
-    native.d.ts
+    counter.ts
+    lib/format.ts
+    native/banner.lua
+    native/banner.d.ts
 ```
 
 `src/lua/tsconfig.json`：
@@ -30,7 +32,19 @@ src/
 
 根 tsconfig 排除 `src/lua`。导入 `g` 仍用 `genshin-ts/runtime/core`；继承配置中的 paths 将它解析为 Lua 声明，不加载节点图运行库。添加自己的路径别名时要保留这项映射。CLI 使用首个入口最近的 tsconfig 的 baseUrl/paths，多个入口应使用相同映射，依赖须位于 compileRoot 内。
 
-可选脚手架 `npm create genshin-ts@latest my-project -- --with-lua` 会创建 Lua 子目录、tsconfig 和最小示例，并补充 AGENTS.md/CLAUDE.md。模板的 `npm run typecheck` 会顺带运行 `gsts lua check`。默认模板仍为纯节点图。
+`npm create genshin-ts@latest` 默认使用"节点图 + Lua"模板，生成的就是上面这套结构；模板的 `npm run typecheck` 会顺带运行 `gsts lua check`。
+
+## 在已有项目中加入 Lua {#add-lua}
+
+用"仅节点图"模板或更早版本创建的项目，按下面几步加入 Lua：
+
+1. 新建 `src/lua/tsconfig.json`，内容同上。
+2. 在根目录的 `tsconfig.json` 里加上 `"exclude": ["src/lua"]`，避免节点图工程混入 Lua 的全局类型。
+3. 在 `src/lua` 下写第一个 `g.clientControlScript` 入口，写法见下文"入口与代码位置"。构建会自动识别 Lua 入口；只要文件在 `gsts.config.ts` 的 `entries` 覆盖范围内，就不用改配置。
+4. 默认的 `full.mjs` ESLint 会按 tsconfig 自动给 `src/lua` 使用 Lua 规则；在 `package.json` 的 `typecheck` 脚本后面加上 `&& gsts lua check`。
+5. 运行 `npm run dev`，然后在编辑器里添加 Lua 输出文件夹并挂载入口，见下文"构建、路径与注入"。
+
+用"节点图 + Lua"模板新建一个项目，可以对照完整结构。
 
 ## 入口与代码位置
 

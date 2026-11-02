@@ -10,5 +10,5 @@ Genshin-TS 是一套支持使用 TypeScript 进行原神UGC - 千星奇域开发
 - 可读的中间产物，便于调试与排错。
 
 ## 从哪里开始
-- 建议先看模板文档：<https://github.com/josStorer/genshin-ts/blob/master/create-genshin-ts/templates/start/README_ZH.md>
+- 建议先看模板文档：<https://github.com/josStorer/genshin-ts/blob/master/create-genshin-ts/templates/_shared/README_ZH.md>
 - 再进入本文档，逐步了解编写规范与边界规则。

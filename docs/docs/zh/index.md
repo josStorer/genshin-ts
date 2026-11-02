@@ -10,7 +10,7 @@ hero:
       link: /doc/overview/intro
     - theme: alt
       text: 模板文档
-      link: https://github.com/josStorer/genshin-ts/blob/master/create-genshin-ts/templates/start/README_ZH.md
+      link: https://github.com/josStorer/genshin-ts/blob/master/create-genshin-ts/templates/_shared/README_ZH.md
     - theme: alt
       text: GitHub
       link: https://github.com/josStorer/genshin-ts

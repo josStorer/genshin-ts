@@ -13,8 +13,16 @@ npm run dev
 
 ## 项目结构
 
-- `src/main.ts`：入口示例（`g.server(...).on(...)`）
-- `src/resources/signals.ts`：配置 `inject` 后生成的信号定义
+<!-- snippet:LAYOUT -->
+- `src/graphs/main.ts`：服务器节点图，接收 Lua 发来的 `HudClicked` 信号
+- `src/lua/hud.ts`：HUD 容器上的客户端控件脚本（Lua 入口）
+- `src/lua/counter.ts`：子容器 `Counter` 上的脚本，`hud.ts` 会调用它的 `methods`
+- `src/lua/lib/`：Lua 入口用到的普通 TS 模块
+- `src/lua/native/`：原生 Lua 模块及其 `.d.ts` 声明
+- `src/lua/tsconfig.json`：Lua 的类型环境（根目录的 `tsconfig.json` 排除了 `src/lua`）
+- `src/shared/constants.ts`：节点图和 Lua 共用的常量
+- `src/resources/signals.ts`：两边共用的信号定义；配置 `inject` 后会按地图的信号管理器重新生成
+<!-- /snippet -->
 - `gsts.config.ts`：编译与输出配置
 - `dist/`：编译产物（`.gs.ts` / `.json` / `.gia`）
 - `docs/EDITOR_BOUNDARIES.md`：英文版代码与编辑器职责边界说明
@@ -27,8 +35,8 @@ npm run dev
 import type { GstsConfig } from 'genshin-ts'
 
 const config: GstsConfig = {
-  compileRoot: '.',
-  entries: ['./src'],
+  compileRoot: './src',
+  entries: ['.'],
   outDir: './dist',
   inject: {
     gameRegion: 'China',
@@ -43,9 +51,30 @@ export default config
 
 提示：
 
+- 创建项目时选了地图的话，`inject` 已经填好了。
 - `npm run maps` 可列出最近保存的地图，帮助确定 `mapId`。
 - 多账号/多服务器时填写 `gameRegion` / `playerId` 以定位地图目录。
 - 注入会自动做备份，便于回滚。
+
+<!-- snippet:LUA_README -->
+## 客户端 Lua
+
+### 首次运行前
+
+在编辑器里做一次下面几件事，然后保存地图：
+
+1. 新建一个服务器节点图。新地图里的第一个节点图 ID 是 `1073741825`，`src/graphs/main.ts` 用的就是它；不是的话改成实际 ID。节点图保持为空，或者名称以 `_GSTS` 开头。
+2. 在信号管理器里添加信号 `HudClicked`，带一个整数参数 `count`。`src/resources/signals.ts` 里已经有这份定义；注入时会按地图重新生成这个文件，所以名称和参数要一致。
+3. 新建一个 HUD 容器，里面放名为 `Title` 的文本框和名为 `Counter` 的子容器；`Counter` 里再放一个名为 `Label` 的文本框。
+
+然后运行 `npm run dev`。配置了 `inject` 时，Lua 文件会复制到地图的 `external_lua_file` 目录；没有配置时留在 `dist/lua/`。注入只复制文件：第一次要在编辑器里添加整个 Lua 输出文件夹，再给 HUD 容器挂载 `lua/hud`、给 `Counter` 挂载 `lua/counter`。之后改 TS、等编译完成，在编辑器里重新运行地图即可。按跳跃键会更新计数，并把 `HudClicked` 发给服务器节点图。
+
+### 检查
+
+`npm run typecheck` 同时检查节点图和 Lua（`gsts lua check` 做完整的 Lua 检查，包括原生 `.d.ts`）。`npm run lint` 会自动对 `src/lua` 使用 Lua 的 ESLint 规则。
+
+完整说明：https://gsts.moe/zh/doc/lua
+<!-- /snippet -->
 
 ## 编辑器边界
 

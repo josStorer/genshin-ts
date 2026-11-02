@@ -13,8 +13,16 @@ Docs: `https://gsts.moe`
 
 ## Project Layout
 
-- `src/main.ts`: entry example (`g.server(...).on(...)`)
-- `src/resources/signals.ts`: generated signal definitions when `inject` is configured
+<!-- snippet:LAYOUT -->
+- `src/graphs/main.ts`: server node graph; receives the `HudClicked` signal sent from Lua
+- `src/lua/hud.ts`: client control script (Lua entry) for the HUD container
+- `src/lua/counter.ts`: script for the child container `Counter`; `hud.ts` calls its `methods`
+- `src/lua/lib/`: ordinary TS modules used by Lua entries
+- `src/lua/native/`: native Lua modules with their `.d.ts` declarations
+- `src/lua/tsconfig.json`: Lua type environment (the root `tsconfig.json` excludes `src/lua`)
+- `src/shared/constants.ts`: constants shared by node graphs and Lua
+- `src/resources/signals.ts`: signal definitions shared by both sides; regenerated from the map's signal manager when `inject` runs
+<!-- /snippet -->
 - `gsts.config.ts`: compile/output configuration
 - `dist/`: build outputs (`.gs.ts` / `.json` / `.gia`)
 - `docs/EDITOR_BOUNDARIES.md`: English code-vs-editor responsibility guide
@@ -27,8 +35,8 @@ Docs: `https://gsts.moe`
 import type { GstsConfig } from 'genshin-ts'
 
 const config: GstsConfig = {
-  compileRoot: '.',
-  entries: ['./src'],
+  compileRoot: './src',
+  entries: ['.'],
   outDir: './dist',
   inject: {
     gameRegion: 'China',
@@ -42,9 +50,30 @@ export default config
 ```
 
 Notes:
+- If you picked a map while creating the project, `inject` is already filled in.
 - `npm run maps` lists recently saved maps to help locate `mapId`.
 - Fill `gameRegion` / `playerId` when you have multiple regions/accounts.
 - Injection automatically creates backups for rollback.
+
+<!-- snippet:LUA_README -->
+## Client Lua
+
+### Before the first run
+
+Do these once in the editor, then save the map:
+
+1. Create a server node graph. The first one in a new map gets ID `1073741825`, which `src/graphs/main.ts` uses; otherwise change the ID there. Leave it empty or give it a name starting with `_GSTS`.
+2. In the signal manager, add a signal named `HudClicked` with one integer parameter `count`. `src/resources/signals.ts` already contains this definition; injection regenerates that file from the map, so the name and parameter must match.
+3. Create a container for the HUD with a text box named `Title` and a child container named `Counter`. Inside `Counter`, add a text box named `Label`.
+
+Then run `npm run dev`. With `inject` configured, the Lua files are copied into the map's `external_lua_file` folder; without it they stay in `dist/lua/`. Injection only copies files. In the editor, add the whole Lua output folder once, then mount `lua/hud` on the HUD container and `lua/counter` on `Counter`. From then on, edit TS, wait for the build, and rerun the map in the editor. Pressing jump updates the counter and sends `HudClicked` to the server graph.
+
+### Checks
+
+`npm run typecheck` checks node graphs and Lua (`gsts lua check` runs the full Lua checks, including native `.d.ts` files). `npm run lint` applies the Lua ESLint rules to `src/lua` automatically.
+
+Full guide: https://gsts.moe/doc/lua
+<!-- /snippet -->
 
 ## Editor Boundary
 

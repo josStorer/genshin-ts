@@ -25,7 +25,7 @@ genshin-ts 自带一个 TypeScript 语言服务插件（`genshin-ts/configs/ts-p
 ## 启用与确认
 
 - **配置：** 模板项目继承的 `genshin-ts/tsconfig/base.json` 和 `genshin-ts/tsconfig/lua.json` 已经写好 `plugins`，不用改 tsconfig。
-- **VS Code / Cursor：** 插件需要编辑器使用工作区的 TypeScript。模板自带 `.vscode/settings.json`（`"typescript.tsdk": "node_modules/typescript/lib"`）；打开项目时如果提示"使用工作区 TypeScript 版本"，请确认；没有提示时执行 `TypeScript: Select TypeScript Version` → `Use Workspace Version`。较新的 VS Code / Cursor 里这个设置名为 `js/ts.tsdk.path`。
+- **VS Code / Cursor：** 插件需要编辑器使用工作区的 TypeScript。模板自带 `.vscode/settings.json`，新旧两种设置名都写了：`"typescript.tsdk"` 和较新 VS Code / Cursor 用的 `"js/ts.tsdk.path"`，都指向 `node_modules/typescript/lib`。打开项目时如果提示"使用工作区 TypeScript 版本"，请确认；没有提示时执行 `TypeScript: Select TypeScript Version` → `Use Workspace Version`。
 - **IDEA 系列：** 通常开箱即用。
 - **升级 genshin-ts 之后：** 运行 `TypeScript: Restart TS Server`。TypeScript 服务器启动时加载插件，不重启会继续用旧版本。
 - **确认是否生效：** 在 Lua 文件里输入 `lua.Color.`，列表里没有 apply、bind 就说明插件已加载；也可以打开 TypeScript 服务器日志，查找 `Plugin validation succeeded`。

@@ -11,3 +11,4 @@ examples/test.json
 *.tgz
 .npm-cache/
 .tmp/
+/create-genshin-ts/bin/

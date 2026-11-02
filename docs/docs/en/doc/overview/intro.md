@@ -10,5 +10,5 @@ Genshin-TS is a toolchain that makes Genshin UGC - Miliastra Wonderland developm
 - Readable intermediates for debugging and automation.
 
 ## Where to start
-- Template guide: <https://github.com/josStorer/genshin-ts/blob/master/create-genshin-ts/templates/start/README.md>
+- Template guide: <https://github.com/josStorer/genshin-ts/blob/master/create-genshin-ts/templates/_shared/README.md>
 - Then follow the sections below for rules and edge cases.

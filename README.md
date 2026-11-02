@@ -14,7 +14,7 @@ Use TypeScript to develop Genshin UGC (Miliastra Wonderland) projects. Full type
 
 English · [简体中文](README_ZH.md)
 
-[Docs](https://gsts.moe) · [Intro Video](https://www.youtube.com/watch?v=kEACvJzHwr0) · [Template Guide & Usage Details](create-genshin-ts/templates/start/README.md)
+[Docs](https://gsts.moe) · [Intro Video](https://www.youtube.com/watch?v=kEACvJzHwr0) · [Template Guide & Usage Details](create-genshin-ts/templates/_shared/README.md)
 
 </div>
 
@@ -43,7 +43,7 @@ npm run dev
 ```
 
 For detailed usage and constraints, see the template guide and docs:
-- [`create-genshin-ts/templates/start/README.md`](create-genshin-ts/templates/start/README.md)
+- [`create-genshin-ts/templates/_shared/README.md`](create-genshin-ts/templates/_shared/README.md)
 - [https://gsts.moe](https://gsts.moe)
 
 ## Highlights
@@ -95,8 +95,8 @@ See the template guide for the full list and best practices.
 
 ## Detailed Usage & AI Guidance
 
-- Template guide: `create-genshin-ts/templates/start/README.md`
-- AI guidance: `create-genshin-ts/templates/start/CLAUDE.md` / `create-genshin-ts/templates/start/AGENTS.md`
+- Template guide: `create-genshin-ts/templates/_shared/README.md`
+- AI guidance: `create-genshin-ts/templates/_shared/CLAUDE.md` / `create-genshin-ts/templates/_shared/AGENTS.md`
 - Function/event notes: `node_modules/genshin-ts/dist/src/definitions/`
 
 ## TODO (Some items may be dropped based on feasibility; in no particular order)

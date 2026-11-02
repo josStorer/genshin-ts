@@ -1,0 +1,3 @@
+- `src/graphs/main.ts`: entry example (`g.server(...).on(...)`)
+- `src/shared/constants.ts`: constants shared by several graphs
+- `src/resources/`: generated from the map when `inject` is configured (signal and prefab definitions)

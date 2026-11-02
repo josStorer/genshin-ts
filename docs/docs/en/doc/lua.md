@@ -8,14 +8,16 @@ Lua and node graphs share a project but use separate tsconfigs to keep their glo
 
 ```text
 src/
-  server.ts
-  shared/signals.ts
+  graphs/main.ts
+  shared/constants.ts
+  resources/signals.ts
   lua/
     tsconfig.json
     hud.ts
-    board.ts
-    native.lua
-    native.d.ts
+    counter.ts
+    lib/format.ts
+    native/banner.lua
+    native/banner.d.ts
 ```
 
 In `src/lua/tsconfig.json`:
@@ -30,7 +32,19 @@ In `src/lua/tsconfig.json`:
 
 Exclude src/lua from the root graph tsconfig. Keep importing g from genshin-ts/runtime/core: the inherited paths mapping selects Lua declarations without loading the graph runtime. Preserve that mapping when adding aliases. The CLI reads baseUrl/paths from the nearest tsconfig of the first entry; entries should share the same mappings, and dependencies must remain inside compileRoot.
 
-The optional `npm create genshin-ts@latest my-project -- --with-lua` scaffold adds the Lua directory, config, example and AGENTS.md/CLAUDE.md guidance. The template's `npm run typecheck` also runs `gsts lua check`. The default template stays graph-only.
+`npm create genshin-ts@latest` uses the "Node graphs + Lua" template by default, which creates the layout above; its `npm run typecheck` also runs `gsts lua check`.
+
+## Adding Lua to an existing project {#add-lua}
+
+For a project created with the "Node graphs only" template or an older version:
+
+1. Create `src/lua/tsconfig.json` with the content above.
+2. Add `"exclude": ["src/lua"]` to the root `tsconfig.json` so the node graph project does not pick up Lua globals.
+3. Write your first `g.clientControlScript` entry under `src/lua` (see "Entries and where code belongs" below). The build finds Lua entries by itself; as long as the file is covered by `entries` in `gsts.config.ts`, no config change is needed.
+4. The default `full.mjs` ESLint selects the Lua rules for `src/lua` from its tsconfig; append `&& gsts lua check` to the `typecheck` script in `package.json`.
+5. Run `npm run dev`, then add the Lua output folder in the editor and mount the entries (see "Build, paths and injection" below).
+
+A new project created with the "Node graphs + Lua" template shows the complete layout.
 
 ## Entries and where code belongs
 

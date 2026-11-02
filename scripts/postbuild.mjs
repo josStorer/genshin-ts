@@ -80,3 +80,6 @@ await build({
     js: "'use strict';\nconst __gstsI18nModuleUrl = require('node:url').pathToFileURL(require('node:path').join(__dirname, '../../i18n/index.js')).href;"
   }
 })
+
+// npm create genshin-ts 的打包产物
+await import('./build-create.mjs')
