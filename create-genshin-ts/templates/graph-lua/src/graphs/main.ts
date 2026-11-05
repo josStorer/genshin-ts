@@ -5,7 +5,7 @@ import { Signal } from '../resources/signals'
 g.server({
   id: 1073741825
 })
-  .on('whenEntityIsCreated', () => {
+  .on('whenEntityIsCreated', (_evt, f) => {
     console.log('hello world')
   })
   // Sent by src/lua/hud.ts each time the player jumps.

@@ -121,13 +121,12 @@ for (const name of ['lua-demo', 'graph-demo']) {
     path.join(project, 'node_modules/@types'),
     'junction'
   )
-  // 仅节点图沿用 v0.2.3 的 src/main.ts，其中未使用的参数 f 有一个 lint 警告
-  const maxWarnings = name === 'lua-demo' ? '0' : '1'
+  // 两个模板的节点图入口都沿用 v0.2.3 的 (_evt, f)，未使用的参数 f 有一个 lint 警告
   const checks = [
     ['node_modules/typescript/bin/tsc', ['-p', 'tsconfig.json', '--noEmit']],
     ['bin/gsts.mjs', ['lua', 'check', '--lang', 'zh']],
     ['bin/gsts.mjs', ['--noinject', '--lang', 'zh']],
-    ['node_modules/eslint/bin/eslint.js', ['src', '--max-warnings', maxWarnings]]
+    ['node_modules/eslint/bin/eslint.js', ['src', '--max-warnings', '1']]
   ]
   if (name === 'lua-demo')
     checks.push(['node_modules/typescript/bin/tsc', ['-p', 'src/lua/tsconfig.json', '--noEmit']])
