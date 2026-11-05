@@ -223,10 +223,12 @@ async function main() {
  * 非交互模式（CI 等）直接把包管理器的输出接到终端。
  */
 async function installDependencies(pm, cwd, interactive, t) {
+  // Windows 上 npm 等是 .cmd，必须经过 shell 启动；整条命令写成一个字符串（只有固定的包管理器名和 install），
+  // 不用"参数数组 + shell"，否则 Node 24 起会出现 DEP0190 警告
   const command = `${pm.name} install`
-  const shell = process.platform === 'win32'
+  const shell = true
   if (!interactive) {
-    const ok = spawnSync(pm.name, ['install'], { cwd, stdio: 'inherit', shell }).status === 0
+    const ok = spawnSync(command, { cwd, stdio: 'inherit', shell }).status === 0
     if (!ok) console.error(t('installFailed', { command }))
     return ok
   }
@@ -234,7 +236,7 @@ async function installDependencies(pm, cwd, interactive, t) {
   spin.start(t('installing', { command }))
   let output = ''
   const code = await new Promise((resolve) => {
-    const child = spawn(pm.name, ['install'], { cwd, shell, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(command, { cwd, shell, stdio: ['ignore', 'pipe', 'pipe'] })
     child.stdout.on('data', (chunk) => (output += chunk))
     child.stderr.on('data', (chunk) => (output += chunk))
     child.on('error', (error) => {
