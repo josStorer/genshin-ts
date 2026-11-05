@@ -9,9 +9,10 @@ fs.mkdirSync(base, { recursive: true })
 const root = fs.mkdtempSync(path.join(base, 'run-'))
 const cli = path.resolve('dist/src/cli/gsts.js')
 const hook = path.join(root, 'stop.mjs')
+// 只在测试 fork 的 gsts 进程里监听；钩子经 NODE_OPTIONS 也会进入编译子进程，在 Node 20 上会抢走发给子进程的请求
 fs.writeFileSync(
   hook,
-  "process.on('message', m => { if(m === 'stop-test') process.exit(process.exitCode ?? 0) })"
+  `if (process.argv[1] === ${JSON.stringify(cli)}) process.on('message', m => { if(m === 'stop-test') process.exit(process.exitCode ?? 0) })`
 )
 const app = path.join(root, 'app/genshin-ts')
 fs.mkdirSync(app, { recursive: true })

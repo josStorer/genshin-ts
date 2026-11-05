@@ -26,7 +26,11 @@ fs.writeFileSync(
   path.join(app, 'Roaming/genshin-ts/state.json'),
   JSON.stringify({ updateCheck: { lastAt: Date.now() }, noticeCheck: { lastAt: Date.now() } })
 )
-fs.writeFileSync(hook, `process.on('message', m => { if(m === 'stop-test') process.exit(0) })`)
+// 只在测试 fork 的 gsts 进程里监听；钩子经 NODE_OPTIONS 也会进入编译子进程，在 Node 20 上会抢走发给子进程的请求
+fs.writeFileSync(
+  hook,
+  `if (process.argv[1] === ${JSON.stringify(cli)}) process.on('message', m => { if(m === 'stop-test') process.exit(0) })`
+)
 const env = {
   ...process.env,
   APPDATA: path.join(app, 'Roaming'),
