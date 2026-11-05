@@ -1,3 +1,2 @@
-- `src/graphs/main.ts`：入口示例（`g.server(...).on(...)`）
-- `src/shared/constants.ts`：多个节点图共用的常量
-- `src/resources/`：配置 `inject` 后从地图生成（信号与元件定义）
+- `src/main.ts`：入口示例（`g.server(...).on(...)`）
+- `src/resources/signals.ts`：配置 `inject` 后生成的信号定义

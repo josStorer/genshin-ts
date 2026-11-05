@@ -1,0 +1,1 @@
+- `src/main.ts`: default entry example

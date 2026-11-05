@@ -9,15 +9,11 @@ Lua 与节点图在同一项目开发，但分别使用自己的 tsconfig，避�
 ```text
 src/
   graphs/main.ts
-  shared/constants.ts
   resources/signals.ts
   lua/
     tsconfig.json
     hud.ts
-    counter.ts
     lib/format.ts
-    native/banner.lua
-    native/banner.d.ts
 ```
 
 `src/lua/tsconfig.json`：

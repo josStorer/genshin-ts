@@ -48,19 +48,19 @@ assert.equal(create('--yes', '--lang', 'en').status, 1, 'non-interactive runs ne
 let result = create('lua-demo', '--yes', '--lang', 'zh')
 assert.equal(result.status, 0, result.stderr)
 assert.match(result.stdout, /已创建 lua-demo/)
+assert.match(result.stdout, /"首次运行前"/, 'the Lua template reminds the editor setup')
 for (const file of [
   'src/graphs/main.ts',
   'src/lua/hud.ts',
-  'src/lua/counter.ts',
   'src/lua/lib/format.ts',
-  'src/lua/native/banner.lua',
-  'src/lua/native/banner.d.ts',
   'src/lua/tsconfig.json',
-  'src/shared/constants.ts',
   '.gitignore'
 ])
   assert(fs.existsSync(path.join(root, 'lua-demo', file)), file)
+for (const dir of ['src/main.ts', 'src/shared', 'src/lua/native', 'src/lua/counter.ts'])
+  assert(!fs.existsSync(path.join(root, 'lua-demo', dir)), dir)
 assert(read('lua-demo/src/resources/signals.ts').startsWith('// @gsts:signals'))
+assert.match(read('lua-demo/src/resources/signals.ts'), /JumpPressed/)
 assert.deepEqual(JSON.parse(read('lua-demo/tsconfig.json')).exclude, ['src/lua'])
 assert.equal(JSON.parse(read('lua-demo/package.json')).name, 'lua-demo')
 assert.doesNotMatch(
@@ -75,12 +75,19 @@ for (const file of ['README.md', 'README_ZH.md', 'AGENTS.md', 'CLAUDE.md']) {
 assert.match(read('lua-demo/README_ZH.md'), /### 首次运行前/)
 assert.match(read('lua-demo/AGENTS.md'), /src\/lua\/hud\.ts/)
 
-// 仅节点图：Lua 指引只指向迁移说明
+// 仅节点图：保持 v0.2.3 的 src/main.ts，Lua 指引只指向迁移说明
 result = create('graph-demo', '--template', 'graph', '--yes', '--lang', 'en')
 assert.equal(result.status, 0, result.stderr)
-assert(!fs.existsSync(path.join(root, 'graph-demo/src/lua')))
-assert(!fs.existsSync(path.join(root, 'graph-demo/src/resources')))
+assert.doesNotMatch(result.stdout, /Before the first run/)
+assert(fs.existsSync(path.join(root, 'graph-demo/src/main.ts')))
+for (const dir of ['src/graphs', 'src/shared', 'src/lua', 'src/resources'])
+  assert(!fs.existsSync(path.join(root, 'graph-demo', dir)), dir)
 assert.equal(JSON.parse(read('graph-demo/tsconfig.json')).exclude, undefined)
+assert.match(read('graph-demo/README_ZH.md'), /- `src\/main\.ts`：入口示例/)
+assert.match(read('graph-demo/AGENTS.md'), /- `src\/main\.ts`: default entry example/)
+assert.match(read('graph-demo/AGENTS.md'), /Update the NodeGraph ID in `src\/main\.ts`/)
+for (const file of ['README.md', 'README_ZH.md', 'AGENTS.md', 'CLAUDE.md'])
+  assert.doesNotMatch(read('graph-demo', file), /src\/graphs|src\/shared|snippet/, file)
 assert.match(read('graph-demo/README.md'), /gsts\.moe\/doc\/lua#add-lua/)
 assert.match(read('graph-demo/README_ZH.md'), /gsts\.moe\/zh\/doc\/lua#add-lua/)
 assert.doesNotMatch(read('graph-demo/AGENTS.md'), /src\/lua\/hud\.ts/)
@@ -114,11 +121,13 @@ for (const name of ['lua-demo', 'graph-demo']) {
     path.join(project, 'node_modules/@types'),
     'junction'
   )
+  // 仅节点图沿用 v0.2.3 的 src/main.ts，其中未使用的参数 f 有一个 lint 警告
+  const maxWarnings = name === 'lua-demo' ? '0' : '1'
   const checks = [
     ['node_modules/typescript/bin/tsc', ['-p', 'tsconfig.json', '--noEmit']],
     ['bin/gsts.mjs', ['lua', 'check', '--lang', 'zh']],
     ['bin/gsts.mjs', ['--noinject', '--lang', 'zh']],
-    ['node_modules/eslint/bin/eslint.js', ['src', '--max-warnings', '0']]
+    ['node_modules/eslint/bin/eslint.js', ['src', '--max-warnings', maxWarnings]]
   ]
   if (name === 'lua-demo')
     checks.push(['node_modules/typescript/bin/tsc', ['-p', 'src/lua/tsconfig.json', '--noEmit']])
@@ -133,7 +142,8 @@ for (const name of ['lua-demo', 'graph-demo']) {
     // 只有节点图的项目里 gsts lua check 直接结束、不输出
     if (name === 'graph-demo' && args[0] === 'lua') assert.equal(run.stdout + run.stderr, '')
   }
-  assert(fs.existsSync(path.join(project, 'dist/graphs/main.gia')), name)
+  const gia = name === 'lua-demo' ? 'dist/graphs/main.gia' : 'dist/main.gia'
+  assert(fs.existsSync(path.join(project, gia)), `${name}: ${gia}`)
   assert.equal(fs.existsSync(path.join(project, 'dist/lua/lua/hud.lua')), name === 'lua-demo', name)
   for (const link of ['genshin-ts', '@types']) fs.rmSync(path.join(project, 'node_modules', link))
 }

@@ -3,5 +3,5 @@
 import { defineSignal } from 'genshin-ts/runtime/core'
 
 export const Signal = {
-  HudClicked: defineSignal('HudClicked', [['count', 'int']])
+  JumpPressed: defineSignal('JumpPressed', [['count', 'int']])
 } as const

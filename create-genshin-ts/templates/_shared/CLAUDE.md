@@ -87,9 +87,9 @@ If something is wrong, compare `.gs.ts` and `.json` first.
 - Keep `g` imported from `genshin-ts/runtime/core`. Entry code goes inside `g.clientControlScript(lua => { ...; return { onStart() {}, methods: {} } })`; listeners (`lua.onSignal`, `lua.onVariable`, `lua.onKey`, `lua.onCursor`) are written at the callback root.
 - `self` is the mounted control in Lua (an entity in node graphs). Keep `self`, `send`, `console` and the timer functions as globals. Host APIs are under `lua.script`, `lua.game`, `lua.Enum`, `lua.Color`, `lua.helper`; find controls with `lua.helper.findControl` / `requireControl` and other mounts with `lua.helper.findScript<typeof Entry>(...)`.
 - Signals come from `src/resources/signals.ts`, regenerated from the map's signal manager on injection; add new signals in the editor rather than only in that file. Send with `send(Signal.X, ...)`, receive in node graphs with `g.server(...).onSignal(Signal.X, ...)`. Signals sent by node graphs with `f.sendSignal` do not reach Lua.
-- Shared modules (`src/shared`) hold neutral types, constants and pure functions only; write shared integer constants as numbers and use `int()` at the node graph call site.
+- Modules imported by both node graphs and Lua hold neutral types, constants and pure functions only; write shared integer constants as numbers and use `int()` at the node graph call site.
 - For native `.lua` modules, keep a matching `.d.ts`; use `this: void` for plain functions and `LuaMultiReturn` for multiple results.
 - No browser/Node APIs, promises or bigint in Lua. Use explicit boolean conditions and `undefined`; prefer dense arrays. Follow the editor and build diagnostics instead of suppressing them.
-- Editor setup the code depends on (controls, signals, mounting `lua/hud` and `lua/counter`) is listed under "Before the first run" in `README.md`. Injection copies Lua files into `external_lua_file` but never mounts them.
+- Editor setup the code depends on (the control, the signal, mounting `lua/hud`) is listed under "Before the first run" in `README.md`. Injection copies Lua files into `external_lua_file` but never mounts them.
 - Check with `npm run typecheck` (includes `gsts lua check`) and `npm run lint`. Full guide: https://gsts.moe/doc/lua (Chinese: https://gsts.moe/zh/doc/lua).
 <!-- /snippet -->

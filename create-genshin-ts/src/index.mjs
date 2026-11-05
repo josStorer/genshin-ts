@@ -215,6 +215,7 @@ async function main() {
     p.outro(t('created', { name }))
   } else {
     console.log(`${t('created', { name })}\n\n${t('nextSteps')}\n${steps.replace(/^/gm, '  ')}`)
+    if (template === 'graph-lua') console.log(`\n${t('luaSetup')}`)
   }
 }
 
