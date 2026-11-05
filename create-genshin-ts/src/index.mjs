@@ -1,7 +1,7 @@
 // npm create genshin-ts 的源码。发布前由 scripts/build-create.mjs 打包成 bin/create-genshin-ts.mjs，
 // 依赖一起打进去，用户安装时不需要额外依赖。
 
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,6 +15,11 @@ import { detectLang, messages } from './messages.mjs'
 const templatesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../templates')
 const TEMPLATES = ['graph-lua', 'graph']
 const REGIONS = ['China', 'Global']
+// 区服对应的存档目录名（见 src/cli/gil_paths.ts），选择时作为提示显示
+const REGION_FOLDERS = {
+  China: 'LocalLow\\miHoYo\\原神',
+  Global: 'LocalLow\\miHoYo\\Genshin Impact'
+}
 
 function parseArgs(argv) {
   const options = { inject: true, positional: [] }
@@ -131,8 +136,8 @@ async function main() {
     if (p.isCancel(value)) fail(t('cancelled'))
     return value
   }
-  // clack 自带的按键提示是英文；中文时隐藏，改在问题后面写说明
-  const keys = lang === 'zh' ? { showInstructions: false } : {}
+  // clack 自带的按键提示只有英文、显示在列表下方；两种语言都隐藏它，统一在问题后面写说明
+  const keys = { showInstructions: false }
 
   if (options.help) return console.log(t('help'))
   if (options.unknown) fail(`${options.unknown}\n\n${t('help')}`)
@@ -200,16 +205,7 @@ async function main() {
           })
         )
       : false)
-  let installed = false
-  if (install) {
-    const result = spawnSync(pm.name, ['install'], {
-      cwd: targetDir,
-      stdio: 'inherit',
-      shell: process.platform === 'win32'
-    })
-    installed = result.status === 0
-    if (!installed) p.log.warn(t('installFailed', { command: `${pm.name} install` }))
-  }
+  const installed = install && (await installDependencies(pm, targetDir, interactive, t))
 
   const cd = /\s/.test(name) ? `cd "${name}"` : `cd ${name}`
   const steps = [cd, ...(installed ? [] : [`${pm.name} install`]), pm.run('dev')].join('\n')
@@ -220,6 +216,42 @@ async function main() {
   } else {
     console.log(`${t('created', { name })}\n\n${t('nextSteps')}\n${steps.replace(/^/gm, '  ')}`)
   }
+}
+
+/**
+ * 交互模式下显示带计时的转圈，结束时给出包管理器的结果行（例如 added 213 packages in 35s），失败时打印它的输出；
+ * 非交互模式（CI 等）直接把包管理器的输出接到终端。
+ */
+async function installDependencies(pm, cwd, interactive, t) {
+  const command = `${pm.name} install`
+  const shell = process.platform === 'win32'
+  if (!interactive) {
+    const ok = spawnSync(pm.name, ['install'], { cwd, stdio: 'inherit', shell }).status === 0
+    if (!ok) console.error(t('installFailed', { command }))
+    return ok
+  }
+  const spin = p.spinner({ indicator: 'timer' })
+  spin.start(t('installing', { command }))
+  let output = ''
+  const code = await new Promise((resolve) => {
+    const child = spawn(pm.name, ['install'], { cwd, shell, stdio: ['ignore', 'pipe', 'pipe'] })
+    child.stdout.on('data', (chunk) => (output += chunk))
+    child.stderr.on('data', (chunk) => (output += chunk))
+    child.on('error', (error) => {
+      output += String(error)
+      resolve(1)
+    })
+    child.on('close', resolve)
+  })
+  const lines = output.trim().split(/\r?\n/).filter(Boolean)
+  if (code === 0) {
+    const summary = lines.find((line) => /^(added|up to date|changed|removed)\b/.test(line))
+    spin.stop(summary ? `${t('installed')} · ${summary}` : t('installed'))
+    return true
+  }
+  spin.error(t('installFailed', { command }))
+  if (lines.length) p.log.message(lines.slice(-20).join('\n'))
+  return false
 }
 
 /** 先用参数；没给 --map 时在交互模式下按本机存档依次选区服、账号和地图。返回 undefined 表示不配置注入。 */
@@ -257,7 +289,11 @@ async function chooseInject({ options, interactive, t, lang, ask, fail, keys, pm
           p.select({
             ...keys,
             message: t('region') + t('keys'),
-            options: regions.map((region) => ({ value: region, label: regionName(region) }))
+            options: regions.map((region) => ({
+              value: region,
+              label: regionName(region),
+              hint: t('regionSaves', { folder: REGION_FOLDERS[region] })
+            }))
           })
         ))
 
