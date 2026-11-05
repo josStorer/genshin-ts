@@ -29,7 +29,7 @@ genshin-ts 内置 TypeScript 插件以获得更高级的TypeScript支持增强�
 
 ## 依赖环境
 
-- Node.js (建议 LTS)
+- Node.js 20.19+ 或 22+（建议 LTS）
 - Windows (涉及地图注入路径)
 
 ## TypeScript Plugin

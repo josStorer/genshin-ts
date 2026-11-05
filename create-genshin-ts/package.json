@@ -17,7 +17,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=20.12"
+    "node": "^20.19.0 || >=22"
   },
   "bin": {
     "create-genshin-ts": "bin/create-genshin-ts.mjs"

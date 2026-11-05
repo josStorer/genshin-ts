@@ -16,6 +16,9 @@
     "compiler"
   ],
   "license": "MIT",
+  "engines": {
+    "node": "^20.19.0 || >=22"
+  },
   "bin": {
     "gsts": "bin/gsts.mjs"
   },

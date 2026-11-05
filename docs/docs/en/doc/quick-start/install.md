@@ -29,7 +29,7 @@ genshin-ts includes a TypeScript plugin for more advanced TypeScript support enh
 
 ## Requirements
 
-- Node.js (LTS recommended)
+- Node.js 20.19+ or 22+ (LTS recommended)
 - Windows (map injection paths)
 
 ## TypeScript Plugin
