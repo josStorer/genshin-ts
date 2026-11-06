@@ -2,6 +2,15 @@
 
 export type NODE_ID = (typeof NODE_ID)[keyof typeof NODE_ID]
 export const NODE_ID = {
+  Enumerations_Equal__Hit_Level: 862,
+  Open_Gift_Box_Interface: 856,
+  Set_CD_For_Specified_Skill_Instance: 857,
+  Increase_CD_For_Specified_Skill_Instance: 858,
+  Set_Creation_Disruptor_Device: 859,
+  Activate_Disable_Native_Push_Collision: 860,
+  Activate_Disable_Extra_Push_Collision: 861,
+  Switch_Combat_Text_Filter_Template: 3800,
+  Send_Client_Scripted_ServerSignal: 300005,
   Print_String: 1,
   Print_String__Generic: 1,
   Double_Branch: 2,

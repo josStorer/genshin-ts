@@ -408,8 +408,14 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
       if (applyArgsWithNullHole(nodeType, giaNode, irNode, 4, 3)) return true
     }
 
-    if (nodeType === 'send_signal' || nodeType === 'monitor_signal') {
-      const nameArg = irNode.args?.[0]
+    if (
+      nodeType === 'send_signal' ||
+      nodeType === 'monitor_signal' ||
+      nodeType === 'send_client_scripted_server_signal'
+    ) {
+      const luaSignal = nodeType === 'send_client_scripted_server_signal'
+      const nameIndex = luaSignal ? 1 : 0
+      const nameArg = irNode.args?.[nameIndex]
       if (nameArg && nameArg.type === 'conn') {
         throw new Error(`[error] ${nodeType} does not accept wired signal name`)
       }
@@ -422,21 +428,23 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
       }
       // Create input pins for signal parameters so graph.connect can find them
       // Signal name is an exec literal (not a data pin), so data pins start at index 0
-      if (nodeType === 'send_signal') {
+      if (nodeType === 'send_signal' || luaSignal) {
         const args = irNode.args ?? []
-        for (let i = 1; i < args.length; i++) {
+        for (let i = luaSignal ? 0 : 1; i < args.length; i++) {
+          if (i === nameIndex) continue
+          const pinIndex = luaSignal && i === 0 ? 0 : i - 1
           const arg = args[i]
           if (!arg) continue
           if (arg.type === 'conn') {
             const connType = (arg as ConnectionArgument).value.type
             const pinType = valueTypeToNodeType(connType)
             if (pinType) {
-              const p = new Pin(giaNode.ConcreteId!, 3, i - 1)
+              const p = new Pin(giaNode.ConcreteId!, 3, pinIndex)
               p.setType(pinType)
               giaNode.pins.push(p)
             }
           } else if (isValueArg(arg)) {
-            setArgValue(giaNode, i - 1, i, nodeType, arg)
+            setArgValue(giaNode, pinIndex, i, nodeType, arg)
           }
         }
       } else {
@@ -522,6 +530,8 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
         return idx >= 4 ? idx + 1 : idx // hole at 4
       case 'send_signal':
         return idx > 0 ? idx - 1 : idx // signal name is exec literal, data pins shift by -1
+      case 'send_client_scripted_server_signal':
+        return idx > 1 ? idx - 1 : idx
       default:
         return idx
     }
@@ -637,6 +647,14 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
   const encodeGraphMs = profiling ? performance.now() - encodeGraphStart : 0
 
   const postprocessStart = profiling ? performance.now() : 0
+  for (const node of root.graph?.graph?.inner?.graph?.nodes ?? []) {
+    if (irNodeTypeById.get(node.nodeIndex) !== 'send_client_scripted_server_signal') continue
+    // Editor save evidence: Lua downlink uses kind 6 and signalVersion 1.
+    node.signalVersion = 1
+    for (const pin of node.pins ?? []) {
+      if (pin.i1?.kind === 5) pin.clientExecNode = { kind: 6, index: 1 }
+    }
+  }
   if (assemblyDictMeta.size > 0) {
     const setNestedAlreadySetValFalse = (pin: { value?: unknown }) => {
       const value = (pin.value as { bConcreteValue?: { value?: { alreadySetVal?: boolean } } })

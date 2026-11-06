@@ -154,7 +154,8 @@ export const ServerEventMetadata = {
     { name: 'damage', typeBase: float, typeName: 'float', isArray: false },
     { name: 'attackTagList', typeBase: str, typeName: 'str', isArray: true },
     { name: 'elementalType', typeBase: enumeration, typeName: 'ElementalType', isArray: false },
-    { name: 'elementalAttackPotency', typeBase: float, typeName: 'float', isArray: false }
+    { name: 'elementalAttackPotency', typeBase: float, typeName: 'float', isArray: false },
+    { name: 'isCriticalHit', typeBase: bool, typeName: 'bool', isArray: false }
   ],
   whenAttacked: [
     { name: 'eventSourceEntity', typeBase: entity, typeName: 'entity', isArray: false },
@@ -163,7 +164,9 @@ export const ServerEventMetadata = {
     { name: 'damage', typeBase: float, typeName: 'float', isArray: false },
     { name: 'attackTagList', typeBase: str, typeName: 'str', isArray: true },
     { name: 'elementalType', typeBase: enumeration, typeName: 'ElementalType', isArray: false },
-    { name: 'elementalAttackPotency', typeBase: float, typeName: 'float', isArray: false }
+    { name: 'elementalAttackPotency', typeBase: float, typeName: 'float', isArray: false },
+    { name: 'isCriticalHit', typeBase: bool, typeName: 'bool', isArray: false },
+    { name: 'hitLevel', typeBase: enumeration, typeName: 'HitLevel', isArray: false }
   ],
   whenEnteringAnInterruptibleState: [
     { name: 'eventSourceEntity', typeBase: entity, typeName: 'entity', isArray: false },

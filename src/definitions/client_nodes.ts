@@ -61,7 +61,9 @@ import type {
   HitLevel,
   KnockbackDirectionType,
   PreAimingEndReason,
+  PreAimResultDataType,
   RayFilterType,
+  RayHitFilterType,
   RetracingType,
   RotationDirection,
   RotationType,
@@ -2248,6 +2250,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
+   * Allows players to complete the current aiming phase early.
+   *
    * Complete Current Pre-Aim
    *
    * 完成当前预瞄准: 可以让玩家提前完成当前预瞄准
@@ -2506,20 +2510,28 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
    * 基准对象
    */
   getBaseObjectOfSpecifiedPreAiming(
-    preAimingIndex: IntValue
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
   ): clientEntity<'character_skill', Mode> {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_base_object_of_specified_pre_aiming',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new entity()
     ret.markPin(ref, 'baseObject', 0)
@@ -3625,18 +3637,28 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
    * 结果数量
    */
-  getPreAimingCollisionDetectionResultCount(preAimingIndex: IntValue): bigint {
+  getPreAimingCollisionDetectionResultCount(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): bigint {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_collision_detection_result_count',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new int()
     ret.markPin(ref, 'resultCount', 0)
@@ -3653,6 +3675,11 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
@@ -3660,13 +3687,15 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * 持续时长（s）
    */
-  getPreAimingDuration(preAimingIndex: IntValue): number {
+  getPreAimingDuration(preAimingIndex: IntValue, resultDataType?: PreAimResultDataType): number {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_duration',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new float()
     ret.markPin(ref, 'durationSeconds', 0)
@@ -3683,8 +3712,16 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    */
-  getPreAimingRayHitInfo(preAimingIndex: IntValue): {
+  getPreAimingRayHitInfo(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): {
     /**
      * On-Hit Location
      *
@@ -3699,11 +3736,13 @@ export class ClientCharacterSkillExecutionFlowFunctions<
     hitEntity: clientEntity<'character_skill', Mode>
   } {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_ray_hit_info',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     return {
       hitPosition: (() => {
@@ -3729,8 +3768,16 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    */
-  getPreAimingResult(preAimingIndex: IntValue): {
+  getPreAimingResult(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): {
     /**
      * On-Hit Location
      *
@@ -3757,11 +3804,13 @@ export class ClientCharacterSkillExecutionFlowFunctions<
     validTargetList: clientEntity<'character_skill', Mode>[]
   } {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_result',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     return {
       hitPosition: (() => {
@@ -4227,6 +4276,11 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
@@ -4234,13 +4288,18 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * 是否处于死区
    */
-  getWhetherPreAimingStickIsInDeadZone(preAimingIndex: IntValue): boolean {
+  getWhetherPreAimingStickIsInDeadZone(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): boolean {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_whether_pre_aiming_stick_is_in_dead_zone',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new bool()
     ret.markPin(ref, 'isInDeadZone', 0)
@@ -5346,7 +5405,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
-   * Available only for Custom Aggro Mode; Searches whether the specified Entity has entered battle
+   * Only available in Custom Aggro Mode; Checks whether the specified Entity is in combat
    *
    * 查询指定实体是否入战: 仅自定义仇恨模式可用; 查询指定实体是否已经入战
    *
@@ -5688,6 +5747,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
+   * Converts screen coordinates to viewport coordinates (normalized from 0 to 1). Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to Viewport Coordinates
    *
    * 屏幕坐标转视口坐标: 将屏幕坐标转换为视口坐标（归一化0-1），仅在超限模式可用
@@ -5739,6 +5800,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
+   * Add a depth value to the screen coordinates to convert them to world coordinates. Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to World Coordinates
    *
    * 屏幕坐标转世界坐标: 将屏幕坐标加上深度值，转换为世界坐标，仅在超限模式可用
@@ -5754,8 +5817,6 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 深度值
    *
    * @returns
-   *
-   * World Coordinates
    *
    * 世界坐标
    */
@@ -5774,12 +5835,12 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       args: [screenXObj, screenYObj, depthObj]
     })
     const ret = new vec3()
-    ret.markPin(ref, 'worldPosition', 0)
+    ret.markPin(ref, 'worldCoordinates', 0)
     return ret as unknown as vec3
   }
 
   /**
-   * Within the skill node graph, you can send a signal to the server node graph, and every server node graph can listen for that signal.
+   * Within the skill node graph, signals can be sent to the server node graph, and all server node graphs can listen for this signal.
    *
    * 向服务器节点图发送信号: 在技能节点图中，可以向服务器节点图发送信号，所有服务器节点图都可以监听到该信号
    *
@@ -6345,8 +6406,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 攻击盒类型
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param radiusOfSphereHitbox
    * Literal only; wired connections are not allowed.
    *
@@ -6548,6 +6611,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
     const hitboxTypeObj = parseValue(hitboxType, 'enum')
     assertClientLiteralValue(hitboxTypeObj, 'triggerHitboxAtSpecificLocation.hitboxType')
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerHitboxAtSpecificLocation.scaleOfCuboidHitbox'
+    )
     const radiusOfSphereHitboxObj = parseValue(radiusOfSphereHitbox, 'float')
     assertClientLiteralValue(
       radiusOfSphereHitboxObj,
@@ -6706,7 +6773,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
-   * Initiates a Hitbox Attack at a specified Attachment Point, with configurable attack parameters
+   * Initiates a Hitbox Attack at a specified Attachment Point, supporting configurable attack parameters
    *
    * 指定挂接点打攻击盒: 对指定挂接点发起一次攻击盒攻击，可以设置该次攻击的各种参数
    *
@@ -6751,8 +6818,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 攻击盒类型
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param radiusOfSphereHitbox
    * Literal only; wired connections are not allowed.
    *
@@ -6954,6 +7023,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
     const hitboxTypeObj = parseValue(hitboxType, 'enum')
     assertClientLiteralValue(hitboxTypeObj, 'triggerHitboxAtSpecifiedAttachmentPoint.hitboxType')
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerHitboxAtSpecifiedAttachmentPoint.scaleOfCuboidHitbox'
+    )
     const radiusOfSphereHitboxObj = parseValue(radiusOfSphereHitbox, 'float')
     assertClientLiteralValue(
       radiusOfSphereHitboxObj,
@@ -7160,8 +7233,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 命中场景特效
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param attackLayerFilter
    * Literal only; wired connections are not allowed.
    *
@@ -7321,6 +7396,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       'triggerRectangularHitboxAtSpecificLocation.onHitSceneEffects'
     )
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerRectangularHitboxAtSpecificLocation.scaleOfCuboidHitbox'
+    )
     const attackLayerFilterObj = parseValue(attackLayerFilter, 'enum')
     assertClientLiteralValue(
       attackLayerFilterObj,
@@ -7494,8 +7573,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 命中场景特效
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param attackLayerFilter
    * Literal only; wired connections are not allowed.
    *
@@ -7661,6 +7742,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.onHitSceneEffects'
     )
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerRectangularHitboxAtSpecifiedAttachmentPoint.scaleOfCuboidHitbox'
+    )
     const attackLayerFilterObj = parseValue(attackLayerFilter, 'enum')
     assertClientLiteralValue(
       attackLayerFilterObj,
@@ -9261,6 +9346,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
+   * Converts normalized viewport coordinates (0–1) to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert Viewport Coordinates to Screen Coordinates
    *
    * 视口坐标转屏幕坐标: 将视口坐标（归一化0-1）转换为屏幕坐标，仅在超限模式可用
@@ -9345,17 +9432,17 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
+   * Convert world coordinates to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert World Coordinates to Screen Coordinates
    *
    * 世界坐标转屏幕坐标: 将世界坐标转换为屏幕坐标，仅在超限模式可用
    *
-   * @param worldPosition
-   *
-   * World Coordinates
+   * @param worldCoordinates
    *
    * 世界坐标
    */
-  worldCoordinatesToScreenCoordinates(worldPosition: Vec3Value): {
+  worldCoordinatesToScreenCoordinates(worldCoordinates: Vec3Value): {
     /**
      * Screen X
      *
@@ -9369,12 +9456,12 @@ export class ClientCharacterSkillExecutionFlowFunctions<
      */
     screenY: number
   } {
-    const worldPositionObj = parseValue(worldPosition, 'vec3')
+    const worldCoordinatesObj = parseValue(worldCoordinates, 'vec3')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'world_coordinates_to_screen_coordinates',
-      args: [worldPositionObj]
+      args: [worldCoordinatesObj]
     })
     return {
       screenX: (() => {
@@ -9743,78 +9830,68 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Adds Temporary Movement Parameters. These values take effect on the next frame, so their changes cannot be read in the current Execution Flow by querying the node.
+   *
    * Add Temporary Movement Parameters
    *
    * 添加临时运动参数值: 添加临时运动参数值。该值将在下一帧生效，因此无法在当前执行流中通过获取节点查到值的变化。
    *
-   * @param controlMotor
-   *
-   * Control Motion Device
+   * @param controlMotionDevice
    *
    * 操控运动器
    * @param forwardAcceleration
    *
    * 前进加速度
-   * @param backwardAcceleration
-   *
-   * Reverse Acceleration
+   * @param reverseAcceleration
    *
    * 后退加速度
-   * @param turningRate
-   *
-   * Turn Speed
+   * @param turnSpeed
    *
    * 转向速率
-   * @param baseDragDeceleration
-   *
-   * Base Resistance Deceleration
+   * @param baseResistanceDeceleration
    *
    * 基础阻力减速度
-   * @param dragCoefficient
-   *
-   * Resistance Coefficient
+   * @param resistanceCoefficient
    *
    * 阻力系数
    * @param maxForwardSpeed
    *
    * 最大前进速度
-   * @param maxBackwardSpeed
-   *
-   * Max Reverse Speed
+   * @param maxReverseSpeed
    *
    * 最大后退速度
    */
   addTemporaryMovementParameterValues(
-    controlMotor: EntityValue,
+    controlMotionDevice: EntityValue,
     forwardAcceleration: FloatValue,
-    backwardAcceleration: FloatValue,
-    turningRate: FloatValue,
-    baseDragDeceleration: FloatValue,
-    dragCoefficient: FloatValue,
+    reverseAcceleration: FloatValue,
+    turnSpeed: FloatValue,
+    baseResistanceDeceleration: FloatValue,
+    resistanceCoefficient: FloatValue,
     maxForwardSpeed: FloatValue,
-    maxBackwardSpeed: FloatValue
+    maxReverseSpeed: FloatValue
   ): void {
-    const controlMotorObj = parseValue(controlMotor, 'entity')
+    const controlMotionDeviceObj = parseValue(controlMotionDevice, 'entity')
     const forwardAccelerationObj = parseValue(forwardAcceleration, 'float')
-    const backwardAccelerationObj = parseValue(backwardAcceleration, 'float')
-    const turningRateObj = parseValue(turningRate, 'float')
-    const baseDragDecelerationObj = parseValue(baseDragDeceleration, 'float')
-    const dragCoefficientObj = parseValue(dragCoefficient, 'float')
+    const reverseAccelerationObj = parseValue(reverseAcceleration, 'float')
+    const turnSpeedObj = parseValue(turnSpeed, 'float')
+    const baseResistanceDecelerationObj = parseValue(baseResistanceDeceleration, 'float')
+    const resistanceCoefficientObj = parseValue(resistanceCoefficient, 'float')
     const maxForwardSpeedObj = parseValue(maxForwardSpeed, 'float')
-    const maxBackwardSpeedObj = parseValue(maxBackwardSpeed, 'float')
+    const maxReverseSpeedObj = parseValue(maxReverseSpeed, 'float')
     this.registry.registerNode({
       id: 0,
       type: 'exec',
       nodeType: 'add_temporary_movement_parameter_values',
       args: [
-        controlMotorObj,
+        controlMotionDeviceObj,
         forwardAccelerationObj,
-        backwardAccelerationObj,
-        turningRateObj,
-        baseDragDecelerationObj,
-        dragCoefficientObj,
+        reverseAccelerationObj,
+        turnSpeedObj,
+        baseResistanceDecelerationObj,
+        resistanceCoefficientObj,
         maxForwardSpeedObj,
-        maxBackwardSpeedObj
+        maxReverseSpeedObj
       ]
     })
   }
@@ -9856,7 +9933,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   /**
    * Add Acceleration
    *
-   * 添加速度: 添加临时加速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承
+   * 添加速度: 添加临时速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承
    *
    * @param targetControlMotor
    *
@@ -11435,6 +11512,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Allows players to complete the current aiming phase early.
+   *
    * Complete Current Pre-Aim
    *
    * 完成当前预瞄准: 可以让玩家提前完成当前预瞄准
@@ -11696,20 +11775,28 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
    * 基准对象
    */
   getBaseObjectOfSpecifiedPreAiming(
-    preAimingIndex: IntValue
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
   ): clientEntity<'character_control_skill', Mode> {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_base_object_of_specified_pre_aiming',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new entity()
     ret.markPin(ref, 'baseObject', 0)
@@ -11745,17 +11832,17 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Returns the current speed of the specified control motion device (speed magnitude and unit direction vector)
+   *
    * Get Control Motion Device's Current Speed
    *
    * 获取操控运动器当前速度: 获取指定操控运动器的当前速度（速度大小及单位方向向量）
    *
-   * @param controlMotor
-   *
-   * Control Motion Device
+   * @param controlMotionDevice
    *
    * 操控运动器
    */
-  getControlMotorCurrentVelocity(controlMotor: EntityValue): {
+  getControlMotorCurrentVelocity(controlMotionDevice: EntityValue): {
     /**
      * Speed Magnitude
      *
@@ -11769,12 +11856,12 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
      */
     velocityDirection: vec3
   } {
-    const controlMotorObj = parseValue(controlMotor, 'entity')
+    const controlMotionDeviceObj = parseValue(controlMotionDevice, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_control_motor_current_velocity',
-      args: [controlMotorObj]
+      args: [controlMotionDeviceObj]
     })
     return {
       speed: (() => {
@@ -11819,17 +11906,17 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Returns the movement parameters of the specified control motion device, including temporary movement parameters. The addition of temporary values takes effect in the next frame, so changes to these values cannot be retrieved by a Get node within the current execution flow
+   *
    * Get Control Motion Device's Movement Parameters
    *
    * 获取操控运动器运动参数: 获取指定操控运动器的运动参数，包含临时运动参数。临时值的添加将在下一帧生效，因此无法在当前执行流中通过获取节点查到值的变化。
    *
-   * @param controlMotor
-   *
-   * Control Motion Device
+   * @param controlMotionDevice
    *
    * 操控运动器
    */
-  getControlMotorMovementParameters(controlMotor: EntityValue): {
+  getControlMotorMovementParameters(controlMotionDevice: EntityValue): {
     /**
      * Forward Acceleration
      *
@@ -11873,12 +11960,12 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
      */
     maxBackwardSpeed: number
   } {
-    const controlMotorObj = parseValue(controlMotor, 'entity')
+    const controlMotionDeviceObj = parseValue(controlMotionDevice, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_control_motor_movement_parameters',
-      args: [controlMotorObj]
+      args: [controlMotionDeviceObj]
     })
     return {
       forwardAcceleration: (() => {
@@ -12074,13 +12161,13 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Returns the list of currently activated control motion devices
+   *
    * Get Currently Activated Control Motion Device List
    *
    * 获取当前激活操控运动器列表: 获取当前激活操控运动器列表
    *
    * @returns
-   *
-   * Control Motion Device List
    *
    * 操控运动器列表
    */
@@ -12092,7 +12179,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       args: []
     })
     const ret = new list('entity')
-    ret.markPin(ref, 'controlMotorList', 0)
+    ret.markPin(ref, 'controlMotionDeviceList', 0)
     return ret as unknown as clientEntity<'character_control_skill', Mode>[]
   }
 
@@ -12201,13 +12288,13 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Returns the currently followed motion device
+   *
    * Get Currently Followed Control Motion Device
    *
    * 获取当前跟随操控运动器: 获取当前跟随操控运动器
    *
    * @returns
-   *
-   * Follow Control Motion Device
    *
    * 跟随操控运动器
    */
@@ -12219,7 +12306,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       args: []
     })
     const ret = new entity()
-    ret.markPin(ref, 'followingControlMotor', 0)
+    ret.markPin(ref, 'followControlMotionDevice', 0)
     return ret as unknown as clientEntity<'character_control_skill', Mode>
   }
 
@@ -13072,18 +13159,28 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
    * 结果数量
    */
-  getPreAimingCollisionDetectionResultCount(preAimingIndex: IntValue): bigint {
+  getPreAimingCollisionDetectionResultCount(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): bigint {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_collision_detection_result_count',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new int()
     ret.markPin(ref, 'resultCount', 0)
@@ -13100,6 +13197,11 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
@@ -13107,13 +13209,15 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * 持续时长（s）
    */
-  getPreAimingDuration(preAimingIndex: IntValue): number {
+  getPreAimingDuration(preAimingIndex: IntValue, resultDataType?: PreAimResultDataType): number {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_duration',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new float()
     ret.markPin(ref, 'durationSeconds', 0)
@@ -13130,8 +13234,16 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    */
-  getPreAimingRayHitInfo(preAimingIndex: IntValue): {
+  getPreAimingRayHitInfo(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): {
     /**
      * On-Hit Location
      *
@@ -13146,11 +13258,13 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
     hitEntity: clientEntity<'character_control_skill', Mode>
   } {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_ray_hit_info',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     return {
       hitPosition: (() => {
@@ -13176,8 +13290,16 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    */
-  getPreAimingResult(preAimingIndex: IntValue): {
+  getPreAimingResult(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): {
     /**
      * On-Hit Location
      *
@@ -13204,11 +13326,13 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
     validTargetList: clientEntity<'character_control_skill', Mode>[]
   } {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_result',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     return {
       hitPosition: (() => {
@@ -13642,32 +13766,30 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Returns whether the specified control motion device is currently grounded
+   *
    * Get Control Motion Device Grounded Status
    *
    * 获取操控运动器是否接地: 获取指定操控运动器当前是否接地
    *
-   * @param targetControlMotor
-   *
-   * Target Control Motion Device
+   * @param targetControlMotionDevice
    *
    * 目标操控运动器
    *
    * @returns
    *
-   * Grounded
-   *
    * 是否接地
    */
-  getWhetherControlMotorIsGrounded(targetControlMotor: EntityValue): boolean {
-    const targetControlMotorObj = parseValue(targetControlMotor, 'entity')
+  getWhetherControlMotorIsGrounded(targetControlMotionDevice: EntityValue): boolean {
+    const targetControlMotionDeviceObj = parseValue(targetControlMotionDevice, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_whether_control_motor_is_grounded',
-      args: [targetControlMotorObj]
+      args: [targetControlMotionDeviceObj]
     })
     const ret = new bool()
-    ret.markPin(ref, 'isGrounded', 0)
+    ret.markPin(ref, 'grounded', 0)
     return ret as unknown as boolean
   }
 
@@ -13704,6 +13826,11 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
@@ -13711,13 +13838,18 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * 是否处于死区
    */
-  getWhetherPreAimingStickIsInDeadZone(preAimingIndex: IntValue): boolean {
+  getWhetherPreAimingStickIsInDeadZone(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): boolean {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_whether_pre_aiming_stick_is_in_dead_zone',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new bool()
     ret.markPin(ref, 'isInDeadZone', 0)
@@ -14826,7 +14958,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
-   * Available only for Custom Aggro Mode; Searches whether the specified Entity has entered battle
+   * Only available in Custom Aggro Mode; Checks whether the specified Entity is in combat
    *
    * 查询指定实体是否入战: 仅自定义仇恨模式可用; 查询指定实体是否已经入战
    *
@@ -15168,6 +15300,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Converts screen coordinates to viewport coordinates (normalized from 0 to 1). Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to Viewport Coordinates
    *
    * 屏幕坐标转视口坐标: 将屏幕坐标转换为视口坐标（归一化0-1），仅在超限模式可用
@@ -15219,6 +15353,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Add a depth value to the screen coordinates to convert them to world coordinates. Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to World Coordinates
    *
    * 屏幕坐标转世界坐标: 将屏幕坐标加上深度值，转换为世界坐标，仅在超限模式可用
@@ -15234,8 +15370,6 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 深度值
    *
    * @returns
-   *
-   * World Coordinates
    *
    * 世界坐标
    */
@@ -15254,12 +15388,12 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       args: [screenXObj, screenYObj, depthObj]
     })
     const ret = new vec3()
-    ret.markPin(ref, 'worldPosition', 0)
+    ret.markPin(ref, 'worldCoordinates', 0)
     return ret as unknown as vec3
   }
 
   /**
-   * Within the skill node graph, you can send a signal to the server node graph, and every server node graph can listen for that signal.
+   * Within the skill node graph, signals can be sent to the server node graph, and all server node graphs can listen for this signal.
    *
    * 向服务器节点图发送信号: 在技能节点图中，可以向服务器节点图发送信号，所有服务器节点图都可以监听到该信号
    *
@@ -15338,27 +15472,30 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * While grounded, the Control Motion Device continuously detects and snaps to the ground surface. To achieve airborne movement (such as jumping) by adding Speed, use this node to temporarily break out of the grounded state.
+   *
    * Set Control Motion Device to Not Grounded
    *
    * 使操控运动器转换至非接地状态: 接地状态下的操控运动器将持续找到地面并贴合。若希望通过添加速度实现离地运动（跳跃等效果），可以使用该节点短暂脱离接地状态。
    *
-   * @param targetControlMotor
-   *
-   * Target Control Motion Device
+   * @param targetControlMotionDevice
    *
    * 目标操控运动器
    * @param duration
    *
    * 持续时间
    */
-  setControlMotorToUngroundedState(targetControlMotor: EntityValue, duration: FloatValue): void {
-    const targetControlMotorObj = parseValue(targetControlMotor, 'entity')
+  setControlMotorToUngroundedState(
+    targetControlMotionDevice: EntityValue,
+    duration: FloatValue
+  ): void {
+    const targetControlMotionDeviceObj = parseValue(targetControlMotionDevice, 'entity')
     const durationObj = parseValue(duration, 'float')
     this.registry.registerNode({
       id: 0,
       type: 'exec',
       nodeType: 'set_control_motor_to_ungrounded_state',
-      args: [targetControlMotorObj, durationObj]
+      args: [targetControlMotionDeviceObj, durationObj]
     })
   }
 
@@ -15853,8 +15990,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 攻击盒类型
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param radiusOfSphereHitbox
    * Literal only; wired connections are not allowed.
    *
@@ -16056,6 +16195,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
     const hitboxTypeObj = parseValue(hitboxType, 'enum')
     assertClientLiteralValue(hitboxTypeObj, 'triggerHitboxAtSpecificLocation.hitboxType')
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerHitboxAtSpecificLocation.scaleOfCuboidHitbox'
+    )
     const radiusOfSphereHitboxObj = parseValue(radiusOfSphereHitbox, 'float')
     assertClientLiteralValue(
       radiusOfSphereHitboxObj,
@@ -16214,7 +16357,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
-   * Initiates a Hitbox Attack at a specified Attachment Point, with configurable attack parameters
+   * Initiates a Hitbox Attack at a specified Attachment Point, supporting configurable attack parameters
    *
    * 指定挂接点打攻击盒: 对指定挂接点发起一次攻击盒攻击，可以设置该次攻击的各种参数
    *
@@ -16259,8 +16402,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 攻击盒类型
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param radiusOfSphereHitbox
    * Literal only; wired connections are not allowed.
    *
@@ -16462,6 +16607,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
     const hitboxTypeObj = parseValue(hitboxType, 'enum')
     assertClientLiteralValue(hitboxTypeObj, 'triggerHitboxAtSpecifiedAttachmentPoint.hitboxType')
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerHitboxAtSpecifiedAttachmentPoint.scaleOfCuboidHitbox'
+    )
     const radiusOfSphereHitboxObj = parseValue(radiusOfSphereHitbox, 'float')
     assertClientLiteralValue(
       radiusOfSphereHitboxObj,
@@ -16668,8 +16817,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 命中场景特效
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param attackLayerFilter
    * Literal only; wired connections are not allowed.
    *
@@ -16829,6 +16980,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       'triggerRectangularHitboxAtSpecificLocation.onHitSceneEffects'
     )
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerRectangularHitboxAtSpecificLocation.scaleOfCuboidHitbox'
+    )
     const attackLayerFilterObj = parseValue(attackLayerFilter, 'enum')
     assertClientLiteralValue(
       attackLayerFilterObj,
@@ -17002,8 +17157,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 命中场景特效
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param attackLayerFilter
    * Literal only; wired connections are not allowed.
    *
@@ -17169,6 +17326,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.onHitSceneEffects'
     )
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerRectangularHitboxAtSpecifiedAttachmentPoint.scaleOfCuboidHitbox'
+    )
     const attackLayerFilterObj = parseValue(attackLayerFilter, 'enum')
     assertClientLiteralValue(
       attackLayerFilterObj,
@@ -18769,6 +18930,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Converts normalized viewport coordinates (0–1) to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert Viewport Coordinates to Screen Coordinates
    *
    * 视口坐标转屏幕坐标: 将视口坐标（归一化0-1）转换为屏幕坐标，仅在超限模式可用
@@ -18853,17 +19016,17 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Convert world coordinates to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert World Coordinates to Screen Coordinates
    *
    * 世界坐标转屏幕坐标: 将世界坐标转换为屏幕坐标，仅在超限模式可用
    *
-   * @param worldPosition
-   *
-   * World Coordinates
+   * @param worldCoordinates
    *
    * 世界坐标
    */
-  worldCoordinatesToScreenCoordinates(worldPosition: Vec3Value): {
+  worldCoordinatesToScreenCoordinates(worldCoordinates: Vec3Value): {
     /**
      * Screen X
      *
@@ -18877,12 +19040,12 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
      */
     screenY: number
   } {
-    const worldPositionObj = parseValue(worldPosition, 'vec3')
+    const worldCoordinatesObj = parseValue(worldCoordinates, 'vec3')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'world_coordinates_to_screen_coordinates',
-      args: [worldPositionObj]
+      args: [worldCoordinatesObj]
     })
     return {
       screenX: (() => {
@@ -22924,7 +23087,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
-   * Available only for Custom Aggro Mode; Searches whether the specified Entity has entered battle
+   * Only available in Custom Aggro Mode; Checks whether the specified Entity is in combat
    *
    * 查询指定实体是否入战: 仅自定义仇恨模式可用; 查询指定实体是否已经入战
    *
@@ -23138,6 +23301,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
+   * Converts screen coordinates to viewport coordinates (normalized from 0 to 1). Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to Viewport Coordinates
    *
    * 屏幕坐标转视口坐标: 将屏幕坐标转换为视口坐标（归一化0-1），仅在超限模式可用
@@ -23189,6 +23354,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
+   * Add a depth value to the screen coordinates to convert them to world coordinates. Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to World Coordinates
    *
    * 屏幕坐标转世界坐标: 将屏幕坐标加上深度值，转换为世界坐标，仅在超限模式可用
@@ -23204,8 +23371,6 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 深度值
    *
    * @returns
-   *
-   * World Coordinates
    *
    * 世界坐标
    */
@@ -23224,12 +23389,12 @@ export class ClientCreationSkillExecutionFlowFunctions<
       args: [screenXObj, screenYObj, depthObj]
     })
     const ret = new vec3()
-    ret.markPin(ref, 'worldPosition', 0)
+    ret.markPin(ref, 'worldCoordinates', 0)
     return ret as unknown as vec3
   }
 
   /**
-   * Within the skill node graph, you can send a signal to the server node graph, and every server node graph can listen for that signal.
+   * Within the skill node graph, signals can be sent to the server node graph, and all server node graphs can listen for this signal.
    *
    * 向服务器节点图发送信号: 在技能节点图中，可以向服务器节点图发送信号，所有服务器节点图都可以监听到该信号
    *
@@ -23878,8 +24043,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 攻击盒类型
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param radiusOfSphereHitbox
    * Literal only; wired connections are not allowed.
    *
@@ -24081,6 +24248,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
     const hitboxTypeObj = parseValue(hitboxType, 'enum')
     assertClientLiteralValue(hitboxTypeObj, 'triggerHitboxAtSpecificLocation.hitboxType')
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerHitboxAtSpecificLocation.scaleOfCuboidHitbox'
+    )
     const radiusOfSphereHitboxObj = parseValue(radiusOfSphereHitbox, 'float')
     assertClientLiteralValue(
       radiusOfSphereHitboxObj,
@@ -24239,7 +24410,7 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
-   * Initiates a Hitbox Attack at a specified Attachment Point, with configurable attack parameters
+   * Initiates a Hitbox Attack at a specified Attachment Point, supporting configurable attack parameters
    *
    * 指定挂接点打攻击盒: 对指定挂接点发起一次攻击盒攻击，可以设置该次攻击的各种参数
    *
@@ -24284,8 +24455,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 攻击盒类型
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param radiusOfSphereHitbox
    * Literal only; wired connections are not allowed.
    *
@@ -24487,6 +24660,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
     const hitboxTypeObj = parseValue(hitboxType, 'enum')
     assertClientLiteralValue(hitboxTypeObj, 'triggerHitboxAtSpecifiedAttachmentPoint.hitboxType')
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerHitboxAtSpecifiedAttachmentPoint.scaleOfCuboidHitbox'
+    )
     const radiusOfSphereHitboxObj = parseValue(radiusOfSphereHitbox, 'float')
     assertClientLiteralValue(
       radiusOfSphereHitboxObj,
@@ -24693,8 +24870,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 命中场景特效
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param attackLayerFilter
    * Literal only; wired connections are not allowed.
    *
@@ -24854,6 +25033,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
       'triggerRectangularHitboxAtSpecificLocation.onHitSceneEffects'
     )
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerRectangularHitboxAtSpecificLocation.scaleOfCuboidHitbox'
+    )
     const attackLayerFilterObj = parseValue(attackLayerFilter, 'enum')
     assertClientLiteralValue(
       attackLayerFilterObj,
@@ -25027,8 +25210,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 命中场景特效
    * 仅支持字面量，不能连接其他节点的输出。
    * @param scaleOfCuboidHitbox
+   * Literal only; wired connections are not allowed.
    *
    * 攻击盒为长方体时的缩放
+   * 仅支持字面量，不能连接其他节点的输出。
    * @param attackLayerFilter
    * Literal only; wired connections are not allowed.
    *
@@ -25194,6 +25379,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
       'triggerRectangularHitboxAtSpecifiedAttachmentPoint.onHitSceneEffects'
     )
     const scaleOfCuboidHitboxObj = parseValue(scaleOfCuboidHitbox, 'vec3')
+    assertClientLiteralValue(
+      scaleOfCuboidHitboxObj,
+      'triggerRectangularHitboxAtSpecifiedAttachmentPoint.scaleOfCuboidHitbox'
+    )
     const attackLayerFilterObj = parseValue(attackLayerFilter, 'enum')
     assertClientLiteralValue(
       attackLayerFilterObj,
@@ -26794,6 +26983,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
+   * Converts normalized viewport coordinates (0–1) to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert Viewport Coordinates to Screen Coordinates
    *
    * 视口坐标转屏幕坐标: 将视口坐标（归一化0-1）转换为屏幕坐标，仅在超限模式可用
@@ -26878,17 +27069,17 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
+   * Convert world coordinates to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert World Coordinates to Screen Coordinates
    *
    * 世界坐标转屏幕坐标: 将世界坐标转换为屏幕坐标，仅在超限模式可用
    *
-   * @param worldPosition
-   *
-   * World Coordinates
+   * @param worldCoordinates
    *
    * 世界坐标
    */
-  worldCoordinatesToScreenCoordinates(worldPosition: Vec3Value): {
+  worldCoordinatesToScreenCoordinates(worldCoordinates: Vec3Value): {
     /**
      * Screen X
      *
@@ -26902,12 +27093,12 @@ export class ClientCreationSkillExecutionFlowFunctions<
      */
     screenY: number
   } {
-    const worldPositionObj = parseValue(worldPosition, 'vec3')
+    const worldCoordinatesObj = parseValue(worldCoordinates, 'vec3')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'world_coordinates_to_screen_coordinates',
-      args: [worldPositionObj]
+      args: [worldCoordinatesObj]
     })
     return {
       screenX: (() => {
@@ -28995,6 +29186,39 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
+   * Assembles the required Entity types into a List. Types include Stages, Objects, Players, Characters, and Creations
+   *
+   * 获取实体类型列表: 将所需的实体类型拼装为一个列表。类型分为关卡、物件、玩家、角色、造物
+   *
+   * @param types Source-level array of types to assemble (up to 10); elements may be wired
+   *
+   * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
+   *
+   * @returns
+   *
+   * 列表
+   */
+  getEntityTypeList(types?: EntityType[]): EntityType[] {
+    assertClientFixedSlotArray(types, 'getEntityTypeList.types')
+    if (types && types.length > 10) {
+      throw new Error(`[error] getEntityTypeList: expected at most 10 types, got ${types.length}`)
+    }
+    const typeObjs = (types ?? []).map((t, index) => {
+      const typeObj = parseValue(t, 'enum')
+      return typeObj
+    })
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_entity_type_list',
+      args: typeObjs
+    })
+    const ret = new list('enum')
+    ret.markPin(ref, 'list', 0)
+    return ret as unknown as EntityType[]
+  }
+
+  /**
    * Returns the length of the list (number of elements)
    *
    * 获取列表长度: 获取列表长度（列表中的元素个数）
@@ -29249,8 +29473,6 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * Obtain the Tactic executed by Creations in the previous frame
-   *
    * 获取前一帧执行战术: 获取造物前一帧执行的战术
    */
   getPreviousFrameExecutionTactic(): {
@@ -29266,6 +29488,12 @@ export class ClientCreationStatusExecutionFlowFunctions<
      * 战术上下文
      */
     tacticalContext: string
+    /**
+     * Tactic Duration
+     *
+     * 战术持续时长
+     */
+    tacticDuration: number
   } {
     const ref = this.registry.registerNode({
       id: 0,
@@ -29283,6 +29511,11 @@ export class ClientCreationStatusExecutionFlowFunctions<
         const ret = new str()
         ret.markPin(ref, 'tacticalContext', 1)
         return ret as unknown as string
+      })(),
+      tacticDuration: (() => {
+        const ret = new float()
+        ret.markPin(ref, 'tacticDuration', 2)
+        return ret as unknown as number
       })()
     }
   }
@@ -29328,6 +29561,134 @@ export class ClientCreationStatusExecutionFlowFunctions<
     const ret = new ValueClassMap[outputIrType]()
     ret.markPin(ref, 'randomNumber', 0)
     return ret as unknown as number | bigint
+  }
+
+  /**
+   * Get the ray detection result. Hits are evaluated from nearest to farthest, and the first target or hit position that meets the filter criteria is returned.
+   *
+   * 获取射线检测结果: 获取射线检测结果，会根据射线命中从近到远的顺序返回满足筛选条件的第一个目标或命中位置
+   *
+   * @param detectInitiatorEntity
+   * Literal only; wired connections are not allowed.
+   *
+   * 检测发起者实体
+   * 仅支持字面量，不能连接其他节点的输出。
+   * @param launchLocation
+   *
+   * 出射位置
+   * @param launchDirection
+   *
+   * 出射方向
+   * @param maxRayLength
+   *
+   * 射线最大长度
+   * @param factionFilter
+   *
+   * 阵营筛选
+   * @param entityTypeFilter Categories: Stage, Object, Player, Character, and Creation
+   *
+   * 实体类型筛选: 分为关卡、物件、玩家、角色、造物
+   * @param hitLayerFilter Categories: Hurtbox, Environment, and Object Self-Collision
+   *
+   * 命中层筛选: 分为受击盒、场景、物件自身碰撞
+   */
+  getRayDetectionResult(
+    detectInitiatorEntity: TargetEntity,
+    launchLocation: Vec3Value,
+    launchDirection: Vec3Value,
+    maxRayLength: FloatValue,
+    factionFilter: TargetType,
+    entityTypeFilter: EntityType[],
+    hitLayerFilter: RayHitFilterType[]
+  ): {
+    /**
+     * On-Hit Location
+     *
+     * 命中位置
+     */
+    onHitLocation: vec3
+    /**
+     * On-Hit Entity
+     *
+     * 是否命中实体
+     */
+    onHitEntity: boolean
+  } {
+    const detectInitiatorEntityObj = parseValue(detectInitiatorEntity, 'enum')
+    assertClientLiteralValue(
+      detectInitiatorEntityObj,
+      'getRayDetectionResult.detectInitiatorEntity'
+    )
+    const launchLocationObj = parseValue(launchLocation, 'vec3')
+    const launchDirectionObj = parseValue(launchDirection, 'vec3')
+    const maxRayLengthObj = parseValue(maxRayLength, 'float')
+    const factionFilterObj = parseValue(factionFilter, 'enum')
+    const entityTypeFilterObj = parseValue(entityTypeFilter, 'enum_list')
+    const hitLayerFilterObj = parseValue(hitLayerFilter, 'enum_list')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_ray_detection_result',
+      args: [
+        detectInitiatorEntityObj,
+        launchLocationObj,
+        launchDirectionObj,
+        maxRayLengthObj,
+        factionFilterObj,
+        entityTypeFilterObj,
+        hitLayerFilterObj
+      ]
+    })
+    return {
+      onHitLocation: (() => {
+        const ret = new vec3()
+        ret.markPin(ref, 'onHitLocation', 0)
+        return ret as unknown as vec3
+      })(),
+      onHitEntity: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'onHitEntity', 1)
+        return ret as unknown as boolean
+      })()
+    }
+  }
+
+  /**
+   * Assembles the required Ray Filter types into a List. Available filters include Hurtbox, Scene, and Object Self-Collision
+   *
+   * 获取射线筛选类型列表: 将所需的射线筛选类型拼装为一个列表。可筛选项有受击盒、场景、物件自身碰撞
+   *
+   * @param types Literal types to assemble into the list (up to 10)
+   * Literal only; wired connections are not allowed.
+   *
+   * 类型0~9: 放入列表的字面量类型，至多10个；省略时使用编辑器默认值
+   * 仅支持字面量，不能连接其他节点的输出。
+   *
+   * @returns
+   *
+   * 列表
+   */
+  getRayFilterTypeList(types?: RayHitFilterType[]): RayHitFilterType[] {
+    assertClientFixedSlotArray(types, 'getRayFilterTypeList.types')
+    if (types && types.length > 10) {
+      throw new Error(
+        `[error] getRayFilterTypeList: expected at most 10 types, got ${types.length}`
+      )
+    }
+    const typeObjs = (types ?? []).map((t, index) => {
+      const typeObj = parseValue(t, 'enum')
+      assertClientLiteralValue(typeObj, `getRayFilterTypeList.types[${index}]`)
+      return typeObj
+    })
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_ray_filter_type_list',
+      args: typeObjs
+    })
+    const ret = new list('enum')
+    ret.markPin(ref, 'list', 0)
+    return ret as unknown as RayHitFilterType[]
   }
 
   /**
@@ -30538,6 +30899,796 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
+   * The creation performs an aerial confrontation action. This multidirectional movement tactic allows the creation to randomly select a destination within the configured probability space around the target and move toward it.; Supports three-dimensional movement behaviors such as pursuing the player, moving away from them, and circling them from either side. It also provides settings to adjust the creation’s distance from the player and to avoid obstacles.; Execution Conditions:
+   *
+   * GSTS Note: This is intentionally different from normal sequential TypeScript.
+   * Although statements are written in order, the following statement is not executed unconditionally:
+   * it is connected to this node’s [Failure] output and runs only when the preceding action fails.
+   * For example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;
+   * if the skill succeeds or is still running, the following statement does not run.
+   *
+   * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
+   * through its [Failure] output to the following statement.
+   *
+   * 战术：空中对峙: 造物执行空中对峙行为，空间中的多向移动战术，能基于配置的目标周围概率空间随机选取位置移动。; 能在三维空间中实现追击/远离/左右绕玩家移动等表现，也包含一些与玩家距离调整和避障的配置。; 执行条件：
+   *
+   * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
+   * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
+   * 只有前面的行为执行失败，才会执行后面的语句。
+   * 例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；
+   * 若技能成功或仍在执行，后面的语句不会执行。
+   *
+   * GSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，
+   * 会从【失败执行】引脚继续执行后续语句。
+   *
+   * @param execute Default: Yes
+   *
+   * 是否执行: 默认为是
+   * @param tacticalContext
+   * Literal only; wired connections are not allowed.
+   *
+   * GSTS Note: Tactical Context is only text used as an identifier and carried with the tactic.
+   * It can be used for conditional special-case handling when needed and may be empty.
+   *
+   * 战术上下文
+   * 仅支持字面量，不能连接其他节点的输出。
+   *
+   * GSTS 注: 【战术上下文】只是一段用于标识并随战术传递的数据文本，
+   * 方便在需要时进行条件特判；可以留空。
+   * @param canSkillBeInterrupted Default: No
+   *
+   * 是否可以打断技能: 默认为否
+   * @param innerRadiusOfConfrontationDistance
+   *
+   * 对峙距离内圈半径
+   * @param outerRadiusOfConfrontationDistance
+   *
+   * 对峙距离外圈半径
+   * @param minimumStandoffHeight Height Above Ground
+   *
+   * 对峙最小高度: 相对地面高度
+   * @param maximumStandoffHeight Same as above.
+   *
+   * 对峙最大高度: 同上
+   * @param optimalHeightAboveGround The greater the difference between the optimal height and the actual height, the more likely the unit is to move in the opposite direction.
+   *
+   * 相对地面的最适高度: 最适高度与实际高度的差值越大，往反方向移动的概率越大
+   * @param minimumRestInterval
+   *
+   * 休息间隔时间最小值
+   * @param maximumRestInterval
+   *
+   * 休息间隔时间最大值
+   * @param whetherRestrictedByTerritory When set to Yes, the tactic ends immediately if no valid positions exist within the territory.
+   *
+   * 是否受到领地限制: 当配置为是，且领地内无合法的点位，会立刻结束该战术
+   * @param limitHeightBasedOnReferenceGround Minimum/Maximum Standoff Height only takes effect when this setting is set to Yes, or when Optimal Height Above Ground is greater than 0.
+   *
+   * 是否受到参考地面的高度限制: 当配置为是，或相对地面的最适高度大于0时，对峙最小/最大高度才会生效
+   * @param cancelTriggerWeightByMovement
+   *
+   * 移动取消触发权重
+   * @param forwardMovementWeight This only affects movement weights in Normal Mode. Even if a direction's weight is reduced to 0, the unit may still move in that direction due to obstacle avoidance or exceptional circumstances.
+   *
+   * 往前移动权重: 只影响常规模式下的移动权重，把某个方向的权重降为0，也可能因为避障/异常情况进入该方向
+   * @param backwardMovementWeight Same as above.
+   *
+   * 往后移动权重: 同上
+   * @param leftwardMovementWeight Same as above.
+   *
+   * 往左移动权重: 同上
+   * @param rightwardMovementWeight Same as above.
+   *
+   * 往右移动权重: 同上
+   * @param upwardMovementWeight Same as above.
+   *
+   * 往上移动权重: 同上
+   * @param downwardMovementWeight Same as above.
+   *
+   * 往下移动权重: 同上
+   * @param lateralObstacleAvoidanceDistance If the configured value is less than 0, obstacle avoidance will not execute.
+   *
+   * 左右避障距离: 当配置数值小于0，则不执行避障功能
+   * @param ascentHeightForObstacleAvoidance
+   *
+   * 避障上飞高度
+   * @param maximumObstacleAvoidanceAngleRelativeToVertical When the angle between the movement direction and the vertical direction exceeds this value, the unit stops instead of flying upward to bypass the obstacle.
+   *
+   * 移动方向与垂直方向的最大避障夹角: 移动方向与垂直方向夹角大于该角度时，不进行上飞绕路而是直接停止
+   * @param overwriteMovementSPD
+   *
+   * 覆写移动速度
+   * @param overwriteMovementRotationSPD
+   *
+   * 覆写移动转向速度
+   * @param overrideOnTheSpotTurnSpeed
+   *
+   * 覆写原地转向速度
+   * @param movementSPD Walk, Run
+   *
+   * 移动速度: 走、跑
+   * @param minimumSingleMovementDistance
+   *
+   * 单次最小移动距离
+   * @param maximumSingleMovementDistance
+   *
+   * 单次最大移动距离
+   */
+  tacticAerialConfrontation(
+    execute: BoolValue,
+    tacticalContext: StrValue,
+    canSkillBeInterrupted: BoolValue,
+    innerRadiusOfConfrontationDistance: FloatValue,
+    outerRadiusOfConfrontationDistance: FloatValue,
+    minimumStandoffHeight: FloatValue,
+    maximumStandoffHeight: FloatValue,
+    optimalHeightAboveGround: FloatValue,
+    minimumRestInterval: FloatValue,
+    maximumRestInterval: FloatValue,
+    whetherRestrictedByTerritory: BoolValue,
+    limitHeightBasedOnReferenceGround: BoolValue,
+    cancelTriggerWeightByMovement: FloatValue,
+    forwardMovementWeight: FloatValue,
+    backwardMovementWeight: FloatValue,
+    leftwardMovementWeight: FloatValue,
+    rightwardMovementWeight: FloatValue,
+    upwardMovementWeight: FloatValue,
+    downwardMovementWeight: FloatValue,
+    lateralObstacleAvoidanceDistance: FloatValue,
+    ascentHeightForObstacleAvoidance: FloatValue,
+    maximumObstacleAvoidanceAngleRelativeToVertical: FloatValue,
+    overwriteMovementSPD: FloatValue,
+    overwriteMovementRotationSPD: FloatValue,
+    overrideOnTheSpotTurnSpeed: FloatValue,
+    movementSPD: TacticSpeed,
+    minimumSingleMovementDistance: FloatValue,
+    maximumSingleMovementDistance: FloatValue
+  ): void {
+    const executeObj = parseValue(execute, 'bool')
+    const tacticalContextObj = parseValue(tacticalContext, 'str')
+    assertClientLiteralValue(tacticalContextObj, 'tacticAerialConfrontation.tacticalContext')
+    const canSkillBeInterruptedObj = parseValue(canSkillBeInterrupted, 'bool')
+    const innerRadiusOfConfrontationDistanceObj = parseValue(
+      innerRadiusOfConfrontationDistance,
+      'float'
+    )
+    const outerRadiusOfConfrontationDistanceObj = parseValue(
+      outerRadiusOfConfrontationDistance,
+      'float'
+    )
+    const minimumStandoffHeightObj = parseValue(minimumStandoffHeight, 'float')
+    const maximumStandoffHeightObj = parseValue(maximumStandoffHeight, 'float')
+    const optimalHeightAboveGroundObj = parseValue(optimalHeightAboveGround, 'float')
+    const minimumRestIntervalObj = parseValue(minimumRestInterval, 'float')
+    const maximumRestIntervalObj = parseValue(maximumRestInterval, 'float')
+    const whetherRestrictedByTerritoryObj = parseValue(whetherRestrictedByTerritory, 'bool')
+    const limitHeightBasedOnReferenceGroundObj = parseValue(
+      limitHeightBasedOnReferenceGround,
+      'bool'
+    )
+    const cancelTriggerWeightByMovementObj = parseValue(cancelTriggerWeightByMovement, 'float')
+    const forwardMovementWeightObj = parseValue(forwardMovementWeight, 'float')
+    const backwardMovementWeightObj = parseValue(backwardMovementWeight, 'float')
+    const leftwardMovementWeightObj = parseValue(leftwardMovementWeight, 'float')
+    const rightwardMovementWeightObj = parseValue(rightwardMovementWeight, 'float')
+    const upwardMovementWeightObj = parseValue(upwardMovementWeight, 'float')
+    const downwardMovementWeightObj = parseValue(downwardMovementWeight, 'float')
+    const lateralObstacleAvoidanceDistanceObj = parseValue(
+      lateralObstacleAvoidanceDistance,
+      'float'
+    )
+    const ascentHeightForObstacleAvoidanceObj = parseValue(
+      ascentHeightForObstacleAvoidance,
+      'float'
+    )
+    const maximumObstacleAvoidanceAngleRelativeToVerticalObj = parseValue(
+      maximumObstacleAvoidanceAngleRelativeToVertical,
+      'float'
+    )
+    const overwriteMovementSPDObj = parseValue(overwriteMovementSPD, 'float')
+    const overwriteMovementRotationSPDObj = parseValue(overwriteMovementRotationSPD, 'float')
+    const overrideOnTheSpotTurnSpeedObj = parseValue(overrideOnTheSpotTurnSpeed, 'float')
+    const movementSPDObj = parseValue(movementSPD, 'enum')
+    const minimumSingleMovementDistanceObj = parseValue(minimumSingleMovementDistance, 'float')
+    const maximumSingleMovementDistanceObj = parseValue(maximumSingleMovementDistance, 'float')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'tactic_aerial_confrontation',
+      args: [
+        executeObj,
+        tacticalContextObj,
+        canSkillBeInterruptedObj,
+        innerRadiusOfConfrontationDistanceObj,
+        outerRadiusOfConfrontationDistanceObj,
+        minimumStandoffHeightObj,
+        maximumStandoffHeightObj,
+        optimalHeightAboveGroundObj,
+        minimumRestIntervalObj,
+        maximumRestIntervalObj,
+        whetherRestrictedByTerritoryObj,
+        limitHeightBasedOnReferenceGroundObj,
+        cancelTriggerWeightByMovementObj,
+        forwardMovementWeightObj,
+        backwardMovementWeightObj,
+        leftwardMovementWeightObj,
+        rightwardMovementWeightObj,
+        upwardMovementWeightObj,
+        downwardMovementWeightObj,
+        lateralObstacleAvoidanceDistanceObj,
+        ascentHeightForObstacleAvoidanceObj,
+        maximumObstacleAvoidanceAngleRelativeToVerticalObj,
+        overwriteMovementSPDObj,
+        overwriteMovementRotationSPDObj,
+        overrideOnTheSpotTurnSpeedObj,
+        movementSPDObj,
+        minimumSingleMovementDistanceObj,
+        maximumSingleMovementDistanceObj
+      ]
+    })
+  }
+
+  /**
+   * The creation performs an aerial escape action. This tactic causes the creation to flee its target by attempting to turn away and move farther away.; You can configure multiple escape movement segments. The number of segments ranges from [Minimum Escape Segments, Maximum Escape Segments).; The system calculates an escape position for each segment or attempt. Both azimuth and pitch angle settings are supported.; Execution Conditions:
+   *
+   * GSTS Note: This is intentionally different from normal sequential TypeScript.
+   * Although statements are written in order, the following statement is not executed unconditionally:
+   * it is connected to this node’s [Failure] output and runs only when the preceding action fails.
+   * For example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;
+   * if the skill succeeds or is still running, the following statement does not run.
+   *
+   * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
+   * through its [Failure] output to the following statement.
+   *
+   * 战术：空中逃跑: 造物执行空中逃跑行为，逃离目标的战术，试图背对目标并向远处移动。; 允许配置多段逃跑移动，段数的取值范围为 [逃跑最少段数，逃跑最多段数); 每段/每次会计算一个逃跑点位，支持方位角和俯仰角的配置。; 执行条件：
+   *
+   * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
+   * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
+   * 只有前面的行为执行失败，才会执行后面的语句。
+   * 例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；
+   * 若技能成功或仍在执行，后面的语句不会执行。
+   *
+   * GSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，
+   * 会从【失败执行】引脚继续执行后续语句。
+   *
+   * @param execute Default: Yes
+   *
+   * 是否执行: 默认为是
+   * @param tacticalContext
+   * Literal only; wired connections are not allowed.
+   *
+   * GSTS Note: Tactical Context is only text used as an identifier and carried with the tactic.
+   * It can be used for conditional special-case handling when needed and may be empty.
+   *
+   * 战术上下文
+   * 仅支持字面量，不能连接其他节点的输出。
+   *
+   * GSTS 注: 【战术上下文】只是一段用于标识并随战术传递的数据文本，
+   * 方便在需要时进行条件特判；可以留空。
+   * @param canSkillBeInterrupted Default: No
+   *
+   * 是否可以打断技能: 默认为否
+   * @param escapeTriggerDistance
+   *
+   * 逃跑触发距离
+   * @param movementSPD Walk, Run
+   *
+   * 移动速度: 走、跑
+   * @param overwriteMovementSPD
+   *
+   * 覆写移动速度
+   * @param overrideTurnSpeed
+   *
+   * 覆写转向速度
+   * @param maximumEscapeAzimuth The actual escape point search range is twice the absolute value of the configured value.
+   *
+   * 逃跑最大方位角: 以配置值绝对值的2倍，做实际逃跑选点范围
+   * @param minimumEscapePitchAngle Escape pitch angle range. Negative values indicate upward angles, while positive values indicate downward angles.
+   *
+   * 逃跑最小俯仰角: 逃跑俯仰角范围，上负下正
+   * @param maximumEscapePitchAngle Same as above.
+   *
+   * 逃跑最大俯仰角: 同上
+   * @param minimumEscapeSegments
+   *
+   * 逃跑最少段数
+   * @param maximumEscapeSegments
+   *
+   * 逃跑最多段数
+   * @param minimumEscapeDistance
+   *
+   * 逃跑距离最小值
+   * @param maximumEscapeDistance
+   *
+   * 逃跑距离最大值
+   * @param upwardEscapeWeight
+   *
+   * 向上逃离权重
+   * @param downwardEscapeWeight
+   *
+   * 向下逃离权重
+   * @param turnTowardTargetWhenEscapeEndsOrIsBlocked Default: Yes
+   *
+   * 逃跑完成/被阻挡时是否转向目标: 默认为是
+   * @param escapeTriggerCD
+   *
+   * 逃离触发冷却时间
+   * @param clearAggroAndCancelTacticAfterCountdown If the value is less than 0, the tactic is not executed.Otherwise, the timer starts when the tactic begins. When the time limit is reached, the entity is forced to exit combat.The entity exits combat immediately when the tactic ends.
+   *
+   * 计时清除仇恨并退出战术: 若数值小于0，则不执行战术。否则从进入战术开始计时, 超时直接强制脱战。执行战术结束后，会马上触发脱战
+   * @param whetherRestrictedByTerritory When set to Yes, the tactic ends immediately if no valid positions exist within the territory.
+   *
+   * 是否受到领地限制: 当配置为是，且领地内无合法的点位，会立刻结束该战术
+   */
+  tacticAerialEscape(
+    execute: BoolValue,
+    tacticalContext: StrValue,
+    canSkillBeInterrupted: BoolValue,
+    escapeTriggerDistance: FloatValue,
+    movementSPD: TacticSpeed,
+    overwriteMovementSPD: FloatValue,
+    overrideTurnSpeed: FloatValue,
+    maximumEscapeAzimuth: FloatValue,
+    minimumEscapePitchAngle: FloatValue,
+    maximumEscapePitchAngle: FloatValue,
+    minimumEscapeSegments: IntValue,
+    maximumEscapeSegments: IntValue,
+    minimumEscapeDistance: FloatValue,
+    maximumEscapeDistance: FloatValue,
+    upwardEscapeWeight: FloatValue,
+    downwardEscapeWeight: FloatValue,
+    turnTowardTargetWhenEscapeEndsOrIsBlocked: BoolValue,
+    escapeTriggerCD: FloatValue,
+    clearAggroAndCancelTacticAfterCountdown: FloatValue,
+    whetherRestrictedByTerritory: BoolValue
+  ): void {
+    const executeObj = parseValue(execute, 'bool')
+    const tacticalContextObj = parseValue(tacticalContext, 'str')
+    assertClientLiteralValue(tacticalContextObj, 'tacticAerialEscape.tacticalContext')
+    const canSkillBeInterruptedObj = parseValue(canSkillBeInterrupted, 'bool')
+    const escapeTriggerDistanceObj = parseValue(escapeTriggerDistance, 'float')
+    const movementSPDObj = parseValue(movementSPD, 'enum')
+    const overwriteMovementSPDObj = parseValue(overwriteMovementSPD, 'float')
+    const overrideTurnSpeedObj = parseValue(overrideTurnSpeed, 'float')
+    const maximumEscapeAzimuthObj = parseValue(maximumEscapeAzimuth, 'float')
+    const minimumEscapePitchAngleObj = parseValue(minimumEscapePitchAngle, 'float')
+    const maximumEscapePitchAngleObj = parseValue(maximumEscapePitchAngle, 'float')
+    const minimumEscapeSegmentsObj = parseValue(minimumEscapeSegments, 'int')
+    const maximumEscapeSegmentsObj = parseValue(maximumEscapeSegments, 'int')
+    const minimumEscapeDistanceObj = parseValue(minimumEscapeDistance, 'float')
+    const maximumEscapeDistanceObj = parseValue(maximumEscapeDistance, 'float')
+    const upwardEscapeWeightObj = parseValue(upwardEscapeWeight, 'float')
+    const downwardEscapeWeightObj = parseValue(downwardEscapeWeight, 'float')
+    const turnTowardTargetWhenEscapeEndsOrIsBlockedObj = parseValue(
+      turnTowardTargetWhenEscapeEndsOrIsBlocked,
+      'bool'
+    )
+    const escapeTriggerCDObj = parseValue(escapeTriggerCD, 'float')
+    const clearAggroAndCancelTacticAfterCountdownObj = parseValue(
+      clearAggroAndCancelTacticAfterCountdown,
+      'float'
+    )
+    const whetherRestrictedByTerritoryObj = parseValue(whetherRestrictedByTerritory, 'bool')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'tactic_aerial_escape',
+      args: [
+        executeObj,
+        tacticalContextObj,
+        canSkillBeInterruptedObj,
+        escapeTriggerDistanceObj,
+        movementSPDObj,
+        overwriteMovementSPDObj,
+        overrideTurnSpeedObj,
+        maximumEscapeAzimuthObj,
+        minimumEscapePitchAngleObj,
+        maximumEscapePitchAngleObj,
+        minimumEscapeSegmentsObj,
+        maximumEscapeSegmentsObj,
+        minimumEscapeDistanceObj,
+        maximumEscapeDistanceObj,
+        upwardEscapeWeightObj,
+        downwardEscapeWeightObj,
+        turnTowardTargetWhenEscapeEndsOrIsBlockedObj,
+        escapeTriggerCDObj,
+        clearAggroAndCancelTacticAfterCountdownObj,
+        whetherRestrictedByTerritoryObj
+      ]
+    })
+  }
+
+  /**
+   * The creation performs an aerial idling action, moving randomly within a specified area.; Execution Conditions:; Point Selection Rules:; This is because selecting a valid target point is one of the conditions for entering the tactic.
+   *
+   * GSTS Note: This is intentionally different from normal sequential TypeScript.
+   * Although statements are written in order, the following statement is not executed unconditionally:
+   * it is connected to this node’s [Failure] output and runs only when the preceding action fails.
+   * For example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;
+   * if the skill succeeds or is still running, the following statement does not run.
+   *
+   * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
+   * through its [Failure] output to the following statement.
+   *
+   * 战术：空中闲逛: 造物执行空中闲逛行为，在范围内随机移动; 执行条件：; 选点规则：; 因为选到合适的目标点是进入战术的条件之一
+   *
+   * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
+   * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
+   * 只有前面的行为执行失败，才会执行后面的语句。
+   * 例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；
+   * 若技能成功或仍在执行，后面的语句不会执行。
+   *
+   * GSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，
+   * 会从【失败执行】引脚继续执行后续语句。
+   *
+   * @param execute Default: Yes
+   *
+   * 是否执行: 默认为是
+   * @param tacticalContext
+   * Literal only; wired connections are not allowed.
+   *
+   * GSTS Note: Tactical Context is only text used as an identifier and carried with the tactic.
+   * It can be used for conditional special-case handling when needed and may be empty.
+   *
+   * 战术上下文
+   * 仅支持字面量，不能连接其他节点的输出。
+   *
+   * GSTS 注: 【战术上下文】只是一段用于标识并随战术传递的数据文本，
+   * 方便在需要时进行条件特判；可以留空。
+   * @param canSkillBeInterrupted Default: No
+   *
+   * 是否可以打断技能: 默认为否
+   * @param movementSPD Walk, Run
+   *
+   * 移动速度: 走、跑
+   * @param overwriteMovementSPD
+   *
+   * 覆写移动速度
+   * @param overrideTurnSpeed
+   *
+   * 覆写转向速度
+   * @param idleRoamingRadius Maximum Idle Roaming distance from the spawn point.
+   *
+   * 闲逛半径: 闲逛距离出生点的最远距离
+   * @param minimumHeightRelativeToSpawnPoint
+   *
+   * 相对出生点最小高度
+   * @param maximumHeightRelativeToSpawnPoint
+   *
+   * 相对出生点最大高度
+   * @param minimumIdleRoamingInterval Idle Roaming cooldown. Each time the tactic ends, a duration is randomly selected from [Minimum Idle Roaming Interval, Maximum Idle Roaming Interval] and used as the cooldown. This tactic cannot be executed during the cooldown.
+   *
+   * 闲逛最小间隔时长: 闲逛冷却时间， 每次退出战术时， 都会在 [闲逛最小间隔时长，闲逛最大间隔时长] 里随机一个时间， 作为冷却时间，冷却时间内不会执行本战术
+   * @param maximumIdleRoamingInterval
+   *
+   * 闲逛最大间隔时长
+   * @param singleIdleMaximumDuration A single Idle Roaming action automatically stops after exceeding this duration.
+   *
+   * 单次闲逛最大持续时间: 单次闲逛超出该时长时自动停止
+   * @param minimumIdleRoamingDistance Idle Roaming distance from the current position.
+   *
+   * 单次最小闲逛距离: 闲逛距当前点距离
+   * @param maximumIdleRoamingDistance Idle Roaming distance from the current position.
+   *
+   * 单次最大闲逛距离: 闲逛距当前点距离
+   */
+  tacticAerialIdling(
+    execute: BoolValue,
+    tacticalContext: StrValue,
+    canSkillBeInterrupted: BoolValue,
+    movementSPD: TacticSpeed,
+    overwriteMovementSPD: FloatValue,
+    overrideTurnSpeed: FloatValue,
+    idleRoamingRadius: FloatValue,
+    minimumHeightRelativeToSpawnPoint: FloatValue,
+    maximumHeightRelativeToSpawnPoint: FloatValue,
+    minimumIdleRoamingInterval: FloatValue,
+    maximumIdleRoamingInterval: FloatValue,
+    singleIdleMaximumDuration: FloatValue,
+    minimumIdleRoamingDistance: FloatValue,
+    maximumIdleRoamingDistance: FloatValue
+  ): void {
+    const executeObj = parseValue(execute, 'bool')
+    const tacticalContextObj = parseValue(tacticalContext, 'str')
+    assertClientLiteralValue(tacticalContextObj, 'tacticAerialIdling.tacticalContext')
+    const canSkillBeInterruptedObj = parseValue(canSkillBeInterrupted, 'bool')
+    const movementSPDObj = parseValue(movementSPD, 'enum')
+    const overwriteMovementSPDObj = parseValue(overwriteMovementSPD, 'float')
+    const overrideTurnSpeedObj = parseValue(overrideTurnSpeed, 'float')
+    const idleRoamingRadiusObj = parseValue(idleRoamingRadius, 'float')
+    const minimumHeightRelativeToSpawnPointObj = parseValue(
+      minimumHeightRelativeToSpawnPoint,
+      'float'
+    )
+    const maximumHeightRelativeToSpawnPointObj = parseValue(
+      maximumHeightRelativeToSpawnPoint,
+      'float'
+    )
+    const minimumIdleRoamingIntervalObj = parseValue(minimumIdleRoamingInterval, 'float')
+    const maximumIdleRoamingIntervalObj = parseValue(maximumIdleRoamingInterval, 'float')
+    const singleIdleMaximumDurationObj = parseValue(singleIdleMaximumDuration, 'float')
+    const minimumIdleRoamingDistanceObj = parseValue(minimumIdleRoamingDistance, 'float')
+    const maximumIdleRoamingDistanceObj = parseValue(maximumIdleRoamingDistance, 'float')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'tactic_aerial_idling',
+      args: [
+        executeObj,
+        tacticalContextObj,
+        canSkillBeInterruptedObj,
+        movementSPDObj,
+        overwriteMovementSPDObj,
+        overrideTurnSpeedObj,
+        idleRoamingRadiusObj,
+        minimumHeightRelativeToSpawnPointObj,
+        maximumHeightRelativeToSpawnPointObj,
+        minimumIdleRoamingIntervalObj,
+        maximumIdleRoamingIntervalObj,
+        singleIdleMaximumDurationObj,
+        minimumIdleRoamingDistanceObj,
+        maximumIdleRoamingDistanceObj
+      ]
+    })
+  }
+
+  /**
+   * The creation performs an aerial landing action. It calculates a landing point based on the configured angle, then moves toward that point.; The tactic is considered complete when the vertical distance between the creation’s current position and the landing point is less than the Height Threshold for Landing Detection.; Execution Conditions:
+   *
+   * GSTS Note: This is intentionally different from normal sequential TypeScript.
+   * Although statements are written in order, the following statement is not executed unconditionally:
+   * it is connected to this node’s [Failure] output and runs only when the preceding action fails.
+   * For example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;
+   * if the skill succeeds or is still running, the following statement does not run.
+   *
+   * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
+   * through its [Failure] output to the following statement.
+   *
+   * 战术：空中降落: 造物执行空中降落行为，根据配置角度计算出落地点，向落地点移动; 当前位置与落地点的高度差小于 判定降落时的离地高度 时，视为战术执行完成; 执行条件：
+   *
+   * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
+   * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
+   * 只有前面的行为执行失败，才会执行后面的语句。
+   * 例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；
+   * 若技能成功或仍在执行，后面的语句不会执行。
+   *
+   * GSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，
+   * 会从【失败执行】引脚继续执行后续语句。
+   *
+   * @param execute Default: Yes
+   *
+   * 是否执行: 默认为是
+   * @param tacticalContext
+   * Literal only; wired connections are not allowed.
+   *
+   * GSTS Note: Tactical Context is only text used as an identifier and carried with the tactic.
+   * It can be used for conditional special-case handling when needed and may be empty.
+   *
+   * 战术上下文
+   * 仅支持字面量，不能连接其他节点的输出。
+   *
+   * GSTS 注: 【战术上下文】只是一段用于标识并随战术传递的数据文本，
+   * 方便在需要时进行条件特判；可以留空。
+   * @param canSkillBeInterrupted Default: No
+   *
+   * 是否可以打断技能: 默认为否
+   * @param minimumLandingAngleFromHorizontal
+   *
+   * 降落方向与水平面最小夹角
+   * @param maximumLandingAngleFromHorizontal
+   *
+   * 降落方向与水平面最大夹角
+   * @param heightThresholdForLandingDetection Height Above Ground
+   *
+   * 判定降落时的离地高度: 相对地面高度
+   * @param movementSPD Walk, Run
+   *
+   * 移动速度: 走、跑
+   * @param overwriteMovementSPD
+   *
+   * 覆写移动速度
+   * @param overrideTurnSpeed
+   *
+   * 覆写转向速度
+   * @param maximumDescentDuration If the value is less than 0, the tactic is not executed.
+   *
+   * 降落最大持续时间: 若数值小于0，则不执行战术
+   */
+  tacticAerialLanding(
+    execute: BoolValue,
+    tacticalContext: StrValue,
+    canSkillBeInterrupted: BoolValue,
+    minimumLandingAngleFromHorizontal: FloatValue,
+    maximumLandingAngleFromHorizontal: FloatValue,
+    heightThresholdForLandingDetection: FloatValue,
+    movementSPD: TacticSpeed,
+    overwriteMovementSPD: FloatValue,
+    overrideTurnSpeed: FloatValue,
+    maximumDescentDuration: FloatValue
+  ): void {
+    const executeObj = parseValue(execute, 'bool')
+    const tacticalContextObj = parseValue(tacticalContext, 'str')
+    assertClientLiteralValue(tacticalContextObj, 'tacticAerialLanding.tacticalContext')
+    const canSkillBeInterruptedObj = parseValue(canSkillBeInterrupted, 'bool')
+    const minimumLandingAngleFromHorizontalObj = parseValue(
+      minimumLandingAngleFromHorizontal,
+      'float'
+    )
+    const maximumLandingAngleFromHorizontalObj = parseValue(
+      maximumLandingAngleFromHorizontal,
+      'float'
+    )
+    const heightThresholdForLandingDetectionObj = parseValue(
+      heightThresholdForLandingDetection,
+      'float'
+    )
+    const movementSPDObj = parseValue(movementSPD, 'enum')
+    const overwriteMovementSPDObj = parseValue(overwriteMovementSPD, 'float')
+    const overrideTurnSpeedObj = parseValue(overrideTurnSpeed, 'float')
+    const maximumDescentDurationObj = parseValue(maximumDescentDuration, 'float')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'tactic_aerial_landing',
+      args: [
+        executeObj,
+        tacticalContextObj,
+        canSkillBeInterruptedObj,
+        minimumLandingAngleFromHorizontalObj,
+        maximumLandingAngleFromHorizontalObj,
+        heightThresholdForLandingDetectionObj,
+        movementSPDObj,
+        overwriteMovementSPDObj,
+        overrideTurnSpeedObj,
+        maximumDescentDurationObj
+      ]
+    })
+  }
+
+  /**
+   * The creation performs an aerial pursuit action.; While pursuing a target, the creation automatically selects a suitable position around the target as its destination.; Execution Conditions:; [Required]; [Meet any one of the Conditions]
+   *
+   * GSTS Note: This is intentionally different from normal sequential TypeScript.
+   * Although statements are written in order, the following statement is not executed unconditionally:
+   * it is connected to this node’s [Failure] output and runs only when the preceding action fails.
+   * For example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;
+   * if the skill succeeds or is still running, the following statement does not run.
+   *
+   * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
+   * through its [Failure] output to the following statement.
+   *
+   * 战术：空中追击: 造物执行空中追击行为; 追击目标战术，会自主选择目标周围合适的位置做目标点; 执行条件：; 【必须满足】; 【任一满足】
+   *
+   * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
+   * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
+   * 只有前面的行为执行失败，才会执行后面的语句。
+   * 例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；
+   * 若技能成功或仍在执行，后面的语句不会执行。
+   *
+   * GSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，
+   * 会从【失败执行】引脚继续执行后续语句。
+   *
+   * @param execute Default: Yes
+   *
+   * 是否执行: 默认为是
+   * @param tacticalContext
+   * Literal only; wired connections are not allowed.
+   *
+   * GSTS Note: Tactical Context is only text used as an identifier and carried with the tactic.
+   * It can be used for conditional special-case handling when needed and may be empty.
+   *
+   * 战术上下文
+   * 仅支持字面量，不能连接其他节点的输出。
+   *
+   * GSTS 注: 【战术上下文】只是一段用于标识并随战术传递的数据文本，
+   * 方便在需要时进行条件特判；可以留空。
+   * @param canSkillBeInterrupted Default: No
+   *
+   * 是否可以打断技能: 默认为否
+   * @param horizontalDistanceToTriggerPursuit
+   *
+   * 触发追击的水平距离
+   * @param horizontalDistanceToStopPursuit
+   *
+   * 停止追击的水平距离
+   * @param useElevationDifferenceWhenPursuing When set to No, both Height Difference to Trigger Pursuit and Height Difference to Stop Pursuit are ignored.
+   *
+   * 是否使用高度差追击: 当配置为否时，触发追击的高度差和停止追击的高度差均不生效
+   * @param heightDifferenceToTriggerPursuit If the value is less than 0, this setting is ignored.
+   *
+   * 触发追击的高度差: 若数值小于0，则不生效
+   * @param heightDifferenceToStopPursuit Same as above.
+   *
+   * 停止追击的高度差: 同上
+   * @param minimumVerticalOffsetFromTarget Height offset range for the target point.
+   *
+   * 相对目标高度偏移下限: 目标点的高度偏移范围
+   * @param maximumVerticalOffsetFromTarget Same as above.
+   *
+   * 相对目标高度偏移上限: 同上
+   * @param movementSPD Walk, Run
+   *
+   * 移动速度: 走、跑
+   * @param overwriteMovementSPD
+   *
+   * 覆写移动速度
+   * @param overrideTurnSpeed
+   *
+   * 覆写转向速度
+   * @param singlePursuitMaximumDuration If the value is less than 0, the tactic is not executed.
+   *
+   * 单次追击最大持续时间: 若数值小于0，则不执行战术
+   * @param tacticalInstanceCD
+   *
+   * 战术实例冷却时间
+   */
+  tacticAerialPursuit(
+    execute: BoolValue,
+    tacticalContext: StrValue,
+    canSkillBeInterrupted: BoolValue,
+    horizontalDistanceToTriggerPursuit: FloatValue,
+    horizontalDistanceToStopPursuit: FloatValue,
+    useElevationDifferenceWhenPursuing: BoolValue,
+    heightDifferenceToTriggerPursuit: FloatValue,
+    heightDifferenceToStopPursuit: FloatValue,
+    minimumVerticalOffsetFromTarget: FloatValue,
+    maximumVerticalOffsetFromTarget: FloatValue,
+    movementSPD: TacticSpeed,
+    overwriteMovementSPD: FloatValue,
+    overrideTurnSpeed: FloatValue,
+    singlePursuitMaximumDuration: FloatValue,
+    tacticalInstanceCD: FloatValue
+  ): void {
+    const executeObj = parseValue(execute, 'bool')
+    const tacticalContextObj = parseValue(tacticalContext, 'str')
+    assertClientLiteralValue(tacticalContextObj, 'tacticAerialPursuit.tacticalContext')
+    const canSkillBeInterruptedObj = parseValue(canSkillBeInterrupted, 'bool')
+    const horizontalDistanceToTriggerPursuitObj = parseValue(
+      horizontalDistanceToTriggerPursuit,
+      'float'
+    )
+    const horizontalDistanceToStopPursuitObj = parseValue(horizontalDistanceToStopPursuit, 'float')
+    const useElevationDifferenceWhenPursuingObj = parseValue(
+      useElevationDifferenceWhenPursuing,
+      'bool'
+    )
+    const heightDifferenceToTriggerPursuitObj = parseValue(
+      heightDifferenceToTriggerPursuit,
+      'float'
+    )
+    const heightDifferenceToStopPursuitObj = parseValue(heightDifferenceToStopPursuit, 'float')
+    const minimumVerticalOffsetFromTargetObj = parseValue(minimumVerticalOffsetFromTarget, 'float')
+    const maximumVerticalOffsetFromTargetObj = parseValue(maximumVerticalOffsetFromTarget, 'float')
+    const movementSPDObj = parseValue(movementSPD, 'enum')
+    const overwriteMovementSPDObj = parseValue(overwriteMovementSPD, 'float')
+    const overrideTurnSpeedObj = parseValue(overrideTurnSpeed, 'float')
+    const singlePursuitMaximumDurationObj = parseValue(singlePursuitMaximumDuration, 'float')
+    const tacticalInstanceCDObj = parseValue(tacticalInstanceCD, 'float')
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'tactic_aerial_pursuit',
+      args: [
+        executeObj,
+        tacticalContextObj,
+        canSkillBeInterruptedObj,
+        horizontalDistanceToTriggerPursuitObj,
+        horizontalDistanceToStopPursuitObj,
+        useElevationDifferenceWhenPursuingObj,
+        heightDifferenceToTriggerPursuitObj,
+        heightDifferenceToStopPursuitObj,
+        minimumVerticalOffsetFromTargetObj,
+        maximumVerticalOffsetFromTargetObj,
+        movementSPDObj,
+        overwriteMovementSPDObj,
+        overrideTurnSpeedObj,
+        singlePursuitMaximumDurationObj,
+        tacticalInstanceCDObj
+      ]
+    })
+  }
+
+  /**
    * A tactic setting where the Creation executes its patrol , using its configured Patrol Template to drive its motion.; Execution Conditions:
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
@@ -30778,7 +31929,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
    * through its [Failure] output to the following statement.
    *
-   * 战术：地面逃跑: 造物执行地面逃跑行为，逃离目标的战术，试图背对目标并向远处移动。; 允许配置多段逃跑移动，每段/每次会计算一个逃跑点位。; 执行条件：
+   * 战术：地面逃跑: 造物执行地面逃跑行为，逃离目标的战术，试图背对目标并向远处移动。; 允许配置多段逃跑移动，段数的取值范围为 [逃跑最少段数，逃跑最多段数) ，每段/每次会计算一个逃跑点位。; 执行条件：
    *
    * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
    * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
@@ -31413,7 +32564,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 水平旋转角速度: 若配置正数，则顺时针旋转；若配置负数，则逆时针旋转；
    * @param useRotationAnimation
    *
-   * 是否使用旋转动画
+   * 是否使用旋转动画: 某些造物在使用旋转动画且水平旋转角速度过小的时候可能会表现异常，请尝试调大水平旋转角速度或不使用旋转动画
    * @param tacticalContext
    * Literal only; wired connections are not allowed.
    *
@@ -31719,6 +32870,39 @@ export class ClientCreationStatusExecutionFlowFunctions<
     const ret = new float()
     ret.markPin(ref, 'result', 0)
     return ret as unknown as number
+  }
+
+  /**
+   * Query whether the entity has the specified unit status
+   *
+   * 实体是否携带指定单位状态: 查询目标实体是否携带指定的单位状态
+   *
+   * @param targetEntity
+   *
+   * 目标实体
+   * @param unitStatus
+   *
+   * 单位状态
+   *
+   * @returns
+   *
+   * 是否携带
+   */
+  whetherTheEntityHasTheSpecifiedUnitStatus(
+    targetEntity: EntityValue,
+    unitStatus: ConfigIdValue
+  ): boolean {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const unitStatusObj = parseValue(unitStatus, 'config_id')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'whether_the_entity_has_the_specified_unit_status',
+      args: [targetEntityObj, unitStatusObj]
+    })
+    const ret = new bool()
+    ret.markPin(ref, 'hasTheStatus', 0)
+    return ret as unknown as boolean
   }
 }
 
@@ -33745,6 +34929,39 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
   }
 
   /**
+   * Assembles the required Entity types into a List. Types include Stages, Objects, Players, Characters, and Creations
+   *
+   * 获取实体类型列表: 将所需的实体类型拼装为一个列表。类型分为关卡、物件、玩家、角色、造物
+   *
+   * @param types Source-level array of types to assemble (up to 10); elements may be wired
+   *
+   * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
+   *
+   * @returns
+   *
+   * 列表
+   */
+  getEntityTypeList(types?: EntityType[]): EntityType[] {
+    assertClientFixedSlotArray(types, 'getEntityTypeList.types')
+    if (types && types.length > 10) {
+      throw new Error(`[error] getEntityTypeList: expected at most 10 types, got ${types.length}`)
+    }
+    const typeObjs = (types ?? []).map((t, index) => {
+      const typeObj = parseValue(t, 'enum')
+      return typeObj
+    })
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_entity_type_list',
+      args: typeObjs
+    })
+    const ret = new list('enum')
+    ret.markPin(ref, 'list', 0)
+    return ret as unknown as EntityType[]
+  }
+
+  /**
    * Returns the length of the list (number of elements)
    *
    * 获取列表长度: 获取列表长度（列表中的元素个数）
@@ -34005,8 +35222,6 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
   }
 
   /**
-   * Obtain the Tactic executed by Creations in the previous frame
-   *
    * 获取前一帧执行战术: 获取造物前一帧执行的战术
    */
   getPreviousFrameExecutionTactic(): {
@@ -34022,6 +35237,12 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
      * 战术上下文
      */
     tacticalContext: string
+    /**
+     * Tactic Duration
+     *
+     * 战术持续时长
+     */
+    tacticDuration: number
   } {
     const ref = this.registry.registerNode({
       id: 0,
@@ -34039,6 +35260,11 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
         const ret = new str()
         ret.markPin(ref, 'tacticalContext', 1)
         return ret as unknown as string
+      })(),
+      tacticDuration: (() => {
+        const ret = new float()
+        ret.markPin(ref, 'tacticDuration', 2)
+        return ret as unknown as number
       })()
     }
   }
@@ -34084,6 +35310,134 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
     const ret = new ValueClassMap[outputIrType]()
     ret.markPin(ref, 'randomNumber', 0)
     return ret as unknown as number | bigint
+  }
+
+  /**
+   * Get the ray detection result. Hits are evaluated from nearest to farthest, and the first target or hit position that meets the filter criteria is returned.
+   *
+   * 获取射线检测结果: 获取射线检测结果，会根据射线命中从近到远的顺序返回满足筛选条件的第一个目标或命中位置
+   *
+   * @param detectInitiatorEntity
+   * Literal only; wired connections are not allowed.
+   *
+   * 检测发起者实体
+   * 仅支持字面量，不能连接其他节点的输出。
+   * @param launchLocation
+   *
+   * 出射位置
+   * @param launchDirection
+   *
+   * 出射方向
+   * @param maxRayLength
+   *
+   * 射线最大长度
+   * @param factionFilter
+   *
+   * 阵营筛选
+   * @param entityTypeFilter Categories: Stage, Object, Player, Character, and Creation
+   *
+   * 实体类型筛选: 分为关卡、物件、玩家、角色、造物
+   * @param hitLayerFilter Categories: Hurtbox, Environment, and Object Self-Collision
+   *
+   * 命中层筛选: 分为受击盒、场景、物件自身碰撞
+   */
+  getRayDetectionResult(
+    detectInitiatorEntity: TargetEntity,
+    launchLocation: Vec3Value,
+    launchDirection: Vec3Value,
+    maxRayLength: FloatValue,
+    factionFilter: TargetType,
+    entityTypeFilter: EntityType[],
+    hitLayerFilter: RayHitFilterType[]
+  ): {
+    /**
+     * On-Hit Location
+     *
+     * 命中位置
+     */
+    onHitLocation: vec3
+    /**
+     * On-Hit Entity
+     *
+     * 是否命中实体
+     */
+    onHitEntity: boolean
+  } {
+    const detectInitiatorEntityObj = parseValue(detectInitiatorEntity, 'enum')
+    assertClientLiteralValue(
+      detectInitiatorEntityObj,
+      'getRayDetectionResult.detectInitiatorEntity'
+    )
+    const launchLocationObj = parseValue(launchLocation, 'vec3')
+    const launchDirectionObj = parseValue(launchDirection, 'vec3')
+    const maxRayLengthObj = parseValue(maxRayLength, 'float')
+    const factionFilterObj = parseValue(factionFilter, 'enum')
+    const entityTypeFilterObj = parseValue(entityTypeFilter, 'enum_list')
+    const hitLayerFilterObj = parseValue(hitLayerFilter, 'enum_list')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_ray_detection_result',
+      args: [
+        detectInitiatorEntityObj,
+        launchLocationObj,
+        launchDirectionObj,
+        maxRayLengthObj,
+        factionFilterObj,
+        entityTypeFilterObj,
+        hitLayerFilterObj
+      ]
+    })
+    return {
+      onHitLocation: (() => {
+        const ret = new vec3()
+        ret.markPin(ref, 'onHitLocation', 0)
+        return ret as unknown as vec3
+      })(),
+      onHitEntity: (() => {
+        const ret = new bool()
+        ret.markPin(ref, 'onHitEntity', 1)
+        return ret as unknown as boolean
+      })()
+    }
+  }
+
+  /**
+   * Assembles the required Ray Filter types into a List. Available filters include Hurtbox, Scene, and Object Self-Collision
+   *
+   * 获取射线筛选类型列表: 将所需的射线筛选类型拼装为一个列表。可筛选项有受击盒、场景、物件自身碰撞
+   *
+   * @param types Literal types to assemble into the list (up to 10)
+   * Literal only; wired connections are not allowed.
+   *
+   * 类型0~9: 放入列表的字面量类型，至多10个；省略时使用编辑器默认值
+   * 仅支持字面量，不能连接其他节点的输出。
+   *
+   * @returns
+   *
+   * 列表
+   */
+  getRayFilterTypeList(types?: RayHitFilterType[]): RayHitFilterType[] {
+    assertClientFixedSlotArray(types, 'getRayFilterTypeList.types')
+    if (types && types.length > 10) {
+      throw new Error(
+        `[error] getRayFilterTypeList: expected at most 10 types, got ${types.length}`
+      )
+    }
+    const typeObjs = (types ?? []).map((t, index) => {
+      const typeObj = parseValue(t, 'enum')
+      assertClientLiteralValue(typeObj, `getRayFilterTypeList.types[${index}]`)
+      return typeObj
+    })
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'get_ray_filter_type_list',
+      args: typeObjs
+    })
+    const ret = new list('enum')
+    ret.markPin(ref, 'list', 0)
+    return ret as unknown as RayHitFilterType[]
   }
 
   /**
@@ -35381,6 +36735,39 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
     const ret = new float()
     ret.markPin(ref, 'result', 0)
     return ret as unknown as number
+  }
+
+  /**
+   * Query whether the entity has the specified unit status
+   *
+   * 实体是否携带指定单位状态: 查询目标实体是否携带指定的单位状态
+   *
+   * @param targetEntity
+   *
+   * 目标实体
+   * @param unitStatus
+   *
+   * 单位状态
+   *
+   * @returns
+   *
+   * 是否携带
+   */
+  whetherTheEntityHasTheSpecifiedUnitStatus(
+    targetEntity: EntityValue,
+    unitStatus: ConfigIdValue
+  ): boolean {
+    const targetEntityObj = parseValue(targetEntity, 'entity')
+    const unitStatusObj = parseValue(unitStatus, 'config_id')
+    const ref = this.registry.registerNode({
+      id: 0,
+      type: 'data',
+      nodeType: 'whether_the_entity_has_the_specified_unit_status',
+      args: [targetEntityObj, unitStatusObj]
+    })
+    const ret = new bool()
+    ret.markPin(ref, 'hasTheStatus', 0)
+    return ret as unknown as boolean
   }
 }
 
@@ -37099,18 +38486,28 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
    * 基准对象
    */
-  getBaseObjectOfSpecifiedPreAiming(preAimingIndex: IntValue): clientEntity<'bool_filter', Mode> {
+  getBaseObjectOfSpecifiedPreAiming(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): clientEntity<'bool_filter', Mode> {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_base_object_of_specified_pre_aiming',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new entity()
     ret.markPin(ref, 'baseObject', 0)
@@ -38161,18 +39558,28 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
    * 结果数量
    */
-  getPreAimingCollisionDetectionResultCount(preAimingIndex: IntValue): bigint {
+  getPreAimingCollisionDetectionResultCount(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): bigint {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_collision_detection_result_count',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new int()
     ret.markPin(ref, 'resultCount', 0)
@@ -38189,6 +39596,11 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
@@ -38196,13 +39608,15 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * 持续时长（s）
    */
-  getPreAimingDuration(preAimingIndex: IntValue): number {
+  getPreAimingDuration(preAimingIndex: IntValue, resultDataType?: PreAimResultDataType): number {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_duration',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new float()
     ret.markPin(ref, 'durationSeconds', 0)
@@ -38219,8 +39633,16 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    */
-  getPreAimingRayHitInfo(preAimingIndex: IntValue): {
+  getPreAimingRayHitInfo(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): {
     /**
      * On-Hit Location
      *
@@ -38235,11 +39657,13 @@ export class ClientBoolFilterExecutionFlowFunctions<
     hitEntity: clientEntity<'bool_filter', Mode>
   } {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_ray_hit_info',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     return {
       hitPosition: (() => {
@@ -38265,8 +39689,16 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    */
-  getPreAimingResult(preAimingIndex: IntValue): {
+  getPreAimingResult(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): {
     /**
      * On-Hit Location
      *
@@ -38293,11 +39725,13 @@ export class ClientBoolFilterExecutionFlowFunctions<
     validTargetList: clientEntity<'bool_filter', Mode>[]
   } {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_result',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     return {
       hitPosition: (() => {
@@ -38707,6 +40141,11 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
@@ -38714,13 +40153,18 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * 是否处于死区
    */
-  getWhetherPreAimingStickIsInDeadZone(preAimingIndex: IntValue): boolean {
+  getWhetherPreAimingStickIsInDeadZone(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): boolean {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_whether_pre_aiming_stick_is_in_dead_zone',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new bool()
     ret.markPin(ref, 'isInDeadZone', 0)
@@ -39628,6 +41072,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
+   * Converts screen coordinates to viewport coordinates (normalized from 0 to 1). Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to Viewport Coordinates
    *
    * 屏幕坐标转视口坐标: 将屏幕坐标转换为视口坐标（归一化0-1），仅在超限模式可用
@@ -39679,6 +41125,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
+   * Add a depth value to the screen coordinates to convert them to world coordinates. Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to World Coordinates
    *
    * 屏幕坐标转世界坐标: 将屏幕坐标加上深度值，转换为世界坐标，仅在超限模式可用
@@ -39694,8 +41142,6 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 深度值
    *
    * @returns
-   *
-   * World Coordinates
    *
    * 世界坐标
    */
@@ -39714,7 +41160,7 @@ export class ClientBoolFilterExecutionFlowFunctions<
       args: [screenXObj, screenYObj, depthObj]
     })
     const ret = new vec3()
-    ret.markPin(ref, 'worldPosition', 0)
+    ret.markPin(ref, 'worldCoordinates', 0)
     return ret as unknown as vec3
   }
 
@@ -39866,6 +41312,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
+   * Converts normalized viewport coordinates (0–1) to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert Viewport Coordinates to Screen Coordinates
    *
    * 视口坐标转屏幕坐标: 将视口坐标（归一化0-1）转换为屏幕坐标，仅在超限模式可用
@@ -39950,17 +41398,17 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
+   * Convert world coordinates to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert World Coordinates to Screen Coordinates
    *
    * 世界坐标转屏幕坐标: 将世界坐标转换为屏幕坐标，仅在超限模式可用
    *
-   * @param worldPosition
-   *
-   * World Coordinates
+   * @param worldCoordinates
    *
    * 世界坐标
    */
-  worldCoordinatesToScreenCoordinates(worldPosition: Vec3Value): {
+  worldCoordinatesToScreenCoordinates(worldCoordinates: Vec3Value): {
     /**
      * Screen X
      *
@@ -39974,12 +41422,12 @@ export class ClientBoolFilterExecutionFlowFunctions<
      */
     screenY: number
   } {
-    const worldPositionObj = parseValue(worldPosition, 'vec3')
+    const worldCoordinatesObj = parseValue(worldCoordinates, 'vec3')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'world_coordinates_to_screen_coordinates',
-      args: [worldPositionObj]
+      args: [worldCoordinatesObj]
     })
     return {
       screenX: (() => {
@@ -41709,18 +43157,28 @@ export class ClientIntFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
    * 基准对象
    */
-  getBaseObjectOfSpecifiedPreAiming(preAimingIndex: IntValue): clientEntity<'int_filter', Mode> {
+  getBaseObjectOfSpecifiedPreAiming(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): clientEntity<'int_filter', Mode> {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_base_object_of_specified_pre_aiming',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new entity()
     ret.markPin(ref, 'baseObject', 0)
@@ -42769,18 +44227,28 @@ export class ClientIntFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
    * 结果数量
    */
-  getPreAimingCollisionDetectionResultCount(preAimingIndex: IntValue): bigint {
+  getPreAimingCollisionDetectionResultCount(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): bigint {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_collision_detection_result_count',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new int()
     ret.markPin(ref, 'resultCount', 0)
@@ -42797,6 +44265,11 @@ export class ClientIntFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
@@ -42804,13 +44277,15 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * 持续时长（s）
    */
-  getPreAimingDuration(preAimingIndex: IntValue): number {
+  getPreAimingDuration(preAimingIndex: IntValue, resultDataType?: PreAimResultDataType): number {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_duration',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new float()
     ret.markPin(ref, 'durationSeconds', 0)
@@ -42827,8 +44302,16 @@ export class ClientIntFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    */
-  getPreAimingRayHitInfo(preAimingIndex: IntValue): {
+  getPreAimingRayHitInfo(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): {
     /**
      * On-Hit Location
      *
@@ -42843,11 +44326,13 @@ export class ClientIntFilterExecutionFlowFunctions<
     hitEntity: clientEntity<'int_filter', Mode>
   } {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_ray_hit_info',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     return {
       hitPosition: (() => {
@@ -42873,8 +44358,16 @@ export class ClientIntFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    */
-  getPreAimingResult(preAimingIndex: IntValue): {
+  getPreAimingResult(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): {
     /**
      * On-Hit Location
      *
@@ -42901,11 +44394,13 @@ export class ClientIntFilterExecutionFlowFunctions<
     validTargetList: clientEntity<'int_filter', Mode>[]
   } {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_pre_aiming_result',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     return {
       hitPosition: (() => {
@@ -43315,6 +44810,11 @@ export class ClientIntFilterExecutionFlowFunctions<
    * Pre-Aim ID
    *
    * 预瞄准序号
+   * @param resultDataType
+   *
+   * Get Type
+   *
+   * 获取类型
    *
    * @returns
    *
@@ -43322,13 +44822,18 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * 是否处于死区
    */
-  getWhetherPreAimingStickIsInDeadZone(preAimingIndex: IntValue): boolean {
+  getWhetherPreAimingStickIsInDeadZone(
+    preAimingIndex: IntValue,
+    resultDataType?: PreAimResultDataType
+  ): boolean {
     const preAimingIndexObj = parseValue(preAimingIndex, 'int')
+    const resultDataTypeObj =
+      resultDataType === undefined ? undefined : parseValue(resultDataType, 'enum')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'get_whether_pre_aiming_stick_is_in_dead_zone',
-      args: [preAimingIndexObj]
+      args: [preAimingIndexObj, ...(resultDataTypeObj === undefined ? [] : [resultDataTypeObj])]
     })
     const ret = new bool()
     ret.markPin(ref, 'isInDeadZone', 0)
@@ -44236,6 +45741,8 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
+   * Converts screen coordinates to viewport coordinates (normalized from 0 to 1). Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to Viewport Coordinates
    *
    * 屏幕坐标转视口坐标: 将屏幕坐标转换为视口坐标（归一化0-1），仅在超限模式可用
@@ -44287,6 +45794,8 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
+   * Add a depth value to the screen coordinates to convert them to world coordinates. Only available in Beyond Mode.
+   *
    * Convert Screen Coordinates to World Coordinates
    *
    * 屏幕坐标转世界坐标: 将屏幕坐标加上深度值，转换为世界坐标，仅在超限模式可用
@@ -44302,8 +45811,6 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 深度值
    *
    * @returns
-   *
-   * World Coordinates
    *
    * 世界坐标
    */
@@ -44322,7 +45829,7 @@ export class ClientIntFilterExecutionFlowFunctions<
       args: [screenXObj, screenYObj, depthObj]
     })
     const ret = new vec3()
-    ret.markPin(ref, 'worldPosition', 0)
+    ret.markPin(ref, 'worldCoordinates', 0)
     return ret as unknown as vec3
   }
 
@@ -44474,6 +45981,8 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
+   * Converts normalized viewport coordinates (0–1) to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert Viewport Coordinates to Screen Coordinates
    *
    * 视口坐标转屏幕坐标: 将视口坐标（归一化0-1）转换为屏幕坐标，仅在超限模式可用
@@ -44558,17 +46067,17 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
+   * Convert world coordinates to screen coordinates. Only available in Beyond Mode.
+   *
    * Convert World Coordinates to Screen Coordinates
    *
    * 世界坐标转屏幕坐标: 将世界坐标转换为屏幕坐标，仅在超限模式可用
    *
-   * @param worldPosition
-   *
-   * World Coordinates
+   * @param worldCoordinates
    *
    * 世界坐标
    */
-  worldCoordinatesToScreenCoordinates(worldPosition: Vec3Value): {
+  worldCoordinatesToScreenCoordinates(worldCoordinates: Vec3Value): {
     /**
      * Screen X
      *
@@ -44582,12 +46091,12 @@ export class ClientIntFilterExecutionFlowFunctions<
      */
     screenY: number
   } {
-    const worldPositionObj = parseValue(worldPosition, 'vec3')
+    const worldCoordinatesObj = parseValue(worldCoordinates, 'vec3')
     const ref = this.registry.registerNode({
       id: 0,
       type: 'data',
       nodeType: 'world_coordinates_to_screen_coordinates',
-      args: [worldPositionObj]
+      args: [worldCoordinatesObj]
     })
     return {
       screenX: (() => {
@@ -44651,6 +46160,8 @@ export interface ClientEntityHelperMethods<
   ): void
 
   /**
+   * Adds Temporary Movement Parameters. These values take effect on the next frame, so their changes cannot be read in the current Execution Flow by querying the node.
+   *
    * Add Temporary Movement Parameters
    *
    * 添加临时运动参数值: 添加临时运动参数值。该值将在下一帧生效，因此无法在当前执行流中通过获取节点查到值的变化。
@@ -44658,43 +46169,33 @@ export interface ClientEntityHelperMethods<
    * @param forwardAcceleration
    *
    * 前进加速度
-   * @param backwardAcceleration
-   *
-   * Reverse Acceleration
+   * @param reverseAcceleration
    *
    * 后退加速度
-   * @param turningRate
-   *
-   * Turn Speed
+   * @param turnSpeed
    *
    * 转向速率
-   * @param baseDragDeceleration
-   *
-   * Base Resistance Deceleration
+   * @param baseResistanceDeceleration
    *
    * 基础阻力减速度
-   * @param dragCoefficient
-   *
-   * Resistance Coefficient
+   * @param resistanceCoefficient
    *
    * 阻力系数
    * @param maxForwardSpeed
    *
    * 最大前进速度
-   * @param maxBackwardSpeed
-   *
-   * Max Reverse Speed
+   * @param maxReverseSpeed
    *
    * 最大后退速度
    */
   addTemporaryMovementParameterValues(
     forwardAcceleration: FloatValue,
-    backwardAcceleration: FloatValue,
-    turningRate: FloatValue,
-    baseDragDeceleration: FloatValue,
-    dragCoefficient: FloatValue,
+    reverseAcceleration: FloatValue,
+    turnSpeed: FloatValue,
+    baseResistanceDeceleration: FloatValue,
+    resistanceCoefficient: FloatValue,
     maxForwardSpeed: FloatValue,
-    maxBackwardSpeed: FloatValue
+    maxReverseSpeed: FloatValue
   ): void
 
   /**
@@ -44716,7 +46217,7 @@ export interface ClientEntityHelperMethods<
   /**
    * Add Acceleration
    *
-   * 添加速度: 添加临时加速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承
+   * 添加速度: 添加临时速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承
    *
    * @param velocity
    *
@@ -44925,6 +46426,8 @@ export interface ClientEntityHelperMethods<
   getCharacterEntityOfSpecifiedPlayer(): clientEntity<T, Mode>
 
   /**
+   * Returns the current speed of the specified control motion device (speed magnitude and unit direction vector)
+   *
    * Get Control Motion Device's Current Speed
    *
    * 获取操控运动器当前速度: 获取指定操控运动器的当前速度（速度大小及单位方向向量）
@@ -44957,6 +46460,8 @@ export interface ClientEntityHelperMethods<
   getControlMotorForwardDirection(): vec3
 
   /**
+   * Returns the movement parameters of the specified control motion device, including temporary movement parameters. The addition of temporary values takes effect in the next frame, so changes to these values cannot be retrieved by a Get node within the current execution flow
+   *
    * Get Control Motion Device's Movement Parameters
    *
    * 获取操控运动器运动参数: 获取指定操控运动器的运动参数，包含临时运动参数。临时值的添加将在下一帧生效，因此无法在当前执行流中通过获取节点查到值的变化。
@@ -45285,13 +46790,13 @@ export interface ClientEntityHelperMethods<
   getUnitAttackTarget(): clientEntity<T, Mode>
 
   /**
+   * Returns whether the specified control motion device is currently grounded
+   *
    * Get Control Motion Device Grounded Status
    *
    * 获取操控运动器是否接地: 获取指定操控运动器当前是否接地
    *
    * @returns
-   *
-   * Grounded
    *
    * 是否接地
    */
@@ -45337,7 +46842,7 @@ export interface ClientEntityHelperMethods<
   readonly inputDevice: InputDeviceType
 
   /**
-   * Available only for Custom Aggro Mode; Searches whether the specified Entity has entered battle
+   * Only available in Custom Aggro Mode; Checks whether the specified Entity is in combat
    *
    * 查询指定实体是否入战: 仅自定义仇恨模式可用; 查询指定实体是否已经入战
    *
@@ -45414,7 +46919,7 @@ export interface ClientEntityHelperMethods<
   queryIfEntityIsOnTheField(): boolean
 
   /**
-   * Available only for Custom Aggro Mode; Searches whether the specified Entity has entered battle
+   * Only available in Custom Aggro Mode; Checks whether the specified Entity is in combat
    *
    * 查询指定实体是否入战: 仅自定义仇恨模式可用; 查询指定实体是否已经入战
    *
@@ -45530,6 +47035,8 @@ export interface ClientEntityHelperMethods<
   setAggroValue(aggroOwnerEntity: EntityValue, aggroValue: IntValue): void
 
   /**
+   * While grounded, the Control Motion Device continuously detects and snaps to the ground surface. To achieve airborne movement (such as jumping) by adding Speed, use this node to temporarily break out of the grounded state.
+   *
    * Set Control Motion Device to Not Grounded
    *
    * 使操控运动器转换至非接地状态: 接地状态下的操控运动器将持续找到地面并贴合。若希望通过添加速度实现离地运动（跳跃等效果），可以使用该节点短暂脱离接地状态。

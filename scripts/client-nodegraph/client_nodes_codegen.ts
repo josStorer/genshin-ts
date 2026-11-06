@@ -174,6 +174,21 @@ const PARAMETER_IDENTIFIER_OVERRIDES: Readonly<Record<string, string>> = {
   'tactic_ground_pursuit.10': 'canSkillBeInterrupted'
 }
 
+// Official English translations changed in November; keep published return keys.
+const RETURN_IDENTIFIER_OVERRIDES: Readonly<Record<string, readonly string[]>> = {
+  get_control_motor_current_velocity: ['speed', 'velocityDirection'],
+  get_control_motor_movement_parameters: [
+    'forwardAcceleration',
+    'backwardAcceleration',
+    'turningRate',
+    'baseDragDeceleration',
+    'dragCoefficient',
+    'maxForwardSpeed',
+    'maxBackwardSpeed'
+  ],
+  get_previous_frame_execution_tactic: ['tacticType', 'tacticalContext', 'tacticDuration']
+}
+
 // ---------------------------------------------------------------------------
 // Type tables
 // ---------------------------------------------------------------------------
@@ -589,6 +604,7 @@ function alignInputs(
 // ---------------------------------------------------------------------------
 
 type ParamSpec = {
+  optional?: boolean
   pinIndex: number
   ident: string
   /** concrete IR type; reflective params carry candidates instead */
@@ -815,7 +831,11 @@ function buildMethodSpec(
     const officialNameEn = officialPin?.nameEn?.trim()
     returns.push({
       pinIndex,
-      ident: uniqueIdent(identFromDocName(doc?.en.name || '', fallbackName), returnIdents),
+      ident: uniqueIdent(
+        RETURN_IDENTIFIER_OVERRIDES[record.nodeType]?.[pinIndex] ??
+          identFromDocName(doc?.en.name || '', fallbackName),
+        returnIdents
+      ),
       ...(irType !== undefined ? { irType } : {}),
       reflective,
       ...(enumClass ? { enumClass } : {}),
@@ -964,7 +984,7 @@ function buildMethodSpec(
       b.pin.type === 'enum'
         ? enumBinding.resolve(record, b.pin, b.doc.zh?.name)
         : b.pin.type === 'enum_list'
-          ? enumBinding.resolveListParam(b.doc.zh?.name)
+          ? enumBinding.resolveListParam(b.doc.zh?.name, record.genericId)
           : undefined
     params.push({
       pinIndex: b.pin.index,
@@ -973,6 +993,7 @@ function buildMethodSpec(
       reflective: false,
       connectable: b.pin.connectable !== false,
       ...(enumClass ? { enumClass } : {}),
+      ...(enumClass === 'PreAimResultDataType' ? { optional: true } : {}),
       editorNameEn: officialNameEn || '',
       docEnName: b.doc.en.name,
       docEnDesc: sanitizeDocText(b.doc.en.description),
@@ -1180,7 +1201,7 @@ function buildJsdoc(spec: MethodSpec): string {
 
 /** args array literal in signature order; hidden pins are the transform's job (argPins) */
 function buildArgsArray(spec: MethodSpec): string {
-  return `[${spec.params.map((p) => `${p.ident}Obj`).join(', ')}]`
+  return `[${spec.params.map((p) => (p.optional ? `...(${p.ident}Obj === undefined ? [] : [${p.ident}Obj])` : `${p.ident}Obj`)).join(', ')}]`
 }
 
 /** physical input pin index per public arg; undefined when identity */
@@ -1263,7 +1284,9 @@ function retConstructionOf(r: ReturnSpec): string {
 }
 
 function emitNonReflectMethod(spec: MethodSpec): string {
-  const sigParams = spec.params.map((p) => `${p.ident}: ${paramTsOf(p)}`).join(', ')
+  const sigParams = spec.params
+    .map((p) => `${p.ident}${p.optional ? '?' : ''}: ${paramTsOf(p)}`)
+    .join(', ')
   const retTs =
     spec.returns.length === 0
       ? 'void'
@@ -1274,7 +1297,7 @@ function emitNonReflectMethod(spec: MethodSpec): string {
   const body: string[] = []
   for (const p of spec.params) {
     body.push(
-      `    const ${p.ident}Obj = ${parsedParamExpr(p, `parseValue(${p.ident}, '${p.irType}')`)}`
+      `    const ${p.ident}Obj = ${p.optional ? `${p.ident} === undefined ? undefined : ` : ''}${parsedParamExpr(p, `parseValue(${p.ident}, '${p.irType}')`)}`
     )
     if (!p.connectable) {
       body.push(`    assertClientLiteralValue(${p.ident}Obj, '${spec.methodName}.${p.ident}')`)
@@ -2835,7 +2858,7 @@ export function generateClientNodes(
               'getRayFilterTypeList',
               'get_ray_filter_type_list',
               '获取射线筛选类型列表',
-              'RayFilterType',
+              record.genericId === 200302 ? 'RayHitFilterType' : 'RayFilterType',
               true
             )
           )

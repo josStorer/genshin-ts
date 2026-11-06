@@ -1039,6 +1039,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
         kind: 'method',
         methodName: 'tacticRotateToTheTargetEntity',
         insertIndex: 1
+      },
+      whetherTheEntityHasTheSpecifiedUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
       }
     },
     classic: {
@@ -1051,12 +1056,29 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
         kind: 'method',
         methodName: 'tacticRotateToTheTargetEntity',
         insertIndex: 1
+      },
+      whetherTheEntityHasTheSpecifiedUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
       }
     }
   },
   creation_status_decision: {
-    beyond: {},
-    classic: {}
+    beyond: {
+      whetherTheEntityHasTheSpecifiedUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      }
+    },
+    classic: {
+      whetherTheEntityHasTheSpecifiedUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      }
+    }
   },
   bool_filter: {
     beyond: {

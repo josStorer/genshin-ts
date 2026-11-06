@@ -530,6 +530,7 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE = {
     'getEntityLocation',
     'getEntityRotation',
     'getEntitySType',
+    'getEntityTypeList',
     'getListLength',
     'getListOfKeysFromDictionary',
     'getListOfValuesFromDictionary',
@@ -539,6 +540,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE = {
     'getPreviousFrameExecutionStatus',
     'getPreviousFrameExecutionTactic',
     'getRandomNumber',
+    'getRayDetectionResult',
+    'getRayFilterTypeList',
     'getSelfEntity',
     'getSelfPresetStatusValue',
     'getSpawnPointLocationInformation',
@@ -570,6 +573,11 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE = {
     'sineFunction',
     'split3dVector',
     'subtraction',
+    'tacticAerialConfrontation',
+    'tacticAerialEscape',
+    'tacticAerialIdling',
+    'tacticAerialLanding',
+    'tacticAerialPursuit',
     'tacticExecutePatrol',
     'tacticGroundConfrontation',
     'tacticGroundEscape',
@@ -582,7 +590,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE = {
     'tacticRotateToTheSpecifiedDirection',
     'tacticRotateToTheTargetEntity',
     'tacticStandStill',
-    'tangentFunction'
+    'tangentFunction',
+    'whetherTheEntityHasTheSpecifiedUnitStatus'
   ],
   creation_status_decision: [
     '_3dVectorAddition',
@@ -627,6 +636,7 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE = {
     'getEntityLocation',
     'getEntityRotation',
     'getEntitySType',
+    'getEntityTypeList',
     'getListLength',
     'getListOfKeysFromDictionary',
     'getListOfValuesFromDictionary',
@@ -636,6 +646,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE = {
     'getPreviousFrameExecutionStatus',
     'getPreviousFrameExecutionTactic',
     'getRandomNumber',
+    'getRayDetectionResult',
+    'getRayFilterTypeList',
     'getSelfEntity',
     'getSelfPresetStatusValue',
     'getSpawnPointLocationInformation',
@@ -668,7 +680,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE = {
     'split3dVector',
     'subtraction',
     'switchToSelfExecutionStatus',
-    'tangentFunction'
+    'tangentFunction',
+    'whetherTheEntityHasTheSpecifiedUnitStatus'
   ],
   bool_filter: [
     '_3dVectorAddition',
@@ -929,18 +942,18 @@ export const CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE = {
     setLocalVariable: [0],
     setSkillVariable: [0],
     triggerHitboxAtSpecificLocation: [
-      0, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+      0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
       30, 31, 32, 36, 37
     ],
     triggerHitboxAtSpecifiedAttachmentPoint: [
-      0, 1, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-      31, 32, 33, 37, 38
+      0, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+      30, 31, 32, 33, 37, 38
     ],
     triggerRectangularHitboxAtSpecificLocation: [
-      0, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30
+      0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30
     ],
     triggerRectangularHitboxAtSpecifiedAttachmentPoint: [
-      0, 1, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31
+      0, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31
     ],
     triggerSectorHitboxAtSpecificLocation: [
       0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
@@ -975,18 +988,18 @@ export const CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE = {
     setLocalVariable: [0],
     setSkillVariable: [0],
     triggerHitboxAtSpecificLocation: [
-      0, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+      0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
       30, 31, 32, 36, 37
     ],
     triggerHitboxAtSpecifiedAttachmentPoint: [
-      0, 1, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-      31, 32, 33, 37, 38
+      0, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+      30, 31, 32, 33, 37, 38
     ],
     triggerRectangularHitboxAtSpecificLocation: [
-      0, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30
+      0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30
     ],
     triggerRectangularHitboxAtSpecifiedAttachmentPoint: [
-      0, 1, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31
+      0, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31
     ],
     triggerSectorHitboxAtSpecificLocation: [
       0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
@@ -1019,18 +1032,18 @@ export const CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE = {
     setLocalVariable: [0],
     setSkillVariable: [0],
     triggerHitboxAtSpecificLocation: [
-      0, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+      0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
       30, 31, 32, 36, 37
     ],
     triggerHitboxAtSpecifiedAttachmentPoint: [
-      0, 1, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-      31, 32, 33, 37, 38
+      0, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+      30, 31, 32, 33, 37, 38
     ],
     triggerRectangularHitboxAtSpecificLocation: [
-      0, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30
+      0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30
     ],
     triggerRectangularHitboxAtSpecifiedAttachmentPoint: [
-      0, 1, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31
+      0, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31
     ],
     triggerSectorHitboxAtSpecificLocation: [
       0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
@@ -1053,11 +1066,18 @@ export const CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE = {
     getEntityRotation: [0],
     getEntitySType: [0],
     getObjectPresetStatus: [0],
+    getRayDetectionResult: [0],
+    getRayFilterTypeList: [0],
     getTargetAtk: [0],
     getTargetHp: [0],
     getTargetLevel: [0],
     queryEntityFaction: [0],
     queryIfEntityIsOnTheField: [0],
+    tacticAerialConfrontation: [1],
+    tacticAerialEscape: [1],
+    tacticAerialIdling: [1],
+    tacticAerialLanding: [1],
+    tacticAerialPursuit: [1],
     tacticExecutePatrol: [4],
     tacticGroundConfrontation: [14],
     tacticGroundEscape: [11],
@@ -1077,6 +1097,8 @@ export const CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE = {
     getEntityRotation: [0],
     getEntitySType: [0],
     getObjectPresetStatus: [0],
+    getRayDetectionResult: [0],
+    getRayFilterTypeList: [0],
     getTargetAtk: [0],
     getTargetHp: [0],
     getTargetLevel: [0],
@@ -1741,6 +1763,7 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'getEntityLocation',
       'getEntityRotation',
       'getEntitySType',
+      'getEntityTypeList',
       'getListLength',
       'getListOfKeysFromDictionary',
       'getListOfValuesFromDictionary',
@@ -1750,6 +1773,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'getPreviousFrameExecutionStatus',
       'getPreviousFrameExecutionTactic',
       'getRandomNumber',
+      'getRayDetectionResult',
+      'getRayFilterTypeList',
       'getSelfEntity',
       'getSelfPresetStatusValue',
       'getSpawnPointLocationInformation',
@@ -1781,6 +1806,11 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'sineFunction',
       'split3dVector',
       'subtraction',
+      'tacticAerialConfrontation',
+      'tacticAerialEscape',
+      'tacticAerialIdling',
+      'tacticAerialLanding',
+      'tacticAerialPursuit',
       'tacticExecutePatrol',
       'tacticGroundConfrontation',
       'tacticGroundEscape',
@@ -1793,7 +1823,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'tacticRotateToTheSpecifiedDirection',
       'tacticRotateToTheTargetEntity',
       'tacticStandStill',
-      'tangentFunction'
+      'tangentFunction',
+      'whetherTheEntityHasTheSpecifiedUnitStatus'
     ],
     classic: [
       '_3dVectorAddition',
@@ -1840,6 +1871,7 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'getEntityLocation',
       'getEntityRotation',
       'getEntitySType',
+      'getEntityTypeList',
       'getListLength',
       'getListOfKeysFromDictionary',
       'getListOfValuesFromDictionary',
@@ -1849,6 +1881,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'getPreviousFrameExecutionStatus',
       'getPreviousFrameExecutionTactic',
       'getRandomNumber',
+      'getRayDetectionResult',
+      'getRayFilterTypeList',
       'getSelfEntity',
       'getSelfPresetStatusValue',
       'getSpawnPointLocationInformation',
@@ -1880,6 +1914,11 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'sineFunction',
       'split3dVector',
       'subtraction',
+      'tacticAerialConfrontation',
+      'tacticAerialEscape',
+      'tacticAerialIdling',
+      'tacticAerialLanding',
+      'tacticAerialPursuit',
       'tacticExecutePatrol',
       'tacticGroundConfrontation',
       'tacticGroundEscape',
@@ -1892,7 +1931,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'tacticRotateToTheSpecifiedDirection',
       'tacticRotateToTheTargetEntity',
       'tacticStandStill',
-      'tangentFunction'
+      'tangentFunction',
+      'whetherTheEntityHasTheSpecifiedUnitStatus'
     ]
   },
   creation_status_decision: {
@@ -1939,6 +1979,7 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'getEntityLocation',
       'getEntityRotation',
       'getEntitySType',
+      'getEntityTypeList',
       'getListLength',
       'getListOfKeysFromDictionary',
       'getListOfValuesFromDictionary',
@@ -1948,6 +1989,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'getPreviousFrameExecutionStatus',
       'getPreviousFrameExecutionTactic',
       'getRandomNumber',
+      'getRayDetectionResult',
+      'getRayFilterTypeList',
       'getSelfEntity',
       'getSelfPresetStatusValue',
       'getSpawnPointLocationInformation',
@@ -1980,7 +2023,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'split3dVector',
       'subtraction',
       'switchToSelfExecutionStatus',
-      'tangentFunction'
+      'tangentFunction',
+      'whetherTheEntityHasTheSpecifiedUnitStatus'
     ],
     classic: [
       '_3dVectorAddition',
@@ -2025,6 +2069,7 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'getEntityLocation',
       'getEntityRotation',
       'getEntitySType',
+      'getEntityTypeList',
       'getListLength',
       'getListOfKeysFromDictionary',
       'getListOfValuesFromDictionary',
@@ -2034,6 +2079,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'getPreviousFrameExecutionStatus',
       'getPreviousFrameExecutionTactic',
       'getRandomNumber',
+      'getRayDetectionResult',
+      'getRayFilterTypeList',
       'getSelfEntity',
       'getSelfPresetStatusValue',
       'getSpawnPointLocationInformation',
@@ -2066,7 +2113,8 @@ export const CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE = {
       'split3dVector',
       'subtraction',
       'switchToSelfExecutionStatus',
-      'tangentFunction'
+      'tangentFunction',
+      'whetherTheEntityHasTheSpecifiedUnitStatus'
     ]
   },
   bool_filter: {
@@ -3144,6 +3192,7 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'get_entity_location',
       'get_entity_rotation',
       'get_entity_s_type',
+      'get_entity_type_list',
       'get_list_length',
       'get_list_of_keys_from_dictionary',
       'get_list_of_values_from_dictionary',
@@ -3153,6 +3202,8 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'get_previous_frame_execution_status',
       'get_previous_frame_execution_tactic',
       'get_random_number',
+      'get_ray_detection_result',
+      'get_ray_filter_type_list',
       'get_self_entity',
       'get_self_preset_status_value',
       'get_spawn_point_location_information',
@@ -3186,6 +3237,11 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'split3d_vector',
       'split_structure',
       'subtraction',
+      'tactic_aerial_confrontation',
+      'tactic_aerial_escape',
+      'tactic_aerial_idling',
+      'tactic_aerial_landing',
+      'tactic_aerial_pursuit',
       'tactic_execute_patrol',
       'tactic_ground_confrontation',
       'tactic_ground_escape',
@@ -3198,7 +3254,8 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'tactic_rotate_to_the_specified_direction',
       'tactic_rotate_to_the_target_entity',
       'tactic_stand_still',
-      'tangent_function'
+      'tangent_function',
+      'whether_the_entity_has_the_specified_unit_status'
     ],
     classic: [
       '_3d_vector_addition',
@@ -3246,6 +3303,7 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'get_entity_location',
       'get_entity_rotation',
       'get_entity_s_type',
+      'get_entity_type_list',
       'get_list_length',
       'get_list_of_keys_from_dictionary',
       'get_list_of_values_from_dictionary',
@@ -3255,6 +3313,8 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'get_previous_frame_execution_status',
       'get_previous_frame_execution_tactic',
       'get_random_number',
+      'get_ray_detection_result',
+      'get_ray_filter_type_list',
       'get_self_entity',
       'get_self_preset_status_value',
       'get_spawn_point_location_information',
@@ -3288,6 +3348,11 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'split3d_vector',
       'split_structure',
       'subtraction',
+      'tactic_aerial_confrontation',
+      'tactic_aerial_escape',
+      'tactic_aerial_idling',
+      'tactic_aerial_landing',
+      'tactic_aerial_pursuit',
       'tactic_execute_patrol',
       'tactic_ground_confrontation',
       'tactic_ground_escape',
@@ -3300,7 +3365,8 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'tactic_rotate_to_the_specified_direction',
       'tactic_rotate_to_the_target_entity',
       'tactic_stand_still',
-      'tangent_function'
+      'tangent_function',
+      'whether_the_entity_has_the_specified_unit_status'
     ]
   },
   creation_status_decision: {
@@ -3348,6 +3414,7 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'get_entity_location',
       'get_entity_rotation',
       'get_entity_s_type',
+      'get_entity_type_list',
       'get_list_length',
       'get_list_of_keys_from_dictionary',
       'get_list_of_values_from_dictionary',
@@ -3357,6 +3424,8 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'get_previous_frame_execution_status',
       'get_previous_frame_execution_tactic',
       'get_random_number',
+      'get_ray_detection_result',
+      'get_ray_filter_type_list',
       'get_self_entity',
       'get_self_preset_status_value',
       'get_spawn_point_location_information',
@@ -3391,7 +3460,8 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'split_structure',
       'subtraction',
       'switch_to_self_execution_status',
-      'tangent_function'
+      'tangent_function',
+      'whether_the_entity_has_the_specified_unit_status'
     ],
     classic: [
       '_3d_vector_addition',
@@ -3437,6 +3507,7 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'get_entity_location',
       'get_entity_rotation',
       'get_entity_s_type',
+      'get_entity_type_list',
       'get_list_length',
       'get_list_of_keys_from_dictionary',
       'get_list_of_values_from_dictionary',
@@ -3446,6 +3517,8 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'get_previous_frame_execution_status',
       'get_previous_frame_execution_tactic',
       'get_random_number',
+      'get_ray_detection_result',
+      'get_ray_filter_type_list',
       'get_self_entity',
       'get_self_preset_status_value',
       'get_spawn_point_location_information',
@@ -3480,7 +3553,8 @@ export const CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE = {
       'split_structure',
       'subtraction',
       'switch_to_self_execution_status',
-      'tangent_function'
+      'tangent_function',
+      'whether_the_entity_has_the_specified_unit_status'
     ]
   },
   bool_filter: {

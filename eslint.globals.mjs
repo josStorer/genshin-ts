@@ -27,6 +27,8 @@ export const gstsDslGlobals = {
 
   print: 'readonly',
   send: 'readonly',
+  sendLua: 'readonly',
+  sendLuaAll: 'readonly',
   player: 'readonly',
   stage: 'readonly',
   level: 'readonly',

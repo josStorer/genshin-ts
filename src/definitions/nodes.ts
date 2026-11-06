@@ -19,6 +19,11 @@ import {
 } from '../runtime/IR.js'
 import { getRuntimeOptions } from '../runtime/runtime_config.js'
 import {
+  signalKinds,
+  type LuaSignalDefinition,
+  type LuaSignalKind
+} from '../runtime/signal_definition.js'
+import {
   assertServerLiteralValue,
   bool,
   BoolValue,
@@ -60,6 +65,7 @@ import {
   vec3,
   Vec3Value
 } from '../runtime/value.js'
+import type { HitLevel } from './client_enums.js'
 import type {
   CharacterEntity,
   CreationEntity,
@@ -945,6 +951,7 @@ export class ServerExecutionFlowFunctions {
   enumerationsEqual(enumeration1: InputDeviceType, enumeration2: InputDeviceType): boolean
   enumerationsEqual(enumeration1: ColorBlendType, enumeration2: ColorBlendType): boolean
   enumerationsEqual(enumeration1: FillMaterial, enumeration2: FillMaterial): boolean
+  enumerationsEqual(enumeration1: HitLevel, enumeration2: HitLevel): boolean
   enumerationsEqual<T extends EnumerationType>(
     enumeration1: EnumerationTypeMap[T],
     enumeration2: EnumerationTypeMap[T]
@@ -4492,6 +4499,11 @@ export class ServerExecutionFlowFunctions {
    * @param initiatorEntity Determines the Initiator Entity for this attack. Defaults to the Entity associated with this Node Graph. Affects which attacker is identified in events such as On Hit and When Attacked
    *
    * 发起者实体: 决定了该次攻击的发起者实体，默认为该节点图所关联的实体。影响【攻击命中时】、【受到攻击时】等事件中判定的攻击者
+   * @param abilityUnitOwnerEntity Entity owning the ability unit; omit to use the editor default.
+   *
+   * Ability Unit Parent Entity
+   *
+   * 能力单元归属实体: 省略时使用编辑器默认值。
    */
   initiateAttack(
     targetEntity: EntityValue,
@@ -4501,7 +4513,8 @@ export class ServerExecutionFlowFunctions {
     rotationOffset: Vec3Value,
     abilityUnit: StrValue,
     overwriteAbilityUnitConfig: BoolValue,
-    initiatorEntity: EntityValue
+    initiatorEntity: EntityValue,
+    abilityUnitOwnerEntity?: EntityValue
   ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const damageCoefficientObj = parseValue(damageCoefficient, 'float')
@@ -4523,7 +4536,10 @@ export class ServerExecutionFlowFunctions {
         rotationOffsetObj,
         abilityUnitObj,
         overwriteAbilityUnitConfigObj,
-        initiatorEntityObj
+        initiatorEntityObj,
+        ...(abilityUnitOwnerEntity === undefined
+          ? []
+          : [parseValue(abilityUnitOwnerEntity, 'entity')])
       ]
     })
   }
@@ -4602,6 +4618,8 @@ export class ServerExecutionFlowFunctions {
    * @param damagePopUpType No Pop-UpNormal Pop-UpCRIT Hit Pop-Up
    *
    * 伤害跳字类型: 无跳字普通跳字暴击跳字
+   * @param initiatorEntity Entity initiating the HP loss; omit to use the editor default.
+   * 发起者实体: 省略时使用编辑器默认值。
    */
   hpLoss(
     targetEntity: EntityValue,
@@ -4609,7 +4627,8 @@ export class ServerExecutionFlowFunctions {
     lethal: BoolValue,
     canBeBlockedByInvincibility: BoolValue,
     canBeBlockedByLockedHp: BoolValue,
-    damagePopUpType: DamagePopUpType
+    damagePopUpType: DamagePopUpType,
+    initiatorEntity?: EntityValue
   ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const hpLossObj = parseValue(hpLoss, 'float')
@@ -4627,7 +4646,8 @@ export class ServerExecutionFlowFunctions {
         lethalObj,
         canBeBlockedByInvincibilityObj,
         canBeBlockedByLockedHpObj,
-        damagePopUpTypeObj
+        damagePopUpTypeObj,
+        ...(initiatorEntity === undefined ? [] : [parseValue(initiatorEntity, 'entity')])
       ]
     })
   }
@@ -7436,6 +7456,258 @@ export class ServerExecutionFlowFunctions {
       type: 'exec',
       nodeType: 'send_signal',
       args: [signalNameObj, ...paramObjs]
+    })
+  }
+
+  /**
+   * Open the gift box interface for the specified player.
+   * 打开礼盒界面: 为指定玩家打开对应礼盒索引的界面。
+   * @param playerEntity Player Entity
+   * 玩家实体
+   * @param giftBoxIndex Gift Box Index
+   * 礼盒索引
+   */
+  openGiftBoxInterface(playerEntity: PlayerEntity, giftBoxIndex: IntValue): void {
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'open_gift_box_interface',
+      args: [parseValue(playerEntity, 'entity'), parseValue(giftBoxIndex, 'int')]
+    })
+  }
+
+  /**
+   * Set the cooldown of the specified skill instance.
+   * 设置指定技能实例冷却: 设置技能实例的冷却时间，并选择是否限制最大冷却时间。
+   * @param targetEntity Target Entity
+   * 目标实体
+   * @param skillInstanceId Skill Instance ID
+   * 技能实例ID
+   * @param cooldown Cooldown
+   *
+   * CD
+   *
+   * 冷却时间
+   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   *
+   * Limit Maximum CD Time
+   *
+   * 是否限制最大冷却时间
+   */
+  setCdForSpecifiedSkillInstance(
+    targetEntity: CharacterEntity,
+    skillInstanceId: IntValue,
+    cooldown: FloatValue,
+    limitMaximumCooldown: BoolValue
+  ): void {
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'set_cd_for_specified_skill_instance',
+      args: [
+        parseValue(targetEntity, 'entity'),
+        parseValue(skillInstanceId, 'int'),
+        parseValue(cooldown, 'float'),
+        parseValue(limitMaximumCooldown, 'bool')
+      ]
+    })
+  }
+
+  /**
+   * Increase the cooldown of the specified skill instance.
+   * 增加指定技能实例冷却: 增加技能实例的冷却时间，并选择是否限制最大冷却时间。
+   * @param targetEntity Target Entity
+   * 目标实体
+   * @param skillInstanceId Skill Instance ID
+   * 技能实例ID
+   * @param cooldownIncrease Cooldown Increase
+   *
+   * CD Increase Value
+   *
+   * 冷却时间增加值
+   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   *
+   * Limit Maximum CD Time
+   *
+   * 是否限制最大冷却时间
+   */
+  increaseCdForSpecifiedSkillInstance(
+    targetEntity: CharacterEntity,
+    skillInstanceId: IntValue,
+    cooldownIncrease: FloatValue,
+    limitMaximumCooldown: BoolValue
+  ): void {
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'increase_cd_for_specified_skill_instance',
+      args: [
+        parseValue(targetEntity, 'entity'),
+        parseValue(skillInstanceId, 'int'),
+        parseValue(cooldownIncrease, 'float'),
+        parseValue(limitMaximumCooldown, 'bool')
+      ]
+    })
+  }
+
+  /**
+   * Set the creation's disruptor device by index.
+   * 设置造物扰动装置: 设置目标造物使用的扰动装置序号。
+   * @param targetEntity Target Entity
+   * 目标实体
+   * @param deviceId Device Index
+   * 装置序号
+   */
+  setCreationDisruptorDevice(targetEntity: CreationEntity, deviceId: IntValue): void {
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'set_creation_disruptor_device',
+      args: [parseValue(targetEntity, 'entity'), parseValue(deviceId, 'int')]
+    })
+  }
+
+  /**
+   * Activate or disable a creation's native push collision.
+   * 激活/关闭原生推挤碰撞: 按序号激活或关闭造物的原生推挤碰撞。
+   * @param creationEntity Creation Entity
+   * 造物实体
+   * @param collisionId Native Push Collision Index
+   *
+   * Native Push Collision ID
+   *
+   * 原生推挤碰撞序号
+   * @param activate Whether to activate
+   * 是否激活
+   */
+  activateDisableNativePushCollision(
+    creationEntity: CreationEntity,
+    collisionId: IntValue,
+    activate: BoolValue
+  ): void {
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'activate_disable_native_push_collision',
+      args: [
+        parseValue(creationEntity, 'entity'),
+        parseValue(collisionId, 'int'),
+        parseValue(activate, 'bool')
+      ]
+    })
+  }
+
+  /**
+   * Activate or disable a creation's extra push collision.
+   * 激活/关闭额外推挤碰撞: 按序号激活或关闭造物的额外推挤碰撞。
+   * @param creationEntity Creation Entity
+   * 造物实体
+   * @param collisionId Extra Push Collision Index
+   *
+   * Extra Push Collision ID
+   *
+   * 额外推挤碰撞序号
+   * @param activate Whether to activate
+   * 是否激活
+   */
+  activateDisableExtraPushCollision(
+    creationEntity: CreationEntity,
+    collisionId: IntValue,
+    activate: BoolValue
+  ): void {
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'activate_disable_extra_push_collision',
+      args: [
+        parseValue(creationEntity, 'entity'),
+        parseValue(collisionId, 'int'),
+        parseValue(activate, 'bool')
+      ]
+    })
+  }
+
+  /**
+   * Switch the combat text filter template for a player.
+   * 切换战斗文字提示过滤模板: 为玩家切换指定序号的战斗文字提示模板。
+   * @param playerEntity Player Entity
+   * 玩家实体
+   * @param templateId Combat Text Template Index
+   *
+   * Combat Text Prompt Template ID
+   *
+   * 战斗文字提示模板序号
+   */
+  switchCombatTextFilterTemplate(playerEntity: PlayerEntity, templateId: IntValue): void {
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'switch_combat_text_filter_template',
+      args: [parseValue(playerEntity, 'entity'), parseValue(templateId, 'int')]
+    })
+  }
+
+  /**
+   * Send a signal to all client Lua scripts attached to the target player.
+   * 发送客户端脚本信号: 向目标玩家身上的所有客户端 Lua 脚本发送信号。
+   * @param target Target Player
+   * 目标玩家: 必须传入玩家实体。
+   * @param signal Literal signal name or typed signal definition
+   * 信号名: 字面量字符串或类型化信号定义。
+   * @param params Parameters supported by Lua, in signal definition order
+   * 信号参数: 按定义顺序传入 Lua 支持的参数。
+   */
+  sendClientScriptedServerSignal<S extends LuaSignalDefinition>(
+    target: PlayerEntity,
+    signal: S,
+    ...params: SignalParamValues<S>
+  ): void
+  sendClientScriptedServerSignal(target: PlayerEntity, signal: StrValue, ...params: unknown[]): void
+  sendClientScriptedServerSignal(
+    target: PlayerEntity,
+    signal: StrValue | SignalDefinition,
+    ...params: unknown[]
+  ): void {
+    const definition = isSignalDefinition(signal) ? signal : undefined
+    const name = ensureLiteralStr(definition ? definition.name : (signal as StrValue), 'signal')
+    const paramObjs = params.map((param, index) => {
+      let type = definition?.params[index]?.[1]
+      if (!type || type === 'unknown') {
+        const inferred = matchTypes(
+          [
+            'float',
+            'int',
+            'bool',
+            'config_id',
+            'entity',
+            'faction',
+            'guid',
+            'prefab_id',
+            'str',
+            'vec3'
+          ],
+          param
+        )
+        type = param instanceof list ? `${inferred}_list` : inferred
+      }
+      const scalar = type.replace(/_list$/, '')
+      if (!(scalar in signalKinds) || !signalKinds[scalar as LuaSignalKind]?.writer) {
+        throw new Error(t('runtime_luaSignalParamType', { index: index + 1, type }))
+      }
+      return parseValue(param, type)
+    })
+    // Check declared parameters too: unsupported declarations must not be hidden by missing values.
+    definition?.params.forEach(([, type], index) => {
+      const scalar = type.replace(/_list$/, '')
+      if (!(scalar in signalKinds) || !signalKinds[scalar as LuaSignalKind]?.writer) {
+        throw new Error(t('runtime_luaSignalParamType', { index: index + 1, type }))
+      }
+    })
+    this.registry.registerNode({
+      id: 0,
+      type: 'exec',
+      nodeType: 'send_client_scripted_server_signal',
+      args: [parseValue(target, 'entity'), name, ...paramObjs]
     })
   }
 
@@ -14138,6 +14410,11 @@ export class ServerExecutionFlowFunctions {
      * 当前受打断状态
      */
     currentInterruptStatus: InterruptStatus
+    /**
+     * Creation weight.
+     * 造物重量: 当前造物的重量。
+     */
+    creationWeight: number
   } {
     const creationEntityObj = parseValue(creationEntity, 'entity')
     const ref = this.registry.registerNode({
@@ -14186,6 +14463,11 @@ export class ServerExecutionFlowFunctions {
         const ret = new enumeration('InterruptStatus')
         ret.markPin(ref, 'currentInterruptStatus', 7)
         return ret as unknown as InterruptStatus
+      })(),
+      creationWeight: (() => {
+        const ret = new float()
+        ret.markPin(ref, 'creationWeight', 8)
+        return ret as unknown as number
       })()
     }
   }
@@ -17134,9 +17416,10 @@ type MethodAllowedByMode<
 > = K extends keyof NodeTypeByMethod ? (NodeTypeByMethod[K] extends M ? K : never) : K
 
 export type ServerExecutionFlowFunctionsByMode<M extends ServerGraphMode> = {
-  [
-    K in keyof ServerExecutionFlowFunctions as MethodAllowedByMode<M, K>
-  ]: ServerExecutionFlowFunctions[K]
+  [K in keyof ServerExecutionFlowFunctions as MethodAllowedByMode<
+    M,
+    K
+  >]: ServerExecutionFlowFunctions[K]
 }
 
 // Client execution flow classes live in ./client_nodes.js (generated with

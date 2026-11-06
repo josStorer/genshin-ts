@@ -4,6 +4,7 @@ import type { ServerEventPayloads } from '../definitions/events-payload.js'
 import type { ServerExecutionFlowFunctions } from '../definitions/nodes.js'
 import type { SignalDefinition, SignalParamValues } from './core.js'
 import type { ClientGraphMode, ClientGraphSubType } from './IR.js'
+import type { LuaSignalDefinition } from './signal_definition.js'
 import type {
   BoolValue,
   configId,
@@ -218,6 +219,27 @@ declare global {
    */
   function send<S extends SignalDefinition>(signalName: S, ...params: SignalParamValues<S>): void
   function send(signalName: StrValue, ...params: any[]): void
+
+  /**
+   * Send a signal to all client Lua scripts attached to the target player.
+   * 发送客户端脚本信号: 向指定玩家身上的所有客户端 Lua 脚本发送信号。
+   */
+  function sendLua<S extends LuaSignalDefinition>(
+    target: PlayerEntity,
+    signal: S,
+    ...params: SignalParamValues<S>
+  ): void
+  function sendLua(target: PlayerEntity, signal: StrValue, ...params: unknown[]): void
+
+  /**
+   * Send a signal to each player currently on the field.
+   * 向所有玩家发送客户端脚本信号: 遍历在场玩家，逐个发送给其客户端 Lua 脚本。
+   */
+  function sendLuaAll<S extends LuaSignalDefinition>(
+    signal: S,
+    ...params: SignalParamValues<S>
+  ): void
+  function sendLuaAll(signal: StrValue, ...params: unknown[]): void
 
   /**
    * Returns the Player Entity based on Player ID, where the ID indicates which Player they are

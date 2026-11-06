@@ -146,6 +146,9 @@ async function generateSource(): Promise<string> {
 
   const byMethod = new Map<string, Set<number>>()
   const byNodeType = new Map<string, Set<number>>()
+  // The signal selector is a client_exec literal rather than a data input.
+  addIndexes(byMethod, 'sendClientScriptedServerSignal', [1])
+  addIndexes(byNodeType, 'send_client_scripted_server_signal', [1])
   for (const node of staticMetadata.nodes) {
     const literalInputIndexes = node.pins
       .filter((pin) => pin.kind === 'input' && pin.connectable === false)

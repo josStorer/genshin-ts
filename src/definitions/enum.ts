@@ -3,6 +3,10 @@ import { SimplifyDeep } from 'type-fest'
 import { enumeration } from '../runtime/value.js'
 import type { ClientEnumerationTypeMap } from './client_enums.js'
 
+// HitLevel became a server enum in November. Retain the existing client import
+// and constructor identity while exposing it through the shared enum module.
+export { HitLevel } from './client_enums.js'
+
 export type EnumerationType = SimplifyDeep<keyof EnumerationTypeMap>
 export type EnumerationTypeMap = ClientEnumerationTypeMap & {
   ComparisonOperator: ComparisonOperator
@@ -551,6 +555,14 @@ export class CharacterSkillSlot extends enumeration {
    * {@link DashSkill} 的别名；两个名称指向同一枚举值。
    */
   static readonly SprintSkill = CharacterSkillSlot.DashSkill
+  /**
+   * Jump Skill
+   * 跳跃技能: 跳跃技能槽位。
+   */
+  static readonly JumpSkill = new enumeration(
+    'CharacterSkillSlot',
+    'character_skill_slot_jump_skill'
+  ) as CharacterSkillSlot
   /**
    * Skill 1-E
    *
@@ -2143,6 +2155,14 @@ export class ElementalReactionType extends enumeration {
   static readonly StellarConduct = new enumeration(
     'ElementalReactionType',
     'elemental_reaction_type_stellar_conduct'
+  ) as ElementalReactionType
+  /**
+   * Stellar Swirl
+   * 星扩散: 星扩散元素反应。
+   */
+  static readonly StellarSwirl = new enumeration(
+    'ElementalReactionType',
+    'elemental_reaction_type_stellar_swirl'
   ) as ElementalReactionType
 
   /**

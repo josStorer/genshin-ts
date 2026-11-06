@@ -1,4 +1,5 @@
 {
+  "runtime_luaSignalParamType": "[error] Lua signal parameter #{{index}} has unsupported type \"{{type}}\"",
   "lua_command": "Lua tools",
   "lua_locateCommand": "Map a Lua error line back to source",
   "lua_locateArgument": "Error text, a log file path, or file.lua:line; reads the clipboard when omitted",

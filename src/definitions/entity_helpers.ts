@@ -1,4 +1,6 @@
+import type { SignalParamValues } from '../runtime/core.js'
 import type { ClientGraphMode, ClientGraphSubType, ServerGraphMode } from '../runtime/IR.js'
+import type { LuaSignalDefinition } from '../runtime/signal_definition.js'
 import {
   entity,
   type BoolValue,
@@ -63,6 +65,14 @@ export type EntityAny = entity
 
 // Generated from src/definitions/nodes.ts (methods whose first param is entity-like).
 const ENTITY_HELPER_METHODS = [
+  'openGiftBoxInterface',
+  'setCdForSpecifiedSkillInstance',
+  'increaseCdForSpecifiedSkillInstance',
+  'setCreationDisruptorDevice',
+  'activateDisableNativePushCollision',
+  'activateDisableExtraPushCollision',
+  'switchCombatTextFilterTemplate',
+  'sendClientScriptedServerSignal',
   'activateBasicMotionDevice',
   'activateDisableCursorCollisionBox',
   'activateDisableCollisionTrigger',
@@ -354,6 +364,7 @@ const ENTITY_HELPER_ALIAS_SOURCES = {
 } as const
 
 const ENTITY_HELPER_METHOD_ALIAS_SOURCES = {
+  sendLua: 'sendClientScriptedServerSignal',
   destroy: 'destroyEntity',
   remove: 'removeEntity',
   get: 'getCustomVariable',
@@ -427,6 +438,15 @@ const ENTITY_HELPER_METHOD_ALIAS_SOURCES = {
 } as const
 
 const ENTITY_HELPER_KIND_BY_KEY = {
+  openGiftBoxInterface: ['player'],
+  setCdForSpecifiedSkillInstance: ['character'],
+  increaseCdForSpecifiedSkillInstance: ['character'],
+  setCreationDisruptorDevice: ['creation'],
+  activateDisableNativePushCollision: ['creation'],
+  activateDisableExtraPushCollision: ['creation'],
+  switchCombatTextFilterTemplate: ['player'],
+  sendClientScriptedServerSignal: ['player'],
+  sendLua: ['player'],
   activateBasicMotionDevice: ['player', 'character', 'stage', 'object', 'creation'],
   activateDisableCursorCollisionBox: ['object'],
   activateDisableCollisionTrigger: ['player', 'character', 'stage', 'object', 'creation'],
@@ -856,6 +876,58 @@ type HelperFromIndex<K extends keyof ServerExecutionFlowFunctions, Index extends
 ) => ReturnType<ServerExecutionFlowFunctions[K]>
 
 interface EntityHelperFromFirstParam {
+  /**
+   * Open the gift box interface for this player.
+   * 打开礼盒界面: 为此玩家打开对应礼盒索引的界面。
+   */
+  openGiftBoxInterface: (giftBoxIndex: IntValue) => void
+  /**
+   * Set the cooldown of the specified skill instance.
+   * 设置指定技能实例冷却: 设置技能实例的冷却时间，并选择是否限制最大冷却时间。
+   */
+  setCdForSpecifiedSkillInstance: (
+    skillInstanceId: IntValue,
+    cooldown: FloatValue,
+    limitMaximumCooldown: BoolValue
+  ) => void
+  /**
+   * Increase the cooldown of the specified skill instance.
+   * 增加指定技能实例冷却: 增加技能实例的冷却时间，并选择是否限制最大冷却时间。
+   */
+  increaseCdForSpecifiedSkillInstance: (
+    skillInstanceId: IntValue,
+    cooldownIncrease: FloatValue,
+    limitMaximumCooldown: BoolValue
+  ) => void
+  /**
+   * Set this creation's disruptor device by index.
+   * 设置造物扰动装置: 设置此造物使用的扰动装置序号。
+   */
+  setCreationDisruptorDevice: (deviceId: IntValue) => void
+  /**
+   * Activate or disable this creation's native push collision.
+   * 激活/关闭原生推挤碰撞: 按序号激活或关闭此造物的原生推挤碰撞。
+   */
+  activateDisableNativePushCollision: (collisionId: IntValue, activate: BoolValue) => void
+  /**
+   * Activate or disable this creation's extra push collision.
+   * 激活/关闭额外推挤碰撞: 按序号激活或关闭此造物的额外推挤碰撞。
+   */
+  activateDisableExtraPushCollision: (collisionId: IntValue, activate: BoolValue) => void
+  /**
+   * Switch the combat text filter template for this player.
+   * 切换战斗文字提示过滤模板: 为此玩家切换指定序号的战斗文字提示模板。
+   */
+  switchCombatTextFilterTemplate: (templateId: IntValue) => void
+  /**
+   * Send a signal to all client Lua scripts attached to this player.
+   * 发送客户端脚本信号: 向此玩家身上的所有客户端 Lua 脚本发送信号。
+   */
+  sendClientScriptedServerSignal<S extends LuaSignalDefinition>(
+    signal: S,
+    ...params: SignalParamValues<S>
+  ): void
+  sendClientScriptedServerSignal(signal: StrValue, ...params: unknown[]): void
   /**
    * Activate a Basic Motion Device configured within the Target Entity's Basic Motion Device Component
    *
@@ -1842,6 +1914,11 @@ interface EntityHelperFromFirstParam {
    */
   getCreationAttribute: () => {
     /**
+     * Creation weight.
+     * 造物重量: 当前造物的重量。
+     */
+    creationWeight: number
+    /**
      *
      * 等级
      */
@@ -2612,13 +2689,16 @@ interface EntityHelperFromFirstParam {
    * @param damagePopUpType No Pop-UpNormal Pop-UpCRIT Hit Pop-Up
    *
    * 伤害跳字类型: 无跳字普通跳字暴击跳字
+   * @param initiatorEntity Entity initiating the HP loss; omit to use the editor default.
+   * 发起者实体: 省略时使用编辑器默认值。
    */
   hpLoss: (
     hpLoss: FloatValue,
     lethal: BoolValue,
     canBeBlockedByInvincibility: BoolValue,
     canBeBlockedByLockedHp: BoolValue,
-    damagePopUpType: DamagePopUpType
+    damagePopUpType: DamagePopUpType,
+    initiatorEntity?: EntityValue
   ) => void
 
   /**
@@ -2680,6 +2760,8 @@ interface EntityHelperFromFirstParam {
    * @param initiatorEntity Determines the Initiator Entity for this attack. Defaults to the Entity associated with this Node Graph. Affects which attacker is identified in events such as On Hit and When Attacked
    *
    * 发起者实体: 决定了该次攻击的发起者实体，默认为该节点图所关联的实体。影响【攻击命中时】、【受到攻击时】等事件中判定的攻击者
+   * @param abilityUnitOwnerEntity Entity owning the ability unit; omit to use the editor default.
+   * 能力单元归属实体: 省略时使用编辑器默认值。
    */
   initiateAttack: (
     damageCoefficient: FloatValue,
@@ -2688,7 +2770,8 @@ interface EntityHelperFromFirstParam {
     rotationOffset: Vec3Value,
     abilityUnit: StrValue,
     overwriteAbilityUnitConfig: BoolValue,
-    initiatorEntity: EntityValue
+    initiatorEntity: EntityValue,
+    abilityUnitOwnerEntity?: EntityValue
   ) => void
 
   /**
@@ -5369,6 +5452,12 @@ interface EntityHelperAliases {
 
 interface EntityHelperMethodAliases {
   /**
+   * Send a signal to all client Lua scripts attached to this player.
+   * 发送客户端脚本信号: 向此玩家身上的所有客户端 Lua 脚本发送信号。
+   */
+  sendLua<S extends LuaSignalDefinition>(signal: S, ...params: SignalParamValues<S>): void
+  sendLua(signal: StrValue, ...params: unknown[]): void
+  /**
    * Destroy the specified Entity with a destruction effect. This can trigger logic that runs only after destruction, such as end-of-lifecycle behaviors for Local Projectiles; The [When Entity Is Destroyed] and [When Entity Is Removed/Destroyed] events can be monitored on Stage Entities
    *
    * 销毁实体: 销毁指定实体会产生销毁表现，也可能触发销毁后逻辑，例如本地投射物生命周期结束行为，或被销毁造物掉落能量球; 在关卡实体上可以监听到【实体销毁时】以及【实体移除/销毁时】事件
@@ -6646,7 +6735,20 @@ export type EntityHelperAll = EntityHelperFromFirstParam &
   EntityHelperMethodAliases &
   EntityHelperAliases
 
-type EntityHelperScoped = EntityHelperOverrides & EntityHelperMethodAliases & EntityHelperAliases
+type EntityHelperScoped = EntityHelperOverrides &
+  EntityHelperMethodAliases &
+  EntityHelperAliases &
+  Pick<
+    EntityHelperFromFirstParam,
+    | 'openGiftBoxInterface'
+    | 'setCdForSpecifiedSkillInstance'
+    | 'increaseCdForSpecifiedSkillInstance'
+    | 'setCreationDisruptorDevice'
+    | 'activateDisableNativePushCollision'
+    | 'activateDisableExtraPushCollision'
+    | 'switchCombatTextFilterTemplate'
+    | 'sendClientScriptedServerSignal'
+  >
 
 type EntityHelperKindByKey = {
   [K in keyof typeof ENTITY_HELPER_KIND_BY_KEY]: (typeof ENTITY_HELPER_KIND_BY_KEY)[K][number]

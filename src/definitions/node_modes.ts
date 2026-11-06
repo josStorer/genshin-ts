@@ -1,6 +1,12 @@
 import type { ServerGraphMode } from '../runtime/IR.js'
 
 export const NODE_TYPE_BY_METHOD = {
+  openGiftBoxInterface: 'beyond',
+  setCdForSpecifiedSkillInstance: 'beyond',
+  increaseCdForSpecifiedSkillInstance: 'beyond',
+  setCreationDisruptorDevice: 'beyond',
+  activateDisableNativePushCollision: 'beyond',
+  activateDisableExtraPushCollision: 'beyond',
   activateDisableCursorCollisionBox: 'beyond',
   addCharacterSkill: 'beyond',
   bindCustomSkillInstanceToSpecifiedSlot: 'beyond',
@@ -56,7 +62,6 @@ export const NODE_TYPE_BY_METHOD = {
   setCharacterSElementalEnergy: 'classic',
   setCharacterSkillCd: 'beyond',
   noOfTasksConfigured: 'beyond',
-  setPlayerCameraToFollowEntity: 'beyond',
   setPlayerActiveControlMotors: 'beyond',
   setPlayerSCursorClickSelectableTargets: 'beyond',
   setPlayerToFollowControlMotor: 'beyond',
@@ -69,7 +74,6 @@ export const NODE_TYPE_BY_METHOD = {
   setTheAggroValueOfSpecifiedEntity: 'beyond',
   switchMainCameraTemplate: 'beyond',
   tauntTarget: 'beyond',
-  resetPlayerCameraToFollowEntity: 'beyond',
   unbindAllSkillInstancesOnTheSlot: 'beyond',
   unbindSkillInstance: 'beyond',
   whenAggroTargetChanges: 'beyond',

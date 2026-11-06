@@ -3,11 +3,12 @@ import {
   parseMessage,
   readFieldBytes,
   readFieldMessages,
+  readFieldVarint,
   readVarint
 } from './binary.js'
 import type { LenField } from './types.js'
 
-type SignalNodeKind = 'send' | 'monitor' | 'sendServer'
+type SignalNodeKind = 'send' | 'monitor' | 'sendServer' | 'sendLua'
 
 type NodeGraphIdInfo = {
   class?: number
@@ -20,6 +21,7 @@ type SignalNodeIds = {
   send?: NodeGraphIdInfo
   monitor?: NodeGraphIdInfo
   sendServer?: NodeGraphIdInfo
+  sendLua?: NodeGraphIdInfo
 }
 
 export type SignalNodeIdMap = Map<string, SignalNodeIds>
@@ -44,7 +46,8 @@ const SIGNAL_NODE_TYPE_SKILLS = 20002
 const SIGNAL_NODE_ID_PLACEHOLDERS = new Map<number, SignalNodeKind>([
   [300000, 'send'],
   [300001, 'monitor'],
-  [300002, 'sendServer']
+  [300002, 'sendServer'],
+  [300005, 'sendLua']
 ])
 
 function parseNodeGraphId(buf: Uint8Array): NodeGraphIdInfo {
@@ -145,8 +148,15 @@ export function buildSignalNodeIdMapFromFields(
     if (!nodeId?.nodeId) continue
 
     const outputs = readFieldMessages(containerBytes, 103).length
-    const kind: SignalNodeKind | undefined =
-      nodeId.type === SIGNAL_NODE_TYPE_SKILLS ? 'sendServer' : outputs >= 3 ? 'monitor' : 'send'
+    const signalKind = readFieldVarint(signalDefBytes, 1)
+    const kind: SignalNodeKind =
+      signalKind === 1006
+        ? 'sendLua'
+        : nodeId.type === SIGNAL_NODE_TYPE_SKILLS
+          ? 'sendServer'
+          : outputs >= 3
+            ? 'monitor'
+            : 'send'
 
     const entry = result.get(signalName) ?? {}
     const existing = entry[kind]

@@ -1,4 +1,5 @@
 {
+  "runtime_luaSignalParamType": "[错误] Lua 信号的第 {{index}} 个参数使用了不支持的类型“{{type}}”",
   "lua_command": "Lua 工具",
   "lua_locateCommand": "将 Lua 报错行号定位到源码",
   "lua_locateArgument": "报错文本、日志文件路径或 文件.lua:行号；不填时读取剪贴板",

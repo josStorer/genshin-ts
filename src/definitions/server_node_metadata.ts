@@ -3,10 +3,12 @@
 
 /** Public server method arguments whose editor input pins cannot be connected. */
 export const SERVER_LITERAL_ARGUMENT_INDEXES_BY_METHOD = {
+  sendClientScriptedServerSignal: [1],
   setPlayerSCursorClickSelectableTargets: [1]
 } as const
 
 /** IR argument indexes keyed by server node type; consumed before physical pin remapping. */
 export const SERVER_LITERAL_ARGUMENT_INDEXES_BY_NODE_TYPE = {
+  send_client_scripted_server_signal: [1],
   set_player_s_cursor_click_selectable_targets: [1]
 } as const

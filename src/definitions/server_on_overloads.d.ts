@@ -286,9 +286,9 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * This event is triggered when an Entity's attack hits other Entities
+   * This event is triggered when an Entity's attack hits other Entities; includes whether the hit was critical.
    *
-   * 攻击命中时: 实体的攻击命中其他实体时，触发该事件
+   * 攻击命中时: 实体攻击命中其他实体时触发，包含是否暴击。
    */
   on(
     eventName: EventNameByLang<Mode, 'whenAttackHits', AllowZh>,
@@ -296,9 +296,9 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * This event is triggered when the Entity is attacked
+   * This event is triggered when the Entity is attacked; includes critical-hit status and hit level.
    *
-   * 受到攻击时: 实体受到攻击时触发该事件
+   * 受到攻击时: 实体受到攻击时触发，包含是否暴击和受击等级。
    */
   on(
     eventName: EventNameByLang<Mode, 'whenAttacked', AllowZh>,

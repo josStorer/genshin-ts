@@ -48,35 +48,52 @@ const rule: Rule.RuleModule = {
         }
 
         const tsNode = services.esTreeNodeToTSNodeMap.get(node)
-        if (
-          !tsNode ||
-          !ts.isCallExpression(tsNode) ||
-          !ts.isPropertyAccessExpression(tsNode.expression)
-        ) {
+        if (!tsNode || !ts.isCallExpression(tsNode)) {
           return
         }
 
-        const rawName = tsNode.expression.name.text
+        const callee = tsNode.expression
+        const globalSignal =
+          ts.isIdentifier(callee) && ['sendLua', 'sendLuaAll'].includes(callee.text)
+        if (!globalSignal && !ts.isPropertyAccessExpression(callee)) return
+        const rawName = ts.isIdentifier(callee)
+          ? callee.text
+          : (callee as ts.PropertyAccessExpression).name.text
+        const luaSignal = [
+          'sendLua',
+          'sendLuaAll',
+          'sendClientScriptedServerSignal',
+          '发送客户端脚本信号'
+        ].includes(rawName)
         const methodName = (SERVER_F_ZH_TO_EN as Record<string, string>)[rawName] ?? rawName
-        const indexes = (
-          SERVER_LITERAL_ARGUMENT_INDEXES_BY_METHOD as Record<string, readonly number[]>
-        )[methodName]
+        const indexes = luaSignal
+          ? [rawName === 'sendLuaAll' ? 0 : 1]
+          : (SERVER_LITERAL_ARGUMENT_INDEXES_BY_METHOD as Record<string, readonly number[]>)[
+              methodName
+            ]
         if (!indexes) return
 
-        const receiverType = checker.getTypeAtLocation(tsNode.expression.expression)
+        const receiverType = ts.isPropertyAccessExpression(callee)
+          ? checker.getTypeAtLocation(callee.expression)
+          : undefined
         const isEntityHelper = Boolean(
-          checker.getPropertyOfType(receiverType, '__entityRuntimeBrand')
+          receiverType && checker.getPropertyOfType(receiverType, '__entityRuntimeBrand')
         )
         const isServerFlowFunctions = Boolean(
-          checker.getPropertyOfType(receiverType, '__gstsEnsureVariable')
+          receiverType && checker.getPropertyOfType(receiverType, '__gstsEnsureVariable')
         )
-        if (!isEntityHelper && !isServerFlowFunctions) return
+        if (!globalSignal && !isEntityHelper && !isServerFlowFunctions) return
 
         for (const methodIndex of indexes) {
           const index = isEntityHelper ? methodIndex - 1 : methodIndex
           if (index < 0) continue
           const argument = tsNode.arguments[index]
           if (!argument || isLiteralArgument(argument, checker)) continue
+          if (
+            luaSignal &&
+            checker.getPropertyOfType(checker.getTypeAtLocation(argument), '__gstsSignal')
+          )
+            continue
           context.report({
             node: node.arguments[index] ?? node,
             message: formatMessage(

@@ -37,10 +37,16 @@ export const CLIENT_ENUM_VALUES: Record<string, number> = {
   pre_aiming_end_reason_none: 6800,
   pre_aiming_end_reason_completed: 6801,
   pre_aiming_end_reason_cancelled: 6802,
+  pre_aim_result_data_type_default: 6810,
+  pre_aim_result_data_type_current: 6811,
+  pre_aim_result_data_type_last_successful: 6812,
   ray_filter_type_hurtbox: 2601,
   ray_filter_type_scene: 2602,
   ray_filter_type_object_self_collision: 2605,
   ray_filter_type_cursor_hitbox: 2606,
+  ray_hit_filter_type_hurtbox: 2601,
+  ray_hit_filter_type_scene: 2602,
+  ray_hit_filter_type_object_self_collision: 2605,
   retracing_type_self: 3200,
   retracing_type_self_owner: 3201,
   retracing_type_top_layer_self_owner: 3202,
@@ -75,6 +81,11 @@ export const CLIENT_ENUM_VALUES: Record<string, number> = {
   tactic_type_ground_standoff: 6209,
   tactic_type_execute_patrol: 6210,
   tactic_type_rotate_towards_target_entity: 6211,
+  tactic_type_aerial_pursuit: 6212,
+  tactic_type_aerial_escape: 6213,
+  tactic_type_aerial_confrontation: 6214,
+  tactic_type_aerial_idling: 6215,
+  tactic_type_aerial_landing: 6216,
   target_entity_aggro_target: 6000,
   target_entity_self: 6003,
   target_entity_stage_entity: 6007,
@@ -158,7 +169,7 @@ export const ENUM_MATCH_ROWS_BY_GENERIC_ID: Record<
         values: [
           4701, 4702, 4703, 4704, 4705, 4706, 4707, 4708, 4709, 4710, 4711, 4712, 4713, 4714, 4715,
           4716, 4717, 4718, 4719, 4720, 4721, 4722, 4723, 4724, 4725, 4726, 4727, 4728, 4729, 4730,
-          4731, 4732, 4733, 4734, 4735, 4736, 4737, 4738, 4739, 4740, 4741, 4742, 4743
+          4731, 4732, 4733, 4734, 4735, 4736, 4737, 4738, 4739, 4740, 4741, 4742, 4743, 4744
         ]
       }
     ],
@@ -418,7 +429,7 @@ export const ENUM_MATCH_ROWS_BY_GENERIC_ID: Record<
         values: [
           4701, 4702, 4703, 4704, 4705, 4706, 4707, 4708, 4709, 4710, 4711, 4712, 4713, 4714, 4715,
           4716, 4717, 4718, 4719, 4720, 4721, 4722, 4723, 4724, 4725, 4726, 4727, 4728, 4729, 4730,
-          4731, 4732, 4733, 4734, 4735, 4736, 4737, 4738, 4739, 4740, 4741, 4742, 4743
+          4731, 4732, 4733, 4734, 4735, 4736, 4737, 4738, 4739, 4740, 4741, 4742, 4743, 4744
         ]
       }
     ],
@@ -561,7 +572,10 @@ export const ENUM_MATCH_ROWS_BY_GENERIC_ID: Record<
     tactic_type: [
       {
         ioc: 42,
-        values: [0, 6200, 6201, 6202, 6203, 6204, 6205, 6206, 6207, 6208, 6209, 6210, 6211]
+        values: [
+          0, 6200, 6201, 6202, 6203, 6204, 6205, 6206, 6207, 6208, 6209, 6210, 6211, 6212, 6213,
+          6214, 6215, 6216
+        ]
       }
     ],
     target_sorting_rules: [

@@ -30,6 +30,34 @@ export interface SingleNodeData extends NodePinsRecords {
 }
 
 export const NODE_PIN_RECORDS = [
+  { name: 'Open Gift Box Interface', id: 856, inputs: ['Ety', 'Int'], outputs: [] },
+  {
+    name: 'Set CD for Specified Skill Instance',
+    id: 857,
+    inputs: ['Ety', 'Int', 'Flt', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'Increase CD for Specified Skill Instance',
+    id: 858,
+    inputs: ['Ety', 'Int', 'Flt', 'Bol'],
+    outputs: []
+  },
+  { name: 'Set Creation Disruptor Device', id: 859, inputs: ['Ety', 'Int'], outputs: [] },
+  {
+    name: 'Activate/Disable Native Push Collision',
+    id: 860,
+    inputs: ['Ety', 'Int', 'Bol'],
+    outputs: []
+  },
+  {
+    name: 'Activate/Disable Extra Push Collision',
+    id: 861,
+    inputs: ['Ety', 'Int', 'Bol'],
+    outputs: []
+  },
+  { name: 'Switch Combat Text Filter Template', id: 3800, inputs: ['Ety', 'Int'], outputs: [] },
+  { name: 'Send Client Scripted ServerSignal', id: 300005, inputs: ['Ety', 'Str'], outputs: [] },
   { name: 'Print String', id: 1, inputs: ['Str'], outputs: [] },
   { name: 'Double Branch', id: 2, inputs: ['Bol'], outputs: [] },
   {
@@ -1224,7 +1252,7 @@ export const NODE_PIN_RECORDS = [
     ]
   },
   {
-    name: 'Modulo Operation',
+    name: 'Modulo',
     id: 208,
     inputs: ['Int', 'Int'],
     outputs: ['Int']
@@ -1723,20 +1751,20 @@ export const NODE_PIN_RECORDS = [
   {
     name: 'Initiate Attack',
     id: 303,
-    inputs: ['Ety', 'Flt', 'Flt', 'Vec', 'Vec', 'Str', 'Bol', 'Ety'],
+    inputs: ['Ety', 'Flt', 'Flt', 'Vec', 'Vec', 'Str', 'Bol', 'Ety', 'Ety'],
     outputs: []
   },
   {
     name: 'When Attacked',
     id: 304,
     inputs: [],
-    outputs: ['Ety', 'Gid', 'Ety', 'Flt', 'L<Str>', 'E<13>', 'Flt']
+    outputs: ['Ety', 'Gid', 'Ety', 'Flt', 'L<Str>', 'E<13>', 'Flt', 'Bol', 'E<44>']
   },
   {
     name: 'When Attack Hits',
     id: 305,
     inputs: [],
-    outputs: ['Ety', 'Gid', 'Ety', 'Flt', 'L<Str>', 'E<13>', 'Flt']
+    outputs: ['Ety', 'Gid', 'Ety', 'Flt', 'L<Str>', 'E<13>', 'Flt', 'Bol']
   },
   {
     name: 'Activate/Disable Tab',
@@ -2415,7 +2443,7 @@ export const NODE_PIN_RECORDS = [
     name: 'Get Creation Attribute',
     id: 381,
     inputs: ['Ety'],
-    outputs: ['Int', 'Flt', 'Flt', 'Flt', 'Flt', 'Flt', 'Flt', 'E<39>']
+    outputs: ['Int', 'Flt', 'Flt', 'Flt', 'Flt', 'Flt', 'Flt', 'E<39>', 'Flt']
   },
   {
     name: 'Switch Current Interface Layout',
@@ -3088,7 +3116,8 @@ export const NODE_PIN_RECORDS = [
       [776, 'S<T:E<40>>'],
       [777, 'S<T:E<41>>'],
       [851, 'S<T:E<42>>'],
-      [852, 'S<T:E<43>>']
+      [852, 'S<T:E<43>>'],
+      [862, 'S<T:E<44>>']
     ]
   },
   {
@@ -3821,7 +3850,7 @@ export const NODE_PIN_RECORDS = [
     name: 'Lose HP',
     id: 697,
     // damagePopUpType: DamagePopUpType -> virtual enum bucket: ENUM_ID.Damage_Pop_Up_Type = 51
-    inputs: ['Ety', 'Flt', 'Bol', 'Bol', 'Bol', 'E<51>'],
+    inputs: ['Ety', 'Flt', 'Bol', 'Bol', 'Bol', 'E<51>', 'Ety'],
     outputs: []
   },
   {
@@ -4259,7 +4288,7 @@ export const NODE_PIN_RECORDS = [
     outputs: ['Int']
   },
   {
-    name: 'Query Corresponding Gift Box Consumption Quantity',
+    name: 'Query Corresponding Gorgeous Performance Box Consumption Quantity',
     id: 774,
     inputs: ['Ety', 'Int'],
     outputs: ['Int']

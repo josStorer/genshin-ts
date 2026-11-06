@@ -14,6 +14,12 @@
 
 import fs from 'node:fs'
 
+// Published July members hidden from the November dropdown; retain their wire
+// values for existing scripts. Current options remain in mihoyo_editor_names.
+export const LEGACY_CLIENT_ELEMENTAL_REACTION_VALUES = new Set([
+  4704, 4709, 4710, 4711, 4713, 4714, 4715, 4721, 4722, 4723, 4724, 4725, 4726, 4732, 4738, 4739
+])
+
 type SeedOption = { order?: number; name: string; value: number }
 
 type CensusRow = {
@@ -70,7 +76,7 @@ export type ClientEnumBinding = {
   /** TS enum class for an enum output pin (undefined -> enumeration) */
   resolveReturn(zhParamName: string | undefined): string | undefined
   /** element enum class for an enum_list input pin (undefined -> EnumerationValue[]) */
-  resolveListParam(zhParamName: string | undefined): string | undefined
+  resolveListParam(zhParamName: string | undefined, genericId?: number): string | undefined
   /** element enum class for an enum_list output pin (undefined -> enumeration[]) */
   resolveListReturn(nodeType: string): string | undefined
   /** every bindable class (server + client-only), for same-class overload emission */
@@ -294,7 +300,12 @@ const CLIENT_ONLY_SPEC_BY_FAMILY_IOC42: Record<string, ClientOnlySpec> = {
       6208: 'ReturnToSpawnPointAfterLeavingBattle',
       6209: 'GroundStandoff',
       6210: 'ExecutePatrol',
-      6211: 'RotateTowardsTargetEntity'
+      6211: 'RotateTowardsTargetEntity',
+      6212: 'AerialPursuit',
+      6213: 'AerialEscape',
+      6214: 'AerialConfrontation',
+      6215: 'AerialIdling',
+      6216: 'AerialLanding'
     }
   }
 }
@@ -471,6 +482,30 @@ function memberZhName(className: string, zhClassName: string, optionName: string
 
 export function buildClientEnumBinding(): ClientEnumBinding {
   const seeds = SEED_PATHS.map((p) => JSON.parse(fs.readFileSync(p, 'utf8')) as EnumSeed)
+  const editorEnums = (
+    JSON.parse(fs.readFileSync('resources/mihoyo_editor_names.json', 'utf8')) as {
+      enums: Array<{ id: number; values: Array<{ value: number; nameZh: string }> }>
+    }
+  ).enums
+  for (const seed of seeds) {
+    for (const row of seed.enumMatchCensus.rows) {
+      const id =
+        row.ioc === 37
+          ? 200039
+          : row.ioc === 42 && seed.family === 'creation_status'
+            ? 200051
+            : undefined
+      if (id === undefined) continue
+      const current = editorEnums.find((entry) => entry.id === id)!
+      // Keep previously published values encodable even when the current
+      // dropdown hides them; resources/mihoyo_editor_names records its exact set.
+      const options = new Map(row.options.map((entry) => [entry.value, entry]))
+      for (const entry of current.values)
+        options.set(entry.value, { value: entry.value, name: entry.nameZh })
+      row.options = [...options.values()]
+      row.values = row.options.map((entry) => entry.value)
+    }
+  }
 
   const classByValue = new Map<number, string>()
   const classesByValueSet = new Map<string, Set<string>>()
@@ -606,6 +641,26 @@ export function buildClientEnumBinding(): ClientEnumBinding {
   // sampled-only classes share values with census classes (2601/2602 also
   // belong to AttackLayerConfig), so they never register in classByValue
   for (const { spec, options } of SAMPLED_ONLY_CLASSES) addClientOnlyClass(spec, options)
+  addClientOnlyClass(
+    {
+      className: 'RayHitFilterType',
+      zhName: '射线命中层筛选',
+      memberByValue: { 2601: 'Hurtbox', 2602: 'Scene', 2605: 'ObjectSelfCollision' }
+    },
+    editorEnums
+      .find((entry) => entry.id === 200053)!
+      .values.map((entry) => ({ value: entry.value, name: entry.nameZh }))
+  )
+  const preAimSpec = {
+    className: 'PreAimResultDataType',
+    zhName: '预瞄准结果数据获取类型',
+    memberByValue: { 6810: 'Default', 6811: 'Current', 6812: 'LastSuccessful' }
+  }
+  const preAimOptions = editorEnums
+    .find((entry) => entry.id === 200054)!
+    .values.map((entry) => ({ value: entry.value, name: entry.nameZh }))
+  addClientOnlyClass(preAimSpec, preAimOptions)
+  for (const option of preAimOptions) bindValue(option.value, preAimSpec.className)
 
   // explicit (genericId / displayName) bindings for pins whose editor default
   // is 0: the value alone cannot identify the class there
@@ -671,6 +726,9 @@ export function buildClientEnumBinding(): ClientEnumBinding {
 
   return {
     resolve(record, pin, zhParamName) {
+      if (record.genericId === 200301 && pin.index === 0) return 'TargetEntity'
+      if (record.genericId === 200302 && pin.index > 0) return 'RayHitFilterType'
+      if (record.genericId === 200312 && pin.index > 0) return 'EntityType'
       const v = pin.defaultValue
       if (typeof v === 'number' && v > 0) return classByValue.get(v)
       return (
@@ -682,7 +740,8 @@ export function buildClientEnumBinding(): ClientEnumBinding {
     resolveReturn(zhParamName) {
       return zhParamName ? CLASS_BY_ZH_RETURN[zhParamName] : undefined
     },
-    resolveListParam(zhParamName) {
+    resolveListParam(zhParamName, genericId) {
+      if (genericId === 200301 && zhParamName === '命中层筛选') return 'RayHitFilterType'
       return zhParamName ? LIST_CLASS_BY_ZH_PARAM[zhParamName] : undefined
     },
     resolveListReturn(nodeType) {

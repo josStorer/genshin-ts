@@ -140,6 +140,14 @@ export const SERVER_EVENT_EN_TO_ZH = {
 } as const
 
 export const SERVER_F_ZH_TO_EN = {
+  打开礼盒界面: 'openGiftBoxInterface',
+  设置指定技能实例冷却: 'setCdForSpecifiedSkillInstance',
+  增加指定技能实例冷却: 'increaseCdForSpecifiedSkillInstance',
+  设置造物扰动装置: 'setCreationDisruptorDevice',
+  '激活/关闭原生推挤碰撞': 'activateDisableNativePushCollision',
+  '激活/关闭额外推挤碰撞': 'activateDisableExtraPushCollision',
+  切换战斗文字提示过滤模板: 'switchCombatTextFilterTemplate',
+  发送客户端脚本信号: 'sendClientScriptedServerSignal',
   三维向量加法: '_3dVectorAddition',
   三维向量夹角: '_3dVectorAngle',
   三维向量后方: '_3dVectorBackward',
@@ -568,6 +576,14 @@ export const SERVER_F_ZH_TO_EN = {
 } as const
 
 export const SERVER_F_EN_TO_ZH = {
+  openGiftBoxInterface: '打开礼盒界面',
+  setCdForSpecifiedSkillInstance: '设置指定技能实例冷却',
+  increaseCdForSpecifiedSkillInstance: '增加指定技能实例冷却',
+  setCreationDisruptorDevice: '设置造物扰动装置',
+  activateDisableNativePushCollision: '激活/关闭原生推挤碰撞',
+  activateDisableExtraPushCollision: '激活/关闭额外推挤碰撞',
+  switchCombatTextFilterTemplate: '切换战斗文字提示过滤模板',
+  sendClientScriptedServerSignal: '发送客户端脚本信号',
   _3dVectorAddition: '三维向量加法',
   _3dVectorAngle: '三维向量夹角',
   _3dVectorBackward: '三维向量后方',

@@ -35,6 +35,10 @@ const ENUM_VALUE_LOWER = new Map<string, { enumId: number; enumValue: number }>(
 )
 
 export const ENUM_VALUE_MAPPINGS: Record<string, { enumId: number; enumValue: number }> = {
+  character_skill_slot_jump_skill: {
+    enumId: ENUM_ID.Skill_Slot,
+    enumValue: ENUM_VALUE.SkillSlot_JumpSkill
+  },
   // enum.ts 使用的是更直观的“单数”value key，但上游 vendor 的 ENUM_VALUE 多数是“复数”前缀；
   // 这里做一次性桥接，避免 parseEnumValue 找不到键
   comparison_operator_equal_to: {
@@ -418,6 +422,7 @@ export const ENUM_VALUE_MAPPINGS: Record<string, { enumId: number; enumValue: nu
 }
 
 export const SPECIAL_NODE_IDS: Record<string, number> = {
+  send_client_scripted_server_signal: 300005,
   send_signal: 300000,
   monitor_signal: 300001,
   assemble_structure: 300002,

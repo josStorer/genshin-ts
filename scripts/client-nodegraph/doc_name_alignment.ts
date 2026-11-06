@@ -15,6 +15,7 @@
  * repeated until a fixpoint. Results are aggregated globally with conflicts
  * reported instead of guessed.
  */
+
 import fs from 'node:fs'
 
 export type DocParam = {
@@ -79,6 +80,9 @@ export type DocAlignment = {
  * absent fails the build instead of silently mis-mapping.
  */
 const SEED_ZH_TO_EN: Record<string, string> = {
+  屏幕坐标转视口坐标: 'Convert Screen Coordinates to Viewport Coordinates',
+  视口坐标转屏幕坐标: 'Convert Viewport Coordinates to Screen Coordinates',
+  屏幕坐标转世界坐标: 'Convert Screen Coordinates to World Coordinates',
   // comparators / logic / trig / math clusters (identical fingerprints)
   是否大于: 'Greater Than',
   是否小于: 'Less Than',
@@ -210,6 +214,14 @@ const SEED_ZH_TO_EN: Record<string, string> = {
  * params not listed fall back to positional idents in codegen.
  */
 const ZH_ONLY_SEED: Record<string, { en: string; params?: Record<string, string> }> = {
+  获取前一帧执行战术: {
+    en: 'Get Previous Frame Execution Tactic',
+    params: {
+      战术类型: 'Tactic Type',
+      战术上下文: 'Tactic Context',
+      战术持续时长: 'Tactic Duration'
+    }
+  },
   // coordinate conversions (超限模式)
   世界坐标转屏幕坐标: {
     en: 'World Coordinates to Screen Coordinates',
@@ -274,7 +286,11 @@ const ZH_ONLY_SEED: Record<string, { en: string; params?: Record<string, string>
   },
   获取光标命中结果: {
     en: 'Get Cursor Hit Result',
-    params: { 命中实体列表: 'Hit Entity List', 命中位置列表: 'Hit Position List', 命中数量: 'Hit Count' }
+    params: {
+      命中实体列表: 'Hit Entity List',
+      命中位置列表: 'Hit Position List',
+      命中数量: 'Hit Count'
+    }
   },
   获取光标屏幕坐标: {
     en: 'Get Cursor Screen Coordinates',
@@ -295,7 +311,10 @@ const ZH_ONLY_SEED: Record<string, { en: string; params?: Record<string, string>
   },
   '获取当前客户端时间（高精度）': {
     en: 'Get Current Client Time (High Precision)',
-    params: { '客户端时间（s）': 'Client Time Seconds', '客户端时间（ms）': 'Client Time Milliseconds' }
+    params: {
+      '客户端时间（s）': 'Client Time Seconds',
+      '客户端时间（ms）': 'Client Time Milliseconds'
+    }
   },
   // control motor
   使操控运动器转换至非接地状态: {
@@ -629,7 +648,9 @@ function alignSection(
     for (const zh of [...zhPool]) {
       const expectedEn = SEED_ZH_TO_EN[zh.name]
       if (!expectedEn) continue
-      const candidates = enPool.filter((en) => canonicalEnName(en.name) === canonicalEnName(expectedEn))
+      const candidates = enPool.filter(
+        (en) => canonicalEnName(en.name) === canonicalEnName(expectedEn)
+      )
       if (candidates.length === 1) {
         take(zh, candidates[0], 'seed')
         changed = true
@@ -644,9 +665,7 @@ function alignSection(
   return { matches, unresolvedZh: zhPool, unresolvedEn: enPool }
 }
 
-export function buildDocNameAlignment(
-  defsPath = 'resources/node_definitions.json'
-): DocAlignment {
+export function buildDocNameAlignment(defsPath = 'resources/node_definitions.json'): DocAlignment {
   const defs = JSON.parse(fs.readFileSync(defsPath, 'utf8')) as Record<string, unknown>
 
   const seedMisses: DocAlignmentReport['seedMisses'] = []
@@ -715,6 +734,28 @@ export function buildDocNameAlignment(
       if (s < enSectionCount && !pairedEn.has(s)) unresolvedEn.push(...enSections[s])
       allMatches.push(...matches)
       for (const zh of unresolvedZh) {
+        // November translations moved whole sections and still omit several
+        // new pins. Keep the reviewed Chinese-name mapping for these entries.
+        const seed = ZH_ONLY_SEED[zh.name]
+        if (seed) {
+          allMatches.push({
+            zh,
+            en: {
+              page: zh.page,
+              section: zh.section,
+              name: seed.en,
+              functions: [],
+              params: zh.params.map((p) => ({
+                io: p.io,
+                name: seed.params?.[p.name] ?? (p.name === '获取类型' ? 'Result Data Type' : ''),
+                dataType: p.dataType,
+                description: ''
+              }))
+            },
+            provenance: 'seed'
+          })
+          continue
+        }
         unresolved.push({
           page: slug,
           section: s,
@@ -758,7 +799,10 @@ export function buildDocNameAlignment(
 
     const variants: AlignedDocNode[] = []
     for (const [groupIndex, group] of groups.entries()) {
-      const votes = new Map<string, { count: number; clientPage: boolean; matches: SectionMatch[] }>()
+      const votes = new Map<
+        string,
+        { count: number; clientPage: boolean; matches: SectionMatch[] }
+      >()
       for (const m of group) {
         const enName = canonicalEnName(m.en.name)
         const vote = votes.get(enName) ?? { count: 0, clientPage: false, matches: [] }

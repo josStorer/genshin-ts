@@ -806,7 +806,8 @@ const TYPE_LIST_BUILDER_NODE_TYPES = new Set(['get_entity_type_list', 'get_ray_f
 /** enum_list 字面量可展开的构造节点，按枚举值 key 前缀识别类 */
 const TYPE_LIST_BUILDER_BY_ENUM_PREFIX = [
   { prefix: 'entity_type_', nodeType: 'get_entity_type_list' },
-  { prefix: 'ray_filter_type_', nodeType: 'get_ray_filter_type_list' }
+  { prefix: 'ray_filter_type_', nodeType: 'get_ray_filter_type_list' },
+  { prefix: 'ray_hit_filter_type_', nodeType: 'get_ray_filter_type_list' }
 ] as const
 
 /**
@@ -828,7 +829,7 @@ function expandEnumListLiterals(nodes: IRNode[], subType: string): IRNode[] {
         throw clientNodegraphError(
           CLIENT_ERROR_CODES.VALUE_TYPE_UNAVAILABLE,
           `${subType}.${node.type} arg #${idx}: enum list literals must be 1-10 values of ` +
-            `EntityType or RayFilterType (the editor only wires these pins from type list ` +
+            `EntityType, RayFilterType or RayHitFilterType (the editor only wires these pins from type list ` +
             `builder nodes), got ${JSON.stringify(arg.value)}`
         )
       }

@@ -8,6 +8,7 @@ import { EntityType, RoundingMode } from '../definitions/enum.js'
 import { DataTypeConversionMap, parseValue } from '../definitions/nodes.js'
 import { callActiveGraphFunction, getActiveGraphFunctions } from './active_graph_functions.js'
 import type { MetaCallRegistry, SignalDefinition, SignalParamValues } from './core.js'
+import type { LuaSignalDefinition } from './signal_definition.js'
 import {
   bool,
   BoolValue,
@@ -418,6 +419,8 @@ export type ServerGlobalFactories = {
   print: (string: StrValue) => void
   send: (<S extends SignalDefinition>(signalName: S, ...params: SignalParamValues<S>) => void) &
     ((signalName: StrValue, ...params: any[]) => void)
+  sendLua: typeof sendLua
+  sendLuaAll: typeof sendLuaAll
   player: (playerId: IntValue) => PlayerEntity
   setTimeout: (handler: (evt: unknown, f: unknown) => void, delayMs?: FloatValue) => string
   setInterval: (handler: (evt: unknown, f: unknown) => void, delayMs?: FloatValue) => string
@@ -608,6 +611,36 @@ function makeFactories(): ServerGlobalFactories {
       ensureServerCtx('send')
       gsts.f.sendSignal(signalName as any, ...params)
     },
+    sendLua: (
+      target: PlayerEntity,
+      signal: StrValue | LuaSignalDefinition,
+      ...params: unknown[]
+    ) => {
+      ensureServerCtx('sendLua')
+      if (typeof signal === 'object' && '__gstsSignal' in signal) {
+        gsts.f.sendClientScriptedServerSignal(
+          target,
+          signal,
+          ...(params as SignalParamValues<LuaSignalDefinition>)
+        )
+      } else {
+        gsts.f.sendClientScriptedServerSignal(target, signal, ...params)
+      }
+    },
+    sendLuaAll: (signal: StrValue | LuaSignalDefinition, ...params: unknown[]) => {
+      ensureServerCtx('sendLuaAll')
+      gsts.f.listIterationLoop(gsts.f.getListOfPlayerEntitiesOnTheField(), (target) => {
+        if (typeof signal === 'object' && '__gstsSignal' in signal) {
+          gsts.f.sendClientScriptedServerSignal(
+            target,
+            signal,
+            ...(params as SignalParamValues<LuaSignalDefinition>)
+          )
+        } else {
+          gsts.f.sendClientScriptedServerSignal(target, signal, ...params)
+        }
+      })
+    },
     player: (playerId: IntValue) => {
       ensureServerCtx('player')
       const guidValue = gsts.f.getPlayerGuidByPlayerId(playerId)
@@ -673,6 +706,8 @@ const SCOPED_NAMES: (keyof ServerGlobalFactories)[] = [
   'clearInterval',
   'print',
   'send',
+  'sendLua',
+  'sendLuaAll',
   'player'
 ]
 

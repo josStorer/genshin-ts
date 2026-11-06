@@ -2,6 +2,7 @@
 
 /** Enum type ids; EnumEqual-supported types also use these as IndexOfConcrete. */
 export const ENUM_ID = {
+  Hit_Level: 44,
   Generic: 0,
   Comparison_Operators: 1,
   Logical_Operators: 2,
@@ -132,6 +133,11 @@ export const ENUM_ID_CLIENT = {
 export type EnumIdClient = (typeof ENUM_ID_CLIENT)[keyof typeof ENUM_ID_CLIENT]
 
 export const ENUM_VALUE = {
+  HitLevel_NoEffect: 3900,
+  HitLevel_LightTremor: 3901,
+  HitLevel_LightHit: 3902,
+  HitLevel_KnockbackHit: 3903,
+  HitLevel_Launch: 3904,
   Default: 0,
   True: 1,
   ComparisonOperators_EqualTo: 100,
@@ -270,6 +276,7 @@ export const ENUM_VALUE = {
   HitPerformanceLevel_LongRangeThrow: 2410,
   SkillSlot_NormalAttack: 3100,
   SkillSlot_DashSkill: 3102,
+  SkillSlot_JumpSkill: 3103,
   SkillSlot_SprintSkill: 3102,
   SkillSlot_1E: 3111,
   SkillSlot_Skill1E: 3111,
@@ -360,6 +367,7 @@ export const ENUM_VALUE = {
   ElementalReactionType_LunarBloom: 4741,
   ElementalReactionType_LunarCrystallize: 4742,
   ElementalReactionType_StellarConduct: 4743,
+  ElementalReactionType_StellarSwirl: 4744,
   InterruptStatus_InterruptResistanceStatus: 5200,
   InterruptStatus_InterruptVulnerabilityStatus: 5201,
   InterruptStatus_InterruptVulnerableState: 5201,
@@ -428,11 +436,6 @@ export const ENUM_VALUE = {
   // RetracingType_Self: 3200,
   // RetracingType_SelfOwner: 3201,
   // RetracingType_TopLayerSelfOwner: 3202,
-  // HitLevel_NoEffect: 3900,
-  // HitLevel_LightTremor: 3901,
-  // HitLevel_LightHit: 3902,
-  // HitLevel_KnockbackHit: 3903,
-  // HitLevel_Launch: 3904,
   // FilterReturnType_ReturnBoolean: 1000010,
   // FilterReturnType_ReturnDefault: 1000011,
   // FilterReturnType_ReturnInteger: 10000011,

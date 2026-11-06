@@ -8,6 +8,7 @@ import {
   guid,
   vec3
 } from '../runtime/value.js'
+import type { HitLevel } from './client_enums.js'
 import {
   CauseOfBeingDown,
   ComparisonOperator,
@@ -629,6 +630,13 @@ export type ServerEventPayloads = {
      * 元素攻击强效: 攻击包含的元素含量
      */
     elementalAttackPotency: number
+    /**
+     * Whether the attack was a critical hit.
+     * CRIT Hit or Not
+     *
+     * 是否暴击: 此次攻击是否暴击。
+     */
+    isCriticalHit: boolean
   }
   /**
    * This event is triggered when the Entity is attacked
@@ -673,6 +681,18 @@ export type ServerEventPayloads = {
      * 元素攻击强效: 攻击包含的元素含量
      */
     elementalAttackPotency: number
+    /**
+     * Whether the attack was a critical hit.
+     * CRIT Hit or Not
+     *
+     * 是否暴击: 此次攻击是否暴击。
+     */
+    isCriticalHit: boolean
+    /**
+     * Hit reaction level of the received attack.
+     * 受击等级: 此次攻击的受击反应等级。
+     */
+    hitLevel: HitLevel
   }
   /**
    * This event is triggered when an Entity is attacked and enters the Vulnerable Status

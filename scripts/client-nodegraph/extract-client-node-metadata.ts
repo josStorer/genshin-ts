@@ -306,6 +306,44 @@ function applyEditorStaticMetadata(records: NodeRecord[], modeData: ClientNodeMo
     sourceSubType: ClientGraphSubType | 'static'
   }> = []
 
+  // November editor fixed-id nodes. Pins come from the same static resource as the ids.
+  const novemberSeeds: Array<[number, number, string]> = [
+    [200301, 3014, 'get_ray_detection_result'],
+    [200302, 3015, 'get_ray_filter_type_list'],
+    [200303, 4029, 'tactic_aerial_landing'],
+    [200307, 4227, 'whether_the_entity_has_the_specified_unit_status'],
+    [200308, 4025, 'tactic_aerial_pursuit'],
+    [200309, 4026, 'tactic_aerial_escape'],
+    [200310, 4027, 'tactic_aerial_confrontation'],
+    [200311, 4028, 'tactic_aerial_idling'],
+    [200312, 1031, 'get_entity_type_list']
+  ]
+  const staticData = JSON.parse(
+    fs.readFileSync(CLIENT_NODE_STATIC_METADATA_PATH, 'utf8')
+  ) as ClientNodeStaticMetadata
+  const editorNames = JSON.parse(fs.readFileSync('resources/mihoyo_editor_names.json', 'utf8')) as {
+    nodes: Array<{ genericId: number; nameZh: string }>
+  }
+  for (const [genericId, concreteId, nodeType] of novemberSeeds) {
+    const node = staticData.nodes.find((candidate) => candidate.genericId === genericId)!
+    const pins: PinRecord[] = node.pins.map((pin) => ({
+      index: pin.index,
+      kind: pin.kind,
+      clientVarType: pin.clientVarType,
+      type: pin.clientVarType === undefined ? 'flow' : CLIENT_VAR_TYPE_NAMES[pin.clientVarType]
+    }))
+    staticSeeds.set(genericId, {
+      nodeType,
+      genericId,
+      concreteId,
+      displayName: editorNames.nodes.find((candidate) => candidate.genericId === genericId)!.nameZh,
+      inputs: pins.filter((pin) => pin.kind === 'input'),
+      outputs: pins.filter((pin) => pin.kind === 'output'),
+      flows: pins.filter((pin) => pin.kind === 'in_flow' || pin.kind === 'out_flow'),
+      sampleFile: `BeyondEditorStatic/${node.sourceFile}`
+    })
+  }
+
   for (const [subType, graph] of Object.entries(modeData.graphs) as Array<
     [ClientGraphSubType, ClientNodeModeData['graphs'][ClientGraphSubType]]
   >) {
@@ -479,6 +517,23 @@ function applyStaticPinMetadata(records: NodeRecord[], aggregates: GidAggregate[
       throw new Error(`[error] missing static metadata for genericId ${record.genericId}`)
     }
     const flows = (record.flows ??= [])
+    // New fixed pins are absent from the older exported sample corpus.
+    if ([200252, 200276, 200277, 200278, 200280, 200281, 200282].includes(record.genericId)) {
+      for (const pin of staticNode.pins) {
+        const target =
+          pin.kind === 'input' ? record.inputs : pin.kind === 'output' ? record.outputs : undefined
+        if (!target || target.some((candidate) => candidate.index === pin.index)) continue
+        if (pin.clientVarType === undefined || pin.variants?.length) {
+          throw new Error(`[error] expected a fixed static pin on ${record.genericId}:${pin.index}`)
+        }
+        target.push({
+          index: pin.index,
+          kind: pin.kind,
+          clientVarType: pin.clientVarType,
+          type: CLIENT_VAR_TYPE_NAMES[pin.clientVarType]
+        })
+      }
+    }
     for (const staticPin of staticNode.pins) {
       if (staticPin.kind !== 'in_flow' && staticPin.kind !== 'out_flow') continue
       if (flows.some((pin) => pin.kind === staticPin.kind && pin.index === staticPin.index))
@@ -520,6 +575,12 @@ function applyStaticPinMetadata(records: NodeRecord[], aggregates: GidAggregate[
           )
         }
         if (!staticPin.connectable) {
+          // These July samples predate the November removal of the scale socket.
+          if (
+            ([200051, 200112].includes(aggregate.genericId) && pin.index === 9) ||
+            ([200059, 200115].includes(aggregate.genericId) && pin.index === 10)
+          )
+            continue
           throw new Error(
             `[error] sample connects literal-only input ${aggregate.genericId} pin #${pin.index}`
           )
@@ -1427,6 +1488,7 @@ function main() {
     throw new Error(`[error] client sample root not found: ${sampleRoot}`)
   }
   const historicalNodeTypeByKey = new Map<string, string>()
+  const historicalSampleByKey = new Map<string, string>()
   if (fs.existsSync(CLIENT_NODE_METADATA_PATH)) {
     const historicalRecords = JSON.parse(
       fs.readFileSync(CLIENT_NODE_METADATA_PATH, 'utf8')
@@ -1440,6 +1502,7 @@ function main() {
         )
       }
       historicalNodeTypeByKey.set(key, record.nodeType)
+      historicalSampleByKey.set(key, record.sampleFile)
     }
   }
   const modeData = JSON.parse(fs.readFileSync(CLIENT_NODE_MODES_PATH, 'utf8')) as ClientNodeModeData
@@ -1688,7 +1751,7 @@ function main() {
       inputs,
       outputs,
       ...(flows.length ? { flows } : {}),
-      sampleFile: agg.exampleFile
+      sampleFile: historicalSampleByKey.get(`${agg.subType}:${agg.genericId}`) ?? agg.exampleFile
     }
 
     if (concreteIds.size > 1 || reflectiveInputIndexes.length > 0) {

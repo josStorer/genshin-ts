@@ -11,7 +11,9 @@ export type ClientEnumerationTypeMap = {
   HitLevel: HitLevel
   KnockbackDirectionType: KnockbackDirectionType
   PreAimingEndReason: PreAimingEndReason
+  PreAimResultDataType: PreAimResultDataType
   RayFilterType: RayFilterType
+  RayHitFilterType: RayHitFilterType
   RetracingType: RetracingType
   RotationDirection: RotationDirection
   RotationType: RotationType
@@ -245,6 +247,44 @@ export class PreAimingEndReason extends enumeration {
   ) as PreAimingEndReason
 }
 
+/** 预瞄准结果数据获取类型 */
+export class PreAimResultDataType extends enumeration {
+  declare private readonly __brandPreAimResultDataType: 'PreAimResultDataType'
+  private constructor() {
+    super('')
+    // 防止用户通过字符串传参构造枚举导致的意外行为
+    throw new Error('you should not create an enum instance')
+  }
+
+  /**
+   * Default
+   *
+   * 默认
+   */
+  static readonly Default = new enumeration(
+    'PreAimResultDataType',
+    'pre_aim_result_data_type_default'
+  ) as PreAimResultDataType
+  /**
+   * Current
+   *
+   * 当前
+   */
+  static readonly Current = new enumeration(
+    'PreAimResultDataType',
+    'pre_aim_result_data_type_current'
+  ) as PreAimResultDataType
+  /**
+   * LastSuccessful
+   *
+   * 上一次成功
+   */
+  static readonly LastSuccessful = new enumeration(
+    'PreAimResultDataType',
+    'pre_aim_result_data_type_last_successful'
+  ) as PreAimResultDataType
+}
+
 /** 射线筛选类型 */
 export class RayFilterType extends enumeration {
   declare private readonly __brandRayFilterType: 'RayFilterType'
@@ -287,6 +327,44 @@ export class RayFilterType extends enumeration {
     'RayFilterType',
     'ray_filter_type_cursor_hitbox'
   ) as RayFilterType
+}
+
+/** 射线命中层筛选 */
+export class RayHitFilterType extends enumeration {
+  declare private readonly __brandRayHitFilterType: 'RayHitFilterType'
+  private constructor() {
+    super('')
+    // 防止用户通过字符串传参构造枚举导致的意外行为
+    throw new Error('you should not create an enum instance')
+  }
+
+  /**
+   * Hurtbox
+   *
+   * 受击盒
+   */
+  static readonly Hurtbox = new enumeration(
+    'RayHitFilterType',
+    'ray_hit_filter_type_hurtbox'
+  ) as RayHitFilterType
+  /**
+   * Scene
+   *
+   * 场景
+   */
+  static readonly Scene = new enumeration(
+    'RayHitFilterType',
+    'ray_hit_filter_type_scene'
+  ) as RayHitFilterType
+  /**
+   * ObjectSelfCollision
+   *
+   * 物件自身碰撞
+   */
+  static readonly ObjectSelfCollision = new enumeration(
+    'RayHitFilterType',
+    'ray_hit_filter_type_object_self_collision'
+  ) as RayHitFilterType
 }
 
 /** 溯源类型 */
@@ -657,6 +735,51 @@ export class TacticType extends enumeration {
   static readonly RotateTowardsTargetEntity = new enumeration(
     'TacticType',
     'tactic_type_rotate_towards_target_entity'
+  ) as TacticType
+  /**
+   * AerialPursuit
+   *
+   * 战术：空中追击
+   */
+  static readonly AerialPursuit = new enumeration(
+    'TacticType',
+    'tactic_type_aerial_pursuit'
+  ) as TacticType
+  /**
+   * AerialEscape
+   *
+   * 战术：空中逃跑
+   */
+  static readonly AerialEscape = new enumeration(
+    'TacticType',
+    'tactic_type_aerial_escape'
+  ) as TacticType
+  /**
+   * AerialConfrontation
+   *
+   * 战术：空中对峙
+   */
+  static readonly AerialConfrontation = new enumeration(
+    'TacticType',
+    'tactic_type_aerial_confrontation'
+  ) as TacticType
+  /**
+   * AerialIdling
+   *
+   * 战术：空中闲逛
+   */
+  static readonly AerialIdling = new enumeration(
+    'TacticType',
+    'tactic_type_aerial_idling'
+  ) as TacticType
+  /**
+   * AerialLanding
+   *
+   * 战术：空中降落
+   */
+  static readonly AerialLanding = new enumeration(
+    'TacticType',
+    'tactic_type_aerial_landing'
   ) as TacticType
 }
 
