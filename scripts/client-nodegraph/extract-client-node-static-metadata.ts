@@ -403,7 +403,7 @@ function main() {
   const selectedIds = new Set<number>()
   if (serverMode) {
     for (const record of NODE_PIN_RECORDS) {
-      if (record.id < 200000) selectedIds.add(record.id)
+      if (record.id < 200000 || record.id === 300005) selectedIds.add(record.id)
     }
   } else {
     clientIds.forEach((id) => selectedIds.add(id))

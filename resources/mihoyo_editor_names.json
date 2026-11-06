@@ -2,28 +2,28 @@
   "formatVersion": 1,
   "source": {
     "encoding": "xor-0xe5 protobuf wire format",
-    "nodeFiles": 799,
-    "nodeAggregateSha256": "9cf2a0d142d301c9faec297d5bcec01ac433ad55efa2d06dd611ca6151bc76be",
+    "nodeFiles": 816,
+    "nodeAggregateSha256": "8013171a6061aebb88fcf2f8f0be956c3cd4558ba6ba3e1fd926680af5cfa1eb",
     "chsTextMapFile": "17720714722766726369.mihoyobin",
-    "chsTextMapSha256": "355815f5143c6749b9341ff62b0a6d6dbd751664c4e3c6f00bc9bcd6c37b3e48",
+    "chsTextMapSha256": "c537bffdb9a4ef63187b6e525cef75f50598bed885fd39393077cfe91c30771f",
     "enTextMapFile": "6246370240741975437.mihoyobin",
-    "enTextMapSha256": "f5d0426e304cbda2e6249cea77fca11346ce9228accb35bee7c712708f231741",
+    "enTextMapSha256": "cbb4caa118c7e6b2f5e7fee50c5beee0dd2a8e13aad3e118344ebc669b555d8d",
     "beyondGlobalFile": "18125831855067188558.mihoyobin",
-    "beyondGlobalSha256": "91c2d65a7ed5f2ecfc15ea8186ca125e7a30a00914a4b4f142f3b184e7c828b0"
+    "beyondGlobalSha256": "68ac357c53d0f60d868a1cba738a5cede98bf557bba6e04aeeae914ebb7271a6"
   },
   "summary": {
-    "nodes": 799,
-    "namedNodesZh": 799,
-    "namedNodesEn": 799,
-    "pinNameHashes": 4048,
-    "namedPinsZh": 3298,
-    "namedPinsEn": 3298,
-    "enums": 102,
-    "enumValues": 501,
+    "nodes": 816,
+    "namedNodesZh": 816,
+    "namedNodesEn": 816,
+    "pinNameHashes": 4232,
+    "namedPinsZh": 3461,
+    "namedPinsEn": 3461,
+    "enums": 104,
+    "enumValues": 499,
     "unknownZh": 0,
     "unknownEn": 0,
-    "emptyZh": 750,
-    "emptyEn": 750
+    "emptyZh": 771,
+    "emptyEn": 771
   },
   "nodes": [
     {
@@ -3424,8 +3424,8 @@
       "genericId": 208,
       "sourceFile": "Node/13077876317915511435.mihoyobin",
       "nameHash": 4033553938,
-      "nameZh": "模运算",
-      "nameEn": "Modulo Operation",
+      "nameZh": "余运算",
+      "nameEn": "Modulo",
       "pins": [
         {
           "kind": "input",
@@ -4882,6 +4882,10 @@
           "nameHash": 2663156607,
           "nameZh": "目标实体",
           "nameEn": "Target Entity"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -4908,6 +4912,10 @@
           "nameHash": 361331587,
           "nameZh": "玩家实体列表",
           "nameEn": "Player Entity List"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -4941,6 +4949,10 @@
           "nameHash": 2639633311,
           "nameZh": "目标实体",
           "nameEn": "Target Entity"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -4967,6 +4979,10 @@
           "nameHash": 699893555,
           "nameZh": "玩家实体列表",
           "nameEn": "Player Entity List"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -5014,6 +5030,10 @@
           "nameHash": 3708926473,
           "nameZh": "震源距离",
           "nameEn": "Shake Source Distance"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -6200,6 +6220,13 @@
           "nameHash": 4123779691,
           "nameZh": "发起者实体",
           "nameEn": "Initiator Entity"
+        },
+        {
+          "kind": "input",
+          "index": 8,
+          "nameHash": 4106781295,
+          "nameZh": "能力单元所属实体",
+          "nameEn": "Ability Unit Parent Entity"
         }
       ]
     },
@@ -6263,6 +6290,20 @@
           "nameHash": 20888072,
           "nameZh": "元素攻击强效",
           "nameEn": "Elemental Attack Potency"
+        },
+        {
+          "kind": "output",
+          "index": 7,
+          "nameHash": 870069812,
+          "nameZh": "是否暴击",
+          "nameEn": "CRIT Hit or Not"
+        },
+        {
+          "kind": "output",
+          "index": 8,
+          "nameHash": 4244847612,
+          "nameZh": "受击等级",
+          "nameEn": "Hit Level"
         }
       ]
     },
@@ -6326,6 +6367,13 @@
           "nameHash": 2900680224,
           "nameZh": "元素攻击强效",
           "nameEn": "Elemental Attack Potency"
+        },
+        {
+          "kind": "output",
+          "index": 7,
+          "nameHash": 1784694732,
+          "nameZh": "是否暴击",
+          "nameEn": "CRIT Hit or Not"
         }
       ]
     },
@@ -7064,6 +7112,10 @@
           "nameHash": 1517101595,
           "nameZh": "是否激活",
           "nameEn": "Activate"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -7485,6 +7537,13 @@
           "nameHash": 531714564,
           "nameZh": "当前受打断状态",
           "nameEn": "Current Interrupt Status"
+        },
+        {
+          "kind": "output",
+          "index": 8,
+          "nameHash": 3053032348,
+          "nameZh": "造物重量",
+          "nameEn": "Creation Weight"
         }
       ]
     },
@@ -8202,6 +8261,10 @@
           "nameHash": 2704339550,
           "nameZh": "is_bp_var",
           "nameEn": "is_bp_var"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -8256,6 +8319,10 @@
           "nameHash": 1088328360,
           "nameZh": "canTriggerEvent",
           "nameEn": "canTriggerEvent"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -8293,6 +8360,10 @@
           "nameHash": 3504559041,
           "nameZh": "value",
           "nameEn": "value"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -9981,6 +10052,10 @@
           "nameHash": 2749011919,
           "nameZh": "铭牌配置ID",
           "nameEn": "Nameplate Configuration ID"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -10014,6 +10089,10 @@
           "nameHash": 207469239,
           "nameZh": "铭牌配置ID",
           "nameEn": "Nameplate Configuration ID"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -12074,6 +12153,10 @@
           "nameHash": 1716206315,
           "nameZh": "排行榜ID",
           "nameEn": "Leaderboard ID"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -12763,6 +12846,13 @@
           "nameHash": 2360429383,
           "nameZh": "伤害跳字类型",
           "nameEn": "Damage Pop-Up Type"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 4163959520,
+          "nameZh": "发起者实体",
+          "nameEn": "Initiator Entity"
         }
       ]
     },
@@ -15681,8 +15771,8 @@
       "genericId": 774,
       "sourceFile": "Node/2167154318245070397.mihoyobin",
       "nameHash": 525816682,
-      "nameZh": "查询对应礼盒消耗数量",
-      "nameEn": "Query Corresponding Gift Box Consumption Quantity",
+      "nameZh": "查询对应华丽演绎礼盒消耗数量",
+      "nameEn": "Query Corresponding Gorgeous Performance Box Consumption Quantity",
       "pins": [
         {
           "kind": "input",
@@ -18514,6 +18604,246 @@
       ]
     },
     {
+      "genericId": 856,
+      "sourceFile": "Node/3970178351876667481.mihoyobin",
+      "nameHash": 674597546,
+      "nameZh": "打开礼盒界面",
+      "nameEn": "Open Gift Box Interface",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 966322150
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 2887757782
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 3969180427,
+          "nameZh": "玩家实体",
+          "nameEn": "Player Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 2296959727,
+          "nameZh": "礼盒索引",
+          "nameEn": "Gift Box Index"
+        }
+      ]
+    },
+    {
+      "genericId": 857,
+      "sourceFile": "Node/13323360766844709090.mihoyobin",
+      "nameHash": 2634258082,
+      "nameZh": "设置指定技能实例冷却",
+      "nameEn": "Set CD for Specified Skill Instance",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 2806909510
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 383030958
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 4102918827,
+          "nameZh": "目标实体",
+          "nameEn": "Target Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 285789039,
+          "nameZh": "技能实例ID",
+          "nameEn": "Skill Instance ID"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 25737795,
+          "nameZh": "冷却时间",
+          "nameEn": "CD"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 99996545,
+          "nameZh": "是否限制最大冷却时间",
+          "nameEn": "Limit Maximum CD Time"
+        }
+      ]
+    },
+    {
+      "genericId": 858,
+      "sourceFile": "Node/11027873278072930871.mihoyobin",
+      "nameHash": 4184959850,
+      "nameZh": "增加指定技能实例冷却",
+      "nameEn": "Increase CD for Specified Skill Instance",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 3386566622
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 3354999726
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 1249745523,
+          "nameZh": "目标实体",
+          "nameEn": "Target Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 2144028471,
+          "nameZh": "技能实例ID",
+          "nameEn": "Skill Instance ID"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 3919187587,
+          "nameZh": "冷却时间增加值",
+          "nameEn": "CD Increase Value"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 3673582137,
+          "nameZh": "是否限制最大冷却时间",
+          "nameEn": "Limit Maximum CD Time"
+        }
+      ]
+    },
+    {
+      "genericId": 859,
+      "sourceFile": "Node/2202577942759711885.mihoyobin",
+      "nameHash": 3442763346,
+      "nameZh": "设置造物扰动装置",
+      "nameEn": "Set Creation Disruptor Device",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 1080923710
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 1645590230
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 2639722363,
+          "nameZh": "目标实体",
+          "nameEn": "Target Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 1002267351,
+          "nameZh": "装置序号",
+          "nameEn": "Device ID"
+        }
+      ]
+    },
+    {
+      "genericId": 860,
+      "sourceFile": "Node/10214033181125605545.mihoyobin",
+      "nameHash": 1647473458,
+      "nameZh": "激活/关闭原生推挤碰撞",
+      "nameEn": "Activate/Disable Native Push Collision",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 1614688886
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 508503926
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 3603404427,
+          "nameZh": "造物实体",
+          "nameEn": "Creation Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 2493830119,
+          "nameZh": "原生推挤碰撞序号",
+          "nameEn": "Native Push Collision ID"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 989810523,
+          "nameZh": "是否激活",
+          "nameEn": "Activate"
+        }
+      ]
+    },
+    {
+      "genericId": 861,
+      "sourceFile": "Node/17988438239111877215.mihoyobin",
+      "nameHash": 3605341058,
+      "nameZh": "激活/关闭额外推挤碰撞",
+      "nameEn": "Activate/Disable Extra Push Collision",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 3571579430
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 1316680350
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 395213651,
+          "nameZh": "造物实体",
+          "nameEn": "Creation Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 2232438615,
+          "nameZh": "额外推挤碰撞序号",
+          "nameEn": "Extra Push Collision ID"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 1621007259,
+          "nameZh": "是否激活",
+          "nameEn": "Activate"
+        }
+      ]
+    },
+    {
       "genericId": 946,
       "sourceFile": "Node/4408767301283512270.mihoyobin",
       "nameHash": 3341276818,
@@ -19739,6 +20069,39 @@
       ]
     },
     {
+      "genericId": 3800,
+      "sourceFile": "Node/17529868520807927259.mihoyobin",
+      "nameHash": 1774111674,
+      "nameZh": "切换战斗文字提示过滤模板",
+      "nameEn": "Switch Combat Text Filter Template",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 1403335662
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 997305174
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 2010675931,
+          "nameZh": "玩家实体",
+          "nameEn": "Player Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 505233407,
+          "nameZh": "战斗文字提示模板序号",
+          "nameEn": "Combat Text Prompt Template ID"
+        }
+      ]
+    },
+    {
       "genericId": 100000,
       "sourceFile": "Node/4709892904257115235.mihoyobin",
       "nameHash": 4154709562,
@@ -19791,6 +20154,10 @@
           "nameHash": 1094007366,
           "nameZh": "param3",
           "nameEn": "param3"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -20774,6 +21141,10 @@
           "nameHash": 3965331257,
           "nameZh": "镜头模板",
           "nameEn": "Camera Template"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -21129,6 +21500,10 @@
           "nameHash": 4241267225,
           "nameZh": "镜头朝向",
           "nameEn": "Camera Orientation"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -26497,6 +26872,10 @@
           "kind": "client_exec",
           "index": 0,
           "nameHash": 3443821064
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
         }
       ]
     },
@@ -32456,6 +32835,13 @@
           "nameHash": 4210955156,
           "nameZh": "战术上下文",
           "nameEn": "Tactical Context"
+        },
+        {
+          "kind": "output",
+          "index": 2,
+          "nameHash": 1183208331,
+          "nameZh": "战术持续时长",
+          "nameEn": "Tactic Duration"
         }
       ]
     },
@@ -33150,6 +33536,13 @@
           "nameEn": "Pre-Aim ID"
         },
         {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 1314301687,
+          "nameZh": "获取类型",
+          "nameEn": "Get Type"
+        },
+        {
           "kind": "output",
           "index": 0,
           "nameHash": 4112951865,
@@ -33171,6 +33564,13 @@
           "nameHash": 3819225827,
           "nameZh": "预瞄准序号",
           "nameEn": "Pre-Aim ID"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 3022591511,
+          "nameZh": "获取类型",
+          "nameEn": "Get Type"
         },
         {
           "kind": "output",
@@ -33217,6 +33617,13 @@
           "nameEn": "Pre-Aim ID"
         },
         {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 3878612671,
+          "nameZh": "获取类型",
+          "nameEn": "Get Type"
+        },
+        {
           "kind": "output",
           "index": 0,
           "nameHash": 1200477777,
@@ -33256,6 +33663,13 @@
           "nameEn": "Pre-Aim ID"
         },
         {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 1598687927,
+          "nameZh": "获取类型",
+          "nameEn": "Get Type"
+        },
+        {
           "kind": "output",
           "index": 0,
           "nameHash": 3116577337,
@@ -33277,6 +33691,13 @@
           "nameHash": 2577221139,
           "nameZh": "预瞄准序号",
           "nameEn": "Pre-Aim ID"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 436039607,
+          "nameZh": "获取类型",
+          "nameEn": "Get Type"
         },
         {
           "kind": "output",
@@ -33307,6 +33728,13 @@
           "nameHash": 4098562867,
           "nameZh": "预瞄准序号",
           "nameEn": "Pre-Aim ID"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 674717599,
+          "nameZh": "获取类型",
+          "nameEn": "Get Type"
         },
         {
           "kind": "output",
@@ -33874,6 +34302,266 @@
       ]
     },
     {
+      "genericId": 200301,
+      "sourceFile": "Node/9706379154925295902.mihoyobin",
+      "nameHash": 1583821362,
+      "nameZh": "获取射线检测结果",
+      "nameEn": "Get Ray Detection Result",
+      "pins": [
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 899815395,
+          "nameZh": "检测发起者实体",
+          "nameEn": "Detect Initiator Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 2301483935,
+          "nameZh": "出射位置",
+          "nameEn": "Launch Location"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 674427891,
+          "nameZh": "出射方向",
+          "nameEn": "Launch Direction"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 64416433,
+          "nameZh": "射线最大长度",
+          "nameEn": "Max Ray Length"
+        },
+        {
+          "kind": "input",
+          "index": 4,
+          "nameHash": 852928456,
+          "nameZh": "阵营筛选",
+          "nameEn": "Faction Filter"
+        },
+        {
+          "kind": "input",
+          "index": 5,
+          "nameHash": 1542656663,
+          "nameZh": "实体类型筛选",
+          "nameEn": "Entity Type Filter"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 492984096,
+          "nameZh": "命中层筛选",
+          "nameEn": "Hit Layer Filter"
+        },
+        {
+          "kind": "output",
+          "index": 0,
+          "nameHash": 4111711801,
+          "nameZh": "命中位置",
+          "nameEn": "On-Hit Location"
+        },
+        {
+          "kind": "output",
+          "index": 1,
+          "nameHash": 3044304620,
+          "nameZh": "是否命中实体",
+          "nameEn": "On-Hit Entity"
+        }
+      ]
+    },
+    {
+      "genericId": 200302,
+      "sourceFile": "Node/16741171627840089547.mihoyobin",
+      "nameHash": 4028062290,
+      "nameZh": "获取射线筛选类型列表",
+      "nameEn": "Get Ray Filter Type List",
+      "pins": [
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 2620116883,
+          "nameZh": "Count",
+          "nameEn": "Count"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 1440612007,
+          "nameZh": "0",
+          "nameEn": "0"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 3301000019,
+          "nameZh": "1",
+          "nameEn": "1"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 3772810921,
+          "nameZh": "2",
+          "nameEn": "2"
+        },
+        {
+          "kind": "input",
+          "index": 4,
+          "nameHash": 961820664,
+          "nameZh": "3",
+          "nameEn": "3"
+        },
+        {
+          "kind": "input",
+          "index": 5,
+          "nameHash": 1244633743,
+          "nameZh": "4",
+          "nameEn": "4"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 3841340976,
+          "nameZh": "5",
+          "nameEn": "5"
+        },
+        {
+          "kind": "input",
+          "index": 7,
+          "nameHash": 2351774411,
+          "nameZh": "6",
+          "nameEn": "6"
+        },
+        {
+          "kind": "input",
+          "index": 8,
+          "nameHash": 840737439,
+          "nameZh": "7",
+          "nameEn": "7"
+        },
+        {
+          "kind": "input",
+          "index": 9,
+          "nameHash": 3202273845,
+          "nameZh": "8",
+          "nameEn": "8"
+        },
+        {
+          "kind": "input",
+          "index": 10,
+          "nameHash": 2830597116,
+          "nameZh": "9",
+          "nameEn": "9"
+        },
+        {
+          "kind": "output",
+          "index": 0,
+          "nameHash": 2701912953,
+          "nameZh": "列表",
+          "nameEn": "List"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
+        }
+      ]
+    },
+    {
+      "genericId": 200303,
+      "sourceFile": "Node/1244314151563021145.mihoyobin",
+      "nameHash": 3787982842,
+      "nameZh": "战术：空中降落",
+      "nameEn": "Tactic: Aerial Landing",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 3052921510
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 1397028518,
+          "nameZh": "失败执行",
+          "nameEn": "Failed Execution"
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 2182556443,
+          "nameZh": "是否执行",
+          "nameEn": "Execute"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 1525838511,
+          "nameZh": "战术上下文",
+          "nameEn": "Tactical Context"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 1562745627,
+          "nameZh": "是否可以打断技能",
+          "nameEn": "Can skill be interrupted"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 2378808961,
+          "nameZh": "降落方向与水平面最小夹角",
+          "nameEn": "Minimum Landing Angle from Horizontal"
+        },
+        {
+          "kind": "input",
+          "index": 4,
+          "nameHash": 3180193392,
+          "nameZh": "降落方向与水平面最大夹角",
+          "nameEn": "Maximum Landing Angle from Horizontal"
+        },
+        {
+          "kind": "input",
+          "index": 5,
+          "nameHash": 1220544111,
+          "nameZh": "判定降落时的离地高度",
+          "nameEn": "Height Threshold for Landing Detection"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 2636096384,
+          "nameZh": "移动速度",
+          "nameEn": "Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 7,
+          "nameHash": 836446187,
+          "nameZh": "覆写移动速度",
+          "nameEn": "Overwrite Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 8,
+          "nameHash": 4179973887,
+          "nameZh": "覆写转向速度",
+          "nameEn": "Override Turn Speed"
+        },
+        {
+          "kind": "input",
+          "index": 9,
+          "nameHash": 1540176789,
+          "nameZh": "降落最大持续时间",
+          "nameEn": "Maximum Descent Duration"
+        }
+      ]
+    },
+    {
       "genericId": 200304,
       "sourceFile": "Node/863152022921239959.mihoyobin",
       "nameHash": 3521692570,
@@ -34016,6 +34704,756 @@
       ]
     },
     {
+      "genericId": 200307,
+      "sourceFile": "Node/15550020904630729637.mihoyobin",
+      "nameHash": 66941746,
+      "nameZh": "实体是否携带指定单位状态",
+      "nameEn": "Whether the entity has the specified unit status",
+      "pins": [
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 1764149859,
+          "nameZh": "目标实体",
+          "nameEn": "Target Entity"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 2421204575,
+          "nameZh": "单位状态",
+          "nameEn": "Unit Status"
+        },
+        {
+          "kind": "output",
+          "index": 0,
+          "nameHash": 1336641257,
+          "nameZh": "是否携带",
+          "nameEn": "Has the Status"
+        }
+      ]
+    },
+    {
+      "genericId": 200308,
+      "sourceFile": "Node/3653558339455364828.mihoyobin",
+      "nameHash": 423460498,
+      "nameZh": "战术：空中追击",
+      "nameEn": "Tactic: Aerial Pursuit",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 3684636302
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 3403924342,
+          "nameZh": "失败执行",
+          "nameEn": "Failed Execution"
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 1541632611,
+          "nameZh": "是否执行",
+          "nameEn": "Execute"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 870514631,
+          "nameZh": "战术上下文",
+          "nameEn": "Tactical Context"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 333295123,
+          "nameZh": "是否可以打断技能",
+          "nameEn": "Can skill be interrupted"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 2107472601,
+          "nameZh": "触发追击的水平距离",
+          "nameEn": "Horizontal Distance to Trigger Pursuit"
+        },
+        {
+          "kind": "input",
+          "index": 4,
+          "nameHash": 3942169472,
+          "nameZh": "停止追击的水平距离",
+          "nameEn": "Horizontal Distance to Stop Pursuit"
+        },
+        {
+          "kind": "input",
+          "index": 5,
+          "nameHash": 3310003815,
+          "nameZh": "是否使用高度差追击",
+          "nameEn": "Use Elevation Difference When Pursuing"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 4182253168,
+          "nameZh": "触发追击的高度差",
+          "nameEn": "Height Difference to Trigger Pursuit"
+        },
+        {
+          "kind": "input",
+          "index": 7,
+          "nameHash": 1588923379,
+          "nameZh": "停止追击的高度差",
+          "nameEn": "Height Difference to Stop Pursuit"
+        },
+        {
+          "kind": "input",
+          "index": 8,
+          "nameHash": 1449559567,
+          "nameZh": "相对目标高度偏移下限",
+          "nameEn": "Minimum Vertical Offset from Target"
+        },
+        {
+          "kind": "input",
+          "index": 9,
+          "nameHash": 286798589,
+          "nameZh": "相对目标高度偏移上限",
+          "nameEn": "Maximum Vertical Offset from Target"
+        },
+        {
+          "kind": "input",
+          "index": 10,
+          "nameHash": 3968124532,
+          "nameZh": "移动速度",
+          "nameEn": "Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 11,
+          "nameHash": 3236041451,
+          "nameZh": "覆写移动速度",
+          "nameEn": "Overwrite Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 12,
+          "nameHash": 3144517412,
+          "nameZh": "覆写转向速度",
+          "nameEn": "Override Turn Speed"
+        },
+        {
+          "kind": "input",
+          "index": 13,
+          "nameHash": 2720771650,
+          "nameZh": "单次追击最大持续时间",
+          "nameEn": "Single Pursuit Maximum Duration"
+        },
+        {
+          "kind": "input",
+          "index": 14,
+          "nameHash": 3534207678,
+          "nameZh": "战术实例冷却时间",
+          "nameEn": "Tactical Instance CD"
+        }
+      ]
+    },
+    {
+      "genericId": 200309,
+      "sourceFile": "Node/5742394129487351022.mihoyobin",
+      "nameHash": 494580290,
+      "nameZh": "战术：空中逃跑",
+      "nameEn": "Tactic: Aerial Escape",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 2869168934
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 3125974798,
+          "nameZh": "失败执行",
+          "nameEn": "Failed Execution"
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 2946809499,
+          "nameZh": "是否执行",
+          "nameEn": "Execute"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 2708982751,
+          "nameZh": "战术上下文",
+          "nameEn": "Tactical Context"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 1705722451,
+          "nameZh": "是否可以打断技能",
+          "nameEn": "Can skill be interrupted"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 3015131065,
+          "nameZh": "逃跑触发距离",
+          "nameEn": "Escape Trigger Distance"
+        },
+        {
+          "kind": "input",
+          "index": 4,
+          "nameHash": 1534738376,
+          "nameZh": "移动速度",
+          "nameEn": "Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 5,
+          "nameHash": 1572060087,
+          "nameZh": "覆写移动速度",
+          "nameEn": "Overwrite Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 1429351080,
+          "nameZh": "覆写转向速度",
+          "nameEn": "Override Turn Speed"
+        },
+        {
+          "kind": "input",
+          "index": 7,
+          "nameHash": 1283390451,
+          "nameZh": "逃跑最大方位角",
+          "nameEn": "Maximum Escape Azimuth"
+        },
+        {
+          "kind": "input",
+          "index": 8,
+          "nameHash": 2795372199,
+          "nameZh": "逃跑最小俯仰角",
+          "nameEn": "Minimum Escape Pitch Angle"
+        },
+        {
+          "kind": "input",
+          "index": 9,
+          "nameHash": 376339069,
+          "nameZh": "逃跑最大俯仰角",
+          "nameEn": "Maximum Escape Pitch Angle"
+        },
+        {
+          "kind": "input",
+          "index": 10,
+          "nameHash": 1453454156,
+          "nameZh": "逃跑最少段数",
+          "nameEn": "Minimum Escape Segments"
+        },
+        {
+          "kind": "input",
+          "index": 11,
+          "nameHash": 2694979219,
+          "nameZh": "逃跑最多段数",
+          "nameEn": "Maximum Escape Segments"
+        },
+        {
+          "kind": "input",
+          "index": 12,
+          "nameHash": 301750868,
+          "nameZh": "逃跑距离最小值",
+          "nameEn": "Minimum Escape Distance"
+        },
+        {
+          "kind": "input",
+          "index": 13,
+          "nameHash": 925035170,
+          "nameZh": "逃跑距离最大值",
+          "nameEn": "Maximum Escape Distance"
+        },
+        {
+          "kind": "input",
+          "index": 14,
+          "nameHash": 1161951190,
+          "nameZh": "向上逃离权重",
+          "nameEn": "Upward Escape Weight"
+        },
+        {
+          "kind": "input",
+          "index": 15,
+          "nameHash": 2969731875,
+          "nameZh": "向下逃离权重",
+          "nameEn": "Downward Escape Weight"
+        },
+        {
+          "kind": "input",
+          "index": 16,
+          "nameHash": 1719613384,
+          "nameZh": "逃跑完成/被阻挡时是否转向目标",
+          "nameEn": "Turn Toward Target When Escape Ends or Is Blocked"
+        },
+        {
+          "kind": "input",
+          "index": 17,
+          "nameHash": 2384715667,
+          "nameZh": "逃离触发冷却时间",
+          "nameEn": "Escape Trigger CD"
+        },
+        {
+          "kind": "input",
+          "index": 18,
+          "nameHash": 1257273895,
+          "nameZh": "计时清除仇恨并退出战术",
+          "nameEn": "Clear aggro and cancel tactic after countdown"
+        },
+        {
+          "kind": "input",
+          "index": 19,
+          "nameHash": 3645740677,
+          "nameZh": "是否受到领地限制",
+          "nameEn": "Whether restricted by territory"
+        }
+      ]
+    },
+    {
+      "genericId": 200310,
+      "sourceFile": "Node/10038672886572232414.mihoyobin",
+      "nameHash": 3312226242,
+      "nameZh": "战术：空中对峙",
+      "nameEn": "Tactic: Aerial Confrontation",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 3446345646
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 1890945718,
+          "nameZh": "失败执行",
+          "nameEn": "Failed Execution"
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 3857728003,
+          "nameZh": "是否执行",
+          "nameEn": "Execute"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 569280223,
+          "nameZh": "战术上下文",
+          "nameEn": "Tactical Context"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 2761887603,
+          "nameZh": "是否可以打断技能",
+          "nameEn": "Can skill be interrupted"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 445633073,
+          "nameZh": "对峙距离内圈半径",
+          "nameEn": "Inner Radius of Confrontation Distance"
+        },
+        {
+          "kind": "input",
+          "index": 4,
+          "nameHash": 192033624,
+          "nameZh": "对峙距离外圈半径",
+          "nameEn": "Outer Radius of Confrontation Distance"
+        },
+        {
+          "kind": "input",
+          "index": 5,
+          "nameHash": 3215191783,
+          "nameZh": "对峙最小高度",
+          "nameEn": "Minimum Standoff Height"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 2069021336,
+          "nameZh": "对峙最大高度",
+          "nameEn": "Maximum Standoff Height"
+        },
+        {
+          "kind": "input",
+          "index": 7,
+          "nameHash": 3752377891,
+          "nameZh": "相对地面的最适高度",
+          "nameEn": "Optimal Height Above Ground"
+        },
+        {
+          "kind": "input",
+          "index": 8,
+          "nameHash": 3472369551,
+          "nameZh": "休息间隔时间最小值",
+          "nameEn": "Minimum Rest Interval"
+        },
+        {
+          "kind": "input",
+          "index": 9,
+          "nameHash": 2929329053,
+          "nameZh": "休息间隔时间最大值",
+          "nameEn": "Maximum Rest Interval"
+        },
+        {
+          "kind": "input",
+          "index": 10,
+          "nameHash": 700516020,
+          "nameZh": "是否受到领地限制",
+          "nameEn": "Whether restricted by territory"
+        },
+        {
+          "kind": "input",
+          "index": 11,
+          "nameHash": 3366501955,
+          "nameZh": "是否受到参考地面的高度限制",
+          "nameEn": "Limit Height Based on Reference Ground"
+        },
+        {
+          "kind": "input",
+          "index": 12,
+          "nameHash": 300143516,
+          "nameZh": "移动取消触发权重",
+          "nameEn": "Cancel Trigger Weight by Movement"
+        },
+        {
+          "kind": "input",
+          "index": 13,
+          "nameHash": 3325492786,
+          "nameZh": "往前移动权重",
+          "nameEn": "Forward Movement Weight"
+        },
+        {
+          "kind": "input",
+          "index": 14,
+          "nameHash": 2003423926,
+          "nameZh": "往后移动权重",
+          "nameEn": "Backward Movement Weight"
+        },
+        {
+          "kind": "input",
+          "index": 15,
+          "nameHash": 3792295795,
+          "nameZh": "往左移动权重",
+          "nameEn": "Leftward Movement Weight"
+        },
+        {
+          "kind": "input",
+          "index": 16,
+          "nameHash": 2423357328,
+          "nameZh": "往右移动权重",
+          "nameEn": "Rightward Movement Weight"
+        },
+        {
+          "kind": "input",
+          "index": 17,
+          "nameHash": 2539652915,
+          "nameZh": "往上移动权重",
+          "nameEn": "Upward Movement Weight"
+        },
+        {
+          "kind": "input",
+          "index": 18,
+          "nameHash": 1629705071,
+          "nameZh": "往下移动权重",
+          "nameEn": "Downward Movement Weight"
+        },
+        {
+          "kind": "input",
+          "index": 19,
+          "nameHash": 2642514533,
+          "nameZh": "左右避障距离",
+          "nameEn": "Lateral Obstacle Avoidance Distance"
+        },
+        {
+          "kind": "input",
+          "index": 20,
+          "nameHash": 3620216575,
+          "nameZh": "避障上飞高度",
+          "nameEn": "Ascent Height for Obstacle Avoidance"
+        },
+        {
+          "kind": "input",
+          "index": 21,
+          "nameHash": 3998370748,
+          "nameZh": "移动方向与垂直方向的最大避障夹角",
+          "nameEn": "Maximum Obstacle-Avoidance Angle Relative to Vertical"
+        },
+        {
+          "kind": "input",
+          "index": 22,
+          "nameHash": 2089898923,
+          "nameZh": "覆写移动速度",
+          "nameEn": "Overwrite Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 23,
+          "nameHash": 3723770451,
+          "nameZh": "覆写移动转向速度",
+          "nameEn": "Overwrite Movement Rotation SPD"
+        },
+        {
+          "kind": "input",
+          "index": 24,
+          "nameHash": 3091958611,
+          "nameZh": "覆写原地转向速度",
+          "nameEn": "Override On-the-Spot Turn Speed"
+        },
+        {
+          "kind": "input",
+          "index": 25,
+          "nameHash": 3743213060,
+          "nameZh": "移动速度",
+          "nameEn": "Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 26,
+          "nameHash": 18599787,
+          "nameZh": "单次最小移动距离",
+          "nameEn": "Minimum Single Movement Distance"
+        },
+        {
+          "kind": "input",
+          "index": 27,
+          "nameHash": 924444163,
+          "nameZh": "单次最大移动距离",
+          "nameEn": "Maximum Single Movement Distance"
+        }
+      ]
+    },
+    {
+      "genericId": 200311,
+      "sourceFile": "Node/13153519696291963406.mihoyobin",
+      "nameHash": 3835961906,
+      "nameZh": "战术：空中闲逛",
+      "nameEn": "Tactic: Aerial Idling",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 580064006
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 2311112342,
+          "nameZh": "失败执行",
+          "nameEn": "Failed Execution"
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 2070231987,
+          "nameZh": "是否执行",
+          "nameEn": "Execute"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 969100903,
+          "nameZh": "战术上下文",
+          "nameEn": "Tactical Context"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 2348046107,
+          "nameZh": "是否可以打断技能",
+          "nameEn": "Can skill be interrupted"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 2426668025,
+          "nameZh": "移动速度",
+          "nameEn": "Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 4,
+          "nameHash": 4058434480,
+          "nameZh": "覆写移动速度",
+          "nameEn": "Overwrite Movement SPD"
+        },
+        {
+          "kind": "input",
+          "index": 5,
+          "nameHash": 4080478951,
+          "nameZh": "覆写转向速度",
+          "nameEn": "Override Turn Speed"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 1275515488,
+          "nameZh": "闲逛半径",
+          "nameEn": "Idle Roaming Radius"
+        },
+        {
+          "kind": "input",
+          "index": 7,
+          "nameHash": 1301108707,
+          "nameZh": "相对出生点最小高度",
+          "nameEn": "Minimum Height Relative to Spawn Point"
+        },
+        {
+          "kind": "input",
+          "index": 8,
+          "nameHash": 244845415,
+          "nameZh": "相对出生点最大高度",
+          "nameEn": "Maximum Height Relative to Spawn Point"
+        },
+        {
+          "kind": "input",
+          "index": 9,
+          "nameHash": 1791683141,
+          "nameZh": "闲逛最小间隔时长",
+          "nameEn": "Minimum Idle Roaming Interval"
+        },
+        {
+          "kind": "input",
+          "index": 10,
+          "nameHash": 1403836964,
+          "nameZh": "闲逛最大间隔时长",
+          "nameEn": "Maximum Idle Roaming Interval"
+        },
+        {
+          "kind": "input",
+          "index": 11,
+          "nameHash": 734105131,
+          "nameZh": "单次闲逛最大持续时间",
+          "nameEn": "Single Idle Maximum Duration"
+        },
+        {
+          "kind": "input",
+          "index": 12,
+          "nameHash": 1981177500,
+          "nameZh": "单次最小闲逛距离",
+          "nameEn": "Minimum Idle Roaming Distance"
+        },
+        {
+          "kind": "input",
+          "index": 13,
+          "nameHash": 2645036018,
+          "nameZh": "单次最大闲逛距离",
+          "nameEn": "Maximum Idle Roaming Distance"
+        }
+      ]
+    },
+    {
+      "genericId": 200312,
+      "sourceFile": "Node/15004529561808324115.mihoyobin",
+      "nameHash": 126789330,
+      "nameZh": "获取实体类型列表",
+      "nameEn": "Get Entity Type List",
+      "pins": [
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 1557274251,
+          "nameZh": "Count",
+          "nameEn": "Count"
+        },
+        {
+          "kind": "input",
+          "index": 1,
+          "nameHash": 4294680327,
+          "nameZh": "0",
+          "nameEn": "0"
+        },
+        {
+          "kind": "input",
+          "index": 2,
+          "nameHash": 777980699,
+          "nameZh": "1",
+          "nameEn": "1"
+        },
+        {
+          "kind": "input",
+          "index": 3,
+          "nameHash": 2584480465,
+          "nameZh": "2",
+          "nameEn": "2"
+        },
+        {
+          "kind": "input",
+          "index": 4,
+          "nameHash": 3852817304,
+          "nameZh": "3",
+          "nameEn": "3"
+        },
+        {
+          "kind": "input",
+          "index": 5,
+          "nameHash": 4017072935,
+          "nameZh": "4",
+          "nameEn": "4"
+        },
+        {
+          "kind": "input",
+          "index": 6,
+          "nameHash": 2433942088,
+          "nameZh": "5",
+          "nameEn": "5"
+        },
+        {
+          "kind": "input",
+          "index": 7,
+          "nameHash": 3252395827,
+          "nameZh": "6",
+          "nameEn": "6"
+        },
+        {
+          "kind": "input",
+          "index": 8,
+          "nameHash": 2631801839,
+          "nameZh": "7",
+          "nameEn": "7"
+        },
+        {
+          "kind": "input",
+          "index": 9,
+          "nameHash": 2098007685,
+          "nameZh": "8",
+          "nameEn": "8"
+        },
+        {
+          "kind": "input",
+          "index": 10,
+          "nameHash": 3891259124,
+          "nameZh": "9",
+          "nameEn": "9"
+        },
+        {
+          "kind": "output",
+          "index": 0,
+          "nameHash": 1070867009,
+          "nameZh": "列表",
+          "nameEn": "List"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
+        }
+      ]
+    },
+    {
       "genericId": 300000,
       "sourceFile": "Node/9787698486299351361.mihoyobin",
       "nameHash": 1048561522,
@@ -34154,6 +35592,43 @@
           "nameHash": 1456310971,
           "nameZh": "目标结构体",
           "nameEn": "Target Structure"
+        },
+        {
+          "kind": "client_signal",
+          "index": 0
+        }
+      ]
+    },
+    {
+      "genericId": 300005,
+      "sourceFile": "Node/17859955122869699155.mihoyobin",
+      "nameHash": 709171906,
+      "nameZh": "发送客户端脚本信号",
+      "nameEn": "Send Client Scripted ServerSignal",
+      "pins": [
+        {
+          "kind": "in_flow",
+          "index": 0,
+          "nameHash": 3638156134
+        },
+        {
+          "kind": "out_flow",
+          "index": 0,
+          "nameHash": 4246742558
+        },
+        {
+          "kind": "input",
+          "index": 0,
+          "nameHash": 2523608675,
+          "nameZh": "目标玩家",
+          "nameEn": "Target Player"
+        },
+        {
+          "kind": "client_exec",
+          "index": 0,
+          "nameHash": 2264771192,
+          "nameZh": "信号名",
+          "nameEn": "ServerSignal Name"
         },
         {
           "kind": "client_signal",
@@ -35362,6 +36837,12 @@
           "nameHash": 785045107,
           "nameZh": "冲刺技能",
           "nameEn": "Sprint Skill"
+        },
+        {
+          "value": 3103,
+          "nameHash": 4271038355,
+          "nameZh": "跳跃技能",
+          "nameEn": "Jump Skill"
         }
       ]
     },
@@ -35762,6 +37243,12 @@
           "nameHash": 1657351122,
           "nameZh": "星超导",
           "nameEn": "Stellar-Conduct"
+        },
+        {
+          "value": 4744,
+          "nameHash": 2561343096,
+          "nameZh": "星扩散",
+          "nameEn": "Stellar Swirl"
         }
       ]
     },
@@ -37316,260 +38803,170 @@
         {
           "value": 4701,
           "nameHash": 316078828,
-          "nameZh": "Explode",
-          "nameEn": "Explode"
+          "nameZh": "超载",
+          "nameEn": "Overloaded"
         },
         {
           "value": 4702,
           "nameHash": 834154175,
-          "nameZh": "Stream",
-          "nameEn": "Stream"
+          "nameZh": "蒸发",
+          "nameEn": "Vaporize"
         },
         {
           "value": 4703,
           "nameHash": 2768891844,
-          "nameZh": "Burning",
+          "nameZh": "燃烧",
           "nameEn": "Burning"
         },
         {
-          "value": 4704,
-          "nameHash": 1501373437,
-          "nameZh": "Burned",
-          "nameEn": "Burned"
-        },
-        {
           "value": 4705,
-          "nameHash": 3167178434,
-          "nameZh": "Wet",
+          "nameHash": 1501373437,
+          "nameZh": "潮湿",
           "nameEn": "Wet"
         },
         {
           "value": 4706,
-          "nameHash": 3819242125,
-          "nameZh": "Overgrow",
-          "nameEn": "Overgrow"
+          "nameHash": 3167178434,
+          "nameZh": "绽放",
+          "nameEn": "Bloom"
         },
         {
           "value": 4707,
-          "nameHash": 619199175,
-          "nameZh": "Melt",
+          "nameHash": 3819242125,
+          "nameZh": "融化",
           "nameEn": "Melt"
         },
         {
           "value": 4708,
-          "nameHash": 786394876,
-          "nameZh": "Freeze",
-          "nameEn": "Freeze"
-        },
-        {
-          "value": 4709,
-          "nameHash": 1808966378,
-          "nameZh": "AntiFire",
-          "nameEn": "AntiFire"
-        },
-        {
-          "value": 4710,
-          "nameHash": 2094594728,
-          "nameZh": "Rock",
-          "nameEn": "Rock"
-        },
-        {
-          "value": 4711,
-          "nameHash": 3045073803,
-          "nameZh": "SlowDown",
-          "nameEn": "SlowDown"
+          "nameHash": 619199175,
+          "nameZh": "冻结",
+          "nameEn": "Frozen"
         },
         {
           "value": 4712,
-          "nameHash": 1916922529,
-          "nameZh": "Shock",
-          "nameEn": "Shock"
-        },
-        {
-          "value": 4713,
-          "nameHash": 1930534596,
-          "nameZh": "Wind",
-          "nameEn": "Wind"
-        },
-        {
-          "value": 4714,
-          "nameHash": 2585423521,
-          "nameZh": "Electric",
-          "nameEn": "Electric"
-        },
-        {
-          "value": 4715,
-          "nameHash": 1266578414,
-          "nameZh": "Fire",
-          "nameEn": "Fire"
+          "nameHash": 786394876,
+          "nameZh": "感电",
+          "nameEn": "Electro-Charged"
         },
         {
           "value": 4716,
-          "nameHash": 3939058374,
-          "nameZh": "Superconductor",
-          "nameEn": "Superconductor"
+          "nameHash": 1808966378,
+          "nameZh": "超导",
+          "nameEn": "Superconduct"
         },
         {
           "value": 4717,
-          "nameHash": 3054920646,
-          "nameZh": "SwirlFire",
-          "nameEn": "SwirlFire"
+          "nameHash": 2094594728,
+          "nameZh": "扩散-火",
+          "nameEn": "Swirl: Pyro"
         },
         {
           "value": 4718,
-          "nameHash": 346445491,
-          "nameZh": "SwirlWater",
-          "nameEn": "SwirlWater"
+          "nameHash": 3045073803,
+          "nameZh": "扩散-水",
+          "nameEn": "Swirl: Hydro"
         },
         {
           "value": 4719,
-          "nameHash": 1678062260,
-          "nameZh": "SwirlElectric",
-          "nameEn": "SwirlElectric"
+          "nameHash": 1916922529,
+          "nameZh": "扩散-雷",
+          "nameEn": "Swirl: Electro"
         },
         {
           "value": 4720,
-          "nameHash": 2641199972,
-          "nameZh": "SwirlIce",
-          "nameEn": "SwirlIce"
-        },
-        {
-          "value": 4721,
-          "nameHash": 1155684084,
-          "nameZh": "SwirlFireAccu",
-          "nameEn": "SwirlFireAccu"
-        },
-        {
-          "value": 4722,
-          "nameHash": 3069052893,
-          "nameZh": "SwirlWaterAccu",
-          "nameEn": "SwirlWaterAccu"
-        },
-        {
-          "value": 4723,
-          "nameHash": 2084088323,
-          "nameZh": "SwirlElectricAccu",
-          "nameEn": "SwirlElectricAccu"
-        },
-        {
-          "value": 4724,
-          "nameHash": 170431011,
-          "nameZh": "SwirlIceAccu",
-          "nameEn": "SwirlIceAccu"
-        },
-        {
-          "value": 4725,
-          "nameHash": 958563029,
-          "nameZh": "StickRock",
-          "nameEn": "StickRock"
-        },
-        {
-          "value": 4726,
-          "nameHash": 613201800,
-          "nameZh": "StickWater",
-          "nameEn": "StickWater"
+          "nameHash": 1930534596,
+          "nameZh": "扩散-冰",
+          "nameEn": "Swirl: Cryo"
         },
         {
           "value": 4727,
-          "nameHash": 3084346332,
-          "nameZh": "CrystallizeFire",
-          "nameEn": "CrystallizeFire"
+          "nameHash": 2585423521,
+          "nameZh": "结晶-火",
+          "nameEn": "Crystallize: Pyro"
         },
         {
           "value": 4728,
-          "nameHash": 1879060384,
-          "nameZh": "CrystallizeWater",
-          "nameEn": "CrystallizeWater"
+          "nameHash": 1266578414,
+          "nameZh": "结晶-水",
+          "nameEn": "Crystallize: Hydro"
         },
         {
           "value": 4729,
-          "nameHash": 2055303130,
-          "nameZh": "CrystallizeElectric",
-          "nameEn": "CrystallizeElectric"
+          "nameHash": 3939058374,
+          "nameZh": "结晶-雷",
+          "nameEn": "Crystallize: Electro"
         },
         {
           "value": 4730,
-          "nameHash": 1871289089,
-          "nameZh": "CrystallizeIce",
-          "nameEn": "CrystallizeIce"
+          "nameHash": 3054920646,
+          "nameZh": "结晶-冰",
+          "nameEn": "Crystallize: Cryo"
         },
         {
           "value": 4731,
-          "nameHash": 4137860675,
-          "nameZh": "FrozenBroken",
-          "nameEn": "FrozenBroken"
-        },
-        {
-          "value": 4732,
-          "nameHash": 100556303,
-          "nameZh": "StickGrass",
-          "nameEn": "StickGrass"
+          "nameHash": 346445491,
+          "nameZh": "碎冰",
+          "nameEn": "Shatter"
         },
         {
           "value": 4733,
-          "nameHash": 606846767,
-          "nameZh": "Overdose",
-          "nameEn": "Overdose"
+          "nameHash": 1678062260,
+          "nameZh": "激化",
+          "nameEn": "Catalyze"
         },
         {
           "value": 4734,
-          "nameHash": 1486021588,
-          "nameZh": "OverdoseElectric",
-          "nameEn": "OverdoseElectric"
+          "nameHash": 2641199972,
+          "nameZh": "超激化",
+          "nameEn": "Aggravate"
         },
         {
           "value": 4735,
-          "nameHash": 296544976,
-          "nameZh": "OverdoseGrass",
-          "nameEn": "OverdoseGrass"
+          "nameHash": 1155684084,
+          "nameZh": "蔓激化",
+          "nameEn": "Spread"
         },
         {
           "value": 4736,
-          "nameHash": 4167978933,
-          "nameZh": "OvergrowMushroomFire",
-          "nameEn": "OvergrowMushroomFire"
+          "nameHash": 3069052893,
+          "nameZh": "烈绽放",
+          "nameEn": "Burgeon"
         },
         {
           "value": 4737,
-          "nameHash": 3185444804,
-          "nameZh": "OvergrowMushroomElectric",
-          "nameEn": "OvergrowMushroomElectric"
-        },
-        {
-          "value": 4738,
-          "nameHash": 753149653,
-          "nameZh": "PhlogistonSolidification",
-          "nameEn": "PhlogistonSolidification"
-        },
-        {
-          "value": 4739,
-          "nameHash": 3702205249,
-          "nameZh": "PhlogistonSolidificationEnd",
-          "nameEn": "PhlogistonSolidificationEnd"
+          "nameHash": 2084088323,
+          "nameZh": "超绽放",
+          "nameEn": "Hyperbloom"
         },
         {
           "value": 4740,
-          "nameHash": 762148836,
+          "nameHash": 170431011,
           "nameZh": "月感电",
           "nameEn": "Lunar-Charged"
         },
         {
           "value": 4741,
-          "nameHash": 3146127291,
+          "nameHash": 958563029,
           "nameZh": "月绽放",
           "nameEn": "Lunar-Bloom"
         },
         {
           "value": 4742,
-          "nameHash": 598316967,
+          "nameHash": 613201800,
           "nameZh": "月结晶",
           "nameEn": "Lunar-Crystallize"
         },
         {
           "value": 4743,
-          "nameHash": 3225257935,
+          "nameHash": 3084346332,
           "nameZh": "星超导",
           "nameEn": "Stellar-Conduct"
+        },
+        {
+          "value": 4744,
+          "nameHash": 1879060384,
+          "nameZh": "星扩散",
+          "nameEn": "Stellar Swirl"
         }
       ]
     },
@@ -37931,8 +39328,38 @@
           "nameEn": "Tactic: Rotate to the Target Entity"
         },
         {
-          "value": 0,
+          "value": 6212,
           "nameHash": 3314104161,
+          "nameZh": "战术：空中追击",
+          "nameEn": "Tactic: Aerial Pursuit"
+        },
+        {
+          "value": 6213,
+          "nameHash": 2308852684,
+          "nameZh": "战术：空中逃跑",
+          "nameEn": "Tactic: Aerial Escape"
+        },
+        {
+          "value": 6214,
+          "nameHash": 4021510676,
+          "nameZh": "战术：空中对峙",
+          "nameEn": "Tactic: Aerial Confrontation"
+        },
+        {
+          "value": 6215,
+          "nameHash": 3219451532,
+          "nameZh": "战术：空中闲逛",
+          "nameEn": "Tactic: Aerial Idling"
+        },
+        {
+          "value": 6216,
+          "nameHash": 2831329927,
+          "nameZh": "战术：空中降落",
+          "nameEn": "Tactic: Aerial Landing"
+        },
+        {
+          "value": 0,
+          "nameHash": 3323336701,
           "nameZh": "无",
           "nameEn": "None"
         }
@@ -37961,6 +39388,58 @@
           "nameHash": 148920182,
           "nameZh": "预瞄准结束原因_取消",
           "nameEn": "Pre-Aim Termination Cause_Cancel"
+        }
+      ]
+    },
+    {
+      "id": 200053,
+      "nameHash": 2236572302,
+      "nameZh": "射线命中筛选类型",
+      "nameEn": "Ray Hit Filter Type",
+      "values": [
+        {
+          "value": 2601,
+          "nameHash": 3132082725,
+          "nameZh": "受击盒",
+          "nameEn": "Hurtbox"
+        },
+        {
+          "value": 2602,
+          "nameHash": 2377302887,
+          "nameZh": "场景",
+          "nameEn": "Scene"
+        },
+        {
+          "value": 2605,
+          "nameHash": 1101866575,
+          "nameZh": "物件自身碰撞",
+          "nameEn": "Object Self-Collision"
+        }
+      ]
+    },
+    {
+      "id": 200054,
+      "nameHash": 2489963090,
+      "nameZh": "预瞄准结果数据获取类型",
+      "nameEn": "Get Pre-Aim Result Data Type",
+      "values": [
+        {
+          "value": 6810,
+          "nameHash": 3947340574,
+          "nameZh": "默认",
+          "nameEn": "Default"
+        },
+        {
+          "value": 6811,
+          "nameHash": 1810870954,
+          "nameZh": "当前",
+          "nameEn": "Current"
+        },
+        {
+          "value": 6812,
+          "nameHash": 2652285608,
+          "nameZh": "上一次成功",
+          "nameEn": "Last Successful"
         }
       ]
     },

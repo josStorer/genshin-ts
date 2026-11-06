@@ -528,9 +528,9 @@
     ]
   },
   {
-    "id": 9,
-    "functionCount": 1,
-    "typeCount": 41,
+      "id": 9,
+      "functionCount": 1,
+      "typeCount": 42,
     "functions": ["enumerationsEqual"],
     "types": [
       "e<10>",
@@ -568,6 +568,7 @@
       "e<41>",
       "e<42>",
       "e<43>",
+      "e<44>",
       "e<4>",
       "e<5>",
       "e<6>",

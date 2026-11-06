@@ -21,7 +21,7 @@ type ExtractedReport = {
   groups: ExtractedGroup[]
 }
 
-const reportPath = 'docs/maintenance/2026-07-15-client-node-pools-extracted.json'
+const reportPath = 'resources/client_node_pools_extracted.json'
 const outputPath = 'resources/client_node_modes.json'
 const report = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as ExtractedReport
 

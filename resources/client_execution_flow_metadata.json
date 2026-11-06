@@ -1114,10 +1114,10 @@
     "kind": "exec",
     "params": [
       {
-        "name": "controlMotor",
+        "name": "controlMotionDevice",
         "irType": "entity",
         "docZh": "操控运动器",
-        "docEn": "Control Motor"
+        "docEn": "Control Motion Device"
       },
       {
         "name": "forwardAcceleration",
@@ -1126,28 +1126,28 @@
         "docEn": "Forward Acceleration"
       },
       {
-        "name": "backwardAcceleration",
+        "name": "reverseAcceleration",
         "irType": "float",
         "docZh": "后退加速度",
-        "docEn": "Backward Acceleration"
+        "docEn": "Reverse Acceleration"
       },
       {
-        "name": "turningRate",
+        "name": "turnSpeed",
         "irType": "float",
         "docZh": "转向速率",
-        "docEn": "Turning Rate"
+        "docEn": "Turn Speed"
       },
       {
-        "name": "baseDragDeceleration",
+        "name": "baseResistanceDeceleration",
         "irType": "float",
         "docZh": "基础阻力减速度",
-        "docEn": "Base Drag Deceleration"
+        "docEn": "Base Resistance Deceleration"
       },
       {
-        "name": "dragCoefficient",
+        "name": "resistanceCoefficient",
         "irType": "float",
         "docZh": "阻力系数",
-        "docEn": "Drag Coefficient"
+        "docEn": "Resistance Coefficient"
       },
       {
         "name": "maxForwardSpeed",
@@ -1156,15 +1156,15 @@
         "docEn": "Max Forward Speed"
       },
       {
-        "name": "maxBackwardSpeed",
+        "name": "maxReverseSpeed",
         "irType": "float",
         "docZh": "最大后退速度",
-        "docEn": "Max Backward Speed"
+        "docEn": "Max Reverse Speed"
       }
     ],
     "returns": null,
     "docs": {
-      "en": "",
+      "en": "Adds Temporary Movement Parameters. These values take effect on the next frame, so their changes cannot be read in the current Execution Flow by querying the node.",
       "zh": "添加临时运动参数值。该值将在下一帧生效，因此无法在当前执行流中通过获取节点查到值的变化。"
     },
     "modes": [
@@ -1275,7 +1275,7 @@
     "returns": null,
     "docs": {
       "en": "",
-      "zh": "添加临时加速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承"
+      "zh": "添加临时速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承"
     },
     "modes": [
       "beyond"
@@ -3564,7 +3564,7 @@
     "params": [],
     "returns": null,
     "docs": {
-      "en": "",
+      "en": "Allows players to complete the current aiming phase early.",
       "zh": "可以让玩家提前完成当前预瞄准"
     },
     "modes": [
@@ -4012,6 +4012,12 @@
         "irType": "int",
         "docZh": "预瞄准序号",
         "docEn": "Pre-Aiming Index"
+      },
+      {
+        "name": "resultDataType",
+        "irType": "enum",
+        "docZh": "获取类型",
+        "docEn": "Result Data Type"
       }
     ],
     "returns": [
@@ -4125,10 +4131,10 @@
     "kind": "data",
     "params": [
       {
-        "name": "controlMotor",
+        "name": "controlMotionDevice",
         "irType": "entity",
         "docZh": "操控运动器",
-        "docEn": "Control Motor"
+        "docEn": "Control Motion Device"
       }
     ],
     "returns": [
@@ -4136,17 +4142,17 @@
         "name": "speed",
         "irType": "float",
         "docZh": "速度大小",
-        "docEn": "Speed"
+        "docEn": "Speed Magnitude"
       },
       {
         "name": "velocityDirection",
         "irType": "vec3",
         "docZh": "速度方向",
-        "docEn": "Velocity Direction"
+        "docEn": "Speed Direction"
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Returns the current speed of the specified control motion device (speed magnitude and unit direction vector)",
       "zh": "获取指定操控运动器的当前速度（速度大小及单位方向向量）"
     },
     "modes": [
@@ -4209,10 +4215,10 @@
     "kind": "data",
     "params": [
       {
-        "name": "controlMotor",
+        "name": "controlMotionDevice",
         "irType": "entity",
         "docZh": "操控运动器",
-        "docEn": "Control Motor"
+        "docEn": "Control Motion Device"
       }
     ],
     "returns": [
@@ -4226,25 +4232,25 @@
         "name": "backwardAcceleration",
         "irType": "float",
         "docZh": "后退加速度",
-        "docEn": "Backward Acceleration"
+        "docEn": "Reverse Acceleration"
       },
       {
         "name": "turningRate",
         "irType": "float",
         "docZh": "转向速率",
-        "docEn": "Turning Rate"
+        "docEn": "Turn Speed"
       },
       {
         "name": "baseDragDeceleration",
         "irType": "float",
         "docZh": "基础阻力减速度",
-        "docEn": "Base Drag Deceleration"
+        "docEn": "Base Resistance Deceleration"
       },
       {
         "name": "dragCoefficient",
         "irType": "float",
         "docZh": "阻力系数",
-        "docEn": "Drag Coefficient"
+        "docEn": "Resistance Coefficient"
       },
       {
         "name": "maxForwardSpeed",
@@ -4256,11 +4262,11 @@
         "name": "maxBackwardSpeed",
         "irType": "float",
         "docZh": "最大后退速度",
-        "docEn": "Max Backward Speed"
+        "docEn": "Max Reverse Speed"
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Returns the movement parameters of the specified control motion device, including temporary movement parameters. The addition of temporary values takes effect in the next frame, so changes to these values cannot be retrieved by a Get node within the current execution flow",
       "zh": "获取指定操控运动器的运动参数，包含临时运动参数。临时值的添加将在下一帧生效，因此无法在当前执行流中通过获取节点查到值的变化。"
     },
     "modes": [
@@ -4472,14 +4478,14 @@
     "params": [],
     "returns": [
       {
-        "name": "controlMotorList",
+        "name": "controlMotionDeviceList",
         "irType": "entity_list",
         "docZh": "操控运动器列表",
-        "docEn": "Control Motor List"
+        "docEn": "Control Motion Device List"
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Returns the list of currently activated control motion devices",
       "zh": "获取当前激活操控运动器列表"
     },
     "modes": [
@@ -4767,14 +4773,14 @@
     "params": [],
     "returns": [
       {
-        "name": "followingControlMotor",
+        "name": "followControlMotionDevice",
         "irType": "entity",
         "docZh": "跟随操控运动器",
-        "docEn": "Following Control Motor"
+        "docEn": "Follow Control Motion Device"
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Returns the currently followed motion device",
       "zh": "获取当前跟随操控运动器"
     },
     "modes": [
@@ -6430,6 +6436,12 @@
         "irType": "int",
         "docZh": "预瞄准序号",
         "docEn": "Pre-Aiming Index"
+      },
+      {
+        "name": "resultDataType",
+        "irType": "enum",
+        "docZh": "获取类型",
+        "docEn": "Result Data Type"
       }
     ],
     "returns": [
@@ -6490,6 +6502,12 @@
         "irType": "int",
         "docZh": "预瞄准序号",
         "docEn": "Pre-Aiming Index"
+      },
+      {
+        "name": "resultDataType",
+        "irType": "enum",
+        "docZh": "获取类型",
+        "docEn": "Result Data Type"
       }
     ],
     "returns": [
@@ -6550,6 +6568,12 @@
         "irType": "int",
         "docZh": "预瞄准序号",
         "docEn": "Pre-Aiming Index"
+      },
+      {
+        "name": "resultDataType",
+        "irType": "enum",
+        "docZh": "获取类型",
+        "docEn": "Result Data Type"
       }
     ],
     "returns": [
@@ -6616,6 +6640,12 @@
         "irType": "int",
         "docZh": "预瞄准序号",
         "docEn": "Pre-Aiming Index"
+      },
+      {
+        "name": "resultDataType",
+        "irType": "enum",
+        "docZh": "获取类型",
+        "docEn": "Result Data Type"
       }
     ],
     "returns": [
@@ -6817,11 +6847,17 @@
         "name": "tacticalContext",
         "irType": "str",
         "docZh": "战术上下文",
-        "docEn": "Tactical Context"
+        "docEn": "Tactic Context"
+      },
+      {
+        "name": "tacticDuration",
+        "irType": "float",
+        "docZh": "战术持续时长",
+        "docEn": "Tactic Duration"
       }
     ],
     "docs": {
-      "en": "Obtain the Tactic executed by Creations in the previous frame",
+      "en": "",
       "zh": "获取造物前一帧执行的战术"
     },
     "modes": [
@@ -7050,6 +7086,97 @@
       },
       {
         "subType": "int_filter",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      }
+    ]
+  },
+  {
+    "methodName": "getRayDetectionResult",
+    "nodeType": "get_ray_detection_result",
+    "subTypes": [
+      "creation_status",
+      "creation_status_decision"
+    ],
+    "kind": "data",
+    "params": [
+      {
+        "name": "detectInitiatorEntity",
+        "irType": "enum",
+        "docZh": "检测发起者实体",
+        "docEn": "Detect Initiator Entity"
+      },
+      {
+        "name": "launchLocation",
+        "irType": "vec3",
+        "docZh": "出射位置",
+        "docEn": "Launch Location"
+      },
+      {
+        "name": "launchDirection",
+        "irType": "vec3",
+        "docZh": "出射方向",
+        "docEn": "Launch Direction"
+      },
+      {
+        "name": "maxRayLength",
+        "irType": "float",
+        "docZh": "射线最大长度",
+        "docEn": "Max Ray Length"
+      },
+      {
+        "name": "factionFilter",
+        "irType": "enum",
+        "docZh": "阵营筛选",
+        "docEn": "Faction Filter"
+      },
+      {
+        "name": "entityTypeFilter",
+        "irType": "enum_list",
+        "docZh": "实体类型筛选",
+        "docEn": "Entity Type Filter"
+      },
+      {
+        "name": "hitLayerFilter",
+        "irType": "enum_list",
+        "docZh": "命中层筛选",
+        "docEn": "Hit Layer Filter"
+      }
+    ],
+    "returns": [
+      {
+        "name": "onHitLocation",
+        "irType": "vec3",
+        "docZh": "命中位置",
+        "docEn": "On-Hit Location"
+      },
+      {
+        "name": "onHitEntity",
+        "irType": "bool",
+        "docZh": "是否命中实体",
+        "docEn": "On-Hit Entity"
+      }
+    ],
+    "docs": {
+      "en": "Get the ray detection result. Hits are evaluated from nearest to farthest, and the first target or hit position that meets the filter criteria is returned.",
+      "zh": "获取射线检测结果，会根据射线命中从近到远的顺序返回满足筛选条件的第一个目标或命中位置"
+    },
+    "modes": [
+      "beyond",
+      "classic"
+    ],
+    "availability": [
+      {
+        "subType": "creation_status",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      },
+      {
+        "subType": "creation_status_decision",
         "modes": [
           "beyond",
           "classic"
@@ -7988,22 +8115,22 @@
     "kind": "data",
     "params": [
       {
-        "name": "targetControlMotor",
+        "name": "targetControlMotionDevice",
         "irType": "entity",
         "docZh": "目标操控运动器",
-        "docEn": "Target Control Motor"
+        "docEn": "Target Control Motion Device"
       }
     ],
     "returns": [
       {
-        "name": "isGrounded",
+        "name": "grounded",
         "irType": "bool",
         "docZh": "是否接地",
-        "docEn": "Is Grounded"
+        "docEn": "Grounded"
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Returns whether the specified control motion device is currently grounded",
       "zh": "获取指定操控运动器当前是否接地"
     },
     "modes": [
@@ -8094,6 +8221,12 @@
         "irType": "int",
         "docZh": "预瞄准序号",
         "docEn": "Pre-Aiming Index"
+      },
+      {
+        "name": "resultDataType",
+        "irType": "enum",
+        "docZh": "获取类型",
+        "docEn": "Result Data Type"
       }
     ],
     "returns": [
@@ -10254,7 +10387,7 @@
       }
     ],
     "docs": {
-      "en": "Available only for Custom Aggro Mode; Searches whether the specified Entity has entered battle",
+      "en": "Only available in Custom Aggro Mode; Checks whether the specified Entity is in combat",
       "zh": "仅自定义仇恨模式可用; 查询指定实体是否已经入战"
     },
     "modes": [
@@ -11057,7 +11190,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Converts screen coordinates to viewport coordinates (normalized from 0 to 1). Only available in Beyond Mode.",
       "zh": "将屏幕坐标转换为视口坐标（归一化0-1），仅在超限模式可用"
     },
     "modes": [
@@ -11129,14 +11262,14 @@
     ],
     "returns": [
       {
-        "name": "worldPosition",
+        "name": "worldCoordinates",
         "irType": "vec3",
         "docZh": "世界坐标",
-        "docEn": "World Position"
+        "docEn": "World Coordinates"
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Add a depth value to the screen coordinates to convert them to world coordinates. Only available in Beyond Mode.",
       "zh": "将屏幕坐标加上深度值，转换为世界坐标，仅在超限模式可用"
     },
     "modes": [
@@ -11229,10 +11362,10 @@
     "kind": "exec",
     "params": [
       {
-        "name": "targetControlMotor",
+        "name": "targetControlMotionDevice",
         "irType": "entity",
         "docZh": "目标操控运动器",
-        "docEn": "Target Control Motor"
+        "docEn": "Target Control Motion Device"
       },
       {
         "name": "duration",
@@ -11243,7 +11376,7 @@
     ],
     "returns": null,
     "docs": {
-      "en": "",
+      "en": "While grounded, the Control Motion Device continuously detects and snaps to the ground surface. To achieve airborne movement (such as jumping) by adding Speed, use this node to temporarily break out of the grounded state.",
       "zh": "接地状态下的操控运动器将持续找到地面并贴合。若希望通过添加速度实现离地运动（跳跃等效果），可以使用该节点短暂脱离接地状态。"
     },
     "modes": [
@@ -12011,6 +12144,668 @@
     ]
   },
   {
+    "methodName": "tacticAerialConfrontation",
+    "nodeType": "tactic_aerial_confrontation",
+    "subTypes": [
+      "creation_status"
+    ],
+    "kind": "exec",
+    "params": [
+      {
+        "name": "execute",
+        "irType": "bool",
+        "docZh": "是否执行",
+        "docEn": "Execute"
+      },
+      {
+        "name": "tacticalContext",
+        "irType": "str",
+        "docZh": "战术上下文",
+        "docEn": "Tactical Context"
+      },
+      {
+        "name": "canSkillBeInterrupted",
+        "irType": "bool",
+        "docZh": "是否可以打断技能",
+        "docEn": "Can skill be interrupted"
+      },
+      {
+        "name": "innerRadiusOfConfrontationDistance",
+        "irType": "float",
+        "docZh": "对峙距离内圈半径",
+        "docEn": "Inner Radius of Confrontation Distance"
+      },
+      {
+        "name": "outerRadiusOfConfrontationDistance",
+        "irType": "float",
+        "docZh": "对峙距离外圈半径",
+        "docEn": "Outer Radius of Confrontation Distance"
+      },
+      {
+        "name": "minimumStandoffHeight",
+        "irType": "float",
+        "docZh": "对峙最小高度",
+        "docEn": "Minimum Standoff Height"
+      },
+      {
+        "name": "maximumStandoffHeight",
+        "irType": "float",
+        "docZh": "对峙最大高度",
+        "docEn": "Maximum Standoff Height"
+      },
+      {
+        "name": "optimalHeightAboveGround",
+        "irType": "float",
+        "docZh": "相对地面的最适高度",
+        "docEn": "Optimal Height Above Ground"
+      },
+      {
+        "name": "minimumRestInterval",
+        "irType": "float",
+        "docZh": "休息间隔时间最小值",
+        "docEn": "Minimum Rest Interval"
+      },
+      {
+        "name": "maximumRestInterval",
+        "irType": "float",
+        "docZh": "休息间隔时间最大值",
+        "docEn": "Maximum Rest Interval"
+      },
+      {
+        "name": "whetherRestrictedByTerritory",
+        "irType": "bool",
+        "docZh": "是否受到领地限制",
+        "docEn": "Whether restricted by territory"
+      },
+      {
+        "name": "limitHeightBasedOnReferenceGround",
+        "irType": "bool",
+        "docZh": "是否受到参考地面的高度限制",
+        "docEn": "Limit Height Based on Reference Ground"
+      },
+      {
+        "name": "cancelTriggerWeightByMovement",
+        "irType": "float",
+        "docZh": "移动取消触发权重",
+        "docEn": "Cancel Trigger Weight by Movement"
+      },
+      {
+        "name": "forwardMovementWeight",
+        "irType": "float",
+        "docZh": "往前移动权重",
+        "docEn": "Forward Movement Weight"
+      },
+      {
+        "name": "backwardMovementWeight",
+        "irType": "float",
+        "docZh": "往后移动权重",
+        "docEn": "Backward Movement Weight"
+      },
+      {
+        "name": "leftwardMovementWeight",
+        "irType": "float",
+        "docZh": "往左移动权重",
+        "docEn": "Leftward Movement Weight"
+      },
+      {
+        "name": "rightwardMovementWeight",
+        "irType": "float",
+        "docZh": "往右移动权重",
+        "docEn": "Rightward Movement Weight"
+      },
+      {
+        "name": "upwardMovementWeight",
+        "irType": "float",
+        "docZh": "往上移动权重",
+        "docEn": "Upward Movement Weight"
+      },
+      {
+        "name": "downwardMovementWeight",
+        "irType": "float",
+        "docZh": "往下移动权重",
+        "docEn": "Downward Movement Weight"
+      },
+      {
+        "name": "lateralObstacleAvoidanceDistance",
+        "irType": "float",
+        "docZh": "左右避障距离",
+        "docEn": "Lateral Obstacle Avoidance Distance"
+      },
+      {
+        "name": "ascentHeightForObstacleAvoidance",
+        "irType": "float",
+        "docZh": "避障上飞高度",
+        "docEn": "Ascent Height for Obstacle Avoidance"
+      },
+      {
+        "name": "maximumObstacleAvoidanceAngleRelativeToVertical",
+        "irType": "float",
+        "docZh": "移动方向与垂直方向的最大避障夹角",
+        "docEn": "Maximum Obstacle-Avoidance Angle Relative to Vertical"
+      },
+      {
+        "name": "overwriteMovementSPD",
+        "irType": "float",
+        "docZh": "覆写移动速度",
+        "docEn": "Overwrite Movement SPD"
+      },
+      {
+        "name": "overwriteMovementRotationSPD",
+        "irType": "float",
+        "docZh": "覆写移动转向速度",
+        "docEn": "Overwrite Movement Rotation SPD"
+      },
+      {
+        "name": "overrideOnTheSpotTurnSpeed",
+        "irType": "float",
+        "docZh": "覆写原地转向速度",
+        "docEn": "Override On-The-Spot Turn Speed"
+      },
+      {
+        "name": "movementSPD",
+        "irType": "enum",
+        "docZh": "移动速度",
+        "docEn": "Movement SPD"
+      },
+      {
+        "name": "minimumSingleMovementDistance",
+        "irType": "float",
+        "docZh": "单次最小移动距离",
+        "docEn": "Minimum Single Movement Distance"
+      },
+      {
+        "name": "maximumSingleMovementDistance",
+        "irType": "float",
+        "docZh": "单次最大移动距离",
+        "docEn": "Maximum Single Movement Distance"
+      }
+    ],
+    "returns": null,
+    "docs": {
+      "en": "The creation performs an aerial confrontation action. This multidirectional movement tactic allows the creation to randomly select a destination within the configured probability space around the target and move toward it.; Supports three-dimensional movement behaviors such as pursuing the player, moving away from them, and circling them from either side. It also provides settings to adjust the creation’s distance from the player and to avoid obstacles.; Execution Conditions:\n\nGSTS Note: This is intentionally different from normal sequential TypeScript.\nAlthough statements are written in order, the following statement is not executed unconditionally:\nit is connected to this node’s [Failure] output and runs only when the preceding action fails.\nFor example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;\nif the skill succeeds or is still running, the following statement does not run.\n\nGSTS Note: When Execute is false, this tactic is treated as failed, so execution continues\nthrough its [Failure] output to the following statement.",
+      "zh": "造物执行空中对峙行为，空间中的多向移动战术，能基于配置的目标周围概率空间随机选取位置移动。; 能在三维空间中实现追击/远离/左右绕玩家移动等表现，也包含一些与玩家距离调整和避障的配置。; 执行条件：\n\nGSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，\n但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；\n只有前面的行为执行失败，才会执行后面的语句。\n例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；\n若技能成功或仍在执行，后面的语句不会执行。\n\nGSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，\n会从【失败执行】引脚继续执行后续语句。"
+    },
+    "modes": [
+      "beyond",
+      "classic"
+    ],
+    "availability": [
+      {
+        "subType": "creation_status",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      }
+    ]
+  },
+  {
+    "methodName": "tacticAerialEscape",
+    "nodeType": "tactic_aerial_escape",
+    "subTypes": [
+      "creation_status"
+    ],
+    "kind": "exec",
+    "params": [
+      {
+        "name": "execute",
+        "irType": "bool",
+        "docZh": "是否执行",
+        "docEn": "Execute"
+      },
+      {
+        "name": "tacticalContext",
+        "irType": "str",
+        "docZh": "战术上下文",
+        "docEn": "Tactical Context"
+      },
+      {
+        "name": "canSkillBeInterrupted",
+        "irType": "bool",
+        "docZh": "是否可以打断技能",
+        "docEn": "Can skill be interrupted"
+      },
+      {
+        "name": "escapeTriggerDistance",
+        "irType": "float",
+        "docZh": "逃跑触发距离",
+        "docEn": "Escape Trigger Distance"
+      },
+      {
+        "name": "movementSPD",
+        "irType": "enum",
+        "docZh": "移动速度",
+        "docEn": "Movement SPD"
+      },
+      {
+        "name": "overwriteMovementSPD",
+        "irType": "float",
+        "docZh": "覆写移动速度",
+        "docEn": "Overwrite Movement SPD"
+      },
+      {
+        "name": "overrideTurnSpeed",
+        "irType": "float",
+        "docZh": "覆写转向速度",
+        "docEn": "Override Turn Speed"
+      },
+      {
+        "name": "maximumEscapeAzimuth",
+        "irType": "float",
+        "docZh": "逃跑最大方位角",
+        "docEn": "Maximum Escape Azimuth"
+      },
+      {
+        "name": "minimumEscapePitchAngle",
+        "irType": "float",
+        "docZh": "逃跑最小俯仰角",
+        "docEn": "Minimum Escape Pitch Angle"
+      },
+      {
+        "name": "maximumEscapePitchAngle",
+        "irType": "float",
+        "docZh": "逃跑最大俯仰角",
+        "docEn": "Maximum Escape Pitch Angle"
+      },
+      {
+        "name": "minimumEscapeSegments",
+        "irType": "int",
+        "docZh": "逃跑最少段数",
+        "docEn": "Minimum Escape Segments"
+      },
+      {
+        "name": "maximumEscapeSegments",
+        "irType": "int",
+        "docZh": "逃跑最多段数",
+        "docEn": "Maximum Escape Segments"
+      },
+      {
+        "name": "minimumEscapeDistance",
+        "irType": "float",
+        "docZh": "逃跑距离最小值",
+        "docEn": "Minimum Escape Distance"
+      },
+      {
+        "name": "maximumEscapeDistance",
+        "irType": "float",
+        "docZh": "逃跑距离最大值",
+        "docEn": "Maximum Escape Distance"
+      },
+      {
+        "name": "upwardEscapeWeight",
+        "irType": "float",
+        "docZh": "向上逃离权重",
+        "docEn": "Upward Escape Weight"
+      },
+      {
+        "name": "downwardEscapeWeight",
+        "irType": "float",
+        "docZh": "向下逃离权重",
+        "docEn": "Downward Escape Weight"
+      },
+      {
+        "name": "turnTowardTargetWhenEscapeEndsOrIsBlocked",
+        "irType": "bool",
+        "docZh": "逃跑完成/被阻挡时是否转向目标",
+        "docEn": "Turn Toward Target When Escape Ends or Is Blocked"
+      },
+      {
+        "name": "escapeTriggerCD",
+        "irType": "float",
+        "docZh": "逃离触发冷却时间",
+        "docEn": "Escape Trigger CD"
+      },
+      {
+        "name": "clearAggroAndCancelTacticAfterCountdown",
+        "irType": "float",
+        "docZh": "计时清除仇恨并退出战术",
+        "docEn": "Clear aggro and cancel tactic after countdown"
+      },
+      {
+        "name": "whetherRestrictedByTerritory",
+        "irType": "bool",
+        "docZh": "是否受到领地限制",
+        "docEn": "Whether restricted by territory"
+      }
+    ],
+    "returns": null,
+    "docs": {
+      "en": "The creation performs an aerial escape action. This tactic causes the creation to flee its target by attempting to turn away and move farther away.; You can configure multiple escape movement segments. The number of segments ranges from [Minimum Escape Segments, Maximum Escape Segments).; The system calculates an escape position for each segment or attempt. Both azimuth and pitch angle settings are supported.; Execution Conditions:\n\nGSTS Note: This is intentionally different from normal sequential TypeScript.\nAlthough statements are written in order, the following statement is not executed unconditionally:\nit is connected to this node’s [Failure] output and runs only when the preceding action fails.\nFor example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;\nif the skill succeeds or is still running, the following statement does not run.\n\nGSTS Note: When Execute is false, this tactic is treated as failed, so execution continues\nthrough its [Failure] output to the following statement.",
+      "zh": "造物执行空中逃跑行为，逃离目标的战术，试图背对目标并向远处移动。; 允许配置多段逃跑移动，段数的取值范围为 [逃跑最少段数，逃跑最多段数); 每段/每次会计算一个逃跑点位，支持方位角和俯仰角的配置。; 执行条件：\n\nGSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，\n但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；\n只有前面的行为执行失败，才会执行后面的语句。\n例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；\n若技能成功或仍在执行，后面的语句不会执行。\n\nGSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，\n会从【失败执行】引脚继续执行后续语句。"
+    },
+    "modes": [
+      "beyond",
+      "classic"
+    ],
+    "availability": [
+      {
+        "subType": "creation_status",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      }
+    ]
+  },
+  {
+    "methodName": "tacticAerialIdling",
+    "nodeType": "tactic_aerial_idling",
+    "subTypes": [
+      "creation_status"
+    ],
+    "kind": "exec",
+    "params": [
+      {
+        "name": "execute",
+        "irType": "bool",
+        "docZh": "是否执行",
+        "docEn": "Execute"
+      },
+      {
+        "name": "tacticalContext",
+        "irType": "str",
+        "docZh": "战术上下文",
+        "docEn": "Tactical Context"
+      },
+      {
+        "name": "canSkillBeInterrupted",
+        "irType": "bool",
+        "docZh": "是否可以打断技能",
+        "docEn": "Can skill be interrupted"
+      },
+      {
+        "name": "movementSPD",
+        "irType": "enum",
+        "docZh": "移动速度",
+        "docEn": "Movement SPD"
+      },
+      {
+        "name": "overwriteMovementSPD",
+        "irType": "float",
+        "docZh": "覆写移动速度",
+        "docEn": "Overwrite Movement SPD"
+      },
+      {
+        "name": "overrideTurnSpeed",
+        "irType": "float",
+        "docZh": "覆写转向速度",
+        "docEn": "Override Turn Speed"
+      },
+      {
+        "name": "idleRoamingRadius",
+        "irType": "float",
+        "docZh": "闲逛半径",
+        "docEn": "Idle Roaming Radius"
+      },
+      {
+        "name": "minimumHeightRelativeToSpawnPoint",
+        "irType": "float",
+        "docZh": "相对出生点最小高度",
+        "docEn": "Minimum Height Relative to Spawn Point"
+      },
+      {
+        "name": "maximumHeightRelativeToSpawnPoint",
+        "irType": "float",
+        "docZh": "相对出生点最大高度",
+        "docEn": "Maximum Height Relative to Spawn Point"
+      },
+      {
+        "name": "minimumIdleRoamingInterval",
+        "irType": "float",
+        "docZh": "闲逛最小间隔时长",
+        "docEn": "Minimum Idle Roaming Interval"
+      },
+      {
+        "name": "maximumIdleRoamingInterval",
+        "irType": "float",
+        "docZh": "闲逛最大间隔时长",
+        "docEn": "Maximum Idle Roaming Interval"
+      },
+      {
+        "name": "singleIdleMaximumDuration",
+        "irType": "float",
+        "docZh": "单次闲逛最大持续时间",
+        "docEn": "Single Idle Maximum Duration"
+      },
+      {
+        "name": "minimumIdleRoamingDistance",
+        "irType": "float",
+        "docZh": "单次最小闲逛距离",
+        "docEn": "Minimum Idle Roaming Distance"
+      },
+      {
+        "name": "maximumIdleRoamingDistance",
+        "irType": "float",
+        "docZh": "单次最大闲逛距离",
+        "docEn": "Maximum Idle Roaming Distance"
+      }
+    ],
+    "returns": null,
+    "docs": {
+      "en": "The creation performs an aerial idling action, moving randomly within a specified area.; Execution Conditions:; Point Selection Rules:; This is because selecting a valid target point is one of the conditions for entering the tactic.\n\nGSTS Note: This is intentionally different from normal sequential TypeScript.\nAlthough statements are written in order, the following statement is not executed unconditionally:\nit is connected to this node’s [Failure] output and runs only when the preceding action fails.\nFor example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;\nif the skill succeeds or is still running, the following statement does not run.\n\nGSTS Note: When Execute is false, this tactic is treated as failed, so execution continues\nthrough its [Failure] output to the following statement.",
+      "zh": "造物执行空中闲逛行为，在范围内随机移动; 执行条件：; 选点规则：; 因为选到合适的目标点是进入战术的条件之一\n\nGSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，\n但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；\n只有前面的行为执行失败，才会执行后面的语句。\n例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；\n若技能成功或仍在执行，后面的语句不会执行。\n\nGSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，\n会从【失败执行】引脚继续执行后续语句。"
+    },
+    "modes": [
+      "beyond",
+      "classic"
+    ],
+    "availability": [
+      {
+        "subType": "creation_status",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      }
+    ]
+  },
+  {
+    "methodName": "tacticAerialLanding",
+    "nodeType": "tactic_aerial_landing",
+    "subTypes": [
+      "creation_status"
+    ],
+    "kind": "exec",
+    "params": [
+      {
+        "name": "execute",
+        "irType": "bool",
+        "docZh": "是否执行",
+        "docEn": "Execute"
+      },
+      {
+        "name": "tacticalContext",
+        "irType": "str",
+        "docZh": "战术上下文",
+        "docEn": "Tactical Context"
+      },
+      {
+        "name": "canSkillBeInterrupted",
+        "irType": "bool",
+        "docZh": "是否可以打断技能",
+        "docEn": "Can Skill be Interrupted"
+      },
+      {
+        "name": "minimumLandingAngleFromHorizontal",
+        "irType": "float",
+        "docZh": "降落方向与水平面最小夹角",
+        "docEn": "Minimum Landing Angle from Horizontal"
+      },
+      {
+        "name": "maximumLandingAngleFromHorizontal",
+        "irType": "float",
+        "docZh": "降落方向与水平面最大夹角",
+        "docEn": "Maximum Landing Angle from Horizontal"
+      },
+      {
+        "name": "heightThresholdForLandingDetection",
+        "irType": "float",
+        "docZh": "判定降落时的离地高度",
+        "docEn": "Height Threshold for Landing Detection"
+      },
+      {
+        "name": "movementSPD",
+        "irType": "enum",
+        "docZh": "移动速度",
+        "docEn": "Movement SPD"
+      },
+      {
+        "name": "overwriteMovementSPD",
+        "irType": "float",
+        "docZh": "覆写移动速度",
+        "docEn": "Overwrite Movement SPD"
+      },
+      {
+        "name": "overrideTurnSpeed",
+        "irType": "float",
+        "docZh": "覆写转向速度",
+        "docEn": "Override Turn Speed"
+      },
+      {
+        "name": "maximumDescentDuration",
+        "irType": "float",
+        "docZh": "降落最大持续时间",
+        "docEn": "Maximum Descent Duration"
+      }
+    ],
+    "returns": null,
+    "docs": {
+      "en": "The creation performs an aerial landing action. It calculates a landing point based on the configured angle, then moves toward that point.; The tactic is considered complete when the vertical distance between the creation’s current position and the landing point is less than the Height Threshold for Landing Detection.; Execution Conditions:\n\nGSTS Note: This is intentionally different from normal sequential TypeScript.\nAlthough statements are written in order, the following statement is not executed unconditionally:\nit is connected to this node’s [Failure] output and runs only when the preceding action fails.\nFor example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;\nif the skill succeeds or is still running, the following statement does not run.\n\nGSTS Note: When Execute is false, this tactic is treated as failed, so execution continues\nthrough its [Failure] output to the following statement.",
+      "zh": "造物执行空中降落行为，根据配置角度计算出落地点，向落地点移动; 当前位置与落地点的高度差小于 判定降落时的离地高度 时，视为战术执行完成; 执行条件：\n\nGSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，\n但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；\n只有前面的行为执行失败，才会执行后面的语句。\n例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；\n若技能成功或仍在执行，后面的语句不会执行。\n\nGSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，\n会从【失败执行】引脚继续执行后续语句。"
+    },
+    "modes": [
+      "beyond",
+      "classic"
+    ],
+    "availability": [
+      {
+        "subType": "creation_status",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      }
+    ]
+  },
+  {
+    "methodName": "tacticAerialPursuit",
+    "nodeType": "tactic_aerial_pursuit",
+    "subTypes": [
+      "creation_status"
+    ],
+    "kind": "exec",
+    "params": [
+      {
+        "name": "execute",
+        "irType": "bool",
+        "docZh": "是否执行",
+        "docEn": "Execute"
+      },
+      {
+        "name": "tacticalContext",
+        "irType": "str",
+        "docZh": "战术上下文",
+        "docEn": "Tactical Context"
+      },
+      {
+        "name": "canSkillBeInterrupted",
+        "irType": "bool",
+        "docZh": "是否可以打断技能",
+        "docEn": "Can skill be interrupted"
+      },
+      {
+        "name": "horizontalDistanceToTriggerPursuit",
+        "irType": "float",
+        "docZh": "触发追击的水平距离",
+        "docEn": "Horizontal Distance to Trigger Pursuit"
+      },
+      {
+        "name": "horizontalDistanceToStopPursuit",
+        "irType": "float",
+        "docZh": "停止追击的水平距离",
+        "docEn": "Horizontal Distance to Stop Pursuit"
+      },
+      {
+        "name": "useElevationDifferenceWhenPursuing",
+        "irType": "bool",
+        "docZh": "是否使用高度差追击",
+        "docEn": "Use Elevation Difference When Pursuing"
+      },
+      {
+        "name": "heightDifferenceToTriggerPursuit",
+        "irType": "float",
+        "docZh": "触发追击的高度差",
+        "docEn": "Height Difference to Trigger Pursuit"
+      },
+      {
+        "name": "heightDifferenceToStopPursuit",
+        "irType": "float",
+        "docZh": "停止追击的高度差",
+        "docEn": "Height Difference to Stop Pursuit"
+      },
+      {
+        "name": "minimumVerticalOffsetFromTarget",
+        "irType": "float",
+        "docZh": "相对目标高度偏移下限",
+        "docEn": "Minimum Vertical Offset from Target"
+      },
+      {
+        "name": "maximumVerticalOffsetFromTarget",
+        "irType": "float",
+        "docZh": "相对目标高度偏移上限",
+        "docEn": "Maximum Vertical Offset from Target"
+      },
+      {
+        "name": "movementSPD",
+        "irType": "enum",
+        "docZh": "移动速度",
+        "docEn": "Movement SPD"
+      },
+      {
+        "name": "overwriteMovementSPD",
+        "irType": "float",
+        "docZh": "覆写移动速度",
+        "docEn": "Overwrite Movement SPD"
+      },
+      {
+        "name": "overrideTurnSpeed",
+        "irType": "float",
+        "docZh": "覆写转向速度",
+        "docEn": "Override Turn Speed"
+      },
+      {
+        "name": "singlePursuitMaximumDuration",
+        "irType": "float",
+        "docZh": "单次追击最大持续时间",
+        "docEn": "Single Pursuit Maximum Duration"
+      },
+      {
+        "name": "tacticalInstanceCD",
+        "irType": "float",
+        "docZh": "战术实例冷却时间",
+        "docEn": "Tactical Instance CD"
+      }
+    ],
+    "returns": null,
+    "docs": {
+      "en": "The creation performs an aerial pursuit action.; While pursuing a target, the creation automatically selects a suitable position around the target as its destination.; Execution Conditions:; [Required]; [Meet any one of the Conditions]\n\nGSTS Note: This is intentionally different from normal sequential TypeScript.\nAlthough statements are written in order, the following statement is not executed unconditionally:\nit is connected to this node’s [Failure] output and runs only when the preceding action fails.\nFor example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;\nif the skill succeeds or is still running, the following statement does not run.\n\nGSTS Note: When Execute is false, this tactic is treated as failed, so execution continues\nthrough its [Failure] output to the following statement.",
+      "zh": "造物执行空中追击行为; 追击目标战术，会自主选择目标周围合适的位置做目标点; 执行条件：; 【必须满足】; 【任一满足】\n\nGSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，\n但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；\n只有前面的行为执行失败，才会执行后面的语句。\n例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；\n若技能成功或仍在执行，后面的语句不会执行。\n\nGSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，\n会从【失败执行】引脚继续执行后续语句。"
+    },
+    "modes": [
+      "beyond",
+      "classic"
+    ],
+    "availability": [
+      {
+        "subType": "creation_status",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      }
+    ]
+  },
+  {
     "methodName": "tacticExecutePatrol",
     "nodeType": "tactic_execute_patrol",
     "subTypes": [
@@ -12288,7 +13083,7 @@
     "returns": null,
     "docs": {
       "en": "The Creation executes a Paving Escape, a tactic for fleeing from the Target. It attempts to turn its back to the Target and move farther away.; Allows you to configure multiple segments of Escape Motion. Each segment/run calculates one escape point.; Execution Conditions:\n\nGSTS Note: This is intentionally different from normal sequential TypeScript.\nAlthough statements are written in order, the following statement is not executed unconditionally:\nit is connected to this node’s [Failure] output and runs only when the preceding action fails.\nFor example, if Execute Skill fails because the skill is on cooldown, the following action is attempted;\nif the skill succeeds or is still running, the following statement does not run.\n\nGSTS Note: When Execute is false, this tactic is treated as failed, so execution continues\nthrough its [Failure] output to the following statement.",
-      "zh": "造物执行地面逃跑行为，逃离目标的战术，试图背对目标并向远处移动。; 允许配置多段逃跑移动，每段/每次会计算一个逃跑点位。; 执行条件：\n\nGSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，\n但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；\n只有前面的行为执行失败，才会执行后面的语句。\n例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；\n若技能成功或仍在执行，后面的语句不会执行。\n\nGSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，\n会从【失败执行】引脚继续执行后续语句。"
+      "zh": "造物执行地面逃跑行为，逃离目标的战术，试图背对目标并向远处移动。; 允许配置多段逃跑移动，段数的取值范围为 [逃跑最少段数，逃跑最多段数) ，每段/每次会计算一个逃跑点位。; 执行条件：\n\nGSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，\n但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；\n只有前面的行为执行失败，才会执行后面的语句。\n例如【执行技能】因技能处于 CD 而失败时，才会尝试下一条行为；\n若技能成功或仍在执行，后面的语句不会执行。\n\nGSTS 注: 当【是否执行】为 false 时，该战术等同于执行失败，\n会从【失败执行】引脚继续执行后续语句。"
     },
     "modes": [
       "beyond",
@@ -13715,7 +14510,7 @@
     ],
     "returns": null,
     "docs": {
-      "en": "Initiates a Hitbox Attack at a specified Attachment Point, with configurable attack parameters",
+      "en": "Initiates a Hitbox Attack at a specified Attachment Point, supporting configurable attack parameters",
       "zh": "对指定挂接点发起一次攻击盒攻击，可以设置该次攻击的各种参数"
     },
     "modes": [
@@ -15218,7 +16013,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Converts normalized viewport coordinates (0–1) to screen coordinates. Only available in Beyond Mode.",
       "zh": "将视口坐标（归一化0-1）转换为屏幕坐标，仅在超限模式可用"
     },
     "modes": [
@@ -15265,6 +16060,8 @@
       "character_control_skill",
       "character_skill",
       "creation_skill",
+      "creation_status",
+      "creation_status_decision",
       "int_filter"
     ],
     "kind": "data",
@@ -15326,6 +16123,20 @@
         ]
       },
       {
+        "subType": "creation_status",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      },
+      {
+        "subType": "creation_status_decision",
+        "modes": [
+          "beyond",
+          "classic"
+        ]
+      },
+      {
         "subType": "int_filter",
         "modes": [
           "beyond",
@@ -15347,10 +16158,10 @@
     "kind": "data",
     "params": [
       {
-        "name": "worldPosition",
+        "name": "worldCoordinates",
         "irType": "vec3",
         "docZh": "世界坐标",
-        "docEn": "World Position"
+        "docEn": "World Coordinates"
       }
     ],
     "returns": [
@@ -15368,7 +16179,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Convert world coordinates to screen coordinates. Only available in Beyond Mode.",
       "zh": "将世界坐标转换为屏幕坐标，仅在超限模式可用"
     },
     "modes": [
