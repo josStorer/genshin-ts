@@ -221,8 +221,23 @@ declare global {
   function send(signalName: StrValue, ...params: any[]): void
 
   /**
-   * Send a signal to all client Lua scripts attached to the target player.
-   * 发送客户端脚本信号: 向指定玩家身上的所有客户端 Lua 脚本发送信号。
+   * Send a signal to every client Lua script attached to the target player
+   *
+   * 发送客户端脚本信号: 向目标玩家身上挂载的所有客户端 Lua 脚本发送信号
+   *
+   * GSTS Note: You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` only reaches node graphs, never Lua. Use `sendLuaAll` to reach every player on the field. Parameters must use types that Lua can receive; faction is not supported
+   *
+   * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` 只发给节点图, Lua 收不到。要发给所有在场玩家请用 `sendLuaAll`。参数只能使用 Lua 能接收的类型, 不支持阵营
+   *
+   * @param target Target player; every client script on this player receives the signal
+   *
+   * 目标玩家: 必须是玩家实体, 该玩家身上的所有客户端脚本都会收到
+   * @param signal Only literal string or extracted Signal.xxx definition is supported
+   *
+   * 信号名（仅支持字面量字符串或提取出的 Signal.xxx 定义）
+   * @param params Signal parameters to pass, matching the signal's registered parameters in the editor
+   *
+   * 信号参数，需与编辑器信号管理器中注册的参数一一对应
    */
   function sendLua<S extends LuaSignalDefinition>(
     target: PlayerEntity,
@@ -232,8 +247,20 @@ declare global {
   function sendLua(target: PlayerEntity, signal: StrValue, ...params: unknown[]): void
 
   /**
-   * Send a signal to each player currently on the field.
-   * 向所有玩家发送客户端脚本信号: 遍历在场玩家，逐个发送给其客户端 Lua 脚本。
+   * Send a client script signal to every player on the field
+   *
+   * 向所有在场玩家发送客户端脚本信号
+   *
+   * GSTS Note: Compiles to a loop over "Get List of Player Entities on the Field" that sends the signal to each player in turn, so every client Lua script of every player receives it. Register the signal in the signal manager in the editor first. Parameters must use types that Lua can receive; faction is not supported
+   *
+   * GSTS 注: 编译为对【获取在场玩家实体列表】的遍历, 逐个玩家发送, 每个玩家身上的所有客户端 Lua 脚本都会收到。你仍然需要在编辑器内的信号管理器注册信号。参数只能使用 Lua 能接收的类型, 不支持阵营
+   *
+   * @param signal Only literal string or extracted Signal.xxx definition is supported
+   *
+   * 信号名（仅支持字面量字符串或提取出的 Signal.xxx 定义）
+   * @param params Signal parameters to pass, matching the signal's registered parameters in the editor
+   *
+   * 信号参数，需与编辑器信号管理器中注册的参数一一对应
    */
   function sendLuaAll<S extends LuaSignalDefinition>(
     signal: S,

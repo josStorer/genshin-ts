@@ -32,7 +32,9 @@ export interface SignalDefinition<
   readonly name: Name
   readonly params: Params
 }
-/** Signal definitions whose scalar and list parameters can be received by Lua.
+/**
+ * Signal definitions whose scalar and list parameters can be received by Lua.
+ *
  * Lua 信号定义: 参数仅包含 Lua 支持的标量和列表类型。
  */
 export type LuaSignalDefinition = SignalDefinition<

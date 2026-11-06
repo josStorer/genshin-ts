@@ -690,6 +690,7 @@ export type ServerEventPayloads = {
     isCriticalHit: boolean
     /**
      * Hit reaction level of the received attack.
+     *
      * 受击等级: 此次攻击的受击反应等级。
      */
     hitLevel: HitLevel

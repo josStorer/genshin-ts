@@ -877,13 +877,33 @@ type HelperFromIndex<K extends keyof ServerExecutionFlowFunctions, Index extends
 
 interface EntityHelperFromFirstParam {
   /**
-   * Open the gift box interface for this player.
-   * 打开礼盒界面: 为此玩家打开对应礼盒索引的界面。
+   * Open the gift box interface for the specified player.
+   *
+   * 打开礼盒界面: 为指定玩家打开对应礼盒索引的界面。
+   *
+   * @param giftBoxIndex Gift Box Index
+   *
+   * 礼盒索引
    */
   openGiftBoxInterface: (giftBoxIndex: IntValue) => void
   /**
    * Set the cooldown of the specified skill instance.
+   *
    * 设置指定技能实例冷却: 设置技能实例的冷却时间，并选择是否限制最大冷却时间。
+   *
+   * @param skillInstanceId Skill Instance ID
+   *
+   * 技能实例ID
+   * @param cooldown Cooldown
+   *
+   * CD
+   *
+   * 冷却时间
+   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   *
+   * Limit Maximum CD Time
+   *
+   * 是否限制最大冷却时间
    */
   setCdForSpecifiedSkillInstance: (
     skillInstanceId: IntValue,
@@ -892,7 +912,22 @@ interface EntityHelperFromFirstParam {
   ) => void
   /**
    * Increase the cooldown of the specified skill instance.
+   *
    * 增加指定技能实例冷却: 增加技能实例的冷却时间，并选择是否限制最大冷却时间。
+   *
+   * @param skillInstanceId Skill Instance ID
+   *
+   * 技能实例ID
+   * @param cooldownIncrease Cooldown Increase
+   *
+   * CD Increase Value
+   *
+   * 冷却时间增加值
+   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   *
+   * Limit Maximum CD Time
+   *
+   * 是否限制最大冷却时间
    */
   increaseCdForSpecifiedSkillInstance: (
     skillInstanceId: IntValue,
@@ -900,28 +935,72 @@ interface EntityHelperFromFirstParam {
     limitMaximumCooldown: BoolValue
   ) => void
   /**
-   * Set this creation's disruptor device by index.
-   * 设置造物扰动装置: 设置此造物使用的扰动装置序号。
+   * Set the creation's disruptor device by index.
+   *
+   * 设置造物扰动装置: 设置目标造物使用的扰动装置序号。
+   *
+   * @param deviceId Device Index
+   *
+   * 装置序号
    */
   setCreationDisruptorDevice: (deviceId: IntValue) => void
   /**
-   * Activate or disable this creation's native push collision.
-   * 激活/关闭原生推挤碰撞: 按序号激活或关闭此造物的原生推挤碰撞。
+   * Activate or disable a creation's native push collision.
+   *
+   * 激活/关闭原生推挤碰撞: 按序号激活或关闭造物的原生推挤碰撞。
+   *
+   * @param collisionId Native Push Collision Index
+   *
+   * Native Push Collision ID
+   *
+   * 原生推挤碰撞序号
+   * @param activate Whether to activate
+   *
+   * 是否激活
    */
   activateDisableNativePushCollision: (collisionId: IntValue, activate: BoolValue) => void
   /**
-   * Activate or disable this creation's extra push collision.
-   * 激活/关闭额外推挤碰撞: 按序号激活或关闭此造物的额外推挤碰撞。
+   * Activate or disable a creation's extra push collision.
+   *
+   * 激活/关闭额外推挤碰撞: 按序号激活或关闭造物的额外推挤碰撞。
+   *
+   * @param collisionId Extra Push Collision Index
+   *
+   * Extra Push Collision ID
+   *
+   * 额外推挤碰撞序号
+   * @param activate Whether to activate
+   *
+   * 是否激活
    */
   activateDisableExtraPushCollision: (collisionId: IntValue, activate: BoolValue) => void
   /**
-   * Switch the combat text filter template for this player.
-   * 切换战斗文字提示过滤模板: 为此玩家切换指定序号的战斗文字提示模板。
+   * Switch the combat text filter template for a player.
+   *
+   * 切换战斗文字提示过滤模板: 为玩家切换指定序号的战斗文字提示模板。
+   *
+   * @param templateId Combat Text Template Index
+   *
+   * Combat Text Prompt Template ID
+   *
+   * 战斗文字提示模板序号
    */
   switchCombatTextFilterTemplate: (templateId: IntValue) => void
   /**
-   * Send a signal to all client Lua scripts attached to this player.
-   * 发送客户端脚本信号: 向此玩家身上的所有客户端 Lua 脚本发送信号。
+   * Send a signal to every client Lua script attached to this player.
+   *
+   * 发送客户端脚本信号: 向此玩家身上挂载的所有客户端 Lua 脚本发送信号。
+   *
+   * GSTS Note: You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` / `f.sendSignal` only reach node graphs, never Lua. Parameters must use types that Lua can receive; faction is not supported
+   *
+   * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` / `f.sendSignal` 只发给节点图, Lua 收不到。参数只能使用 Lua 能接收的类型, 不支持阵营
+   *
+   * @param signal Only literal string or extracted Signal.xxx definition is supported
+   *
+   * 信号名（仅支持字面量字符串或提取出的 Signal.xxx 定义）
+   * @param params Signal parameters to pass, matching the signal's registered parameters in the editor
+   *
+   * 信号参数，需与编辑器信号管理器中注册的参数一一对应
    */
   sendClientScriptedServerSignal<S extends LuaSignalDefinition>(
     signal: S,
@@ -1915,6 +1994,7 @@ interface EntityHelperFromFirstParam {
   getCreationAttribute: () => {
     /**
      * Creation weight.
+     *
      * 造物重量: 当前造物的重量。
      */
     creationWeight: number
@@ -2690,6 +2770,7 @@ interface EntityHelperFromFirstParam {
    *
    * 伤害跳字类型: 无跳字普通跳字暴击跳字
    * @param initiatorEntity Entity initiating the HP loss; omit to use the editor default.
+   *
    * 发起者实体: 省略时使用编辑器默认值。
    */
   hpLoss: (
@@ -2761,6 +2842,7 @@ interface EntityHelperFromFirstParam {
    *
    * 发起者实体: 决定了该次攻击的发起者实体，默认为该节点图所关联的实体。影响【攻击命中时】、【受到攻击时】等事件中判定的攻击者
    * @param abilityUnitOwnerEntity Entity owning the ability unit; omit to use the editor default.
+   *
    * 能力单元归属实体: 省略时使用编辑器默认值。
    */
   initiateAttack: (
@@ -5452,8 +5534,20 @@ interface EntityHelperAliases {
 
 interface EntityHelperMethodAliases {
   /**
-   * Send a signal to all client Lua scripts attached to this player.
-   * 发送客户端脚本信号: 向此玩家身上的所有客户端 Lua 脚本发送信号。
+   * Send a signal to every client Lua script attached to this player.
+   *
+   * 发送客户端脚本信号: 向此玩家身上挂载的所有客户端 Lua 脚本发送信号。
+   *
+   * GSTS Note: You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` / `f.sendSignal` only reach node graphs, never Lua. Parameters must use types that Lua can receive; faction is not supported
+   *
+   * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` / `f.sendSignal` 只发给节点图, Lua 收不到。参数只能使用 Lua 能接收的类型, 不支持阵营
+   *
+   * @param signal Only literal string or extracted Signal.xxx definition is supported
+   *
+   * 信号名（仅支持字面量字符串或提取出的 Signal.xxx 定义）
+   * @param params Signal parameters to pass, matching the signal's registered parameters in the editor
+   *
+   * 信号参数，需与编辑器信号管理器中注册的参数一一对应
    */
   sendLua<S extends LuaSignalDefinition>(signal: S, ...params: SignalParamValues<S>): void
   sendLua(signal: StrValue, ...params: unknown[]): void

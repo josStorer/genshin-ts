@@ -557,6 +557,7 @@ export class CharacterSkillSlot extends enumeration {
   static readonly SprintSkill = CharacterSkillSlot.DashSkill
   /**
    * Jump Skill
+   *
    * 跳跃技能: 跳跃技能槽位。
    */
   static readonly JumpSkill = new enumeration(
@@ -2158,6 +2159,7 @@ export class ElementalReactionType extends enumeration {
   ) as ElementalReactionType
   /**
    * Stellar Swirl
+   *
    * 星扩散: 星扩散元素反应。
    */
   static readonly StellarSwirl = new enumeration(
