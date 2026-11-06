@@ -67,7 +67,12 @@ type EmitState = {
   filterChecks: string[]
 }
 
-const OUT_DIR = 'tests/manual/client-nodes'
+const november = process.argv.includes('--november')
+const OUT_DIR = november ? 'tests/manual/nodes-2026-11' : 'tests/manual/client-nodes'
+const NOVEMBER_IDS = new Set([
+  200050, 200051, 200059, 200112, 200115, 200252, 200276, 200277, 200278, 200280, 200281, 200282,
+  200301, 200302, 200303, 200307, 200308, 200309, 200310, 200311, 200312
+])
 const SOURCE_FILE = 'src/definitions/client_nodes.ts'
 const RANDOM_SEED = 0x6d696c69
 
@@ -286,13 +291,14 @@ function extractEnumPicks(file: string, namespace: EnumPick['namespace']): Map<s
 
   for (const statement of source.statements) {
     if (!ts.isClassDeclaration(statement) || !statement.name) continue
-    const member = statement.members.find(
+    const members = statement.members.filter(
       (candidate): candidate is ts.PropertyDeclaration =>
         ts.isPropertyDeclaration(candidate) &&
         candidate.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword) ===
           true &&
         ts.isIdentifier(candidate.name)
     )
+    const member = members[november ? 1 : 0] ?? members[0]
     if (member && ts.isIdentifier(member.name)) {
       result.set(statement.name.text, { namespace, member: member.name.text })
     }
@@ -392,7 +398,11 @@ function emitArg(
   }
   if (method.name === 'getRayFilterTypeList' && param.name === 'types') {
     recordArg(state, 'literal')
-    return emitEnumArray(state, 'RayFilterType', 10)
+    return emitEnumArray(
+      state,
+      type === 'RayHitFilterType[]' ? 'RayHitFilterType' : 'RayFilterType',
+      10
+    )
   }
 
   if (type === 'FloatValue') {
@@ -471,11 +481,12 @@ function emitArg(
       ? `f.getEntityTypeList(${emitEnumArray(state, 'EntityType', 10)})`
       : emitEnumArray(state, 'EntityType', 3)
   }
-  if (type === 'RayFilterType[]') {
+  if (type === 'RayFilterType[]' || type === 'RayHitFilterType[]') {
+    const enumType = type.slice(0, -2)
     recordArg(state, kind)
     return useWire && state.methodNames.has('getRayFilterTypeList')
-      ? `f.getRayFilterTypeList(${emitEnumArray(state, 'RayFilterType', 10)})`
-      : emitEnumArray(state, 'RayFilterType', 3)
+      ? `f.getRayFilterTypeList(${emitEnumArray(state, enumType, 10)})`
+      : emitEnumArray(state, enumType, 3)
   }
   if (type.includes('[]') && type.includes('RuntimeParameterValueTypeMap')) {
     recordArg(state, literalOnly ? 'literal' : 'wire')
@@ -551,25 +562,39 @@ function emitValueConsumer(
   }
   if (isListReturn(type)) {
     if (type === 'EntityType[]') {
+      const status = state.graph.subType.startsWith('creation_status')
       const probe = `enumListProbe${nextSerial(state)}`
       lines.push(
-        `const ${probe} = f.getRayDetectionResult(wireEntity, wireVec3, wireVec3, wireFloat, ${enumExpression(
+        `const ${probe} = f.getRayDetectionResult(${status ? enumExpression(state, 'TargetEntity') : 'wireEntity'}, wireVec3, wireVec3, wireFloat, ${enumExpression(
           state,
           'TargetType'
-        )}, ${expression}, f.getRayFilterTypeList(${emitEnumArray(state, 'RayFilterType', 10)}))`
+        )}, ${expression}, f.getRayFilterTypeList(${emitEnumArray(state, status ? 'RayHitFilterType' : 'RayFilterType', 10)}))`
       )
       emitBooleanAnchor(lines, state, `f.equal(${probe}.onHitLocation, [0, 0, 0])`)
+      if (november)
+        emitBooleanAnchor(
+          lines,
+          state,
+          status ? `${probe}.onHitEntity` : `f.equal(${probe}.onHitEntity, wireEntity)`
+        )
       return
     }
-    if (type === 'RayFilterType[]') {
+    if (type === 'RayFilterType[]' || type === 'RayHitFilterType[]') {
+      const status = state.graph.subType.startsWith('creation_status')
       const probe = `enumListProbe${nextSerial(state)}`
       lines.push(
-        `const ${probe} = f.getRayDetectionResult(wireEntity, wireVec3, wireVec3, wireFloat, ${enumExpression(
+        `const ${probe} = f.getRayDetectionResult(${status ? enumExpression(state, 'TargetEntity') : 'wireEntity'}, wireVec3, wireVec3, wireFloat, ${enumExpression(
           state,
           'TargetType'
         )}, f.getEntityTypeList(${emitEnumArray(state, 'EntityType', 10)}), ${expression})`
       )
       emitBooleanAnchor(lines, state, `f.equal(${probe}.onHitLocation, [0, 0, 0])`)
+      if (november)
+        emitBooleanAnchor(
+          lines,
+          state,
+          status ? `${probe}.onHitEntity` : `f.equal(${probe}.onHitEntity, wireEntity)`
+        )
       return
     }
     emitBooleanAnchor(lines, state, `f.greaterThanOrEqualTo(f.getListLength(${expression}), 0n)`)
@@ -747,21 +772,32 @@ function emitMethod(state: EmitState, method: MethodInfo, metadata: MetadataReco
 
   const resultName = `result${nextSerial(state)}`
   const returnType = normalizeType(method.returnText)
-  if (returnType === 'EntityType[]' || returnType === 'RayFilterType[]') {
+  if (
+    returnType === 'EntityType[]' ||
+    returnType === 'RayFilterType[]' ||
+    returnType === 'RayHitFilterType[]'
+  ) {
+    const status = state.graph.subType.startsWith('creation_status')
     const otherList =
       returnType === 'EntityType[]'
-        ? `f.getRayFilterTypeList(${emitEnumArray(state, 'RayFilterType', 10)})`
+        ? `f.getRayFilterTypeList(${emitEnumArray(state, status ? 'RayHitFilterType' : 'RayFilterType', 10)})`
         : `f.getEntityTypeList(${emitEnumArray(state, 'EntityType', 10)})`
     const entityTypes = returnType === 'EntityType[]' ? call : otherList
-    const rayFilters = returnType === 'RayFilterType[]' ? call : otherList
+    const rayFilters = returnType !== 'EntityType[]' ? call : otherList
     const probe = `enumListProbe${nextSerial(state)}`
     lines.push(
-      `const ${probe} = f.getRayDetectionResult(wireEntity, wireVec3, wireVec3, wireFloat, ${enumExpression(
+      `const ${probe} = f.getRayDetectionResult(${status ? enumExpression(state, 'TargetEntity') : 'wireEntity'}, wireVec3, wireVec3, wireFloat, ${enumExpression(
         state,
         'TargetType'
       )}, ${entityTypes}, ${rayFilters})`
     )
     emitBooleanAnchor(lines, state, `f.equal(${probe}.onHitLocation, [0, 0, 0])`)
+    if (november)
+      emitBooleanAnchor(
+        lines,
+        state,
+        status ? `${probe}.onHitEntity` : `f.equal(${probe}.onHitEntity, wireEntity)`
+      )
     return lines
   }
   if (returnType.startsWith('ReadonlyDict<') || returnType === 'dict') {
@@ -783,15 +819,19 @@ function emitGraph(
   metadataByMethodKey: ReadonlyMap<string, MetadataRecord>,
   enumPicks: ReadonlyMap<string, EnumPick>
 ): { source: string; report: Record<string, unknown> } {
-  const methodNames = CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE[graph.subType][
+  const availableMethods = CLIENT_NODE_METHODS_BY_SUB_TYPE_AND_MODE[graph.subType][
     graph.mode
   ] as readonly string[]
+  const methodNames = availableMethods.filter(
+    (name) =>
+      !november || NOVEMBER_IDS.has(metadataByMethodKey.get(`${graph.subType}.${name}`)!.genericId)
+  )
   const methods = methodsBySubType.get(graph.subType)
   if (!methods) throw new Error(`missing generated class for ${graph.subType}`)
 
   const state: EmitState = {
     graph,
-    methodNames: new Set(methodNames),
+    methodNames: new Set(availableMethods),
     enumPicks,
     serial: 0,
     literalArgs: 0,
@@ -841,7 +881,14 @@ function emitGraph(
   const expectedNodeTypes = CLIENT_NODE_TYPES_BY_SUB_TYPE_AND_MODE[graph.subType][
     graph.mode
   ] as readonly string[]
-  const uncoveredNodeTypes = expectedNodeTypes.filter(
+  const selectedExpectedNodeTypes = expectedNodeTypes.filter(
+    (nodeType) =>
+      !november ||
+      NOVEMBER_IDS.has(
+        metadataByMethodKey.get(`${graph.subType}.${snakeToCamel(nodeType)}`)?.genericId ?? -1
+      )
+  )
+  const uncoveredNodeTypes = selectedExpectedNodeTypes.filter(
     (nodeType) =>
       !coveredNodeTypes.has(nodeType) &&
       nodeType !== 'node_graph_begins' &&
@@ -858,7 +905,7 @@ function emitGraph(
       id: graph.id,
       name: graph.name,
       methodCount: methodNames.length,
-      expectedNodeTypeCount: expectedNodeTypes.length,
+      expectedNodeTypeCount: selectedExpectedNodeTypes.length,
       literalArgs: state.literalArgs,
       wiredArgs: state.wiredArgs,
       uncoveredNodeTypes
@@ -889,13 +936,16 @@ function emitFilterResult(lines: string[], state: EmitState): string {
 
 function emitModeFile(mode: ClientGraphMode, graphs: readonly string[]): string {
   const graphSpecs = GRAPH_SPECS.filter((graph) => graph.mode === mode)
-  const idRows = graphSpecs.map((graph) => ` *   ${graph.id}  ${graph.name} (${graph.subType})`)
+  const idRows = graphSpecs.map(
+    (graph) =>
+      ` *   ${graph.id + (november ? 1000 : 0)}  ${november ? 'November_' : ''}${graph.name} (${graph.subType})`
+  )
   return [
     `/**`,
     ` * AUTO-GENERATED exhaustive client-node import fixture (${mode}).`,
     ` *`,
-    ` * Regenerate: npm run gen:client:manual`,
-    ` * Build GIA: node ./bin/gsts.mjs tests/manual/client-nodes/${mode}.ts -c ./gsts.test.config.ts --noinject`,
+    ` * Regenerate: npm run gen:client:${november ? 'november' : 'manual'}`,
+    ` * Build GIA: node ./bin/gsts.mjs ${OUT_DIR}/${mode}.ts -c ./gsts.test.config.ts --noinject`,
     ` *`,
     ` * Graph IDs:`,
     ...idRows,
@@ -945,6 +995,7 @@ function main(): void {
   const reports: Record<string, unknown>[] = []
   for (const mode of ['beyond', 'classic'] as const) {
     const graphs = GRAPH_SPECS.filter((graph) => graph.mode === mode).map((graph) => {
+      if (november) graph = { ...graph, id: graph.id + 1000, name: `November_${graph.name}` }
       const result = emitGraph(graph, methodsBySubType, metadataByMethodKey, enumPicks)
       reports.push(result.report)
       return result.source
@@ -952,8 +1003,12 @@ function main(): void {
     fs.writeFileSync(path.join(OUT_DIR, `${mode}.ts`), emitModeFile(mode, graphs))
   }
 
+  const reportPath = november
+    ? '.tmp/nodes-2026-11-work/client-manual-coverage.json'
+    : path.join(OUT_DIR, '_coverage.json')
+  fs.mkdirSync(path.dirname(reportPath), { recursive: true })
   fs.writeFileSync(
-    path.join(OUT_DIR, '_coverage.json'),
+    reportPath,
     `${JSON.stringify(
       {
         format: 1,

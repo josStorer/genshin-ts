@@ -30,6 +30,7 @@ import {
 } from '../../src/thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/enum_id.js'
 import { NODE_ID } from '../../src/thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/node_id.js'
 import { NODE_PIN_RECORDS } from '../../src/thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/node_pin_records.js'
+import { LEGACY_CLIENT_ELEMENTAL_REACTION_VALUES } from '../client-nodegraph/client_enum_binding.js'
 import { editorNameToMethodName, snakeToCamel } from '../client-nodegraph/client_nodes_codegen.js'
 
 type OfficialNode = {
@@ -444,7 +445,12 @@ function main() {
       .flatMap((enumRecord) => enumRecord.values.map((value) => value.value))
   )
   const missingClientEnumValues = Object.entries(CLIENT_ENUM_VALUES).filter(
-    ([, value]) => !officialClientEnumValues.has(value)
+    ([key, value]) =>
+      !officialClientEnumValues.has(value) &&
+      !(
+        key.startsWith('elemental_reaction_type_') &&
+        LEGACY_CLIENT_ELEMENTAL_REACTION_VALUES.has(value)
+      )
   )
   if (missingClientEnumValues.length) {
     errors.push(

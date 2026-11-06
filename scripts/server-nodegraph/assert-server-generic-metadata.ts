@@ -86,7 +86,8 @@ const SERVER_EQUALITY_TYPES_BY_ENUM_ID = [
   [40, 'GameplayMode'],
   [41, 'InputDeviceType'],
   [42, 'ColorBlendType'],
-  [43, 'FillMaterial']
+  [43, 'FillMaterial'],
+  [44, 'HitLevel']
 ] as const
 
 const TYPE_BY_VENDOR_TAG: Record<string, string> = {
@@ -138,6 +139,7 @@ const SERVER_ENUM_RECORD_ID_BY_CONNECTION_TYPE = new Map<number, number>([
   [10048, ENUM_ID.Color_Blend_Type],
   [10049, ENUM_ID.Fill_Material],
   [210043, ENUM_ID.Interrupt_Status],
+  [210038, ENUM_ID.Hit_Level],
   [210045, ENUM_ID.Damage_Pop_Up_Type]
 ])
 
@@ -467,9 +469,9 @@ for (const [genericId, kind, pinIndex, connectionType] of [
 const colorBlendConnectionType = staticInputConnectionType(835, 5)
 const fillMaterialConnectionType = staticInputConnectionType(835, 8)
 assert.deepEqual(
-  enumEqualConnectionTypes.slice(-2),
-  [colorBlendConnectionType, fillMaterialConnectionType],
-  'Enumerations Equal final variants are not model color/fill-material enums'
+  enumEqualConnectionTypes.slice(-3),
+  [colorBlendConnectionType, fillMaterialConnectionType, 210038],
+  'Enumerations Equal final variants must retain color/fill-material and append Hit Level'
 )
 assert.equal(enumEqualConnectionTypes.includes(staticInputConnectionType(775, 2)), false)
 assert.equal(enumEqualConnectionTypes.includes(staticInputConnectionType(775, 7)), false)

@@ -149,7 +149,12 @@ try {
       args: [{ type: 'str', value: 'in-flight' }]
     }))
   }
-  fs.writeFileSync(inFlightPath, JSON.stringify(largeDocument))
+  const largeJson = JSON.stringify(largeDocument)
+  fs.writeFileSync(inFlightPath, largeJson)
+  // Scheduling is largest-first. Start the failing task in the first worker
+  // slot, so startup/transpilation timing cannot let the valid task drain the
+  // queue before the failure worker has even loaded.
+  fs.writeFileSync(invalidPath, '{'.repeat(Buffer.byteLength(largeJson) + 1))
   const queuedPath = path.join(tempDir, 'queued.json')
   fs.writeFileSync(queuedPath, JSON.stringify(document(1073742506)))
   await assert.rejects(

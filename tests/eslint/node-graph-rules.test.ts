@@ -410,6 +410,19 @@ ruleTester.run('server-literal-arguments', serverLiteralArguments, {
     {
       filename,
       code: `${importG}
+import { defineSignal } from '../../src/runtime/core'
+const S = defineSignal('LuaLiteral', [['value', 'int']])
+g.server().on('whenEntityIsCreated', (_evt, f) => {
+  const player = f.getCorrespondingValueFromList(f.getListOfPlayerEntitiesOnTheField(), 0n)
+  f.sendClientScriptedServerSignal(player, S, 1n)
+  sendLua(player, S, 1n)
+  sendLuaAll(S, 1n)
+  player.sendLua('LuaLiteral', 1n)
+})`
+    },
+    {
+      filename,
+      code: `${importG}
 import type { PlayerEntity } from '../../src/definitions/entity_helpers'
 g.server().on('whenEntityIsCreated', (_evt, f) => {
   const player = f.getSelfEntity() as unknown as PlayerEntity
@@ -424,6 +437,27 @@ g.server().on('whenEntityIsCreated', (_evt, f) => {
     }
   ],
   invalid: [
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', (_evt, f) => {
+  const player = f.getCorrespondingValueFromList(f.getListOfPlayerEntitiesOnTheField(), 0n)
+  const name = str(f.addition(1n, 2n))
+  f.sendClientScriptedServerSignal(player, name)
+  sendLua(player, name)
+  sendLuaAll(name)
+  player.sendLua(name)
+})`,
+      errors: [
+        {
+          message:
+            /Argument 2 of server method sendClientScriptedServerSignal must be a source literal/
+        },
+        { message: /Argument 2 of server method sendLua must be a source literal/ },
+        { message: /Argument 1 of server method sendLuaAll must be a source literal/ },
+        { message: /Argument 1 of server method sendLua must be a source literal/ }
+      ]
+    },
     {
       filename,
       code: `${importG}

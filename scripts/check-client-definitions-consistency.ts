@@ -14,7 +14,10 @@ import {
   ENUM_MATCH_ROWS_BY_GENERIC_ID
 } from '../src/thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/client_enum_values.js'
 import { CLIENT_NODE_METADATA } from '../src/thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/client_node_metadata.js'
-import { buildClientEnumBinding } from './client-nodegraph/client_enum_binding.js'
+import {
+  buildClientEnumBinding,
+  LEGACY_CLIENT_ELEMENTAL_REACTION_VALUES
+} from './client-nodegraph/client_enum_binding.js'
 import { snakeToCamel } from './client-nodegraph/client_nodes_codegen.js'
 
 /** graph entry/exit nodes handled by the runtime, never exposed as methods */
@@ -251,7 +254,11 @@ for (const expectation of enumMatchExpectations) {
       continue
     }
     const officialValues = new Set(officialEnum.values.map((value) => value.value))
-    const missingValues = row.values.filter((value) => !officialValues.has(value))
+    const missingValues = row.values.filter(
+      (value) =>
+        !officialValues.has(value) &&
+        !(row.ioc === 37 && LEGACY_CLIENT_ELEMENTAL_REACTION_VALUES.has(value))
+    )
     if (missingValues.length) {
       errors.push(
         `client enumeration_match ${expectation.genericId} IOC ${row.ioc} ` +

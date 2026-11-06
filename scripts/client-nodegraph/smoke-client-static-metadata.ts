@@ -81,14 +81,14 @@ const flowBySubTypeAndNodeType = new Map(
 assert.strictEqual(staticMetadata.formatVersion, 2)
 assert.strictEqual(concreteVariants.formatVersion, 1)
 assert.strictEqual(concreteVariants.sourceAggregateSha256, staticMetadata.source.aggregateSha256)
-assert.strictEqual(staticMetadata.nodes.length, 297)
+assert.strictEqual(staticMetadata.nodes.length, 306)
 assert.deepStrictEqual(staticMetadata.summary, {
-  inputPins: 1173,
-  connectableInputs: 828,
-  literalOnlyInputs: 345,
+  inputPins: 1297,
+  connectableInputs: 932,
+  literalOnlyInputs: 365,
   reflectiveInputs: 309,
-  pinsWithExplicitDefaults: 109,
-  namedPins: 1446,
+  pinsWithExplicitDefaults: 140,
+  namedPins: 1581,
   concreteVariantGroups: 88,
   concreteVariants: 4259,
   concreteVariantBindings: 53934
@@ -137,7 +137,7 @@ assert.deepStrictEqual(
 assert.strictEqual(
   staticMetadata.nodes.flatMap((node) => node.pins).filter((pin) => pin.defaultValue === false)
     .length,
-  13,
+  18,
   'protobuf-omitted boolean zero values must remain explicit false defaults'
 )
 
@@ -321,11 +321,11 @@ const pinsAbsentFromBaseMetadata = staticMetadata.nodes.flatMap((node) => {
   const basePins = basePinsByGenericId.get(node.genericId) ?? new Set<string>()
   return node.pins.filter((pin) => !basePins.has(`${pin.kind}:${pin.index}`))
 })
-assert.strictEqual(CLIENT_NODE_METADATA.length, 907)
-assert.strictEqual(publicParams, 3033)
-assert.strictEqual(literalOnlyPublicParams, 752)
+assert.strictEqual(CLIENT_NODE_METADATA.length, 920)
+assert.strictEqual(publicParams, 3206)
+assert.strictEqual(literalOnlyPublicParams, 791)
 assert.ok(nameCheckedPublicParams > 0, 'public argument mappings must be checked against pin names')
-assert.strictEqual(pinsAbsentFromBaseMetadata.length, 13)
+assert.strictEqual(pinsAbsentFromBaseMetadata.length, 15)
 assert.ok(
   pinsAbsentFromBaseMetadata.every((pin) => pin.kind === 'client_signal'),
   'only editor-internal client signal pins may remain outside generated metadata'
@@ -340,7 +340,7 @@ const eslintLiteralArgumentCount = Object.values(
 )
 assert.strictEqual(
   eslintLiteralArgumentCount,
-  710,
+  731,
   'ESLint literal indexes must cover every public literal-only argument plus the three dynamic client signal-name arguments; each ray-filter array collapses ten fixed slots into one method argument'
 )
 for (const subType of ['creation_status', 'creation_status_decision'] as const) {

@@ -8,5 +8,5 @@
     "skipLibCheck": false,
     "noEmit": true
   },
-  "files": ["index.ts"]
+  "files": ["index.ts", "lua-signals.ts"]
 }

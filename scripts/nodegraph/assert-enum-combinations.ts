@@ -195,7 +195,7 @@ function serverEqualityClassNames(): Set<string> {
       if (candidate instanceof enumeration) classNames.add(candidate.getClassName())
     }
   }
-  assert.equal(overloadTypes.size, 41, 'unexpected server equality overload count')
+  assert.equal(overloadTypes.size, 42, 'unexpected server equality overload count')
   return classNames
 }
 
