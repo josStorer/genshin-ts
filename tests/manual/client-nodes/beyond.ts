@@ -286,8 +286,8 @@ g.characterSkill({
   )
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck111)
 
-  // getBaseObjectOfSpecifiedPreAiming / get_base_object_of_specified_pre_aiming / genericId=200276 / literal=0, wire=1
-  const result112 = f.getBaseObjectOfSpecifiedPreAiming(wireInt)
+  // getBaseObjectOfSpecifiedPreAiming / get_base_object_of_specified_pre_aiming / genericId=200276 / literal=1, wire=1
+  const result112 = f.getBaseObjectOfSpecifiedPreAiming(wireInt, CE.PreAimResultDataType.Default)
   const pinCheck113 = f.equal(result112, wireEntity)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck113)
 
@@ -553,25 +553,28 @@ g.characterSkill({
   const pinCheck190 = f.equal(result188.inputStrength, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck190)
 
-  // getPreAimingCollisionDetectionResultCount / get_pre_aiming_collision_detection_result_count / genericId=200280 / literal=0, wire=1
-  const result191 = f.getPreAimingCollisionDetectionResultCount(wireInt)
+  // getPreAimingCollisionDetectionResultCount / get_pre_aiming_collision_detection_result_count / genericId=200280 / literal=1, wire=1
+  const result191 = f.getPreAimingCollisionDetectionResultCount(
+    wireInt,
+    CE.PreAimResultDataType.Default
+  )
   const pinCheck192 = f.equal(result191, 0n)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck192)
 
-  // getPreAimingDuration / get_pre_aiming_duration / genericId=200278 / literal=1, wire=0
-  const result194 = f.getPreAimingDuration(193n)
+  // getPreAimingDuration / get_pre_aiming_duration / genericId=200278 / literal=2, wire=0
+  const result194 = f.getPreAimingDuration(193n, CE.PreAimResultDataType.Default)
   const pinCheck195 = f.equal(result194, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck195)
 
-  // getPreAimingRayHitInfo / get_pre_aiming_ray_hit_info / genericId=200281 / literal=0, wire=1
-  const result196 = f.getPreAimingRayHitInfo(wireInt)
+  // getPreAimingRayHitInfo / get_pre_aiming_ray_hit_info / genericId=200281 / literal=1, wire=1
+  const result196 = f.getPreAimingRayHitInfo(wireInt, CE.PreAimResultDataType.Default)
   const pinCheck197 = f.equal(result196.hitPosition, [0, 0, 0])
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck197)
   const pinCheck198 = f.equal(result196.hitEntity, wireEntity)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck198)
 
-  // getPreAimingResult / get_pre_aiming_result / genericId=200277 / literal=0, wire=1
-  const result199 = f.getPreAimingResult(wireInt)
+  // getPreAimingResult / get_pre_aiming_result / genericId=200277 / literal=1, wire=1
+  const result199 = f.getPreAimingResult(wireInt, CE.PreAimResultDataType.Default)
   const pinCheck200 = f.equal(result199.hitPosition, [0, 0, 0])
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck200)
   const pinCheck201 = f.equal(result199.inRangePosition, [0, 0, 0])
@@ -688,8 +691,8 @@ g.characterSkill({
   const pinCheck236 = f.equal(result235, false)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck236)
 
-  // getWhetherPreAimingStickIsInDeadZone / get_whether_pre_aiming_stick_is_in_dead_zone / genericId=200282 / literal=1, wire=0
-  const result238 = f.getWhetherPreAimingStickIsInDeadZone(237n)
+  // getWhetherPreAimingStickIsInDeadZone / get_whether_pre_aiming_stick_is_in_dead_zone / genericId=200282 / literal=2, wire=0
+  const result238 = f.getWhetherPreAimingStickIsInDeadZone(237n, CE.PreAimResultDataType.Default)
   const pinCheck239 = f.equal(result238, false)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck239)
 
@@ -1236,7 +1239,7 @@ g.characterSkill({
     394.25
   )
 
-  // triggerRectangularHitboxAtSpecificLocation / trigger_rectangular_hitbox_at_specific_location / genericId=200112 / literal=27, wire=4
+  // triggerRectangularHitboxAtSpecificLocation / trigger_rectangular_hitbox_at_specific_location / genericId=200112 / literal=28, wire=3
   f.triggerRectangularHitboxAtSpecificLocation(
     E.TargetType.None,
     [395, 396, 397],
@@ -1246,7 +1249,7 @@ g.characterSkill({
     [E.EntityType.Stage, E.EntityType.Object, E.EntityType.Player],
     E.TriggerRestriction.TriggerOnlyOnce,
     398n,
-    wireVec3,
+    [399, 400, 401],
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
@@ -1507,14 +1510,14 @@ g.characterControlSkill({
   const wireGuid = f.getCustomVariable(wireEntity, 'gsts_manual_wire_guid').asType('guid')
   const wireConfig = f.getCustomVariable(wireEntity, 'gsts_manual_wire_config').asType('config_id')
   const wirePrefab = f.getCustomVariable(wireEntity, 'gsts_manual_wire_prefab').asType('prefab_id')
-  const pinCheck557 = f.equal(wireStr, '')
+  const pinCheck556 = f.equal(wireStr, '')
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck556)
+  const pinCheck557 = f.equal(wireGuid, guid(0n))
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck557)
-  const pinCheck558 = f.equal(wireGuid, guid(0n))
+  const pinCheck558 = f.equal(wireConfig, configId(0n))
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck558)
-  const pinCheck559 = f.equal(wireConfig, configId(0n))
+  const pinCheck559 = f.equal(wirePrefab, prefabId(0n))
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck559)
-  const pinCheck560 = f.equal(wirePrefab, prefabId(0n))
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck560)
 
   // _3dVectorAddition / _3d_vector_addition / genericId=200071 / literal=0, wire=2
   const result3 = f._3dVectorAddition(wireVec3, wireVec3)
@@ -1567,27 +1570,27 @@ g.characterControlSkill({
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck36)
 
   // addition / addition / genericId=200011 / literal=0, wire=2
-  const result47 = f.addition(wireInt, wireInt)
-  const pinCheck48 = f.equal(result47, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck48)
+  const result46 = f.addition(wireInt, wireInt)
+  const pinCheck47 = f.equal(result46, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck47)
 
   // arccosineFunction / arccosine_function / genericId=200098 / literal=0, wire=1
-  const result49 = f.arccosineFunction(wireFloat)
-  const pinCheck50 = f.equal(result49, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck50)
+  const result48 = f.arccosineFunction(wireFloat)
+  const pinCheck49 = f.equal(result48, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck49)
 
   // arcsineFunction / arcsine_function / genericId=200097 / literal=0, wire=1
-  const result51 = f.arcsineFunction(wireFloat)
-  const pinCheck52 = f.equal(result51, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck52)
+  const result50 = f.arcsineFunction(wireFloat)
+  const pinCheck51 = f.equal(result50, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck51)
 
   // arctangentFunction / arctangent_function / genericId=200099 / literal=0, wire=1
-  const result53 = f.arctangentFunction(wireFloat)
-  const pinCheck54 = f.equal(result53, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck54)
+  const result52 = f.arctangentFunction(wireFloat)
+  const pinCheck53 = f.equal(result52, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck53)
 
   // assemblyDictionary / assembly_dictionary / genericId=200152 / literal=0, wire=1
-  const pinCheck56 = f.greaterThanOrEqualTo(
+  const pinCheck55 = f.greaterThanOrEqualTo(
     f.queryDictionarySLength(
       f.assemblyDictionary([
         { k: wireInt, v: wireInt },
@@ -1604,10 +1607,10 @@ g.characterControlSkill({
     ),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck56)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck55)
 
   // assemblyList / assembly_list / genericId=200049 / literal=1, wire=1
-  const pinCheck58 = f.greaterThanOrEqualTo(
+  const pinCheck57 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.assemblyList(
         [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
@@ -1616,25 +1619,25 @@ g.characterControlSkill({
     ),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck58)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck57)
 
   // checkThePresetStatusValueOfTheComplexCreation / check_the_preset_status_value_of_the_complex_creation / genericId=200244 / literal=2, wire=0
-  const result70 = f.checkThePresetStatusValueOfTheComplexCreation(self, 69n)
-  const pinCheck71 = f.equal(result70, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck71)
+  const result69 = f.checkThePresetStatusValueOfTheComplexCreation(self, 68n)
+  const pinCheck70 = f.equal(result69, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck70)
 
   // cosineFunction / cosine_function / genericId=200095 / literal=1, wire=0
-  const result73 = f.cosineFunction(72.25)
-  const pinCheck74 = f.equal(result73, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck74)
+  const result72 = f.cosineFunction(71.25)
+  const pinCheck73 = f.equal(result72, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck73)
 
   // create3dVector / create3d_vector / genericId=200070 / literal=0, wire=3
-  const result75 = f.create3dVector(wireFloat, wireFloat, wireFloat)
-  const pinCheck76 = f.equal(result75, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck76)
+  const result74 = f.create3dVector(wireFloat, wireFloat, wireFloat)
+  const pinCheck75 = f.equal(result74, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck75)
 
   // createDictionary / create_dictionary / genericId=200153 / literal=0, wire=2
-  const pinCheck78 = f.greaterThanOrEqualTo(
+  const pinCheck77 = f.greaterThanOrEqualTo(
     f.queryDictionarySLength(
       f.createDictionary(
         f.assemblyList(
@@ -1671,43 +1674,43 @@ g.characterControlSkill({
     ),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck78)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck77)
 
   // dataTypeConversion / data_type_conversion / genericId=200022 / literal=2, wire=0
-  const result80 = f.dataTypeConversion(79n, 'str')
-  const pinCheck81 = f.equal(result80, '')
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck81)
+  const result79 = f.dataTypeConversion(78n, 'str')
+  const pinCheck80 = f.equal(result79, '')
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck80)
 
   // degreesToRadians / degrees_to_radians / genericId=200102 / literal=0, wire=1
-  const result82 = f.degreesToRadians(wireFloat)
-  const pinCheck83 = f.equal(result82, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck83)
+  const result81 = f.degreesToRadians(wireFloat)
+  const pinCheck82 = f.equal(result81, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck82)
 
   // directionVectorToRotation / direction_vector_to_rotation / genericId=200073 / literal=1, wire=1
-  const result86 = f.directionVectorToRotation(wireVec3, [85, 86, 87])
-  const pinCheck87 = f.equal(result86, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck87)
+  const result85 = f.directionVectorToRotation(wireVec3, [84, 85, 86])
+  const pinCheck86 = f.equal(result85, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck86)
 
   // division / division / genericId=200014 / literal=2, wire=0
-  const result90 = f.division(88n, 89n)
-  const pinCheck91 = f.equal(result90, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck91)
+  const result89 = f.division(87n, 88n)
+  const pinCheck90 = f.equal(result89, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck90)
 
   // enumerationMatch / enumeration_match / genericId=200005 / literal=2, wire=0
-  const result93 = f.enumerationMatch(E.SortBy.Ascending, E.SortBy.Ascending)
-  const pinCheck94 = f.equal(result93, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck94)
+  const result92 = f.enumerationMatch(E.SortBy.Ascending, E.SortBy.Ascending)
+  const pinCheck93 = f.equal(result92, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck93)
 
   // equal / equal / genericId=200006 / literal=0, wire=2
-  const result95 = f.equal(wireInt, wireInt)
-  const pinCheck96 = f.equal(result95, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck96)
+  const result94 = f.equal(wireInt, wireInt)
+  const pinCheck95 = f.equal(result94, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck95)
 
   // filterEntityListWithinSphericalRange / filter_entity_list_within_spherical_range / genericId=200043 / literal=2, wire=2
-  const pinCheck100 = f.greaterThanOrEqualTo(
+  const pinCheck99 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.filterEntityListWithinSphericalRange(
-        97.25,
+        96.25,
         wireVec3,
         wireInt,
         CE.TargetSortingRules.DefaultSorting
@@ -1715,15 +1718,15 @@ g.characterControlSkill({
     ),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck100)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck99)
 
   // filterEntityListWithinSquareRange / filter_entity_list_within_square_range / genericId=200044 / literal=4, wire=2
-  const pinCheck106 = f.greaterThanOrEqualTo(
+  const pinCheck105 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.filterEntityListWithinSquareRange(
+        100.25,
         101.25,
         102.25,
-        103.25,
         wireVec3,
         wireInt,
         CE.TargetSortingRules.DefaultSorting
@@ -1731,198 +1734,198 @@ g.characterControlSkill({
     ),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck106)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck105)
 
   // getAllEntitiesWithinTheCollisionTrigger / get_all_entities_within_the_collision_trigger / genericId=200107 / literal=2, wire=0
-  const pinCheck117 = f.greaterThanOrEqualTo(
-    f.getListLength(f.getAllEntitiesWithinTheCollisionTrigger(self, 115n)),
+  const pinCheck116 = f.greaterThanOrEqualTo(
+    f.getListLength(f.getAllEntitiesWithinTheCollisionTrigger(self, 114n)),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck117)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck116)
 
   // getAllValidEntitiesThatAreScannableByScanComponent / get_all_valid_entities_that_are_scannable_by_scan_component / genericId=200119 / literal=0, wire=0
-  const pinCheck119 = f.greaterThanOrEqualTo(
+  const pinCheck118 = f.greaterThanOrEqualTo(
     f.getListLength(f.getAllValidEntitiesThatAreScannableByScanComponent()),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck119)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck118)
 
-  // getBaseObjectOfSpecifiedPreAiming / get_base_object_of_specified_pre_aiming / genericId=200276 / literal=0, wire=1
-  const result120 = f.getBaseObjectOfSpecifiedPreAiming(wireInt)
-  const pinCheck121 = f.equal(result120, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck121)
+  // getBaseObjectOfSpecifiedPreAiming / get_base_object_of_specified_pre_aiming / genericId=200276 / literal=1, wire=1
+  const result119 = f.getBaseObjectOfSpecifiedPreAiming(wireInt, CE.PreAimResultDataType.Default)
+  const pinCheck120 = f.equal(result119, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck120)
 
   // getCharacterEntityOfSpecifiedPlayer / get_character_entity_of_specified_player / genericId=200024 / literal=1, wire=0
-  const result122 = f.getCharacterEntityOfSpecifiedPlayer(self)
-  const pinCheck123 = f.equal(result122, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck123)
+  const result121 = f.getCharacterEntityOfSpecifiedPlayer(self)
+  const pinCheck122 = f.equal(result121, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck122)
 
-  // getControlMotorCurrentVelocity / get_control_motor_current_velocity / genericId=200297 / literal=1, wire=0
-  const result124 = f.getControlMotorCurrentVelocity(self)
-  const pinCheck125 = f.equal(result124.speed, 0)
+  // getControlMotorCurrentVelocity / get_control_motor_current_velocity / genericId=200297 / literal=0, wire=1
+  const result123 = f.getControlMotorCurrentVelocity(wireEntity)
+  const pinCheck124 = f.equal(result123.speed, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck124)
+  const pinCheck125 = f.equal(result123.velocityDirection, [0, 0, 0])
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck125)
-  const pinCheck126 = f.equal(result124.velocityDirection, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck126)
 
   // getControlMotorForwardDirection / get_control_motor_forward_direction / genericId=200298 / literal=1, wire=0
-  const result127 = f.getControlMotorForwardDirection(self)
-  const pinCheck128 = f.equal(result127, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck128)
+  const result126 = f.getControlMotorForwardDirection(self)
+  const pinCheck127 = f.equal(result126, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck127)
 
-  // getControlMotorMovementParameters / get_control_motor_movement_parameters / genericId=200296 / literal=0, wire=1
-  const result129 = f.getControlMotorMovementParameters(wireEntity)
-  const pinCheck130 = f.equal(result129.forwardAcceleration, 0)
+  // getControlMotorMovementParameters / get_control_motor_movement_parameters / genericId=200296 / literal=1, wire=0
+  const result128 = f.getControlMotorMovementParameters(self)
+  const pinCheck129 = f.equal(result128.forwardAcceleration, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck129)
+  const pinCheck130 = f.equal(result128.backwardAcceleration, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck130)
-  const pinCheck131 = f.equal(result129.backwardAcceleration, 0)
+  const pinCheck131 = f.equal(result128.turningRate, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck131)
-  const pinCheck132 = f.equal(result129.turningRate, 0)
+  const pinCheck132 = f.equal(result128.baseDragDeceleration, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck132)
-  const pinCheck133 = f.equal(result129.baseDragDeceleration, 0)
+  const pinCheck133 = f.equal(result128.dragCoefficient, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck133)
-  const pinCheck134 = f.equal(result129.dragCoefficient, 0)
+  const pinCheck134 = f.equal(result128.maxForwardSpeed, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck134)
-  const pinCheck135 = f.equal(result129.maxForwardSpeed, 0)
+  const pinCheck135 = f.equal(result128.maxBackwardSpeed, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck135)
-  const pinCheck136 = f.equal(result129.maxBackwardSpeed, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck136)
 
   // getControlMotorTargetTurningDirection / get_control_motor_target_turning_direction / genericId=200299 / literal=0, wire=1
-  const result137 = f.getControlMotorTargetTurningDirection(wireEntity)
-  const pinCheck138 = f.equal(result137, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck138)
+  const result136 = f.getControlMotorTargetTurningDirection(wireEntity)
+  const pinCheck137 = f.equal(result136, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck137)
 
   // getCorrespondingValueFromList / get_corresponding_value_from_list / genericId=200017 / literal=0, wire=2
-  const result139 = f.getCorrespondingValueFromList(
+  const result138 = f.getCorrespondingValueFromList(
     wireInt,
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck140 = f.equal(result139, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck140)
+  const pinCheck139 = f.equal(result138, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck139)
 
   // getCurrentActiveControlMotorList / get_current_active_control_motor_list / genericId=200294 / literal=0, wire=0
-  const pinCheck142 = f.greaterThanOrEqualTo(
+  const pinCheck141 = f.greaterThanOrEqualTo(
     f.getListLength(f.getCurrentActiveControlMotorList()),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck142)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck141)
 
   // getCurrentActivePreAimingIndex / get_current_active_pre_aiming_index / genericId=200279 / literal=0, wire=0
-  const result143 = f.getCurrentActivePreAimingIndex()
-  const pinCheck144 = f.equal(result143, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck144)
+  const result142 = f.getCurrentActivePreAimingIndex()
+  const pinCheck143 = f.equal(result142, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck143)
 
   // getCurrentCharacter / get_current_character / genericId=200076 / literal=0, wire=0
-  const result145 = f.getCurrentCharacter()
-  const pinCheck146 = f.equal(result145, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck146)
+  const result144 = f.getCurrentCharacter()
+  const pinCheck145 = f.equal(result144, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck145)
 
   // getCurrentClientTime / get_current_client_time / genericId=200269 / literal=0, wire=0
-  const result147 = f.getCurrentClientTime()
-  const pinCheck148 = f.equal(result147, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck148)
+  const result146 = f.getCurrentClientTime()
+  const pinCheck147 = f.equal(result146, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck147)
 
   // getCurrentClientTimeHighPrecision / get_current_client_time_high_precision / genericId=200270 / literal=0, wire=0
-  const result149 = f.getCurrentClientTimeHighPrecision()
-  const pinCheck150 = f.equal(result149.clientTimeS, 0n)
+  const result148 = f.getCurrentClientTimeHighPrecision()
+  const pinCheck149 = f.equal(result148.clientTimeS, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck149)
+  const pinCheck150 = f.equal(result148.clientTimeMs, 0n)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck150)
-  const pinCheck151 = f.equal(result149.clientTimeMs, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck151)
 
   // getCurrentFollowingControlMotor / get_current_following_control_motor / genericId=200295 / literal=0, wire=0
-  const result152 = f.getCurrentFollowingControlMotor()
-  const pinCheck153 = f.equal(result152, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck153)
+  const result151 = f.getCurrentFollowingControlMotor()
+  const pinCheck152 = f.equal(result151, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck152)
 
   // getCurrentKeyBehavior / get_current_key_behavior / genericId=200267 / literal=0, wire=0
-  const result154 = f.getCurrentKeyBehavior()
-  const pinCheck155 = f.greaterThanOrEqualTo(f.getListLength(result154.behaviorIDList), 0n)
+  const result153 = f.getCurrentKeyBehavior()
+  const pinCheck154 = f.greaterThanOrEqualTo(f.getListLength(result153.behaviorIDList), 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck154)
+  const pinCheck155 = f.greaterThanOrEqualTo(f.getListLength(result153.entryTimeList), 0n)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck155)
-  const pinCheck156 = f.greaterThanOrEqualTo(f.getListLength(result154.entryTimeList), 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck156)
 
   // getCurrentKeyBehaviorHighPrecision / get_current_key_behavior_high_precision / genericId=200268 / literal=0, wire=0
-  const result157 = f.getCurrentKeyBehaviorHighPrecision()
-  const pinCheck158 = f.greaterThanOrEqualTo(f.getListLength(result157.behaviorIDList), 0n)
+  const result156 = f.getCurrentKeyBehaviorHighPrecision()
+  const pinCheck157 = f.greaterThanOrEqualTo(f.getListLength(result156.behaviorIDList), 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck157)
+  const pinCheck158 = f.greaterThanOrEqualTo(f.getListLength(result156.entryTimeListS), 0n)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck158)
-  const pinCheck159 = f.greaterThanOrEqualTo(f.getListLength(result157.entryTimeListS), 0n)
+  const pinCheck159 = f.greaterThanOrEqualTo(f.getListLength(result156.entryTimeListMs), 0n)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck159)
-  const pinCheck160 = f.greaterThanOrEqualTo(f.getListLength(result157.entryTimeListMs), 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck160)
 
   // getCursorHitResult / get_cursor_hit_result / genericId=200285 / literal=0, wire=0
-  const result161 = f.getCursorHitResult()
-  const pinCheck162 = f.greaterThanOrEqualTo(f.getListLength(result161.hitEntityList), 0n)
+  const result160 = f.getCursorHitResult()
+  const pinCheck161 = f.greaterThanOrEqualTo(f.getListLength(result160.hitEntityList), 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck161)
+  const pinCheck162 = f.greaterThanOrEqualTo(f.getListLength(result160.hitPositionList), 0n)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck162)
-  const pinCheck163 = f.greaterThanOrEqualTo(f.getListLength(result161.hitPositionList), 0n)
+  const pinCheck163 = f.equal(result160.hitCount, 0n)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck163)
-  const pinCheck164 = f.equal(result161.hitCount, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck164)
 
   // getCursorScreenCoordinates / get_cursor_screen_coordinates / genericId=200286 / literal=0, wire=0
-  const result165 = f.getCursorScreenCoordinates()
-  const pinCheck166 = f.equal(result165.screenX, 0)
+  const result164 = f.getCursorScreenCoordinates()
+  const pinCheck165 = f.equal(result164.screenX, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck165)
+  const pinCheck166 = f.equal(result164.screenY, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck166)
-  const pinCheck167 = f.equal(result165.screenY, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck167)
 
   // getCursorViewportCoordinates / get_cursor_viewport_coordinates / genericId=200287 / literal=0, wire=0
-  const result168 = f.getCursorViewportCoordinates()
-  const pinCheck169 = f.equal(result168.viewportX, 0)
+  const result167 = f.getCursorViewportCoordinates()
+  const pinCheck168 = f.equal(result167.viewportX, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck168)
+  const pinCheck169 = f.equal(result167.viewportY, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck169)
-  const pinCheck170 = f.equal(result168.viewportY, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck170)
 
   // getCustomVariable / get_custom_variable / genericId=200016 / literal=0, wire=2
-  const result171 = f.getCustomVariable(wireEntity, wireStr)
-  const narrowed172 = result171.asType('int')
-  const pinCheck173 = f.equal(narrowed172, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck173)
+  const result170 = f.getCustomVariable(wireEntity, wireStr)
+  const narrowed171 = result170.asType('int')
+  const pinCheck172 = f.equal(narrowed171, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck172)
 
   // getEntityCurrentlyScannedByScanComponent / get_entity_currently_scanned_by_scan_component / genericId=200118 / literal=0, wire=0
-  const result174 = f.getEntityCurrentlyScannedByScanComponent()
-  const pinCheck175 = f.equal(result174.correspondingEntity, wireEntity)
+  const result173 = f.getEntityCurrentlyScannedByScanComponent()
+  const pinCheck174 = f.equal(result173.correspondingEntity, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck174)
+  const pinCheck175 = f.equal(result173.scanTagConfigID, configId(0n))
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck175)
-  const pinCheck176 = f.equal(result174.scanTagConfigID, configId(0n))
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck176)
 
   // getEntityListByUnitTag / get_entity_list_by_unit_tag / genericId=200078 / literal=1, wire=0
-  const pinCheck179 = f.greaterThanOrEqualTo(f.getListLength(f.getEntityListByUnitTag(177n)), 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck179)
+  const pinCheck178 = f.greaterThanOrEqualTo(f.getListLength(f.getEntityListByUnitTag(176n)), 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck178)
 
   // getEntityLocation / get_entity_location / genericId=200030 / literal=0, wire=1
-  const result180 = f.getEntityLocation(wireEntity)
-  const pinCheck181 = f.equal(result180, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck181)
+  const result179 = f.getEntityLocation(wireEntity)
+  const pinCheck180 = f.equal(result179, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck180)
 
   // getEntityRotation / get_entity_rotation / genericId=200031 / literal=1, wire=0
-  const result182 = f.getEntityRotation(self)
-  const pinCheck183 = f.equal(result182, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck183)
+  const result181 = f.getEntityRotation(self)
+  const pinCheck182 = f.equal(result181, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck182)
 
   // getEntitySCurrentActiveScanTags / get_entity_s_current_active_scan_tags / genericId=200121 / literal=0, wire=1
-  const result184 = f.getEntitySCurrentActiveScanTags(wireEntity)
-  const pinCheck185 = f.equal(result184, configId(0n))
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck185)
+  const result183 = f.getEntitySCurrentActiveScanTags(wireEntity)
+  const pinCheck184 = f.equal(result183, configId(0n))
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck184)
 
   // getEntitySScanStatus / get_entity_s_scan_status / genericId=200120 / literal=0, wire=1
-  const result186 = f.getEntitySScanStatus(wireEntity)
-  const pinCheck187 = f.enumerationMatch(result186, CE.ScanStatus.UnusableTarget)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck187)
+  const result185 = f.getEntitySScanStatus(wireEntity)
+  const pinCheck186 = f.enumerationMatch(result185, CE.ScanStatus.UnusableTarget)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck186)
 
   // getEntitySType / get_entity_s_type / genericId=200045 / literal=1, wire=0
-  const result188 = f.getEntitySType(self)
-  const pinCheck189 = f.enumerationMatch(result188, E.EntityType.Stage)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck189)
+  const result187 = f.getEntitySType(self)
+  const pinCheck188 = f.enumerationMatch(result187, E.EntityType.Stage)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck188)
 
   // getEntitySUnitTagList / get_entity_s_unit_tag_list / genericId=200077 / literal=1, wire=0
-  const pinCheck191 = f.greaterThanOrEqualTo(f.getListLength(f.getEntitySUnitTagList(self)), 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck191)
+  const pinCheck190 = f.greaterThanOrEqualTo(f.getListLength(f.getEntitySUnitTagList(self)), 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck190)
 
   // getEntityTypeList / get_entity_type_list / genericId=200050 / literal=1, wire=0
-  const enumListProbe193 = f.getRayDetectionResult(
+  const enumListProbe192 = f.getRayDetectionResult(
     wireEntity,
     wireVec3,
     wireVec3,
@@ -1953,21 +1956,21 @@ g.characterControlSkill({
       CE.RayFilterType.Scene
     ])
   )
-  const pinCheck194 = f.equal(enumListProbe193.onHitLocation, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck194)
+  const pinCheck193 = f.equal(enumListProbe192.onHitLocation, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck193)
 
   // getListLength / get_list_length / genericId=200018 / literal=0, wire=1
-  const result195 = f.getListLength(
+  const result194 = f.getListLength(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck196 = f.equal(result195, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck196)
+  const pinCheck195 = f.equal(result194, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck195)
 
   // getListOfKeysFromDictionary / get_list_of_keys_from_dictionary / genericId=200159 / literal=0, wire=1
-  const pinCheck198 = f.greaterThanOrEqualTo(
+  const pinCheck197 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.getListOfKeysFromDictionary(
         f.assemblyDictionary([
@@ -1986,17 +1989,17 @@ g.characterControlSkill({
     ),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck198)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck197)
 
   // getListOfPlayerEntitiesOnTheField / get_list_of_player_entities_on_the_field / genericId=200026 / literal=0, wire=0
-  const pinCheck200 = f.greaterThanOrEqualTo(
+  const pinCheck199 = f.greaterThanOrEqualTo(
     f.getListLength(f.getListOfPlayerEntitiesOnTheField()),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck200)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck199)
 
   // getListOfValuesFromDictionary / get_list_of_values_from_dictionary / genericId=200158 / literal=0, wire=1
-  const pinCheck202 = f.greaterThanOrEqualTo(
+  const pinCheck201 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.getListOfValuesFromDictionary(
         f.assemblyDictionary([
@@ -2015,106 +2018,109 @@ g.characterControlSkill({
     ),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck202)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck201)
 
   // getLocalVariable / get_local_variable / genericId=200082 / literal=1, wire=0
-  const result204 = f.getLocalVariable('literal-203')
-  const narrowed205 = result204.asType('int')
-  const pinCheck206 = f.equal(narrowed205, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck206)
+  const result203 = f.getLocalVariable('literal-202')
+  const narrowed204 = result203.asType('int')
+  const pinCheck205 = f.equal(narrowed204, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck205)
 
   // getMaximumValueFromList / get_maximum_value_from_list / genericId=200020 / literal=0, wire=1
-  const result207 = f.getMaximumValueFromList(
+  const result206 = f.getMaximumValueFromList(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck208 = f.equal(result207, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck208)
+  const pinCheck207 = f.equal(result206, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck207)
 
   // getMinimumValueFromList / get_minimum_value_from_list / genericId=200021 / literal=0, wire=1
-  const result209 = f.getMinimumValueFromList(
+  const result208 = f.getMinimumValueFromList(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck210 = f.equal(result209, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck210)
+  const pinCheck209 = f.equal(result208, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck209)
 
   // getPlayerClientInputDeviceType / get_player_client_input_device_type / genericId=200123 / literal=0, wire=0
-  const result211 = f.getPlayerClientInputDeviceType()
-  const pinCheck212 = f.enumerationMatch(result211, E.InputDeviceType.KeyboardAndMouse)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck212)
+  const result210 = f.getPlayerClientInputDeviceType()
+  const pinCheck211 = f.enumerationMatch(result210, E.InputDeviceType.KeyboardAndMouse)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck211)
 
   // getPlayerEntityToWhichTheCharacterBelongs / get_player_entity_to_which_the_character_belongs / genericId=200025 / literal=1, wire=0
-  const result213 = f.getPlayerEntityToWhichTheCharacterBelongs(self)
-  const pinCheck214 = f.equal(result213, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck214)
+  const result212 = f.getPlayerEntityToWhichTheCharacterBelongs(self)
+  const pinCheck213 = f.equal(result212, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck213)
 
   // getPlayerMovementInput / get_player_movement_input / genericId=200255 / literal=0, wire=0
-  const result215 = f.getPlayerMovementInput()
-  const pinCheck216 = f.equal(result215.inputDirection, 0)
+  const result214 = f.getPlayerMovementInput()
+  const pinCheck215 = f.equal(result214.inputDirection, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck215)
+  const pinCheck216 = f.equal(result214.inputStrength, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck216)
-  const pinCheck217 = f.equal(result215.inputStrength, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck217)
 
-  // getPreAimingCollisionDetectionResultCount / get_pre_aiming_collision_detection_result_count / genericId=200280 / literal=0, wire=1
-  const result218 = f.getPreAimingCollisionDetectionResultCount(wireInt)
-  const pinCheck219 = f.equal(result218, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck219)
+  // getPreAimingCollisionDetectionResultCount / get_pre_aiming_collision_detection_result_count / genericId=200280 / literal=1, wire=1
+  const result217 = f.getPreAimingCollisionDetectionResultCount(
+    wireInt,
+    CE.PreAimResultDataType.Default
+  )
+  const pinCheck218 = f.equal(result217, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck218)
 
-  // getPreAimingDuration / get_pre_aiming_duration / genericId=200278 / literal=1, wire=0
-  const result221 = f.getPreAimingDuration(220n)
-  const pinCheck222 = f.equal(result221, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck222)
+  // getPreAimingDuration / get_pre_aiming_duration / genericId=200278 / literal=2, wire=0
+  const result220 = f.getPreAimingDuration(219n, CE.PreAimResultDataType.Default)
+  const pinCheck221 = f.equal(result220, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck221)
 
-  // getPreAimingRayHitInfo / get_pre_aiming_ray_hit_info / genericId=200281 / literal=0, wire=1
-  const result223 = f.getPreAimingRayHitInfo(wireInt)
-  const pinCheck224 = f.equal(result223.hitPosition, [0, 0, 0])
+  // getPreAimingRayHitInfo / get_pre_aiming_ray_hit_info / genericId=200281 / literal=1, wire=1
+  const result222 = f.getPreAimingRayHitInfo(wireInt, CE.PreAimResultDataType.Default)
+  const pinCheck223 = f.equal(result222.hitPosition, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck223)
+  const pinCheck224 = f.equal(result222.hitEntity, wireEntity)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck224)
-  const pinCheck225 = f.equal(result223.hitEntity, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck225)
 
-  // getPreAimingResult / get_pre_aiming_result / genericId=200277 / literal=0, wire=1
-  const result226 = f.getPreAimingResult(wireInt)
-  const pinCheck227 = f.equal(result226.hitPosition, [0, 0, 0])
+  // getPreAimingResult / get_pre_aiming_result / genericId=200277 / literal=1, wire=1
+  const result225 = f.getPreAimingResult(wireInt, CE.PreAimResultDataType.Default)
+  const pinCheck226 = f.equal(result225.hitPosition, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck226)
+  const pinCheck227 = f.equal(result225.inRangePosition, [0, 0, 0])
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck227)
-  const pinCheck228 = f.equal(result226.inRangePosition, [0, 0, 0])
+  const pinCheck228 = f.equal(result225.bestValidTarget, wireEntity)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck228)
-  const pinCheck229 = f.equal(result226.bestValidTarget, wireEntity)
+  const pinCheck229 = f.greaterThanOrEqualTo(f.getListLength(result225.validTargetList), 0n)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck229)
-  const pinCheck230 = f.greaterThanOrEqualTo(f.getListLength(result226.validTargetList), 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck230)
 
   // getPresetStatus / get_preset_status / genericId=200028 / literal=1, wire=1
-  const result231 = f.getPresetStatus(self, wireInt)
-  const pinCheck232 = f.equal(result231, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck232)
+  const result230 = f.getPresetStatus(self, wireInt)
+  const pinCheck231 = f.equal(result230, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck231)
 
   // getRandomNumber / get_random_number / genericId=200032 / literal=2, wire=0
-  const result235 = f.getRandomNumber(233n, 234n)
-  const pinCheck236 = f.equal(result235, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck236)
+  const result234 = f.getRandomNumber(232n, 233n)
+  const pinCheck235 = f.equal(result234, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck235)
 
   // getRayDetectionResult / get_ray_detection_result / genericId=200109 / literal=4, wire=3
-  const result239 = f.getRayDetectionResult(
+  const result238 = f.getRayDetectionResult(
     wireEntity,
     wireVec3,
-    [238, 239, 240],
+    [237, 238, 239],
     wireFloat,
     E.TargetType.None,
     [E.EntityType.Stage, E.EntityType.Object, E.EntityType.Player],
     [CE.RayFilterType.Hurtbox, CE.RayFilterType.Scene, CE.RayFilterType.ObjectSelfCollision]
   )
-  const pinCheck240 = f.equal(result239.onHitLocation, [0, 0, 0])
+  const pinCheck239 = f.equal(result238.onHitLocation, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck239)
+  const pinCheck240 = f.equal(result238.onHitEntity, wireEntity)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck240)
-  const pinCheck241 = f.equal(result239.onHitEntity, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck241)
 
   // getRayFilterTypeList / get_ray_filter_type_list / genericId=200110 / literal=1, wire=0
-  const enumListProbe243 = f.getRayDetectionResult(
+  const enumListProbe242 = f.getRayDetectionResult(
     wireEntity,
     wireVec3,
     wireVec3,
@@ -2145,134 +2151,134 @@ g.characterControlSkill({
       CE.RayFilterType.Scene
     ])
   )
-  const pinCheck244 = f.equal(enumListProbe243.onHitLocation, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck244)
+  const pinCheck243 = f.equal(enumListProbe242.onHitLocation, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck243)
 
   // getSelfEntity / get_self_entity / genericId=200033 / literal=0, wire=0
-  const result245 = f.getSelfEntity()
-  const pinCheck246 = f.equal(result245, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck246)
+  const result244 = f.getSelfEntity()
+  const pinCheck245 = f.equal(result244, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck245)
 
   // getSkillConfigIdBySkillInstanceId / get_skill_config_id_by_skill_instance_id / genericId=200272 / literal=0, wire=1
-  const result247 = f.getSkillConfigIdBySkillInstanceId(wireInt)
-  const pinCheck248 = f.equal(result247, configId(0n))
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck248)
+  const result246 = f.getSkillConfigIdBySkillInstanceId(wireInt)
+  const pinCheck247 = f.equal(result246, configId(0n))
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck247)
 
   // getTargetAttachmentPointLocation / get_target_attachment_point_location / genericId=200047 / literal=1, wire=1
-  const result250 = f.getTargetAttachmentPointLocation(wireEntity, 'literal-249')
-  const pinCheck251 = f.equal(result250, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck251)
+  const result249 = f.getTargetAttachmentPointLocation(wireEntity, 'literal-248')
+  const pinCheck250 = f.equal(result249, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck250)
 
   // getTargetAttachmentPointRotation / get_target_attachment_point_rotation / genericId=200048 / literal=1, wire=1
-  const result252 = f.getTargetAttachmentPointRotation(self, wireStr)
-  const pinCheck253 = f.equal(result252, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck253)
+  const result251 = f.getTargetAttachmentPointRotation(self, wireStr)
+  const pinCheck252 = f.equal(result251, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck252)
 
   // getTargetEntity / get_target_entity / genericId=200034 / literal=0, wire=0
-  const result254 = f.getTargetEntity()
-  const pinCheck255 = f.equal(result254, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck255)
+  const result253 = f.getTargetEntity()
+  const pinCheck254 = f.equal(result253, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck254)
 
   // getTheAggroListOfTheSpecifiedEntity / get_the_aggro_list_of_the_specified_entity / genericId=200091 / literal=0, wire=1
-  const pinCheck257 = f.greaterThanOrEqualTo(
+  const pinCheck256 = f.greaterThanOrEqualTo(
     f.getListLength(f.getTheAggroListOfTheSpecifiedEntity(wireEntity)),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck257)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck256)
 
   // getTheAggroTargetOfTheSpecifiedEntity / get_the_aggro_target_of_the_specified_entity / genericId=200090 / literal=1, wire=0
-  const result258 = f.getTheAggroTargetOfTheSpecifiedEntity(self)
-  const pinCheck259 = f.equal(result258, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck259)
+  const result257 = f.getTheAggroTargetOfTheSpecifiedEntity(self)
+  const pinCheck258 = f.equal(result257, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck258)
 
   // getUnitAttackTarget / get_unit_attack_target / genericId=200035 / literal=1, wire=0
-  const result260 = f.getUnitAttackTarget(self)
-  const pinCheck261 = f.equal(result260, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck261)
+  const result259 = f.getUnitAttackTarget(self)
+  const pinCheck260 = f.equal(result259, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck260)
 
-  // getWhetherControlMotorIsGrounded / get_whether_control_motor_is_grounded / genericId=200300 / literal=1, wire=0
-  const result262 = f.getWhetherControlMotorIsGrounded(self)
-  const pinCheck263 = f.equal(result262, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck263)
+  // getWhetherControlMotorIsGrounded / get_whether_control_motor_is_grounded / genericId=200300 / literal=0, wire=1
+  const result261 = f.getWhetherControlMotorIsGrounded(wireEntity)
+  const pinCheck262 = f.equal(result261, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck262)
 
   // getWhetherCursorIsActive / get_whether_cursor_is_active / genericId=200284 / literal=0, wire=0
-  const result264 = f.getWhetherCursorIsActive()
-  const pinCheck265 = f.equal(result264, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck265)
+  const result263 = f.getWhetherCursorIsActive()
+  const pinCheck264 = f.equal(result263, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck264)
 
-  // getWhetherPreAimingStickIsInDeadZone / get_whether_pre_aiming_stick_is_in_dead_zone / genericId=200282 / literal=1, wire=0
-  const result267 = f.getWhetherPreAimingStickIsInDeadZone(266n)
-  const pinCheck268 = f.equal(result267, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck268)
+  // getWhetherPreAimingStickIsInDeadZone / get_whether_pre_aiming_stick_is_in_dead_zone / genericId=200282 / literal=2, wire=0
+  const result266 = f.getWhetherPreAimingStickIsInDeadZone(265n, CE.PreAimResultDataType.Default)
+  const pinCheck267 = f.equal(result266, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck267)
 
   // greaterThan / greater_than / genericId=200007 / literal=2, wire=0
-  const result271 = f.greaterThan(269n, 270n)
-  const pinCheck272 = f.equal(result271, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck272)
+  const result270 = f.greaterThan(268n, 269n)
+  const pinCheck271 = f.equal(result270, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck271)
 
   // greaterThanOrEqualTo / greater_than_or_equal_to / genericId=200010 / literal=2, wire=0
-  const result275 = f.greaterThanOrEqualTo(273n, 274n)
-  const pinCheck276 = f.equal(result275, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck276)
+  const result274 = f.greaterThanOrEqualTo(272n, 273n)
+  const pinCheck275 = f.equal(result274, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck275)
 
   // lessThan / less_than / genericId=200008 / literal=0, wire=2
-  const result280 = f.lessThan(wireInt, wireInt)
-  const pinCheck281 = f.equal(result280, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck281)
+  const result279 = f.lessThan(wireInt, wireInt)
+  const pinCheck280 = f.equal(result279, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck280)
 
   // lessThanOrEqualTo / less_than_or_equal_to / genericId=200009 / literal=0, wire=2
-  const result282 = f.lessThanOrEqualTo(wireInt, wireInt)
-  const pinCheck283 = f.equal(result282, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck283)
+  const result281 = f.lessThanOrEqualTo(wireInt, wireInt)
+  const pinCheck282 = f.equal(result281, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck282)
 
   // listIncludesThisValue / list_includes_this_value / genericId=200019 / literal=0, wire=2
-  const result284 = f.listIncludesThisValue(
+  const result283 = f.listIncludesThisValue(
     wireInt,
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck285 = f.equal(result284, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck285)
+  const pinCheck284 = f.equal(result283, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck284)
 
   // logicalAndOperation / logical_and_operation / genericId=200001 / literal=0, wire=2
-  const result286 = f.logicalAndOperation(wireBool, wireBool)
-  const pinCheck287 = f.equal(result286, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck287)
+  const result285 = f.logicalAndOperation(wireBool, wireBool)
+  const pinCheck286 = f.equal(result285, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck286)
 
   // logicalNotOperation / logical_not_operation / genericId=200003 / literal=1, wire=0
-  const result289 = f.logicalNotOperation(false)
-  const pinCheck290 = f.equal(result289, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck290)
+  const result288 = f.logicalNotOperation(true)
+  const pinCheck289 = f.equal(result288, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck289)
 
   // logicalOrOperation / logical_or_operation / genericId=200002 / literal=0, wire=2
-  const result291 = f.logicalOrOperation(wireBool, wireBool)
-  const pinCheck292 = f.equal(result291, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck292)
+  const result290 = f.logicalOrOperation(wireBool, wireBool)
+  const pinCheck291 = f.equal(result290, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck291)
 
   // logicalXorOperation / logical_xor_operation / genericId=200004 / literal=0, wire=2
-  const result293 = f.logicalXorOperation(wireBool, wireBool)
-  const pinCheck294 = f.equal(result293, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck294)
+  const result292 = f.logicalXorOperation(wireBool, wireBool)
+  const pinCheck293 = f.equal(result292, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck293)
 
   // multiplication / multiplication / genericId=200013 / literal=0, wire=2
-  const result295 = f.multiplication(wireInt, wireInt)
-  const pinCheck296 = f.equal(result295, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck296)
+  const result294 = f.multiplication(wireInt, wireInt)
+  const pinCheck295 = f.equal(result294, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck295)
 
   // orientationToRotation / orientation_to_rotation / genericId=200074 / literal=0, wire=1
-  const result301 = f.orientationToRotation(wireVec3)
-  const pinCheck302 = f.equal(result301, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck302)
+  const result300 = f.orientationToRotation(wireVec3)
+  const pinCheck301 = f.equal(result300, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck301)
 
   // queryActiveSkillInstanceListOfSpecifiedSlot / query_active_skill_instance_list_of_specified_slot / genericId=200274 / literal=1, wire=0
-  const result308 = f.queryActiveSkillInstanceListOfSpecifiedSlot(E.CharacterSkillSlot.NormalAttack)
-  const pinCheck309 = f.equal(result308, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck309)
+  const result307 = f.queryActiveSkillInstanceListOfSpecifiedSlot(E.CharacterSkillSlot.NormalAttack)
+  const pinCheck308 = f.equal(result307, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck308)
 
   // queryDictionarySLength / query_dictionary_s_length / genericId=200157 / literal=0, wire=1
-  const result310 = f.queryDictionarySLength(
+  const result309 = f.queryDictionarySLength(
     f.assemblyDictionary([
       { k: wireInt, v: wireInt },
       { k: wireInt, v: wireInt },
@@ -2286,11 +2292,11 @@ g.characterControlSkill({
       { k: wireInt, v: wireInt }
     ])
   )
-  const pinCheck311 = f.equal(result310, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck311)
+  const pinCheck310 = f.equal(result309, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck310)
 
   // queryDictionaryValueByKey / query_dictionary_value_by_key / genericId=200154 / literal=0, wire=2
-  const result312 = f.queryDictionaryValueByKey(
+  const result311 = f.queryDictionaryValueByKey(
     f.assemblyDictionary([
       { k: wireInt, v: wireInt },
       { k: wireInt, v: wireInt },
@@ -2305,26 +2311,26 @@ g.characterControlSkill({
     ]),
     wireInt
   )
-  const pinCheck313 = f.equal(result312, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck313)
+  const pinCheck312 = f.equal(result311, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck312)
 
   // queryEntityByGuid / query_entity_by_guid / genericId=200023 / literal=1, wire=0
-  const result315 = f.queryEntityByGuid(guid(314n))
-  const pinCheck316 = f.equal(result315, wireEntity)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck316)
+  const result314 = f.queryEntityByGuid(guid(313n))
+  const pinCheck315 = f.equal(result314, wireEntity)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck315)
 
   // queryEntityFaction / query_entity_faction / genericId=200029 / literal=0, wire=1
-  const result317 = f.queryEntityFaction(wireEntity)
-  const pinCheck318 = f.equal(result317, faction(0n))
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck318)
+  const result316 = f.queryEntityFaction(wireEntity)
+  const pinCheck317 = f.equal(result316, faction(0n))
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck317)
 
   // queryGuidByEntity / query_guid_by_entity / genericId=200027 / literal=1, wire=0
-  const result319 = f.queryGuidByEntity(self)
-  const pinCheck320 = f.equal(result319, guid(0n))
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck320)
+  const result318 = f.queryGuidByEntity(self)
+  const pinCheck319 = f.equal(result318, guid(0n))
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck319)
 
   // queryIfDictionaryContainsSpecificKey / query_if_dictionary_contains_specific_key / genericId=200155 / literal=0, wire=2
-  const result321 = f.queryIfDictionaryContainsSpecificKey(
+  const result320 = f.queryIfDictionaryContainsSpecificKey(
     f.assemblyDictionary([
       { k: wireInt, v: wireInt },
       { k: wireInt, v: wireInt },
@@ -2339,11 +2345,11 @@ g.characterControlSkill({
     ]),
     wireInt
   )
-  const pinCheck322 = f.equal(result321, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck322)
+  const pinCheck321 = f.equal(result320, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck321)
 
   // queryIfDictionaryContainsSpecificValue / query_if_dictionary_contains_specific_value / genericId=200156 / literal=0, wire=2
-  const result323 = f.queryIfDictionaryContainsSpecificValue(
+  const result322 = f.queryIfDictionaryContainsSpecificValue(
     f.assemblyDictionary([
       { k: wireInt, v: wireInt },
       { k: wireInt, v: wireInt },
@@ -2358,118 +2364,118 @@ g.characterControlSkill({
     ]),
     wireInt
   )
-  const pinCheck324 = f.equal(result323, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck324)
+  const pinCheck323 = f.equal(result322, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck323)
 
   // queryIfEntityIsOnTheField / query_if_entity_is_on_the_field / genericId=200103 / literal=1, wire=0
-  const result325 = f.queryIfEntityIsOnTheField(self)
-  const pinCheck326 = f.equal(result325, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck326)
+  const result324 = f.queryIfEntityIsOnTheField(self)
+  const pinCheck325 = f.equal(result324, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck325)
 
   // queryIfFactionIsHostile / query_if_faction_is_hostile / genericId=200093 / literal=2, wire=0
-  const result329 = f.queryIfFactionIsHostile(faction(327n), faction(328n))
-  const pinCheck330 = f.equal(result329, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck330)
+  const result328 = f.queryIfFactionIsHostile(faction(326n), faction(327n))
+  const pinCheck329 = f.equal(result328, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck329)
 
   // queryIfSelfIsInCombat / query_if_self_is_in_combat / genericId=200037 / literal=0, wire=0
-  const result331 = f.queryIfSelfIsInCombat()
-  const pinCheck332 = f.equal(result331, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck332)
+  const result330 = f.queryIfSelfIsInCombat()
+  const pinCheck331 = f.equal(result330, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck331)
 
   // queryIfSpecifiedEntityIsInCombat / query_if_specified_entity_is_in_combat / genericId=200092 / literal=0, wire=1
-  const result333 = f.queryIfSpecifiedEntityIsInCombat(wireEntity)
-  const pinCheck334 = f.equal(result333, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck334)
+  const result332 = f.queryIfSpecifiedEntityIsInCombat(wireEntity)
+  const pinCheck333 = f.equal(result332, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck333)
 
   // queryPreAimingEndReason / query_pre_aiming_end_reason / genericId=200283 / literal=0, wire=1
-  const result335 = f.queryPreAimingEndReason(wireInt)
-  const pinCheck336 = f.enumerationMatch(result335, CE.PreAimingEndReason.None)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck336)
+  const result334 = f.queryPreAimingEndReason(wireInt)
+  const pinCheck335 = f.enumerationMatch(result334, CE.PreAimingEndReason.None)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck335)
 
   // querySkillInstanceIdBySkillSlotAndSkillConfigId / query_skill_instance_id_by_skill_slot_and_skill_config_id / genericId=200275 / literal=1, wire=1
-  const result337 = f.querySkillInstanceIdBySkillSlotAndSkillConfigId(
+  const result336 = f.querySkillInstanceIdBySkillSlotAndSkillConfigId(
     E.CharacterSkillSlot.NormalAttack,
     wireConfig
   )
-  const pinCheck338 = f.equal(result337, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck338)
+  const pinCheck337 = f.equal(result336, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck337)
 
   // querySkillInstanceListBySpecifiedSlot / query_skill_instance_list_by_specified_slot / genericId=200273 / literal=1, wire=0
-  const pinCheck340 = f.greaterThanOrEqualTo(
+  const pinCheck339 = f.greaterThanOrEqualTo(
     f.getListLength(f.querySkillInstanceListBySpecifiedSlot(E.CharacterSkillSlot.NormalAttack)),
     0n
   )
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck340)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck339)
 
   // querySkillVariableValue / query_skill_variable_value / genericId=200259 / literal=1, wire=0
-  const result342 = f.querySkillVariableValue(configId(341n))
-  const pinCheck343 = f.equal(result342, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck343)
+  const result341 = f.querySkillVariableValue(configId(340n))
+  const pinCheck342 = f.equal(result341, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck342)
 
   // queryWhetherPlayerIsCurrentlyInVoiceChat / query_whether_player_is_currently_in_voice_chat / genericId=200271 / literal=0, wire=1
-  const result344 = f.queryWhetherPlayerIsCurrentlyInVoiceChat(wireEntity)
-  const pinCheck345 = f.equal(result344, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck345)
+  const result343 = f.queryWhetherPlayerIsCurrentlyInVoiceChat(wireEntity)
+  const pinCheck344 = f.equal(result343, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck344)
 
   // radiansToDegrees / radians_to_degrees / genericId=200101 / literal=0, wire=1
-  const result346 = f.radiansToDegrees(wireFloat)
-  const pinCheck347 = f.equal(result346, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck347)
+  const result345 = f.radiansToDegrees(wireFloat)
+  const pinCheck346 = f.equal(result345, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck346)
 
   // screenCoordinatesToViewportCoordinates / screen_coordinates_to_viewport_coordinates / genericId=200290 / literal=0, wire=2
-  const result352 = f.screenCoordinatesToViewportCoordinates(wireFloat, wireFloat)
-  const pinCheck353 = f.equal(result352.viewportX, 0)
+  const result351 = f.screenCoordinatesToViewportCoordinates(wireFloat, wireFloat)
+  const pinCheck352 = f.equal(result351.viewportX, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck352)
+  const pinCheck353 = f.equal(result351.viewportY, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck353)
-  const pinCheck354 = f.equal(result352.viewportY, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck354)
 
   // screenCoordinatesToWorldCoordinates / screen_coordinates_to_world_coordinates / genericId=200292 / literal=1, wire=2
-  const result356 = f.screenCoordinatesToWorldCoordinates(wireFloat, wireFloat, 355.25)
-  const pinCheck357 = f.equal(result356, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck357)
+  const result355 = f.screenCoordinatesToWorldCoordinates(wireFloat, wireFloat, 354.25)
+  const pinCheck356 = f.equal(result355, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck356)
 
   // sineFunction / sine_function / genericId=200094 / literal=1, wire=0
-  const result364 = f.sineFunction(363.25)
-  const pinCheck365 = f.equal(result364, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck365)
+  const result363 = f.sineFunction(362.25)
+  const pinCheck364 = f.equal(result363, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck364)
 
   // split3dVector / split3d_vector / genericId=200065 / literal=0, wire=1
-  const result367 = f.split3dVector(wireVec3)
-  const pinCheck368 = f.equal(result367.xComponent, 0)
+  const result366 = f.split3dVector(wireVec3)
+  const pinCheck367 = f.equal(result366.xComponent, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck367)
+  const pinCheck368 = f.equal(result366.yComponent, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck368)
-  const pinCheck369 = f.equal(result367.yComponent, 0)
+  const pinCheck369 = f.equal(result366.zComponent, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck369)
-  const pinCheck370 = f.equal(result367.zComponent, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck370)
 
   // subtraction / subtraction / genericId=200012 / literal=0, wire=2
-  const result371 = f.subtraction(wireInt, wireInt)
-  const pinCheck372 = f.equal(result371, 0n)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck372)
+  const result370 = f.subtraction(wireInt, wireInt)
+  const pinCheck371 = f.equal(result370, 0n)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck371)
 
   // tangentFunction / tangent_function / genericId=200096 / literal=1, wire=0
-  const result374 = f.tangentFunction(373.25)
-  const pinCheck375 = f.equal(result374, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck375)
+  const result373 = f.tangentFunction(372.25)
+  const pinCheck374 = f.equal(result373, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck374)
 
   // viewportCoordinatesToScreenCoordinates / viewport_coordinates_to_screen_coordinates / genericId=200291 / literal=0, wire=2
-  const result548 = f.viewportCoordinatesToScreenCoordinates(wireFloat, wireFloat)
-  const pinCheck549 = f.equal(result548.screenX, 0)
+  const result547 = f.viewportCoordinatesToScreenCoordinates(wireFloat, wireFloat)
+  const pinCheck548 = f.equal(result547.screenX, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck548)
+  const pinCheck549 = f.equal(result547.screenY, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck549)
-  const pinCheck550 = f.equal(result548.screenY, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck550)
 
   // whetherTheEntityHasTheSpecifiedUnitStatus / whether_the_entity_has_the_specified_unit_status / genericId=200243 / literal=1, wire=1
-  const result551 = f.whetherTheEntityHasTheSpecifiedUnitStatus(self, wireConfig)
-  const pinCheck552 = f.equal(result551, false)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck552)
+  const result550 = f.whetherTheEntityHasTheSpecifiedUnitStatus(self, wireConfig)
+  const pinCheck551 = f.equal(result550, false)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck551)
 
   // worldCoordinatesToScreenCoordinates / world_coordinates_to_screen_coordinates / genericId=200293 / literal=1, wire=0
-  const result554 = f.worldCoordinatesToScreenCoordinates([553, 554, 555])
-  const pinCheck555 = f.equal(result554.screenX, 0)
+  const result553 = f.worldCoordinatesToScreenCoordinates([552, 553, 554])
+  const pinCheck554 = f.equal(result553.screenX, 0)
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck554)
+  const pinCheck555 = f.equal(result553.screenY, 0)
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck555)
-  const pinCheck556 = f.equal(result554.screenY, 0)
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck556)
 
   // addKeyBehavior / add_key_behavior / genericId=200262 / literal=1, wire=0
   f.addKeyBehavior(37n)
@@ -2477,43 +2483,43 @@ g.characterControlSkill({
   // addTemporaryAcceleration / add_temporary_acceleration / genericId=200305 / literal=0, wire=4
   f.addTemporaryAcceleration(wireEntity, wireFloat, wireVec3, wireFloat)
 
-  // addTemporaryMovementParameterValues / add_temporary_movement_parameter_values / genericId=200289 / literal=6, wire=2
+  // addTemporaryMovementParameterValues / add_temporary_movement_parameter_values / genericId=200289 / literal=4, wire=4
   f.addTemporaryMovementParameterValues(
-    self,
+    wireEntity,
     39.25,
-    wireFloat,
     40.25,
+    wireFloat,
+    wireFloat,
+    wireFloat,
     41.25,
-    42.25,
-    43.25,
-    wireFloat
+    42.25
   )
 
   // addUnitStatus / add_unit_status / genericId=200057 / literal=2, wire=1
-  f.addUnitStatus(self, wireInt, configId(44n))
+  f.addUnitStatus(self, wireInt, configId(43n))
 
   // addVelocity / add_velocity / genericId=200304 / literal=1, wire=3
-  f.addVelocity(wireEntity, 45.25, wireVec3, wireFloat)
+  f.addVelocity(wireEntity, 44.25, wireVec3, wireFloat)
 
   // breakLoop is emitted by finiteLoop/traverseEntityList callbacks below.
 
   // cameraOrientationDetectionData / camera_orientation_detection_data / genericId=200062 / literal=3, wire=1
-  const result62 = f.cameraOrientationDetectionData(
+  const result61 = f.cameraOrientationDetectionData(
     CE.TargetTypeForCameraOrientationNode.None,
     wireVec3,
-    60.25,
-    61.25
+    59.25,
+    60.25
   )
-  const pinCheck63 = f.equal(result62.targetRotation, [0, 0, 0])
+  const pinCheck62 = f.equal(result61.targetRotation, [0, 0, 0])
+  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck62)
+  const pinCheck63 = f.equal(result61.targetLocation, [0, 0, 0])
   f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck63)
-  const pinCheck64 = f.equal(result62.targetLocation, [0, 0, 0])
-  f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', pinCheck64)
 
   // castSkillFromSpecifiedSlot / cast_skill_from_specified_slot / genericId=200266 / literal=1, wire=1
   f.castSkillFromSpecifiedSlot(E.CharacterSkillSlot.NormalAttack, wireBool)
 
   // castSpecifiedSkillInstance / cast_specified_skill_instance / genericId=200265 / literal=2, wire=0
-  f.castSpecifiedSkillInstance(65n, false)
+  f.castSpecifiedSkillInstance(64n, true)
 
   // characterBlink / character_blink / genericId=200261 / literal=0, wire=2
   f.characterBlink(wireVec3, wireVec3)
@@ -2526,7 +2532,7 @@ g.characterControlSkill({
 
   // doubleBranch / double_branch / genericId=200056 / literal=1, wire=0
   f.doubleBranch(
-    false,
+    true,
     () => {},
     () => {}
   )
@@ -2535,19 +2541,19 @@ g.characterControlSkill({
   f.finishCurrentPreAiming()
 
   // finiteLoop / finite_loop / genericId=200079 / literal=2, wire=0
-  f.finiteLoop(107n, 108n, (loopValue, breakLoop) => {
+  f.finiteLoop(106n, 107n, (loopValue, breakLoop) => {
     f.sendSignalToServerNodeGraph('gsts_all_client_pin_anchor', f.equal(loopValue, 0n))
     breakLoop()
   })
 
   // fixedPointDisplacement / fixed_point_displacement / genericId=200053 / literal=2, wire=3
-  f.fixedPointDisplacement(109.25, wireFloat, wireFloat, wireVec3, true)
+  f.fixedPointDisplacement(108.25, wireFloat, wireFloat, wireVec3, false)
 
   // fixedPointProjectileLaunch / fixed_point_projectile_launch / genericId=200052 / literal=3, wire=2
   f.fixedPointProjectileLaunch(
-    prefabId(112n),
+    prefabId(111n),
+    [112, 113, 114],
     [113, 114, 115],
-    [114, 115, 116],
     wireEntity,
     wireFaction
   )
@@ -2556,10 +2562,10 @@ g.characterControlSkill({
   f.forceExitAimingState()
 
   // increaseSkillVariableValue / increase_skill_variable_value / genericId=200258 / literal=2, wire=0
-  f.increaseSkillVariableValue(configId(277n), 278.25)
+  f.increaseSkillVariableValue(configId(276n), 277.25)
 
   // increaseTheAggroValueOfTheSpecifiedEntity / increase_the_aggro_value_of_the_specified_entity / genericId=200084 / literal=2, wire=1
-  f.increaseTheAggroValueOfTheSpecifiedEntity(wireEntity, self, 279n)
+  f.increaseTheAggroValueOfTheSpecifiedEntity(wireEntity, self, 278n)
 
   // interruptCurrentSkill / interrupt_current_skill / genericId=200256 / literal=0, wire=0
   f.interruptCurrentSkill()
@@ -2580,19 +2586,19 @@ g.characterControlSkill({
   })
 
   // notifyServerNodeGraph / notify_server_node_graph / genericId=200039 / literal=3, wire=0
-  f.notifyServerNodeGraph('literal-297', 'literal-298', 'literal-299')
+  f.notifyServerNodeGraph('literal-296', 'literal-297', 'literal-298')
 
   // playTimedEffects / play_timed_effects / genericId=200038 / literal=3, wire=2
-  f.playTimedEffects(configId(303n), wireVec3, [305, 306, 307], 306.25, wireBool)
+  f.playTimedEffects(configId(302n), wireVec3, [304, 305, 306], 305.25, wireBool)
 
   // playerTurning / player_turning / genericId=200040 / literal=1, wire=0
   f.playerTurning(CE.RotationType.TargetFirstThenInput)
 
   // playerTurnsToFaceSetDirection / player_turns_to_face_set_direction / genericId=200105 / literal=1, wire=0
-  f.playerTurnsToFaceSetDirection([307, 308, 309])
+  f.playerTurnsToFaceSetDirection([306, 307, 308])
 
   // recoverCharacterSHp / recover_character_s_hp / genericId=200075 / literal=4, wire=1
-  f.recoverCharacterSHp(self, 348.25, true, wireFloat, 350n)
+  f.recoverCharacterSHp(self, 347.25, false, wireFloat, 349n)
 
   // removeSpecifiedCharacterDisruptorDevice / remove_specified_character_disruptor_device / genericId=200060 / literal=1, wire=0
   f.removeSpecifiedCharacterDisruptorDevice(E.DisruptorDeviceType.ForceFieldDevice)
@@ -2601,7 +2607,7 @@ g.characterControlSkill({
   f.removeTargetEntityFromAggroList(self, wireEntity)
 
   // removeUnitStatus / remove_unit_status / genericId=200058 / literal=1, wire=1
-  f.removeUnitStatus(wireEntity, configId(351n))
+  f.removeUnitStatus(wireEntity, configId(350n))
 
   // resetSkillTarget / reset_skill_target / genericId=200106 / literal=0, wire=0
   f.resetSkillTarget()
@@ -2621,19 +2627,19 @@ g.characterControlSkill({
   )
 
   // setAttackWeight / set_attack_weight / genericId=200061 / literal=2, wire=0
-  f.setAttackWeight(358.25, true)
+  f.setAttackWeight(357.25, false)
 
-  // setControlMotorToUngroundedState / set_control_motor_to_ungrounded_state / genericId=200306 / literal=2, wire=0
-  f.setControlMotorToUngroundedState(self, 360.25)
+  // setControlMotorToUngroundedState / set_control_motor_to_ungrounded_state / genericId=200306 / literal=1, wire=1
+  f.setControlMotorToUngroundedState(wireEntity, 359.25)
 
   // setLocalVariable / set_local_variable / genericId=200081 / literal=1, wire=1
-  f.setLocalVariable('literal-361', wireInt)
+  f.setLocalVariable('literal-360', wireInt)
 
   // setOwnAttackTarget / set_own_attack_target / genericId=200041 / literal=0, wire=2
   f.setOwnAttackTarget(wireEntity, wireBool)
 
   // setSkillVariable / set_skill_variable / genericId=200257 / literal=1, wire=1
-  f.setSkillVariable(configId(362n), wireFloat)
+  f.setSkillVariable(configId(361n), wireFloat)
 
   // setTheAggroValueOfSpecifiedEntity / set_the_aggro_value_of_specified_entity / genericId=200083 / literal=1, wire=2
   f.setTheAggroValueOfSpecifiedEntity(self, wireEntity, wireInt)
@@ -2676,52 +2682,52 @@ g.characterControlSkill({
   // triggerHitboxAtSpecificLocation / trigger_hitbox_at_specific_location / genericId=200051 / literal=35, wire=3
   f.triggerHitboxAtSpecificLocation(
     E.TargetType.None,
-    [376, 377, 378],
+    [375, 376, 377],
     wireVec3,
     wireFloat,
-    378.25,
+    377.25,
     [E.EntityType.Stage, E.EntityType.Object, E.EntityType.Player],
     E.TriggerRestriction.TriggerOnlyOnce,
-    379n,
+    378n,
     E.AttackShape.Rectangle,
-    [380, 381, 382],
+    [379, 380, 381],
+    380.25,
     381.25,
     382.25,
     383.25,
     384.25,
-    385.25,
     CE.SectorDetectionDirection.FromInsideOut,
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
-    386.25,
+    385.25,
     E.HitType.None,
     E.AttackType.None,
-    387.25,
-    false,
-    389n,
+    386.25,
+    true,
+    388n,
     CE.KnockbackDirectionType.LineConnectingAttackerAndHitPoint,
-    false,
+    true,
+    [390, 391, 392],
     [391, 392, 393],
-    [392, 393, 394],
-    393.25,
+    392.25,
+    [393, 394, 395],
     [394, 395, 396],
-    [395, 396, 397],
+    395.25,
     396.25,
-    397.25,
     wireInt,
     CE.HitLevel.NoEffect,
-    398.25,
-    399.25
+    397.25,
+    398.25
   )
 
   // triggerHitboxAtSpecifiedAttachmentPoint / trigger_hitbox_at_specified_attachment_point / genericId=200059 / literal=36, wire=3
   f.triggerHitboxAtSpecifiedAttachmentPoint(
     E.TargetType.None,
-    'literal-400',
+    'literal-399',
+    [400, 401, 402],
     [401, 402, 403],
-    [402, 403, 404],
-    403.25,
+    402.25,
     wireFloat,
     f.getEntityTypeList([
       E.EntityType.Stage,
@@ -2736,81 +2742,81 @@ g.characterControlSkill({
       E.EntityType.Creation
     ]),
     E.TriggerRestriction.TriggerOnlyOnce,
-    404n,
+    403n,
     E.AttackShape.Rectangle,
-    [405, 406, 407],
+    [404, 405, 406],
+    405.25,
     406.25,
     407.25,
     408.25,
     409.25,
-    410.25,
     CE.SectorDetectionDirection.FromInsideOut,
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
-    411.25,
+    410.25,
     E.HitType.None,
     E.AttackType.None,
-    412.25,
-    true,
-    414n,
+    411.25,
+    false,
+    413n,
     CE.KnockbackDirectionType.LineConnectingAttackerAndHitPoint,
-    true,
+    false,
+    [415, 416, 417],
     [416, 417, 418],
-    [417, 418, 419],
-    418.25,
+    417.25,
+    [418, 419, 420],
     [419, 420, 421],
-    [420, 421, 422],
-    421.25,
+    420.25,
     wireFloat,
-    422n,
+    421n,
     CE.HitLevel.NoEffect,
-    423.25,
-    424.25
+    422.25,
+    423.25
   )
 
-  // triggerRectangularHitboxAtSpecificLocation / trigger_rectangular_hitbox_at_specific_location / genericId=200112 / literal=27, wire=4
+  // triggerRectangularHitboxAtSpecificLocation / trigger_rectangular_hitbox_at_specific_location / genericId=200112 / literal=28, wire=3
   f.triggerRectangularHitboxAtSpecificLocation(
     E.TargetType.None,
-    [425, 426, 427],
+    [424, 425, 426],
     wireVec3,
     wireFloat,
-    427.25,
+    426.25,
     [E.EntityType.Stage, E.EntityType.Object, E.EntityType.Player],
     E.TriggerRestriction.TriggerOnlyOnce,
-    428n,
-    wireVec3,
+    427n,
+    [428, 429, 430],
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
-    430.25,
+    429.25,
     E.HitType.None,
     E.AttackType.None,
-    431.25,
-    false,
-    433n,
+    430.25,
+    true,
+    432n,
     CE.KnockbackDirectionType.LineConnectingAttackerAndHitPoint,
-    false,
+    true,
+    [434, 435, 436],
     [435, 436, 437],
-    [436, 437, 438],
-    437.25,
+    436.25,
+    [437, 438, 439],
     [438, 439, 440],
-    [439, 440, 441],
+    439.25,
     440.25,
-    441.25,
     wireInt,
     CE.HitLevel.NoEffect,
-    442.25,
-    443.25
+    441.25,
+    442.25
   )
 
   // triggerRectangularHitboxAtSpecifiedAttachmentPoint / trigger_rectangular_hitbox_at_specified_attachment_point / genericId=200115 / literal=29, wire=3
   f.triggerRectangularHitboxAtSpecifiedAttachmentPoint(
     E.TargetType.None,
-    'literal-444',
+    'literal-443',
+    [444, 445, 446],
     [445, 446, 447],
-    [446, 447, 448],
-    447.25,
+    446.25,
     wireFloat,
     f.getEntityTypeList([
       E.EntityType.Stage,
@@ -2825,78 +2831,78 @@ g.characterControlSkill({
       E.EntityType.Creation
     ]),
     E.TriggerRestriction.TriggerOnlyOnce,
-    448n,
-    [449, 450, 451],
+    447n,
+    [448, 449, 450],
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
-    450.25,
+    449.25,
     E.HitType.None,
     E.AttackType.None,
-    451.25,
-    false,
-    453n,
+    450.25,
+    true,
+    452n,
     CE.KnockbackDirectionType.LineConnectingAttackerAndHitPoint,
-    false,
+    true,
+    [454, 455, 456],
     [455, 456, 457],
-    [456, 457, 458],
-    457.25,
+    456.25,
+    [457, 458, 459],
     [458, 459, 460],
-    [459, 460, 461],
-    460.25,
+    459.25,
     wireFloat,
-    461n,
+    460n,
     CE.HitLevel.NoEffect,
-    462.25,
-    463.25
+    461.25,
+    462.25
   )
 
   // triggerSectorHitboxAtSpecificLocation / trigger_sector_hitbox_at_specific_location / genericId=200113 / literal=32, wire=3
   f.triggerSectorHitboxAtSpecificLocation(
     E.TargetType.None,
-    [464, 465, 466],
+    [463, 464, 465],
     wireVec3,
     wireFloat,
-    466.25,
+    465.25,
     [E.EntityType.Stage, E.EntityType.Object, E.EntityType.Player],
     E.TriggerRestriction.TriggerOnlyOnce,
-    467n,
+    466n,
+    467.25,
     468.25,
     469.25,
     470.25,
-    471.25,
     CE.SectorDetectionDirection.FromInsideOut,
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
-    472.25,
+    471.25,
     E.HitType.None,
     E.AttackType.None,
-    473.25,
-    false,
-    475n,
+    472.25,
+    true,
+    474n,
     CE.KnockbackDirectionType.LineConnectingAttackerAndHitPoint,
-    false,
+    true,
+    [476, 477, 478],
     [477, 478, 479],
-    [478, 479, 480],
-    479.25,
+    478.25,
+    [479, 480, 481],
     [480, 481, 482],
-    [481, 482, 483],
-    482.25,
+    481.25,
     wireFloat,
-    483n,
+    482n,
     CE.HitLevel.NoEffect,
-    484.25,
-    485.25
+    483.25,
+    484.25
   )
 
   // triggerSectorHitboxAtSpecifiedAttachmentPoint / trigger_sector_hitbox_at_specified_attachment_point / genericId=200116 / literal=33, wire=3
   f.triggerSectorHitboxAtSpecifiedAttachmentPoint(
     E.TargetType.None,
-    'literal-486',
+    'literal-485',
+    [486, 487, 488],
     [487, 488, 489],
-    [488, 489, 490],
-    489.25,
+    488.25,
     wireFloat,
     f.getEntityTypeList([
       E.EntityType.Stage,
@@ -2911,42 +2917,42 @@ g.characterControlSkill({
       E.EntityType.Creation
     ]),
     E.TriggerRestriction.TriggerOnlyOnce,
-    490n,
+    489n,
+    490.25,
     491.25,
     492.25,
     493.25,
-    494.25,
     CE.SectorDetectionDirection.FromInsideOut,
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
-    495.25,
+    494.25,
     E.HitType.None,
     E.AttackType.None,
-    496.25,
-    true,
-    498n,
+    495.25,
+    false,
+    497n,
     CE.KnockbackDirectionType.LineConnectingAttackerAndHitPoint,
-    true,
+    false,
+    [499, 500, 501],
     [500, 501, 502],
-    [501, 502, 503],
-    502.25,
+    501.25,
+    [502, 503, 504],
     [503, 504, 505],
-    [504, 505, 506],
+    504.25,
     505.25,
-    506.25,
     wireInt,
     CE.HitLevel.NoEffect,
-    507.25,
-    508.25
+    506.25,
+    507.25
   )
 
   // triggerSphericalHitboxAtSpecificLocation / trigger_spherical_hitbox_at_specific_location / genericId=200111 / literal=27, wire=4
   f.triggerSphericalHitboxAtSpecificLocation(
     E.TargetType.None,
     wireVec3,
-    [510, 511, 512],
-    511.25,
+    [509, 510, 511],
+    510.25,
     wireFloat,
     f.getEntityTypeList([
       E.EntityType.Stage,
@@ -2961,66 +2967,66 @@ g.characterControlSkill({
       E.EntityType.Creation
     ]),
     E.TriggerRestriction.TriggerOnlyOnce,
-    512n,
-    513.25,
+    511n,
+    512.25,
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
-    514.25,
+    513.25,
     E.HitType.None,
     E.AttackType.None,
-    515.25,
-    false,
-    517n,
+    514.25,
+    true,
+    516n,
     CE.KnockbackDirectionType.LineConnectingAttackerAndHitPoint,
-    false,
+    true,
+    [518, 519, 520],
     [519, 520, 521],
-    [520, 521, 522],
-    521.25,
+    520.25,
+    [521, 522, 523],
     [522, 523, 524],
-    [523, 524, 525],
-    524.25,
+    523.25,
     wireFloat,
-    525n,
+    524n,
     CE.HitLevel.NoEffect,
-    526.25,
-    527.25
+    525.25,
+    526.25
   )
 
   // triggerSphericalHitboxAtSpecifiedAttachmentPoint / trigger_spherical_hitbox_at_specified_attachment_point / genericId=200114 / literal=28, wire=4
   f.triggerSphericalHitboxAtSpecifiedAttachmentPoint(
     E.TargetType.None,
-    'literal-528',
+    'literal-527',
     wireVec3,
     wireVec3,
     wireFloat,
-    531.25,
+    530.25,
     [E.EntityType.Stage, E.EntityType.Object, E.EntityType.Player],
     E.TriggerRestriction.TriggerOnlyOnce,
-    532n,
-    533.25,
+    531n,
+    532.25,
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
-    534.25,
+    533.25,
     E.HitType.None,
     E.AttackType.None,
-    535.25,
-    false,
-    537n,
+    534.25,
+    true,
+    536n,
     CE.KnockbackDirectionType.LineConnectingAttackerAndHitPoint,
-    false,
+    true,
+    [538, 539, 540],
     [539, 540, 541],
-    [540, 541, 542],
-    541.25,
+    540.25,
+    [541, 542, 543],
     [542, 543, 544],
-    [543, 544, 545],
+    543.25,
     544.25,
-    545.25,
     wireInt,
     CE.HitLevel.NoEffect,
-    546.25,
-    547.25
+    545.25,
+    546.25
   )
 })
 
@@ -4034,7 +4040,7 @@ g.creationSkill({
     326.25
   )
 
-  // triggerRectangularHitboxAtSpecificLocation / trigger_rectangular_hitbox_at_specific_location / genericId=200112 / literal=27, wire=4
+  // triggerRectangularHitboxAtSpecificLocation / trigger_rectangular_hitbox_at_specific_location / genericId=200112 / literal=28, wire=3
   f.triggerRectangularHitboxAtSpecificLocation(
     E.TargetType.None,
     [327, 328, 329],
@@ -4044,7 +4050,7 @@ g.creationSkill({
     [E.EntityType.Stage, E.EntityType.Object, E.EntityType.Player],
     E.TriggerRestriction.TriggerOnlyOnce,
     330n,
-    wireVec3,
+    [331, 332, 333],
     CE.AttackLayerConfig.OnlyOnHitHurtbox,
     list(0),
     E.ElementalType.None,
@@ -4313,14 +4319,14 @@ g.creationStatus({
   const wirePrefab = f
     .getCustomVariable(CE.TargetEntity.AggroTarget, 'gsts_manual_wire_prefab')
     .asType('prefab_id')
-  const pinCheck278 = f.equal(wireStr, '')
-  f.executeSkill(pinCheck278, 1n)
-  const pinCheck279 = f.equal(wireGuid, guid(0n))
-  f.executeSkill(pinCheck279, 1n)
-  const pinCheck280 = f.equal(wireConfig, configId(0n))
-  f.executeSkill(pinCheck280, 1n)
-  const pinCheck281 = f.equal(wirePrefab, prefabId(0n))
-  f.executeSkill(pinCheck281, 1n)
+  const pinCheck337 = f.equal(wireStr, '')
+  f.executeSkill(pinCheck337, 1n)
+  const pinCheck338 = f.equal(wireGuid, guid(0n))
+  f.executeSkill(pinCheck338, 1n)
+  const pinCheck339 = f.equal(wireConfig, configId(0n))
+  f.executeSkill(pinCheck339, 1n)
+  const pinCheck340 = f.equal(wirePrefab, prefabId(0n))
+  f.executeSkill(pinCheck340, 1n)
 
   // _3dVectorAddition / _3d_vector_addition / genericId=200200 / literal=2, wire=0
   const result3 = f._3dVectorAddition([1, 2, 3], [2, 3, 4])
@@ -4590,18 +4596,53 @@ g.creationStatus({
   const pinCheck121 = f.enumerationMatch(result120, E.EntityType.Stage)
   f.executeSkill(pinCheck121, 1n)
 
+  // getEntityTypeList / get_entity_type_list / genericId=200312 / literal=1, wire=0
+  const enumListProbe123 = f.getRayDetectionResult(
+    CE.TargetEntity.AggroTarget,
+    wireVec3,
+    wireVec3,
+    wireFloat,
+    E.TargetType.None,
+    f.getEntityTypeList([
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation,
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation
+    ]),
+    f.getRayFilterTypeList([
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox
+    ])
+  )
+  const pinCheck124 = f.equal(enumListProbe123.onHitLocation, [0, 0, 0])
+  f.executeSkill(pinCheck124, 1n)
+
   // getListLength / get_list_length / genericId=200223 / literal=0, wire=1
-  const result122 = f.getListLength(
+  const result125 = f.getListLength(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck123 = f.equal(result122, 0n)
-  f.executeSkill(pinCheck123, 1n)
+  const pinCheck126 = f.equal(result125, 0n)
+  f.executeSkill(pinCheck126, 1n)
 
   // getListOfKeysFromDictionary / get_list_of_keys_from_dictionary / genericId=200235 / literal=0, wire=1
-  const pinCheck125 = f.greaterThanOrEqualTo(
+  const pinCheck128 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.getListOfKeysFromDictionary(
         f.assemblyDictionary([
@@ -4620,10 +4661,10 @@ g.creationStatus({
     ),
     0n
   )
-  f.executeSkill(pinCheck125, 1n)
+  f.executeSkill(pinCheck128, 1n)
 
   // getListOfValuesFromDictionary / get_list_of_values_from_dictionary / genericId=200234 / literal=0, wire=1
-  const pinCheck127 = f.greaterThanOrEqualTo(
+  const pinCheck130 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.getListOfValuesFromDictionary(
         f.assemblyDictionary([
@@ -4642,161 +4683,235 @@ g.creationStatus({
     ),
     0n
   )
-  f.executeSkill(pinCheck127, 1n)
+  f.executeSkill(pinCheck130, 1n)
 
   // getMaximumValueFromList / get_maximum_value_from_list / genericId=200225 / literal=0, wire=1
-  const result128 = f.getMaximumValueFromList(
+  const result131 = f.getMaximumValueFromList(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck129 = f.equal(result128, 0n)
-  f.executeSkill(pinCheck129, 1n)
+  const pinCheck132 = f.equal(result131, 0n)
+  f.executeSkill(pinCheck132, 1n)
 
   // getMinimumValueFromList / get_minimum_value_from_list / genericId=200226 / literal=0, wire=1
-  const result130 = f.getMinimumValueFromList(
+  const result133 = f.getMinimumValueFromList(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck131 = f.equal(result130, 0n)
-  f.executeSkill(pinCheck131, 1n)
+  const pinCheck134 = f.equal(result133, 0n)
+  f.executeSkill(pinCheck134, 1n)
 
   // getObjectPresetStatus / get_object_preset_status / genericId=200172 / literal=1, wire=1
-  const result132 = f.getObjectPresetStatus(CE.TargetEntity.AggroTarget, wireInt)
-  const pinCheck133 = f.equal(result132, 0n)
-  f.executeSkill(pinCheck133, 1n)
+  const result135 = f.getObjectPresetStatus(CE.TargetEntity.AggroTarget, wireInt)
+  const pinCheck136 = f.equal(result135, 0n)
+  f.executeSkill(pinCheck136, 1n)
 
   // getPreviousFrameExecutionStatus / get_previous_frame_execution_status / genericId=200250 / literal=0, wire=0
-  const result134 = f.getPreviousFrameExecutionStatus()
-  const pinCheck135 = f.equal(result134, configId(0n))
-  f.executeSkill(pinCheck135, 1n)
-
-  // getPreviousFrameExecutionTactic / get_previous_frame_execution_tactic / genericId=200252 / literal=0, wire=0
-  const result136 = f.getPreviousFrameExecutionTactic()
-  const pinCheck137 = f.enumerationMatch(result136.tacticType, CE.TacticType.None)
-  f.executeSkill(pinCheck137, 1n)
-  const pinCheck138 = f.equal(result136.tacticalContext, '')
+  const result137 = f.getPreviousFrameExecutionStatus()
+  const pinCheck138 = f.equal(result137, configId(0n))
   f.executeSkill(pinCheck138, 1n)
 
-  // getRandomNumber / get_random_number / genericId=200190 / literal=0, wire=2
-  const result139 = f.getRandomNumber(wireInt, wireInt)
-  const pinCheck140 = f.equal(result139, 0n)
+  // getPreviousFrameExecutionTactic / get_previous_frame_execution_tactic / genericId=200252 / literal=0, wire=0
+  const result139 = f.getPreviousFrameExecutionTactic()
+  const pinCheck140 = f.enumerationMatch(result139.tacticType, CE.TacticType.None)
   f.executeSkill(pinCheck140, 1n)
-
-  // getSelfEntity / get_self_entity / genericId=200164 / literal=0, wire=0
-  const result141 = f.getSelfEntity()
-  const pinCheck142 = f.equal(result141, wireEntity)
+  const pinCheck141 = f.equal(result139.tacticalContext, '')
+  f.executeSkill(pinCheck141, 1n)
+  const pinCheck142 = f.equal(result139.tacticDuration, 0)
   f.executeSkill(pinCheck142, 1n)
 
-  // getSelfPresetStatusValue / get_self_preset_status_value / genericId=200241 / literal=1, wire=0
-  const result144 = f.getSelfPresetStatusValue(143n)
-  const pinCheck145 = f.equal(result144, 0n)
-  f.executeSkill(pinCheck145, 1n)
+  // getRandomNumber / get_random_number / genericId=200190 / literal=0, wire=2
+  const result143 = f.getRandomNumber(wireInt, wireInt)
+  const pinCheck144 = f.equal(result143, 0n)
+  f.executeSkill(pinCheck144, 1n)
 
-  // getSpawnPointLocationInformation / get_spawn_point_location_information / genericId=200163 / literal=0, wire=0
-  const result146 = f.getSpawnPointLocationInformation()
-  const pinCheck147 = f.equal(result146.spawnPointCoordinates, [0, 0, 0])
-  f.executeSkill(pinCheck147, 1n)
-  const pinCheck148 = f.equal(result146.spawnPointRotation, [0, 0, 0])
-  f.executeSkill(pinCheck148, 1n)
-
-  // getStageEntity / get_stage_entity / genericId=200166 / literal=0, wire=0
-  const result149 = f.getStageEntity()
-  const pinCheck150 = f.equal(result149, wireEntity)
+  // getRayDetectionResult / get_ray_detection_result / genericId=200301 / literal=4, wire=3
+  const result148 = f.getRayDetectionResult(
+    CE.TargetEntity.AggroTarget,
+    [145, 146, 147],
+    wireVec3,
+    147.25,
+    E.TargetType.None,
+    f.getEntityTypeList([
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation,
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation
+    ]),
+    f.getRayFilterTypeList([
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox
+    ])
+  )
+  const pinCheck149 = f.equal(result148.onHitLocation, [0, 0, 0])
+  f.executeSkill(pinCheck149, 1n)
+  const pinCheck150 = f.equal(result148.onHitEntity, false)
   f.executeSkill(pinCheck150, 1n)
 
-  // getTargetAtk / get_target_atk / genericId=200240 / literal=1, wire=0
-  const result151 = f.getTargetAtk(CE.TargetEntity.AggroTarget)
-  const pinCheck152 = f.equal(result151.baseATK, 0)
-  f.executeSkill(pinCheck152, 1n)
-  const pinCheck153 = f.equal(result151.currentATK, 0)
+  // getRayFilterTypeList / get_ray_filter_type_list / genericId=200302 / literal=1, wire=0
+  const enumListProbe152 = f.getRayDetectionResult(
+    CE.TargetEntity.AggroTarget,
+    wireVec3,
+    wireVec3,
+    wireFloat,
+    E.TargetType.None,
+    f.getEntityTypeList([
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation,
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation
+    ]),
+    f.getRayFilterTypeList([
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox
+    ])
+  )
+  const pinCheck153 = f.equal(enumListProbe152.onHitLocation, [0, 0, 0])
   f.executeSkill(pinCheck153, 1n)
 
-  // getTargetEntity / get_target_entity / genericId=200165 / literal=0, wire=0
-  const result154 = f.getTargetEntity()
+  // getSelfEntity / get_self_entity / genericId=200164 / literal=0, wire=0
+  const result154 = f.getSelfEntity()
   const pinCheck155 = f.equal(result154, wireEntity)
   f.executeSkill(pinCheck155, 1n)
 
-  // getTargetHp / get_target_hp / genericId=200238 / literal=1, wire=0
-  const result156 = f.getTargetHp(CE.TargetEntity.AggroTarget)
-  const pinCheck157 = f.equal(result156.baseHP, 0)
-  f.executeSkill(pinCheck157, 1n)
-  const pinCheck158 = f.equal(result156.maxHP, 0)
+  // getSelfPresetStatusValue / get_self_preset_status_value / genericId=200241 / literal=1, wire=0
+  const result157 = f.getSelfPresetStatusValue(156n)
+  const pinCheck158 = f.equal(result157, 0n)
   f.executeSkill(pinCheck158, 1n)
-  const pinCheck159 = f.equal(result156.currentHPPercentage, 0)
-  f.executeSkill(pinCheck159, 1n)
 
-  // getTargetLevel / get_target_level / genericId=200239 / literal=1, wire=0
-  const result160 = f.getTargetLevel(CE.TargetEntity.AggroTarget)
-  const pinCheck161 = f.equal(result160, 0n)
+  // getSpawnPointLocationInformation / get_spawn_point_location_information / genericId=200163 / literal=0, wire=0
+  const result159 = f.getSpawnPointLocationInformation()
+  const pinCheck160 = f.equal(result159.spawnPointCoordinates, [0, 0, 0])
+  f.executeSkill(pinCheck160, 1n)
+  const pinCheck161 = f.equal(result159.spawnPointRotation, [0, 0, 0])
   f.executeSkill(pinCheck161, 1n)
 
-  // greaterThan / greater_than / genericId=200180 / literal=0, wire=2
-  const result162 = f.greaterThan(wireInt, wireInt)
-  const pinCheck163 = f.equal(result162, false)
+  // getStageEntity / get_stage_entity / genericId=200166 / literal=0, wire=0
+  const result162 = f.getStageEntity()
+  const pinCheck163 = f.equal(result162, wireEntity)
   f.executeSkill(pinCheck163, 1n)
 
-  // greaterThanOrEqualTo / greater_than_or_equal_to / genericId=200183 / literal=0, wire=2
-  const result164 = f.greaterThanOrEqualTo(wireInt, wireInt)
-  const pinCheck165 = f.equal(result164, false)
+  // getTargetAtk / get_target_atk / genericId=200240 / literal=1, wire=0
+  const result164 = f.getTargetAtk(CE.TargetEntity.AggroTarget)
+  const pinCheck165 = f.equal(result164.baseATK, 0)
   f.executeSkill(pinCheck165, 1n)
+  const pinCheck166 = f.equal(result164.currentATK, 0)
+  f.executeSkill(pinCheck166, 1n)
+
+  // getTargetEntity / get_target_entity / genericId=200165 / literal=0, wire=0
+  const result167 = f.getTargetEntity()
+  const pinCheck168 = f.equal(result167, wireEntity)
+  f.executeSkill(pinCheck168, 1n)
+
+  // getTargetHp / get_target_hp / genericId=200238 / literal=1, wire=0
+  const result169 = f.getTargetHp(CE.TargetEntity.AggroTarget)
+  const pinCheck170 = f.equal(result169.baseHP, 0)
+  f.executeSkill(pinCheck170, 1n)
+  const pinCheck171 = f.equal(result169.maxHP, 0)
+  f.executeSkill(pinCheck171, 1n)
+  const pinCheck172 = f.equal(result169.currentHPPercentage, 0)
+  f.executeSkill(pinCheck172, 1n)
+
+  // getTargetLevel / get_target_level / genericId=200239 / literal=1, wire=0
+  const result173 = f.getTargetLevel(CE.TargetEntity.AggroTarget)
+  const pinCheck174 = f.equal(result173, 0n)
+  f.executeSkill(pinCheck174, 1n)
+
+  // greaterThan / greater_than / genericId=200180 / literal=0, wire=2
+  const result175 = f.greaterThan(wireInt, wireInt)
+  const pinCheck176 = f.equal(result175, false)
+  f.executeSkill(pinCheck176, 1n)
+
+  // greaterThanOrEqualTo / greater_than_or_equal_to / genericId=200183 / literal=0, wire=2
+  const result177 = f.greaterThanOrEqualTo(wireInt, wireInt)
+  const pinCheck178 = f.equal(result177, false)
+  f.executeSkill(pinCheck178, 1n)
 
   // lessThan / less_than / genericId=200181 / literal=2, wire=0
-  const result168 = f.lessThan(166n, 167n)
-  const pinCheck169 = f.equal(result168, false)
-  f.executeSkill(pinCheck169, 1n)
+  const result181 = f.lessThan(179n, 180n)
+  const pinCheck182 = f.equal(result181, false)
+  f.executeSkill(pinCheck182, 1n)
 
   // lessThanOrEqualTo / less_than_or_equal_to / genericId=200182 / literal=2, wire=0
-  const result172 = f.lessThanOrEqualTo(170n, 171n)
-  const pinCheck173 = f.equal(result172, false)
-  f.executeSkill(pinCheck173, 1n)
+  const result185 = f.lessThanOrEqualTo(183n, 184n)
+  const pinCheck186 = f.equal(result185, false)
+  f.executeSkill(pinCheck186, 1n)
 
   // listIncludesThisValue / list_includes_this_value / genericId=200224 / literal=1, wire=1
-  const result175 = f.listIncludesThisValue(
-    174n,
+  const result188 = f.listIncludesThisValue(
+    187n,
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck176 = f.equal(result175, false)
-  f.executeSkill(pinCheck176, 1n)
+  const pinCheck189 = f.equal(result188, false)
+  f.executeSkill(pinCheck189, 1n)
 
   // logicalAndOperation / logical_and_operation / genericId=200174 / literal=2, wire=0
-  const result179 = f.logicalAndOperation(true, false)
-  const pinCheck180 = f.equal(result179, false)
-  f.executeSkill(pinCheck180, 1n)
+  const result192 = f.logicalAndOperation(false, true)
+  const pinCheck193 = f.equal(result192, false)
+  f.executeSkill(pinCheck193, 1n)
 
   // logicalNotOperation / logical_not_operation / genericId=200176 / literal=0, wire=1
-  const result181 = f.logicalNotOperation(wireBool)
-  const pinCheck182 = f.equal(result181, false)
-  f.executeSkill(pinCheck182, 1n)
-
-  // logicalOrOperation / logical_or_operation / genericId=200175 / literal=2, wire=0
-  const result185 = f.logicalOrOperation(true, false)
-  const pinCheck186 = f.equal(result185, false)
-  f.executeSkill(pinCheck186, 1n)
-
-  // logicalXorOperation / logical_xor_operation / genericId=200177 / literal=2, wire=0
-  const result189 = f.logicalXorOperation(true, false)
-  const pinCheck190 = f.equal(result189, false)
-  f.executeSkill(pinCheck190, 1n)
-
-  // multiplication / multiplication / genericId=200186 / literal=2, wire=0
-  const result194 = f.multiplication(192n, 193n)
-  const pinCheck195 = f.equal(result194, 0n)
+  const result194 = f.logicalNotOperation(wireBool)
+  const pinCheck195 = f.equal(result194, false)
   f.executeSkill(pinCheck195, 1n)
 
+  // logicalOrOperation / logical_or_operation / genericId=200175 / literal=2, wire=0
+  const result198 = f.logicalOrOperation(false, true)
+  const pinCheck199 = f.equal(result198, false)
+  f.executeSkill(pinCheck199, 1n)
+
+  // logicalXorOperation / logical_xor_operation / genericId=200177 / literal=2, wire=0
+  const result202 = f.logicalXorOperation(false, true)
+  const pinCheck203 = f.equal(result202, false)
+  f.executeSkill(pinCheck203, 1n)
+
+  // multiplication / multiplication / genericId=200186 / literal=2, wire=0
+  const result207 = f.multiplication(205n, 206n)
+  const pinCheck208 = f.equal(result207, 0n)
+  f.executeSkill(pinCheck208, 1n)
+
   // orientationToRotation / orientation_to_rotation / genericId=200203 / literal=1, wire=0
-  const result197 = f.orientationToRotation([196, 197, 198])
-  const pinCheck198 = f.equal(result197, [0, 0, 0])
-  f.executeSkill(pinCheck198, 1n)
+  const result210 = f.orientationToRotation([209, 210, 211])
+  const pinCheck211 = f.equal(result210, [0, 0, 0])
+  f.executeSkill(pinCheck211, 1n)
 
   // queryDictionarySLength / query_dictionary_s_length / genericId=200233 / literal=0, wire=1
-  const result199 = f.queryDictionarySLength(
+  const result212 = f.queryDictionarySLength(
     f.assemblyDictionary([
       { k: wireInt, v: wireInt },
       { k: wireInt, v: wireInt },
@@ -4810,109 +4925,114 @@ g.creationStatus({
       { k: wireInt, v: wireInt }
     ])
   )
-  const pinCheck200 = f.equal(result199, 0n)
-  f.executeSkill(pinCheck200, 1n)
-
-  // queryDictionaryValueByKey / query_dictionary_value_by_key / genericId=200230 / literal=1, wire=1
-  const result202 = f.queryDictionaryValueByKey(
-    f.assemblyDictionary([
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt }
-    ]),
-    201n
-  )
-  const pinCheck203 = f.equal(result202, 0n)
-  f.executeSkill(pinCheck203, 1n)
-
-  // queryEntityFaction / query_entity_faction / genericId=200171 / literal=1, wire=0
-  const result204 = f.queryEntityFaction(CE.TargetEntity.AggroTarget)
-  const pinCheck205 = f.equal(result204, faction(0n))
-  f.executeSkill(pinCheck205, 1n)
-
-  // queryIfDictionaryContainsSpecificKey / query_if_dictionary_contains_specific_key / genericId=200231 / literal=1, wire=1
-  const result207 = f.queryIfDictionaryContainsSpecificKey(
-    f.assemblyDictionary([
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt }
-    ]),
-    206n
-  )
-  const pinCheck208 = f.equal(result207, false)
-  f.executeSkill(pinCheck208, 1n)
-
-  // queryIfDictionaryContainsSpecificValue / query_if_dictionary_contains_specific_value / genericId=200232 / literal=1, wire=1
-  const result210 = f.queryIfDictionaryContainsSpecificValue(
-    f.assemblyDictionary([
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt }
-    ]),
-    209n
-  )
-  const pinCheck211 = f.equal(result210, false)
-  f.executeSkill(pinCheck211, 1n)
-
-  // queryIfEntityIsOnTheField / query_if_entity_is_on_the_field / genericId=200167 / literal=1, wire=0
-  const result212 = f.queryIfEntityIsOnTheField(CE.TargetEntity.AggroTarget)
-  const pinCheck213 = f.equal(result212, false)
+  const pinCheck213 = f.equal(result212, 0n)
   f.executeSkill(pinCheck213, 1n)
 
-  // queryIfFactionIsHostile / query_if_faction_is_hostile / genericId=200227 / literal=0, wire=2
-  const result214 = f.queryIfFactionIsHostile(wireFaction, wireFaction)
-  const pinCheck215 = f.equal(result214, false)
-  f.executeSkill(pinCheck215, 1n)
+  // queryDictionaryValueByKey / query_dictionary_value_by_key / genericId=200230 / literal=1, wire=1
+  const result215 = f.queryDictionaryValueByKey(
+    f.assemblyDictionary([
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt }
+    ]),
+    214n
+  )
+  const pinCheck216 = f.equal(result215, 0n)
+  f.executeSkill(pinCheck216, 1n)
 
-  // radiansToDegrees / radians_to_degrees / genericId=200211 / literal=1, wire=0
-  const result217 = f.radiansToDegrees(216.25)
-  const pinCheck218 = f.equal(result217, 0)
+  // queryEntityFaction / query_entity_faction / genericId=200171 / literal=1, wire=0
+  const result217 = f.queryEntityFaction(CE.TargetEntity.AggroTarget)
+  const pinCheck218 = f.equal(result217, faction(0n))
   f.executeSkill(pinCheck218, 1n)
 
+  // queryIfDictionaryContainsSpecificKey / query_if_dictionary_contains_specific_key / genericId=200231 / literal=1, wire=1
+  const result220 = f.queryIfDictionaryContainsSpecificKey(
+    f.assemblyDictionary([
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt }
+    ]),
+    219n
+  )
+  const pinCheck221 = f.equal(result220, false)
+  f.executeSkill(pinCheck221, 1n)
+
+  // queryIfDictionaryContainsSpecificValue / query_if_dictionary_contains_specific_value / genericId=200232 / literal=1, wire=1
+  const result223 = f.queryIfDictionaryContainsSpecificValue(
+    f.assemblyDictionary([
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt }
+    ]),
+    222n
+  )
+  const pinCheck224 = f.equal(result223, false)
+  f.executeSkill(pinCheck224, 1n)
+
+  // queryIfEntityIsOnTheField / query_if_entity_is_on_the_field / genericId=200167 / literal=1, wire=0
+  const result225 = f.queryIfEntityIsOnTheField(CE.TargetEntity.AggroTarget)
+  const pinCheck226 = f.equal(result225, false)
+  f.executeSkill(pinCheck226, 1n)
+
+  // queryIfFactionIsHostile / query_if_faction_is_hostile / genericId=200227 / literal=0, wire=2
+  const result227 = f.queryIfFactionIsHostile(wireFaction, wireFaction)
+  const pinCheck228 = f.equal(result227, false)
+  f.executeSkill(pinCheck228, 1n)
+
+  // radiansToDegrees / radians_to_degrees / genericId=200211 / literal=1, wire=0
+  const result230 = f.radiansToDegrees(229.25)
+  const pinCheck231 = f.equal(result230, 0)
+  f.executeSkill(pinCheck231, 1n)
+
   // sineFunction / sine_function / genericId=200204 / literal=0, wire=1
-  const result219 = f.sineFunction(wireFloat)
-  const pinCheck220 = f.equal(result219, 0)
-  f.executeSkill(pinCheck220, 1n)
+  const result232 = f.sineFunction(wireFloat)
+  const pinCheck233 = f.equal(result232, 0)
+  f.executeSkill(pinCheck233, 1n)
 
   // split3dVector / split3d_vector / genericId=200194 / literal=1, wire=0
-  const result222 = f.split3dVector([221, 222, 223])
-  const pinCheck223 = f.equal(result222.xComponent, 0)
-  f.executeSkill(pinCheck223, 1n)
-  const pinCheck224 = f.equal(result222.yComponent, 0)
-  f.executeSkill(pinCheck224, 1n)
-  const pinCheck225 = f.equal(result222.zComponent, 0)
-  f.executeSkill(pinCheck225, 1n)
+  const result235 = f.split3dVector([234, 235, 236])
+  const pinCheck236 = f.equal(result235.xComponent, 0)
+  f.executeSkill(pinCheck236, 1n)
+  const pinCheck237 = f.equal(result235.yComponent, 0)
+  f.executeSkill(pinCheck237, 1n)
+  const pinCheck238 = f.equal(result235.zComponent, 0)
+  f.executeSkill(pinCheck238, 1n)
 
   // subtraction / subtraction / genericId=200185 / literal=2, wire=0
-  const result228 = f.subtraction(226n, 227n)
-  const pinCheck229 = f.equal(result228, 0n)
-  f.executeSkill(pinCheck229, 1n)
+  const result241 = f.subtraction(239n, 240n)
+  const pinCheck242 = f.equal(result241, 0n)
+  f.executeSkill(pinCheck242, 1n)
 
   // tangentFunction / tangent_function / genericId=200206 / literal=0, wire=1
-  const result276 = f.tangentFunction(wireFloat)
-  const pinCheck277 = f.equal(result276, 0)
-  f.executeSkill(pinCheck277, 1n)
+  const result332 = f.tangentFunction(wireFloat)
+  const pinCheck333 = f.equal(result332, 0)
+  f.executeSkill(pinCheck333, 1n)
+
+  // whetherTheEntityHasTheSpecifiedUnitStatus / whether_the_entity_has_the_specified_unit_status / genericId=200307 / literal=1, wire=1
+  const result335 = f.whetherTheEntityHasTheSpecifiedUnitStatus(wireEntity, configId(334n))
+  const pinCheck336 = f.equal(result335, false)
+  f.executeSkill(pinCheck336, 1n)
 
   // continueExecutingPreviousFrameBehavior / continue_executing_previous_frame_behavior / genericId=200253 / literal=0, wire=0
   f.doubleBranch(
@@ -4934,7 +5054,7 @@ g.creationStatus({
   f.executeSkill(true, 106n)
 
   // multipleBranches / multiple_branches / genericId=200127 / literal=1, wire=0
-  f.multipleBranches(191n, {
+  f.multipleBranches(204n, {
     1: () => {},
     2: () => {},
     3: () => {},
@@ -4948,8 +5068,115 @@ g.creationStatus({
     default: () => {}
   })
 
+  // tacticAerialConfrontation / tactic_aerial_confrontation / genericId=200310 / literal=13, wire=15
+  f.tacticAerialConfrontation(
+    true,
+    'literal-244',
+    wireBool,
+    245.25,
+    246.25,
+    247.25,
+    wireFloat,
+    wireFloat,
+    248.25,
+    wireFloat,
+    wireBool,
+    wireBool,
+    249.25,
+    wireFloat,
+    250.25,
+    wireFloat,
+    wireFloat,
+    wireFloat,
+    wireFloat,
+    251.25,
+    252.25,
+    wireFloat,
+    253.25,
+    wireFloat,
+    wireFloat,
+    CE.TacticSpeed.Walk,
+    wireFloat,
+    254.25
+  )
+
+  // tacticAerialEscape / tactic_aerial_escape / genericId=200309 / literal=12, wire=8
+  f.tacticAerialEscape(
+    wireBool,
+    'literal-255',
+    false,
+    wireFloat,
+    CE.TacticSpeed.Walk,
+    257.25,
+    258.25,
+    259.25,
+    260.25,
+    wireFloat,
+    261n,
+    wireInt,
+    wireFloat,
+    262.25,
+    wireFloat,
+    wireFloat,
+    true,
+    264.25,
+    265.25,
+    wireBool
+  )
+
+  // tacticAerialIdling / tactic_aerial_idling / genericId=200311 / literal=6, wire=8
+  f.tacticAerialIdling(
+    wireBool,
+    'literal-266',
+    true,
+    CE.TacticSpeed.Walk,
+    wireFloat,
+    wireFloat,
+    wireFloat,
+    268.25,
+    wireFloat,
+    wireFloat,
+    wireFloat,
+    269.25,
+    wireFloat,
+    270.25
+  )
+
+  // tacticAerialLanding / tactic_aerial_landing / genericId=200303 / literal=7, wire=3
+  f.tacticAerialLanding(
+    wireBool,
+    'literal-271',
+    false,
+    wireFloat,
+    273.25,
+    274.25,
+    CE.TacticSpeed.Walk,
+    275.25,
+    276.25,
+    wireFloat
+  )
+
+  // tacticAerialPursuit / tactic_aerial_pursuit / genericId=200308 / literal=9, wire=6
+  f.tacticAerialPursuit(
+    true,
+    'literal-278',
+    wireBool,
+    279.25,
+    wireFloat,
+    false,
+    281.25,
+    wireFloat,
+    wireFloat,
+    282.25,
+    CE.TacticSpeed.Walk,
+    283.25,
+    284.25,
+    wireFloat,
+    wireFloat
+  )
+
   // tacticExecutePatrol / tactic_execute_patrol / genericId=200141 / literal=3, wire=3
-  f.tacticExecutePatrol(wireBool, 230n, true, wireBool, 'literal-232', wireBool)
+  f.tacticExecutePatrol(wireBool, 285n, false, wireBool, 'literal-287', wireBool)
 
   // tacticGroundConfrontation / tactic_ground_confrontation / genericId=200140 / literal=7, wire=9
   f.tacticGroundConfrontation(
@@ -4958,61 +5185,61 @@ g.creationStatus({
     wireFloat,
     wireFloat,
     wireFloat,
-    233.25,
+    288.25,
     wireBool,
-    false,
-    235.25,
+    true,
+    290.25,
     wireFloat,
     wireFloat,
-    236.25,
-    237.25,
+    291.25,
+    292.25,
     wireFloat,
-    'literal-238',
-    true
+    'literal-293',
+    false
   )
 
   // tacticGroundEscape / tactic_ground_escape / genericId=200138 / literal=8, wire=5
   f.tacticGroundEscape(
-    false,
-    241.25,
+    true,
+    296.25,
     CE.TacticSpeed.Walk,
-    242.25,
-    243n,
+    297.25,
+    298n,
     wireInt,
     wireFloat,
-    244.25,
+    299.25,
     wireFloat,
     wireFloat,
     wireBool,
-    'literal-245',
-    false
+    'literal-300',
+    true
   )
 
   // tacticGroundIdleRoaming / tactic_ground_idle_roaming / genericId=200130 / literal=6, wire=3
   f.tacticGroundIdleRoaming(
-    true,
+    false,
     CE.TacticSpeed.Walk,
-    248.25,
-    249.25,
+    303.25,
+    304.25,
     wireFloat,
-    250.25,
+    305.25,
     wireFloat,
-    'literal-251',
+    'literal-306',
     wireBool
   )
 
-  // tacticGroundPursuit / tactic_ground_pursuit / genericId=200131 / literal=4, wire=7
+  // tacticGroundPursuit / tactic_ground_pursuit / genericId=200131 / literal=5, wire=6
   f.tacticGroundPursuit(
-    false,
+    wireBool,
+    307.25,
     wireFloat,
-    wireFloat,
-    wireFloat,
+    308.25,
     CE.TacticSpeed.Walk,
     wireFloat,
     CE.TacticSpeed.Walk,
     wireFloat,
     wireFloat,
-    'literal-253',
+    'literal-309',
     wireBool
   )
 
@@ -5022,8 +5249,8 @@ g.creationStatus({
     wireEntity,
     wireFloat,
     CE.TacticSpeed.Walk,
-    254.25,
-    'literal-255',
+    310.25,
+    'literal-311',
     false
   )
 
@@ -5033,8 +5260,8 @@ g.creationStatus({
     wireVec3,
     wireFloat,
     CE.TacticSpeed.Walk,
-    258.25,
-    'literal-259',
+    314.25,
+    'literal-315',
     false
   )
 
@@ -5044,31 +5271,31 @@ g.creationStatus({
     CE.TacticSpeed.Walk,
     wireBool,
     wireFloat,
-    262.25,
+    318.25,
     wireBool,
-    'literal-263',
+    'literal-319',
     false
   )
 
   // tacticRotateBySpecifiedAngle / tactic_rotate_by_specified_angle / genericId=200137 / literal=3, wire=3
-  f.tacticRotateBySpecifiedAngle(wireBool, 265.25, wireFloat, false, 'literal-267', wireBool)
+  f.tacticRotateBySpecifiedAngle(wireBool, 321.25, wireFloat, false, 'literal-323', wireBool)
 
   // tacticRotateToTheSpecifiedDirection / tactic_rotate_to_the_specified_direction / genericId=200136 / literal=4, wire=3
   f.tacticRotateToTheSpecifiedDirection(
     false,
     wireVec3,
-    270.25,
+    326.25,
     wireBool,
     CE.RotationDirection.Default,
-    'literal-271',
+    'literal-327',
     wireBool
   )
 
   // tacticRotateToTheTargetEntity / tactic_rotate_to_the_target_entity / genericId=200246 / literal=2, wire=4
-  f.tacticRotateToTheTargetEntity(wireBool, wireEntity, wireFloat, false, 'literal-273', wireBool)
+  f.tacticRotateToTheTargetEntity(wireBool, wireEntity, wireFloat, false, 'literal-329', wireBool)
 
   // tacticStandStill / tactic_stand_still / genericId=200133 / literal=2, wire=1
-  f.tacticStandStill(false, 'literal-275', wireBool)
+  f.tacticStandStill(false, 'literal-331', wireBool)
 })
 
 g.creationStatusDecision({
@@ -5095,14 +5322,14 @@ g.creationStatusDecision({
   const wirePrefab = f
     .getCustomVariable(CE.TargetEntity.AggroTarget, 'gsts_manual_wire_prefab')
     .asType('prefab_id')
-  const pinCheck211 = f.equal(wireStr, '')
-  f.switchToSelfExecutionStatus(pinCheck211, configId(1082130438), 1n)
-  const pinCheck212 = f.equal(wireGuid, guid(0n))
-  f.switchToSelfExecutionStatus(pinCheck212, configId(1082130438), 1n)
-  const pinCheck213 = f.equal(wireConfig, configId(0n))
-  f.switchToSelfExecutionStatus(pinCheck213, configId(1082130438), 1n)
-  const pinCheck214 = f.equal(wirePrefab, prefabId(0n))
-  f.switchToSelfExecutionStatus(pinCheck214, configId(1082130438), 1n)
+  const pinCheck225 = f.equal(wireStr, '')
+  f.switchToSelfExecutionStatus(pinCheck225, configId(1082130438), 1n)
+  const pinCheck226 = f.equal(wireGuid, guid(0n))
+  f.switchToSelfExecutionStatus(pinCheck226, configId(1082130438), 1n)
+  const pinCheck227 = f.equal(wireConfig, configId(0n))
+  f.switchToSelfExecutionStatus(pinCheck227, configId(1082130438), 1n)
+  const pinCheck228 = f.equal(wirePrefab, prefabId(0n))
+  f.switchToSelfExecutionStatus(pinCheck228, configId(1082130438), 1n)
 
   // _3dVectorAddition / _3d_vector_addition / genericId=200200 / literal=0, wire=2
   const result3 = f._3dVectorAddition(wireVec3, wireVec3)
@@ -5377,18 +5604,53 @@ g.creationStatusDecision({
   const pinCheck108 = f.enumerationMatch(result107, E.EntityType.Stage)
   f.switchToSelfExecutionStatus(pinCheck108, configId(1082130438), 1n)
 
+  // getEntityTypeList / get_entity_type_list / genericId=200312 / literal=1, wire=0
+  const enumListProbe110 = f.getRayDetectionResult(
+    CE.TargetEntity.AggroTarget,
+    wireVec3,
+    wireVec3,
+    wireFloat,
+    E.TargetType.None,
+    f.getEntityTypeList([
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation,
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation
+    ]),
+    f.getRayFilterTypeList([
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox
+    ])
+  )
+  const pinCheck111 = f.equal(enumListProbe110.onHitLocation, [0, 0, 0])
+  f.switchToSelfExecutionStatus(pinCheck111, configId(1082130438), 1n)
+
   // getListLength / get_list_length / genericId=200223 / literal=0, wire=1
-  const result109 = f.getListLength(
+  const result112 = f.getListLength(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck110 = f.equal(result109, 0n)
-  f.switchToSelfExecutionStatus(pinCheck110, configId(1082130438), 1n)
+  const pinCheck113 = f.equal(result112, 0n)
+  f.switchToSelfExecutionStatus(pinCheck113, configId(1082130438), 1n)
 
   // getListOfKeysFromDictionary / get_list_of_keys_from_dictionary / genericId=200235 / literal=0, wire=1
-  const pinCheck112 = f.greaterThanOrEqualTo(
+  const pinCheck115 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.getListOfKeysFromDictionary(
         f.assemblyDictionary([
@@ -5407,10 +5669,10 @@ g.creationStatusDecision({
     ),
     0n
   )
-  f.switchToSelfExecutionStatus(pinCheck112, configId(1082130438), 1n)
+  f.switchToSelfExecutionStatus(pinCheck115, configId(1082130438), 1n)
 
   // getListOfValuesFromDictionary / get_list_of_values_from_dictionary / genericId=200234 / literal=0, wire=1
-  const pinCheck114 = f.greaterThanOrEqualTo(
+  const pinCheck117 = f.greaterThanOrEqualTo(
     f.getListLength(
       f.getListOfValuesFromDictionary(
         f.assemblyDictionary([
@@ -5429,161 +5691,217 @@ g.creationStatusDecision({
     ),
     0n
   )
-  f.switchToSelfExecutionStatus(pinCheck114, configId(1082130438), 1n)
+  f.switchToSelfExecutionStatus(pinCheck117, configId(1082130438), 1n)
 
   // getMaximumValueFromList / get_maximum_value_from_list / genericId=200225 / literal=0, wire=1
-  const result115 = f.getMaximumValueFromList(
+  const result118 = f.getMaximumValueFromList(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck116 = f.equal(result115, 0n)
-  f.switchToSelfExecutionStatus(pinCheck116, configId(1082130438), 1n)
+  const pinCheck119 = f.equal(result118, 0n)
+  f.switchToSelfExecutionStatus(pinCheck119, configId(1082130438), 1n)
 
   // getMinimumValueFromList / get_minimum_value_from_list / genericId=200226 / literal=0, wire=1
-  const result117 = f.getMinimumValueFromList(
+  const result120 = f.getMinimumValueFromList(
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck118 = f.equal(result117, 0n)
-  f.switchToSelfExecutionStatus(pinCheck118, configId(1082130438), 1n)
-
-  // getObjectPresetStatus / get_object_preset_status / genericId=200172 / literal=2, wire=0
-  const result120 = f.getObjectPresetStatus(CE.TargetEntity.AggroTarget, 119n)
   const pinCheck121 = f.equal(result120, 0n)
   f.switchToSelfExecutionStatus(pinCheck121, configId(1082130438), 1n)
 
-  // getPreviousFrameExecutionStatus / get_previous_frame_execution_status / genericId=200250 / literal=0, wire=0
-  const result122 = f.getPreviousFrameExecutionStatus()
-  const pinCheck123 = f.equal(result122, configId(0n))
-  f.switchToSelfExecutionStatus(pinCheck123, configId(1082130438), 1n)
+  // getObjectPresetStatus / get_object_preset_status / genericId=200172 / literal=2, wire=0
+  const result123 = f.getObjectPresetStatus(CE.TargetEntity.AggroTarget, 122n)
+  const pinCheck124 = f.equal(result123, 0n)
+  f.switchToSelfExecutionStatus(pinCheck124, configId(1082130438), 1n)
 
-  // getPreviousFrameExecutionTactic / get_previous_frame_execution_tactic / genericId=200252 / literal=0, wire=0
-  const result124 = f.getPreviousFrameExecutionTactic()
-  const pinCheck125 = f.enumerationMatch(result124.tacticType, CE.TacticType.None)
-  f.switchToSelfExecutionStatus(pinCheck125, configId(1082130438), 1n)
-  const pinCheck126 = f.equal(result124.tacticalContext, '')
+  // getPreviousFrameExecutionStatus / get_previous_frame_execution_status / genericId=200250 / literal=0, wire=0
+  const result125 = f.getPreviousFrameExecutionStatus()
+  const pinCheck126 = f.equal(result125, configId(0n))
   f.switchToSelfExecutionStatus(pinCheck126, configId(1082130438), 1n)
 
-  // getRandomNumber / get_random_number / genericId=200190 / literal=2, wire=0
-  const result129 = f.getRandomNumber(127n, 128n)
-  const pinCheck130 = f.equal(result129, 0n)
+  // getPreviousFrameExecutionTactic / get_previous_frame_execution_tactic / genericId=200252 / literal=0, wire=0
+  const result127 = f.getPreviousFrameExecutionTactic()
+  const pinCheck128 = f.enumerationMatch(result127.tacticType, CE.TacticType.None)
+  f.switchToSelfExecutionStatus(pinCheck128, configId(1082130438), 1n)
+  const pinCheck129 = f.equal(result127.tacticalContext, '')
+  f.switchToSelfExecutionStatus(pinCheck129, configId(1082130438), 1n)
+  const pinCheck130 = f.equal(result127.tacticDuration, 0)
   f.switchToSelfExecutionStatus(pinCheck130, configId(1082130438), 1n)
 
-  // getSelfEntity / get_self_entity / genericId=200164 / literal=0, wire=0
-  const result131 = f.getSelfEntity()
-  const pinCheck132 = f.equal(result131, wireEntity)
-  f.switchToSelfExecutionStatus(pinCheck132, configId(1082130438), 1n)
-
-  // getSelfPresetStatusValue / get_self_preset_status_value / genericId=200241 / literal=0, wire=1
-  const result133 = f.getSelfPresetStatusValue(wireInt)
+  // getRandomNumber / get_random_number / genericId=200190 / literal=2, wire=0
+  const result133 = f.getRandomNumber(131n, 132n)
   const pinCheck134 = f.equal(result133, 0n)
   f.switchToSelfExecutionStatus(pinCheck134, configId(1082130438), 1n)
 
-  // getSpawnPointLocationInformation / get_spawn_point_location_information / genericId=200163 / literal=0, wire=0
-  const result135 = f.getSpawnPointLocationInformation()
-  const pinCheck136 = f.equal(result135.spawnPointCoordinates, [0, 0, 0])
-  f.switchToSelfExecutionStatus(pinCheck136, configId(1082130438), 1n)
-  const pinCheck137 = f.equal(result135.spawnPointRotation, [0, 0, 0])
-  f.switchToSelfExecutionStatus(pinCheck137, configId(1082130438), 1n)
-
-  // getStageEntity / get_stage_entity / genericId=200166 / literal=0, wire=0
-  const result138 = f.getStageEntity()
-  const pinCheck139 = f.equal(result138, wireEntity)
+  // getRayDetectionResult / get_ray_detection_result / genericId=200301 / literal=5, wire=2
+  const result137 = f.getRayDetectionResult(
+    CE.TargetEntity.AggroTarget,
+    wireVec3,
+    [136, 137, 138],
+    wireFloat,
+    E.TargetType.None,
+    [E.EntityType.Stage, E.EntityType.Object, E.EntityType.Player],
+    [
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision
+    ]
+  )
+  const pinCheck138 = f.equal(result137.onHitLocation, [0, 0, 0])
+  f.switchToSelfExecutionStatus(pinCheck138, configId(1082130438), 1n)
+  const pinCheck139 = f.equal(result137.onHitEntity, false)
   f.switchToSelfExecutionStatus(pinCheck139, configId(1082130438), 1n)
 
-  // getTargetAtk / get_target_atk / genericId=200240 / literal=1, wire=0
-  const result140 = f.getTargetAtk(CE.TargetEntity.AggroTarget)
-  const pinCheck141 = f.equal(result140.baseATK, 0)
-  f.switchToSelfExecutionStatus(pinCheck141, configId(1082130438), 1n)
-  const pinCheck142 = f.equal(result140.currentATK, 0)
+  // getRayFilterTypeList / get_ray_filter_type_list / genericId=200302 / literal=1, wire=0
+  const enumListProbe141 = f.getRayDetectionResult(
+    CE.TargetEntity.AggroTarget,
+    wireVec3,
+    wireVec3,
+    wireFloat,
+    E.TargetType.None,
+    f.getEntityTypeList([
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation,
+      E.EntityType.Stage,
+      E.EntityType.Object,
+      E.EntityType.Player,
+      E.EntityType.Character,
+      E.EntityType.Creation
+    ]),
+    f.getRayFilterTypeList([
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox,
+      CE.RayHitFilterType.Scene,
+      CE.RayHitFilterType.ObjectSelfCollision,
+      CE.RayHitFilterType.Hurtbox
+    ])
+  )
+  const pinCheck142 = f.equal(enumListProbe141.onHitLocation, [0, 0, 0])
   f.switchToSelfExecutionStatus(pinCheck142, configId(1082130438), 1n)
 
-  // getTargetEntity / get_target_entity / genericId=200165 / literal=0, wire=0
-  const result143 = f.getTargetEntity()
+  // getSelfEntity / get_self_entity / genericId=200164 / literal=0, wire=0
+  const result143 = f.getSelfEntity()
   const pinCheck144 = f.equal(result143, wireEntity)
   f.switchToSelfExecutionStatus(pinCheck144, configId(1082130438), 1n)
 
-  // getTargetHp / get_target_hp / genericId=200238 / literal=1, wire=0
-  const result145 = f.getTargetHp(CE.TargetEntity.AggroTarget)
-  const pinCheck146 = f.equal(result145.baseHP, 0)
+  // getSelfPresetStatusValue / get_self_preset_status_value / genericId=200241 / literal=0, wire=1
+  const result145 = f.getSelfPresetStatusValue(wireInt)
+  const pinCheck146 = f.equal(result145, 0n)
   f.switchToSelfExecutionStatus(pinCheck146, configId(1082130438), 1n)
-  const pinCheck147 = f.equal(result145.maxHP, 0)
-  f.switchToSelfExecutionStatus(pinCheck147, configId(1082130438), 1n)
-  const pinCheck148 = f.equal(result145.currentHPPercentage, 0)
+
+  // getSpawnPointLocationInformation / get_spawn_point_location_information / genericId=200163 / literal=0, wire=0
+  const result147 = f.getSpawnPointLocationInformation()
+  const pinCheck148 = f.equal(result147.spawnPointCoordinates, [0, 0, 0])
   f.switchToSelfExecutionStatus(pinCheck148, configId(1082130438), 1n)
+  const pinCheck149 = f.equal(result147.spawnPointRotation, [0, 0, 0])
+  f.switchToSelfExecutionStatus(pinCheck149, configId(1082130438), 1n)
 
-  // getTargetLevel / get_target_level / genericId=200239 / literal=1, wire=0
-  const result149 = f.getTargetLevel(CE.TargetEntity.AggroTarget)
-  const pinCheck150 = f.equal(result149, 0n)
-  f.switchToSelfExecutionStatus(pinCheck150, configId(1082130438), 1n)
+  // getStageEntity / get_stage_entity / genericId=200166 / literal=0, wire=0
+  const result150 = f.getStageEntity()
+  const pinCheck151 = f.equal(result150, wireEntity)
+  f.switchToSelfExecutionStatus(pinCheck151, configId(1082130438), 1n)
 
-  // greaterThan / greater_than / genericId=200180 / literal=2, wire=0
-  const result153 = f.greaterThan(151n, 152n)
-  const pinCheck154 = f.equal(result153, false)
+  // getTargetAtk / get_target_atk / genericId=200240 / literal=1, wire=0
+  const result152 = f.getTargetAtk(CE.TargetEntity.AggroTarget)
+  const pinCheck153 = f.equal(result152.baseATK, 0)
+  f.switchToSelfExecutionStatus(pinCheck153, configId(1082130438), 1n)
+  const pinCheck154 = f.equal(result152.currentATK, 0)
   f.switchToSelfExecutionStatus(pinCheck154, configId(1082130438), 1n)
 
-  // greaterThanOrEqualTo / greater_than_or_equal_to / genericId=200183 / literal=2, wire=0
-  const result157 = f.greaterThanOrEqualTo(155n, 156n)
-  const pinCheck158 = f.equal(result157, false)
-  f.switchToSelfExecutionStatus(pinCheck158, configId(1082130438), 1n)
+  // getTargetEntity / get_target_entity / genericId=200165 / literal=0, wire=0
+  const result155 = f.getTargetEntity()
+  const pinCheck156 = f.equal(result155, wireEntity)
+  f.switchToSelfExecutionStatus(pinCheck156, configId(1082130438), 1n)
 
-  // lessThan / less_than / genericId=200181 / literal=0, wire=2
-  const result159 = f.lessThan(wireInt, wireInt)
-  const pinCheck160 = f.equal(result159, false)
+  // getTargetHp / get_target_hp / genericId=200238 / literal=1, wire=0
+  const result157 = f.getTargetHp(CE.TargetEntity.AggroTarget)
+  const pinCheck158 = f.equal(result157.baseHP, 0)
+  f.switchToSelfExecutionStatus(pinCheck158, configId(1082130438), 1n)
+  const pinCheck159 = f.equal(result157.maxHP, 0)
+  f.switchToSelfExecutionStatus(pinCheck159, configId(1082130438), 1n)
+  const pinCheck160 = f.equal(result157.currentHPPercentage, 0)
   f.switchToSelfExecutionStatus(pinCheck160, configId(1082130438), 1n)
 
-  // lessThanOrEqualTo / less_than_or_equal_to / genericId=200182 / literal=0, wire=2
-  const result161 = f.lessThanOrEqualTo(wireInt, wireInt)
-  const pinCheck162 = f.equal(result161, false)
+  // getTargetLevel / get_target_level / genericId=200239 / literal=1, wire=0
+  const result161 = f.getTargetLevel(CE.TargetEntity.AggroTarget)
+  const pinCheck162 = f.equal(result161, 0n)
   f.switchToSelfExecutionStatus(pinCheck162, configId(1082130438), 1n)
 
+  // greaterThan / greater_than / genericId=200180 / literal=2, wire=0
+  const result165 = f.greaterThan(163n, 164n)
+  const pinCheck166 = f.equal(result165, false)
+  f.switchToSelfExecutionStatus(pinCheck166, configId(1082130438), 1n)
+
+  // greaterThanOrEqualTo / greater_than_or_equal_to / genericId=200183 / literal=2, wire=0
+  const result169 = f.greaterThanOrEqualTo(167n, 168n)
+  const pinCheck170 = f.equal(result169, false)
+  f.switchToSelfExecutionStatus(pinCheck170, configId(1082130438), 1n)
+
+  // lessThan / less_than / genericId=200181 / literal=0, wire=2
+  const result171 = f.lessThan(wireInt, wireInt)
+  const pinCheck172 = f.equal(result171, false)
+  f.switchToSelfExecutionStatus(pinCheck172, configId(1082130438), 1n)
+
+  // lessThanOrEqualTo / less_than_or_equal_to / genericId=200182 / literal=0, wire=2
+  const result173 = f.lessThanOrEqualTo(wireInt, wireInt)
+  const pinCheck174 = f.equal(result173, false)
+  f.switchToSelfExecutionStatus(pinCheck174, configId(1082130438), 1n)
+
   // listIncludesThisValue / list_includes_this_value / genericId=200224 / literal=0, wire=2
-  const result163 = f.listIncludesThisValue(
+  const result175 = f.listIncludesThisValue(
     wireInt,
     f.assemblyList(
       [wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt, wireInt],
       'int'
     )
   )
-  const pinCheck164 = f.equal(result163, false)
-  f.switchToSelfExecutionStatus(pinCheck164, configId(1082130438), 1n)
+  const pinCheck176 = f.equal(result175, false)
+  f.switchToSelfExecutionStatus(pinCheck176, configId(1082130438), 1n)
 
   // logicalAndOperation / logical_and_operation / genericId=200174 / literal=0, wire=2
-  const result165 = f.logicalAndOperation(wireBool, wireBool)
-  const pinCheck166 = f.equal(result165, false)
-  f.switchToSelfExecutionStatus(pinCheck166, configId(1082130438), 1n)
-
-  // logicalNotOperation / logical_not_operation / genericId=200176 / literal=1, wire=0
-  const result168 = f.logicalNotOperation(true)
-  const pinCheck169 = f.equal(result168, false)
-  f.switchToSelfExecutionStatus(pinCheck169, configId(1082130438), 1n)
-
-  // logicalOrOperation / logical_or_operation / genericId=200175 / literal=0, wire=2
-  const result170 = f.logicalOrOperation(wireBool, wireBool)
-  const pinCheck171 = f.equal(result170, false)
-  f.switchToSelfExecutionStatus(pinCheck171, configId(1082130438), 1n)
-
-  // logicalXorOperation / logical_xor_operation / genericId=200177 / literal=0, wire=2
-  const result172 = f.logicalXorOperation(wireBool, wireBool)
-  const pinCheck173 = f.equal(result172, false)
-  f.switchToSelfExecutionStatus(pinCheck173, configId(1082130438), 1n)
-
-  // multiplication / multiplication / genericId=200186 / literal=0, wire=2
-  const result174 = f.multiplication(wireInt, wireInt)
-  const pinCheck175 = f.equal(result174, 0n)
-  f.switchToSelfExecutionStatus(pinCheck175, configId(1082130438), 1n)
-
-  // orientationToRotation / orientation_to_rotation / genericId=200203 / literal=0, wire=1
-  const result177 = f.orientationToRotation(wireVec3)
-  const pinCheck178 = f.equal(result177, [0, 0, 0])
+  const result177 = f.logicalAndOperation(wireBool, wireBool)
+  const pinCheck178 = f.equal(result177, false)
   f.switchToSelfExecutionStatus(pinCheck178, configId(1082130438), 1n)
 
+  // logicalNotOperation / logical_not_operation / genericId=200176 / literal=1, wire=0
+  const result180 = f.logicalNotOperation(true)
+  const pinCheck181 = f.equal(result180, false)
+  f.switchToSelfExecutionStatus(pinCheck181, configId(1082130438), 1n)
+
+  // logicalOrOperation / logical_or_operation / genericId=200175 / literal=0, wire=2
+  const result182 = f.logicalOrOperation(wireBool, wireBool)
+  const pinCheck183 = f.equal(result182, false)
+  f.switchToSelfExecutionStatus(pinCheck183, configId(1082130438), 1n)
+
+  // logicalXorOperation / logical_xor_operation / genericId=200177 / literal=0, wire=2
+  const result184 = f.logicalXorOperation(wireBool, wireBool)
+  const pinCheck185 = f.equal(result184, false)
+  f.switchToSelfExecutionStatus(pinCheck185, configId(1082130438), 1n)
+
+  // multiplication / multiplication / genericId=200186 / literal=0, wire=2
+  const result186 = f.multiplication(wireInt, wireInt)
+  const pinCheck187 = f.equal(result186, 0n)
+  f.switchToSelfExecutionStatus(pinCheck187, configId(1082130438), 1n)
+
+  // orientationToRotation / orientation_to_rotation / genericId=200203 / literal=0, wire=1
+  const result189 = f.orientationToRotation(wireVec3)
+  const pinCheck190 = f.equal(result189, [0, 0, 0])
+  f.switchToSelfExecutionStatus(pinCheck190, configId(1082130438), 1n)
+
   // queryDictionarySLength / query_dictionary_s_length / genericId=200233 / literal=0, wire=1
-  const result179 = f.queryDictionarySLength(
+  const result191 = f.queryDictionarySLength(
     f.assemblyDictionary([
       { k: wireInt, v: wireInt },
       { k: wireInt, v: wireInt },
@@ -5597,11 +5915,11 @@ g.creationStatusDecision({
       { k: wireInt, v: wireInt }
     ])
   )
-  const pinCheck180 = f.equal(result179, 0n)
-  f.switchToSelfExecutionStatus(pinCheck180, configId(1082130438), 1n)
+  const pinCheck192 = f.equal(result191, 0n)
+  f.switchToSelfExecutionStatus(pinCheck192, configId(1082130438), 1n)
 
   // queryDictionaryValueByKey / query_dictionary_value_by_key / genericId=200230 / literal=0, wire=2
-  const result181 = f.queryDictionaryValueByKey(
+  const result193 = f.queryDictionaryValueByKey(
     f.assemblyDictionary([
       { k: wireInt, v: wireInt },
       { k: wireInt, v: wireInt },
@@ -5616,90 +5934,95 @@ g.creationStatusDecision({
     ]),
     wireInt
   )
-  const pinCheck182 = f.equal(result181, 0n)
-  f.switchToSelfExecutionStatus(pinCheck182, configId(1082130438), 1n)
-
-  // queryEntityFaction / query_entity_faction / genericId=200171 / literal=1, wire=0
-  const result183 = f.queryEntityFaction(CE.TargetEntity.AggroTarget)
-  const pinCheck184 = f.equal(result183, faction(0n))
-  f.switchToSelfExecutionStatus(pinCheck184, configId(1082130438), 1n)
-
-  // queryIfDictionaryContainsSpecificKey / query_if_dictionary_contains_specific_key / genericId=200231 / literal=0, wire=2
-  const result185 = f.queryIfDictionaryContainsSpecificKey(
-    f.assemblyDictionary([
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt }
-    ]),
-    wireInt
-  )
-  const pinCheck186 = f.equal(result185, false)
-  f.switchToSelfExecutionStatus(pinCheck186, configId(1082130438), 1n)
-
-  // queryIfDictionaryContainsSpecificValue / query_if_dictionary_contains_specific_value / genericId=200232 / literal=0, wire=2
-  const result187 = f.queryIfDictionaryContainsSpecificValue(
-    f.assemblyDictionary([
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt },
-      { k: wireInt, v: wireInt }
-    ]),
-    wireInt
-  )
-  const pinCheck188 = f.equal(result187, false)
-  f.switchToSelfExecutionStatus(pinCheck188, configId(1082130438), 1n)
-
-  // queryIfEntityIsOnTheField / query_if_entity_is_on_the_field / genericId=200167 / literal=1, wire=0
-  const result189 = f.queryIfEntityIsOnTheField(CE.TargetEntity.AggroTarget)
-  const pinCheck190 = f.equal(result189, false)
-  f.switchToSelfExecutionStatus(pinCheck190, configId(1082130438), 1n)
-
-  // queryIfFactionIsHostile / query_if_faction_is_hostile / genericId=200227 / literal=2, wire=0
-  const result193 = f.queryIfFactionIsHostile(faction(191n), faction(192n))
-  const pinCheck194 = f.equal(result193, false)
+  const pinCheck194 = f.equal(result193, 0n)
   f.switchToSelfExecutionStatus(pinCheck194, configId(1082130438), 1n)
 
-  // radiansToDegrees / radians_to_degrees / genericId=200211 / literal=0, wire=1
-  const result195 = f.radiansToDegrees(wireFloat)
-  const pinCheck196 = f.equal(result195, 0)
+  // queryEntityFaction / query_entity_faction / genericId=200171 / literal=1, wire=0
+  const result195 = f.queryEntityFaction(CE.TargetEntity.AggroTarget)
+  const pinCheck196 = f.equal(result195, faction(0n))
   f.switchToSelfExecutionStatus(pinCheck196, configId(1082130438), 1n)
 
-  // sineFunction / sine_function / genericId=200204 / literal=1, wire=0
-  const result198 = f.sineFunction(197.25)
-  const pinCheck199 = f.equal(result198, 0)
-  f.switchToSelfExecutionStatus(pinCheck199, configId(1082130438), 1n)
+  // queryIfDictionaryContainsSpecificKey / query_if_dictionary_contains_specific_key / genericId=200231 / literal=0, wire=2
+  const result197 = f.queryIfDictionaryContainsSpecificKey(
+    f.assemblyDictionary([
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt }
+    ]),
+    wireInt
+  )
+  const pinCheck198 = f.equal(result197, false)
+  f.switchToSelfExecutionStatus(pinCheck198, configId(1082130438), 1n)
 
-  // split3dVector / split3d_vector / genericId=200194 / literal=0, wire=1
-  const result201 = f.split3dVector(wireVec3)
-  const pinCheck202 = f.equal(result201.xComponent, 0)
+  // queryIfDictionaryContainsSpecificValue / query_if_dictionary_contains_specific_value / genericId=200232 / literal=0, wire=2
+  const result199 = f.queryIfDictionaryContainsSpecificValue(
+    f.assemblyDictionary([
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt },
+      { k: wireInt, v: wireInt }
+    ]),
+    wireInt
+  )
+  const pinCheck200 = f.equal(result199, false)
+  f.switchToSelfExecutionStatus(pinCheck200, configId(1082130438), 1n)
+
+  // queryIfEntityIsOnTheField / query_if_entity_is_on_the_field / genericId=200167 / literal=1, wire=0
+  const result201 = f.queryIfEntityIsOnTheField(CE.TargetEntity.AggroTarget)
+  const pinCheck202 = f.equal(result201, false)
   f.switchToSelfExecutionStatus(pinCheck202, configId(1082130438), 1n)
-  const pinCheck203 = f.equal(result201.yComponent, 0)
-  f.switchToSelfExecutionStatus(pinCheck203, configId(1082130438), 1n)
-  const pinCheck204 = f.equal(result201.zComponent, 0)
-  f.switchToSelfExecutionStatus(pinCheck204, configId(1082130438), 1n)
 
-  // subtraction / subtraction / genericId=200185 / literal=0, wire=2
-  const result205 = f.subtraction(wireInt, wireInt)
-  const pinCheck206 = f.equal(result205, 0n)
+  // queryIfFactionIsHostile / query_if_faction_is_hostile / genericId=200227 / literal=2, wire=0
+  const result205 = f.queryIfFactionIsHostile(faction(203n), faction(204n))
+  const pinCheck206 = f.equal(result205, false)
   f.switchToSelfExecutionStatus(pinCheck206, configId(1082130438), 1n)
 
+  // radiansToDegrees / radians_to_degrees / genericId=200211 / literal=0, wire=1
+  const result207 = f.radiansToDegrees(wireFloat)
+  const pinCheck208 = f.equal(result207, 0)
+  f.switchToSelfExecutionStatus(pinCheck208, configId(1082130438), 1n)
+
+  // sineFunction / sine_function / genericId=200204 / literal=1, wire=0
+  const result210 = f.sineFunction(209.25)
+  const pinCheck211 = f.equal(result210, 0)
+  f.switchToSelfExecutionStatus(pinCheck211, configId(1082130438), 1n)
+
+  // split3dVector / split3d_vector / genericId=200194 / literal=0, wire=1
+  const result213 = f.split3dVector(wireVec3)
+  const pinCheck214 = f.equal(result213.xComponent, 0)
+  f.switchToSelfExecutionStatus(pinCheck214, configId(1082130438), 1n)
+  const pinCheck215 = f.equal(result213.yComponent, 0)
+  f.switchToSelfExecutionStatus(pinCheck215, configId(1082130438), 1n)
+  const pinCheck216 = f.equal(result213.zComponent, 0)
+  f.switchToSelfExecutionStatus(pinCheck216, configId(1082130438), 1n)
+
+  // subtraction / subtraction / genericId=200185 / literal=0, wire=2
+  const result217 = f.subtraction(wireInt, wireInt)
+  const pinCheck218 = f.equal(result217, 0n)
+  f.switchToSelfExecutionStatus(pinCheck218, configId(1082130438), 1n)
+
   // tangentFunction / tangent_function / genericId=200206 / literal=1, wire=0
-  const result209 = f.tangentFunction(208.25)
-  const pinCheck210 = f.equal(result209, 0)
-  f.switchToSelfExecutionStatus(pinCheck210, configId(1082130438), 1n)
+  const result221 = f.tangentFunction(220.25)
+  const pinCheck222 = f.equal(result221, 0)
+  f.switchToSelfExecutionStatus(pinCheck222, configId(1082130438), 1n)
+
+  // whetherTheEntityHasTheSpecifiedUnitStatus / whether_the_entity_has_the_specified_unit_status / genericId=200307 / literal=1, wire=1
+  const result223 = f.whetherTheEntityHasTheSpecifiedUnitStatus(self, wireConfig)
+  const pinCheck224 = f.equal(result223, false)
+  f.switchToSelfExecutionStatus(pinCheck224, configId(1082130438), 1n)
 
   // doubleBranch / double_branch / genericId=200125 / literal=1, wire=0
   f.doubleBranch(
@@ -5949,8 +6272,8 @@ g.boolFilter({
     0n
   )
 
-  // getBaseObjectOfSpecifiedPreAiming / get_base_object_of_specified_pre_aiming / genericId=200276 / literal=0, wire=1
-  const result91 = f.getBaseObjectOfSpecifiedPreAiming(wireInt)
+  // getBaseObjectOfSpecifiedPreAiming / get_base_object_of_specified_pre_aiming / genericId=200276 / literal=1, wire=1
+  const result91 = f.getBaseObjectOfSpecifiedPreAiming(wireInt, CE.PreAimResultDataType.Default)
   const pinCheck92 = f.equal(result91, wireEntity)
 
   // getCharacterEntityOfSpecifiedPlayer / get_character_entity_of_specified_player / genericId=200024 / literal=1, wire=0
@@ -6163,21 +6486,24 @@ g.boolFilter({
   const pinCheck159 = f.equal(result158.inputDirection, 0)
   const pinCheck160 = f.equal(result158.inputStrength, 0)
 
-  // getPreAimingCollisionDetectionResultCount / get_pre_aiming_collision_detection_result_count / genericId=200280 / literal=0, wire=1
-  const result161 = f.getPreAimingCollisionDetectionResultCount(wireInt)
+  // getPreAimingCollisionDetectionResultCount / get_pre_aiming_collision_detection_result_count / genericId=200280 / literal=1, wire=1
+  const result161 = f.getPreAimingCollisionDetectionResultCount(
+    wireInt,
+    CE.PreAimResultDataType.Default
+  )
   const pinCheck162 = f.equal(result161, 0n)
 
-  // getPreAimingDuration / get_pre_aiming_duration / genericId=200278 / literal=1, wire=0
-  const result164 = f.getPreAimingDuration(163n)
+  // getPreAimingDuration / get_pre_aiming_duration / genericId=200278 / literal=2, wire=0
+  const result164 = f.getPreAimingDuration(163n, CE.PreAimResultDataType.Default)
   const pinCheck165 = f.equal(result164, 0)
 
-  // getPreAimingRayHitInfo / get_pre_aiming_ray_hit_info / genericId=200281 / literal=0, wire=1
-  const result166 = f.getPreAimingRayHitInfo(wireInt)
+  // getPreAimingRayHitInfo / get_pre_aiming_ray_hit_info / genericId=200281 / literal=1, wire=1
+  const result166 = f.getPreAimingRayHitInfo(wireInt, CE.PreAimResultDataType.Default)
   const pinCheck167 = f.equal(result166.hitPosition, [0, 0, 0])
   const pinCheck168 = f.equal(result166.hitEntity, wireEntity)
 
-  // getPreAimingResult / get_pre_aiming_result / genericId=200277 / literal=0, wire=1
-  const result169 = f.getPreAimingResult(wireInt)
+  // getPreAimingResult / get_pre_aiming_result / genericId=200277 / literal=1, wire=1
+  const result169 = f.getPreAimingResult(wireInt, CE.PreAimResultDataType.Default)
   const pinCheck170 = f.equal(result169.hitPosition, [0, 0, 0])
   const pinCheck171 = f.equal(result169.inRangePosition, [0, 0, 0])
   const pinCheck172 = f.equal(result169.bestValidTarget, wireEntity)
@@ -6266,8 +6592,8 @@ g.boolFilter({
   const result201 = f.getWhetherCursorIsActive()
   const pinCheck202 = f.equal(result201, false)
 
-  // getWhetherPreAimingStickIsInDeadZone / get_whether_pre_aiming_stick_is_in_dead_zone / genericId=200282 / literal=1, wire=0
-  const result204 = f.getWhetherPreAimingStickIsInDeadZone(203n)
+  // getWhetherPreAimingStickIsInDeadZone / get_whether_pre_aiming_stick_is_in_dead_zone / genericId=200282 / literal=2, wire=0
+  const result204 = f.getWhetherPreAimingStickIsInDeadZone(203n, CE.PreAimResultDataType.Default)
   const pinCheck205 = f.equal(result204, false)
 
   // greaterThan / greater_than / genericId=200007 / literal=2, wire=0
@@ -6844,8 +7170,8 @@ g.intFilter({
     0n
   )
 
-  // getBaseObjectOfSpecifiedPreAiming / get_base_object_of_specified_pre_aiming / genericId=200276 / literal=1, wire=0
-  const result98 = f.getBaseObjectOfSpecifiedPreAiming(97n)
+  // getBaseObjectOfSpecifiedPreAiming / get_base_object_of_specified_pre_aiming / genericId=200276 / literal=2, wire=0
+  const result98 = f.getBaseObjectOfSpecifiedPreAiming(97n, CE.PreAimResultDataType.Default)
   const pinCheck99 = f.equal(result98, wireEntity)
 
   // getCharacterEntityOfSpecifiedPlayer / get_character_entity_of_specified_player / genericId=200024 / literal=0, wire=1
@@ -7058,21 +7384,24 @@ g.intFilter({
   const pinCheck168 = f.equal(result167.inputDirection, 0)
   const pinCheck169 = f.equal(result167.inputStrength, 0)
 
-  // getPreAimingCollisionDetectionResultCount / get_pre_aiming_collision_detection_result_count / genericId=200280 / literal=1, wire=0
-  const result171 = f.getPreAimingCollisionDetectionResultCount(170n)
+  // getPreAimingCollisionDetectionResultCount / get_pre_aiming_collision_detection_result_count / genericId=200280 / literal=2, wire=0
+  const result171 = f.getPreAimingCollisionDetectionResultCount(
+    170n,
+    CE.PreAimResultDataType.Default
+  )
   const pinCheck172 = f.equal(result171, 0n)
 
-  // getPreAimingDuration / get_pre_aiming_duration / genericId=200278 / literal=0, wire=1
-  const result173 = f.getPreAimingDuration(wireInt)
+  // getPreAimingDuration / get_pre_aiming_duration / genericId=200278 / literal=1, wire=1
+  const result173 = f.getPreAimingDuration(wireInt, CE.PreAimResultDataType.Default)
   const pinCheck174 = f.equal(result173, 0)
 
-  // getPreAimingRayHitInfo / get_pre_aiming_ray_hit_info / genericId=200281 / literal=1, wire=0
-  const result176 = f.getPreAimingRayHitInfo(175n)
+  // getPreAimingRayHitInfo / get_pre_aiming_ray_hit_info / genericId=200281 / literal=2, wire=0
+  const result176 = f.getPreAimingRayHitInfo(175n, CE.PreAimResultDataType.Default)
   const pinCheck177 = f.equal(result176.hitPosition, [0, 0, 0])
   const pinCheck178 = f.equal(result176.hitEntity, wireEntity)
 
-  // getPreAimingResult / get_pre_aiming_result / genericId=200277 / literal=1, wire=0
-  const result180 = f.getPreAimingResult(179n)
+  // getPreAimingResult / get_pre_aiming_result / genericId=200277 / literal=2, wire=0
+  const result180 = f.getPreAimingResult(179n, CE.PreAimResultDataType.Default)
   const pinCheck181 = f.equal(result180.hitPosition, [0, 0, 0])
   const pinCheck182 = f.equal(result180.inRangePosition, [0, 0, 0])
   const pinCheck183 = f.equal(result180.bestValidTarget, wireEntity)
@@ -7183,8 +7512,8 @@ g.intFilter({
   const result213 = f.getWhetherCursorIsActive()
   const pinCheck214 = f.equal(result213, false)
 
-  // getWhetherPreAimingStickIsInDeadZone / get_whether_pre_aiming_stick_is_in_dead_zone / genericId=200282 / literal=0, wire=1
-  const result215 = f.getWhetherPreAimingStickIsInDeadZone(wireInt)
+  // getWhetherPreAimingStickIsInDeadZone / get_whether_pre_aiming_stick_is_in_dead_zone / genericId=200282 / literal=1, wire=1
+  const result215 = f.getWhetherPreAimingStickIsInDeadZone(wireInt, CE.PreAimResultDataType.Default)
   const pinCheck216 = f.equal(result215, false)
 
   // greaterThan / greater_than / genericId=200007 / literal=0, wire=2

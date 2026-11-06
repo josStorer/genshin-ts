@@ -10,8 +10,8 @@
       "name": "AllClientNodesCharacterSkillBeyond",
       "methodCount": 164,
       "expectedNodeTypeCount": 167,
-      "literalArgs": 360,
-      "wiredArgs": 158,
+      "literalArgs": 367,
+      "wiredArgs": 157,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
     {
@@ -22,8 +22,8 @@
       "name": "AllClientNodesCharacterControlSkillBeyond",
       "methodCount": 175,
       "expectedNodeTypeCount": 178,
-      "literalArgs": 372,
-      "wiredArgs": 169,
+      "literalArgs": 375,
+      "wiredArgs": 172,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
     {
@@ -34,8 +34,8 @@
       "name": "AllClientNodesCreationSkillBeyond",
       "methodCount": 133,
       "expectedNodeTypeCount": 136,
-      "literalArgs": 350,
-      "wiredArgs": 148,
+      "literalArgs": 351,
+      "wiredArgs": 147,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
     {
@@ -44,10 +44,10 @@
       "registerMethod": "creationStatus",
       "id": 1082130438,
       "name": "AllClientNodesCreationStatusBeyond",
-      "methodCount": 97,
-      "expectedNodeTypeCount": 100,
-      "literalArgs": 117,
-      "wiredArgs": 85,
+      "methodCount": 106,
+      "expectedNodeTypeCount": 109,
+      "literalArgs": 172,
+      "wiredArgs": 128,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
     {
@@ -56,10 +56,10 @@
       "registerMethod": "creationStatusDecision",
       "id": 1082130439,
       "name": "AllClientNodesCreationStatusDecisionBeyond",
-      "methodCount": 84,
-      "expectedNodeTypeCount": 87,
-      "literalArgs": 40,
-      "wiredArgs": 64,
+      "methodCount": 88,
+      "expectedNodeTypeCount": 91,
+      "literalArgs": 48,
+      "wiredArgs": 67,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
     {
@@ -70,7 +70,7 @@
       "name": "AllClientNodesBoolFilterBeyond",
       "methodCount": 112,
       "expectedNodeTypeCount": 115,
-      "literalArgs": 63,
+      "literalArgs": 69,
       "wiredArgs": 90,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
@@ -82,7 +82,7 @@
       "name": "AllClientNodesIntFilterBeyond",
       "methodCount": 112,
       "expectedNodeTypeCount": 115,
-      "literalArgs": 90,
+      "literalArgs": 96,
       "wiredArgs": 63,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
@@ -94,8 +94,8 @@
       "name": "AllClientNodesCreationSkillClassic",
       "methodCount": 117,
       "expectedNodeTypeCount": 120,
-      "literalArgs": 344,
-      "wiredArgs": 125,
+      "literalArgs": 347,
+      "wiredArgs": 122,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
     {
@@ -104,10 +104,10 @@
       "registerMethod": "creationStatus",
       "id": 1082130445,
       "name": "AllClientNodesCreationStatusClassic",
-      "methodCount": 97,
-      "expectedNodeTypeCount": 100,
-      "literalArgs": 107,
-      "wiredArgs": 95,
+      "methodCount": 106,
+      "expectedNodeTypeCount": 109,
+      "literalArgs": 163,
+      "wiredArgs": 137,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
     {
@@ -116,10 +116,10 @@
       "registerMethod": "creationStatusDecision",
       "id": 1082130446,
       "name": "AllClientNodesCreationStatusDecisionClassic",
-      "methodCount": 84,
-      "expectedNodeTypeCount": 87,
-      "literalArgs": 65,
-      "wiredArgs": 39,
+      "methodCount": 88,
+      "expectedNodeTypeCount": 91,
+      "literalArgs": 72,
+      "wiredArgs": 43,
       "uncoveredNodeTypes": ["assemble_structure", "split_structure"]
     },
     {

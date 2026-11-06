@@ -328,7 +328,7 @@ function assertGiaCoverage(
         )
           ? 'get_entity_type_list'
           : values.every(
-                (value) => typeof value === 'string' && value.startsWith('ray_filter_type_')
+                (value) => typeof value === 'string' && /^ray_(hit_)?filter_type_/.test(value)
               )
             ? 'get_ray_filter_type_list'
             : undefined
