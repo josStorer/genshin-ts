@@ -497,15 +497,15 @@ declare global {
    * Use it when one graph is reused on several entities that need different settings:
    * - Two explosive barrels share one graph but deal different damage (the official example)
    * - Each door, trap or spawner points at its own scene entity: expose an entity variable
-   * - Since 7.2 the multilingual text tool collects the node graph variables filled in on entities, so exposed text
-   *   can be translated
+   * - Each entity shows its own text: since 7.2 the multilingual text tool also collects the text filled in on
+   *   entities, so it can be translated like the initial values in the graph
    *
    * 暴露节点图变量: 把节点图变量暴露到关卡，挂载这个节点图的每个实体都可以在编辑器里填自己的值。只需在 `variables` 里包住初始值，`f.get` / `f.set` 的用法不变。
    *
    * 适用于一张节点图挂在多个实体上、但每个实体需要不同配置的情况:
    * - 两个炸药桶共用一张图，但爆炸伤害不同（官方示例）
    * - 每扇门、每个机关或刷怪点要指向各自的场景实体: 暴露一个实体类型的变量
-   * - 7.2 起多语言文本管理工具会收集实体上填写的节点图变量，暴露的文本可以参与翻译
+   * - 每个实体显示各自的文本: 7.2 起多语言文本管理工具也会收集在实体上填写的文本，和节点图里的初始值一样可以翻译
    *
    * 官方说明：[节点图变量](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhtshailzs7w)、[多语言文本](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhk59aiqtwyk)
    *
