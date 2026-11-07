@@ -386,6 +386,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorAddition(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -415,6 +417,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 三维向量2
    *
    * @returns
+   *
+   * Angle (°)
    *
    * 夹角(角度)
    */
@@ -446,6 +450,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorCrossProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -476,6 +482,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorDotProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): number {
@@ -503,6 +511,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorModuloOperation(_3DVector: Vec3Value): number {
@@ -528,6 +538,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 三维向量
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -557,6 +569,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 旋转
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -588,6 +602,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorSubtraction(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -618,6 +634,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorZoom(zoomMultiplier: FloatValue, _3DVector: Vec3Value): vec3 {
@@ -644,6 +662,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -730,6 +750,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   addition(input1: FloatValue, input2: FloatValue): number
@@ -767,6 +789,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arccosineFunction(input: FloatValue): number {
@@ -792,6 +816,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Radian
    *
    * 弧度
    */
@@ -819,6 +845,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arctangentFunction(input: FloatValue): number {
@@ -844,6 +872,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 键值对: 至多50个键值对
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -1422,6 +1452,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   checkThePresetStatusValueOfTheComplexCreation(
@@ -1485,6 +1517,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   cosineFunction(radian: FloatValue): number {
@@ -1513,6 +1547,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 值列表
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -1739,6 +1775,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * 3D Vector
+   *
    * 三维向量
    */
   create3dVector(xComponent: FloatValue, yComponent: FloatValue, zComponent: FloatValue): vec3 {
@@ -1820,6 +1858,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   degreesToRadians(angle: FloatValue): number {
@@ -1848,6 +1888,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 向上向量: 定义单位的上方向（用于确定旋转的旋转角度），默认值为世界坐标系Y轴正方向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -1878,6 +1920,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -1959,6 +2003,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 枚举2
    *
    * @returns Output True if equal, False if not equal
+   *
+   * Result
    *
    * 结果: 相等输出“是”，不相等输出“否”
    */
@@ -2081,6 +2127,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   equal(input1: FloatValue, input2: FloatValue): boolean
@@ -2166,6 +2214,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Filter Results
+   *
    * 筛选结果
    */
   filterEntityListWithinSphericalRange(
@@ -2214,6 +2264,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 筛选规则: 分为默认排序、随机排序、从近到远排序
    *
    * @returns
+   *
+   * Filter Results
    *
    * 筛选结果
    */
@@ -2460,6 +2512,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity List
+   *
    * 实体列表
    */
   getAllEntitiesWithinTheCollisionTrigger(
@@ -2485,6 +2539,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 获取扫描组件可扫描的所有合法对象: 获取扫描组件可扫描的所有合法对象，此处的合法对象指代所有携带扫描组件且过滤器返回为“是”的单位，与单位的可扫描状态无关
    *
    * @returns
+   *
+   * Object List
    *
    * 对象列表
    */
@@ -2512,11 +2568,17 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
    *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
+   *
    * @returns
+   *
+   * Base Object
    *
    * 基准对象
    */
@@ -2549,6 +2611,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getCharacterEntityOfSpecifiedPlayer(
@@ -2579,6 +2643,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 数据列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -2720,6 +2786,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getCurrentCharacter(): clientEntity<'character_skill', Mode> {
@@ -2740,6 +2808,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 获取当前客户端时间: 获取当前客户端的时间; 如需对玩家展示节点内容，奇匠应在简介等处提前告知玩家获取客户端时间后的相关效果
    *
    * @returns
+   *
+   * Client Time
    *
    * 客户端时间
    */
@@ -2884,6 +2954,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the hit results for the local always-visible cursor, including the On-Hit Entity List, On-Hit Position List, and number of hits. Only available in Beyond Mode.
+   *
    * 获取光标命中结果: 获取本机持久光标的命中结果，包含命中实体列表、命中位置列表与命中数量，仅在超限模式可用
    */
   getCursorHitResult(): {
@@ -2932,6 +3004,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the screen X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标屏幕坐标: 获取本机持久光标的屏幕坐标X与Y，仅在超限模式可用
    */
   getCursorScreenCoordinates(): {
@@ -2969,6 +3043,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the viewport X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标视口坐标: 获取本机持久光标的视口坐标X与Y，仅在超限模式可用
    */
   getCursorViewportCoordinates(): {
@@ -3085,6 +3161,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity List
+   *
    * 实体列表
    */
   getEntityListByUnitTag(unitTagIndex: IntValue): clientEntity<'character_skill', Mode>[] {
@@ -3110,6 +3188,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * Location
    *
    * 位置
    */
@@ -3137,6 +3217,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Rotate
+   *
    * 旋转
    */
   getEntityRotation(entity: EntityValue): vec3 {
@@ -3162,6 +3244,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * Scan Tag Config ID
    *
    * 扫描标签配置ID
    */
@@ -3189,6 +3273,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns Options: Invisible, Current Scan Target, Candidate Target, Not Eligible
    *
+   * Scan Status
+   *
    * 扫描状态: 分为不可见、当前扫描目标、候选目标、不满足条件
    */
   getEntitySScanStatus(targetEntity: EntityValue): ScanStatus {
@@ -3214,6 +3300,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * Entity Type
    *
    * 实体类型
    */
@@ -3241,6 +3329,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getEntitySUnitTagList(targetEntity: EntityValue): bigint[] {
@@ -3266,6 +3356,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -3299,6 +3391,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 输入列表
    *
    * @returns
+   *
+   * Length
    *
    * 长度
    */
@@ -3363,6 +3457,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Key List
+   *
    * 键列表
    */
   getListOfKeysFromDictionary<K extends DictKeyType, V extends DictValueType>(
@@ -3386,6 +3482,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 获取在场玩家实体列表: 获取在场所有玩家实体组成的列表
    *
    * @returns
+   *
+   * Player Entity List
    *
    * 玩家实体列表
    */
@@ -3411,6 +3509,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 字典
    *
    * @returns
+   *
+   * Value List
    *
    * 值列表
    */
@@ -3472,6 +3572,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Maximum Value
+   *
    * 最大值
    */
   getMaximumValueFromList(listValue: FloatValue[]): number
@@ -3512,6 +3614,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Minimum Value
+   *
    * 最小值
    */
   getMinimumValueFromList(listValue: FloatValue[]): number
@@ -3546,6 +3650,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns Includes keyboard/mouse, gamepad, touchscreen
    *
+   * Input Device Type
+   *
    * 输入设备类型: 分为键盘鼠标、手柄、触屏
    */
   getPlayerClientInputDeviceType(): InputDeviceType {
@@ -3570,6 +3676,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 角色实体
    *
    * @returns
+   *
+   * Affiliated Player Entity
    *
    * 所属玩家实体
    */
@@ -3639,11 +3747,17 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
    *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
+   *
    * @returns
+   *
+   * Result Count
    *
    * 结果数量
    */
@@ -3677,9 +3791,13 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    *
    * @returns
    *
@@ -3714,9 +3832,13 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    */
   getPreAimingRayHitInfo(
     preAimingIndex: IntValue,
@@ -3770,9 +3892,13 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    */
   getPreAimingResult(
     preAimingIndex: IntValue,
@@ -3850,6 +3976,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   getPresetStatus(entity: EntityValue, presetStatusIndex: IntValue): bigint {
@@ -3879,6 +4007,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 上限
    *
    * @returns
+   *
+   * Random Number
    *
    * 随机数
    */
@@ -4008,6 +4138,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getRayFilterTypeList(types?: RayFilterType[]): RayFilterType[] {
@@ -4040,6 +4172,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Self Entity
+   *
    * 自身实体
    */
   getSelfEntity(): clientEntity<'character_skill', Mode> {
@@ -4064,6 +4198,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 技能实例ID
    *
    * @returns
+   *
+   * Skill Config ID
    *
    * 技能配置ID
    */
@@ -4093,6 +4229,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 挂接点名称
    *
    * @returns
+   *
+   * Attachment Point Location
    *
    * 挂接点位置
    */
@@ -4124,6 +4262,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Attachment Point Rotation
+   *
    * 挂接点旋转
    */
   getTargetAttachmentPointRotation(targetEntity: EntityValue, attachmentPointName: StrValue): vec3 {
@@ -4146,6 +4286,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 获取目标实体: 获取目标实体，根据过滤器节点图被引用的功能模块不同，其指代含义会有区别
    *
    * @returns
+   *
+   * Target Entity
    *
    * 目标实体
    */
@@ -4171,6 +4313,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 指定实体
    *
    * @returns
+   *
+   * Aggro List
    *
    * 仇恨列表
    */
@@ -4200,6 +4344,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Aggro Target
+   *
    * 仇恨目标
    */
   getTheAggroTargetOfTheSpecifiedEntity(
@@ -4227,6 +4373,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 单位实体
    *
    * @returns
+   *
+   * Attack Target Entity
    *
    * 攻击目标实体
    */
@@ -4278,9 +4426,13 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    *
    * @returns
    *
@@ -4320,6 +4472,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   greaterThan(input1: FloatValue, input2: FloatValue): boolean
@@ -4352,6 +4506,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -4462,6 +4618,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThan(input1: FloatValue, input2: FloatValue): boolean
@@ -4495,6 +4653,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -4527,6 +4687,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -4621,6 +4783,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalAndOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -4647,6 +4811,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 条件
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -4677,6 +4843,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalOrOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -4706,6 +4874,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 条件2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -4899,6 +5069,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   multiplication(input1: FloatValue, input2: FloatValue): number
@@ -4971,6 +5143,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 朝向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -5127,6 +5301,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Length
+   *
    * 长度
    */
   queryDictionarySLength(dictionary: DictValue): bigint
@@ -5157,6 +5333,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Value
    *
    * 值
    */
@@ -5194,6 +5372,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity
+   *
    * 实体
    */
   queryEntityByGuid(gUID: GuidValue): clientEntity<'character_skill', Mode> {
@@ -5220,6 +5400,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Faction
+   *
    * 阵营
    */
   queryEntityFaction(targetEntity: EntityValue): faction {
@@ -5245,6 +5427,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * GUID
    *
    * GUID
    */
@@ -5274,6 +5458,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -5308,6 +5494,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Include
+   *
    * 是否包含
    */
   queryIfDictionaryContainsSpecificValue<
@@ -5338,6 +5526,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * On the Field
+   *
    * 是否在场
    */
   queryIfEntityIsOnTheField(targetEntity: EntityValue): boolean {
@@ -5367,6 +5557,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Hostile
+   *
    * 是否敌对
    */
   queryIfFactionIsHostile(faction1: FactionValue, faction2: FactionValue): boolean {
@@ -5389,6 +5581,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 查询自身是否已入战: 查询该节点图关联的实体是否入战
    *
    * @returns
+   *
+   * In Combat
    *
    * 是否入战
    */
@@ -5414,6 +5608,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * In Combat
    *
    * 是否入战
    */
@@ -5506,6 +5702,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Skill Instance ID List
+   *
    * 技能实例ID列表
    */
   querySkillInstanceListBySpecifiedSlot(skillSlot: CharacterSkillSlot): bigint[] {
@@ -5533,6 +5731,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 仅支持字面量，不能连接其他节点的输出。
    *
    * @returns
+   *
+   * Variable Value
    *
    * 变量值
    */
@@ -5564,6 +5764,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Currently in Voice Chat?
+   *
    * 是否正在语音
    */
   queryWhetherPlayerIsCurrentlyInVoiceChat(playerEntity: EntityValue): boolean {
@@ -5589,6 +5791,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Angle
    *
    * 角度
    */
@@ -5817,6 +6021,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 深度值
    *
    * @returns
+   *
+   * World Coordinates
    *
    * 世界坐标
    */
@@ -6123,6 +6329,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   sineFunction(radian: FloatValue): number {
@@ -6207,6 +6415,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   subtraction(input1: FloatValue, input2: FloatValue): number
@@ -6243,6 +6453,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -9412,6 +9624,8 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Has the Status
+   *
    * 是否携带
    */
   whetherTheEntityHasTheSpecifiedUnitStatus(
@@ -9495,6 +9709,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorAddition(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -9524,6 +9740,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 三维向量2
    *
    * @returns
+   *
+   * Angle (°)
    *
    * 夹角(角度)
    */
@@ -9555,6 +9773,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorCrossProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -9585,6 +9805,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorDotProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): number {
@@ -9612,6 +9834,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorModuloOperation(_3DVector: Vec3Value): number {
@@ -9637,6 +9861,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 三维向量
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -9666,6 +9892,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 旋转
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -9697,6 +9925,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorSubtraction(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -9727,6 +9957,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorZoom(zoomMultiplier: FloatValue, _3DVector: Vec3Value): vec3 {
@@ -9753,6 +9985,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -9792,6 +10026,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Adds temporary Acceleration. If the Vehicle is grounded, Acceleration is added only along the ground plane (its planar component)
+   *
    * 添加临时加速度: 添加临时加速度，若载具处于接地状态，则只会受到地面所在平面的加速度（在平面上的分量）。
    *
    * @param targetControlMotor
@@ -9931,6 +10167,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Adds Temporary Speed. If the Vehicle is grounded, Speed is added only along the ground plane (its planar component); The added Speed persists even after the Duration expires
+   *
    * Add Acceleration
    *
    * 添加速度: 添加临时速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承
@@ -9986,6 +10224,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   addition(input1: FloatValue, input2: FloatValue): number
@@ -10023,6 +10263,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arccosineFunction(input: FloatValue): number {
@@ -10048,6 +10290,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Radian
    *
    * 弧度
    */
@@ -10075,6 +10319,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arctangentFunction(input: FloatValue): number {
@@ -10100,6 +10346,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 键值对: 至多50个键值对
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -10684,6 +10932,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   checkThePresetStatusValueOfTheComplexCreation(
@@ -10747,6 +10997,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   cosineFunction(radian: FloatValue): number {
@@ -10775,6 +11027,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 值列表
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -11001,6 +11255,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * 3D Vector
+   *
    * 三维向量
    */
   create3dVector(xComponent: FloatValue, yComponent: FloatValue, zComponent: FloatValue): vec3 {
@@ -11082,6 +11338,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   degreesToRadians(angle: FloatValue): number {
@@ -11110,6 +11368,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 向上向量: 定义单位的上方向（用于确定旋转的旋转角度），默认值为世界坐标系Y轴正方向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -11140,6 +11400,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -11221,6 +11483,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 枚举2
    *
    * @returns Output True if equal, False if not equal
+   *
+   * Result
    *
    * 结果: 相等输出“是”，不相等输出“否”
    */
@@ -11343,6 +11607,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   equal(input1: FloatValue, input2: FloatValue): boolean
@@ -11428,6 +11694,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Filter Results
+   *
    * 筛选结果
    */
   filterEntityListWithinSphericalRange(
@@ -11476,6 +11744,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 筛选规则: 分为默认排序、随机排序、从近到远排序
    *
    * @returns
+   *
+   * Filter Results
    *
    * 筛选结果
    */
@@ -11722,6 +11992,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity List
+   *
    * 实体列表
    */
   getAllEntitiesWithinTheCollisionTrigger(
@@ -11747,6 +12019,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 获取扫描组件可扫描的所有合法对象: 获取扫描组件可扫描的所有合法对象，此处的合法对象指代所有携带扫描组件且过滤器返回为“是”的单位，与单位的可扫描状态无关
    *
    * @returns
+   *
+   * Object List
    *
    * 对象列表
    */
@@ -11777,11 +12051,17 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
    *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
+   *
    * @returns
+   *
+   * Base Object
    *
    * 基准对象
    */
@@ -11813,6 +12093,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 玩家实体
    *
    * @returns
+   *
+   * Character Entity
    *
    * 角色实体
    */
@@ -11878,6 +12160,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Returns the forward direction vector of the specified control motion device
+   *
    * Get Control Motion Device's Forward Direction
    *
    * 获取操控运动器前向: 获取指定操控运动器的前向方向向量
@@ -11889,6 +12173,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 操控运动器
    *
    * @returns
+   *
+   * Forward Direction
    *
    * 前向
    */
@@ -12007,6 +12293,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Returns the target steering direction of the control motion device (the movement joystick input converted into the control motion device's target steering direction)
+   *
    * Get Control Motion Device's Target Turn Direction
    *
    * 获取操控运动器目标转向方向: 获取操控运动器目标转向方向（移动轮盘输入后，转换成操控运动器的目标转向）
@@ -12049,6 +12337,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 数据列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -12169,6 +12459,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Control Motion Device List
+   *
    * 操控运动器列表
    */
   getCurrentActiveControlMotorList(): clientEntity<'character_control_skill', Mode>[] {
@@ -12213,6 +12505,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getCurrentCharacter(): clientEntity<'character_control_skill', Mode> {
@@ -12233,6 +12527,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 获取当前客户端时间: 获取当前客户端的时间; 如需对玩家展示节点内容，奇匠应在简介等处提前告知玩家获取客户端时间后的相关效果
    *
    * @returns
+   *
+   * Client Time
    *
    * 客户端时间
    */
@@ -12295,6 +12591,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 获取当前跟随操控运动器: 获取当前跟随操控运动器
    *
    * @returns
+   *
+   * Follow Control Motion Device
    *
    * 跟随操控运动器
    */
@@ -12400,6 +12698,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the hit results for the local always-visible cursor, including the On-Hit Entity List, On-Hit Position List, and number of hits. Only available in Beyond Mode.
+   *
    * 获取光标命中结果: 获取本机持久光标的命中结果，包含命中实体列表、命中位置列表与命中数量，仅在超限模式可用
    */
   getCursorHitResult(): {
@@ -12448,6 +12748,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the screen X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标屏幕坐标: 获取本机持久光标的屏幕坐标X与Y，仅在超限模式可用
    */
   getCursorScreenCoordinates(): {
@@ -12485,6 +12787,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the viewport X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标视口坐标: 获取本机持久光标的视口坐标X与Y，仅在超限模式可用
    */
   getCursorViewportCoordinates(): {
@@ -12601,6 +12905,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity List
+   *
    * 实体列表
    */
   getEntityListByUnitTag(unitTagIndex: IntValue): clientEntity<'character_control_skill', Mode>[] {
@@ -12626,6 +12932,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * Location
    *
    * 位置
    */
@@ -12653,6 +12961,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Rotate
+   *
    * 旋转
    */
   getEntityRotation(entity: EntityValue): vec3 {
@@ -12678,6 +12988,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * Scan Tag Config ID
    *
    * 扫描标签配置ID
    */
@@ -12705,6 +13017,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns Options: Invisible, Current Scan Target, Candidate Target, Not Eligible
    *
+   * Scan Status
+   *
    * 扫描状态: 分为不可见、当前扫描目标、候选目标、不满足条件
    */
   getEntitySScanStatus(targetEntity: EntityValue): ScanStatus {
@@ -12730,6 +13044,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * Entity Type
    *
    * 实体类型
    */
@@ -12757,6 +13073,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getEntitySUnitTagList(targetEntity: EntityValue): bigint[] {
@@ -12782,6 +13100,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -12815,6 +13135,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 输入列表
    *
    * @returns
+   *
+   * Length
    *
    * 长度
    */
@@ -12879,6 +13201,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Key List
+   *
    * 键列表
    */
   getListOfKeysFromDictionary<K extends DictKeyType, V extends DictValueType>(
@@ -12906,6 +13230,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Player Entity List
+   *
    * 玩家实体列表
    */
   getListOfPlayerEntitiesOnTheField(): clientEntity<'character_control_skill', Mode>[] {
@@ -12930,6 +13256,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 字典
    *
    * @returns
+   *
+   * Value List
    *
    * 值列表
    */
@@ -12994,6 +13322,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Maximum Value
+   *
    * 最大值
    */
   getMaximumValueFromList(listValue: FloatValue[]): number
@@ -13034,6 +13364,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Minimum Value
+   *
    * 最小值
    */
   getMinimumValueFromList(listValue: FloatValue[]): number
@@ -13068,6 +13400,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns Includes keyboard/mouse, gamepad, touchscreen
    *
+   * Input Device Type
+   *
    * 输入设备类型: 分为键盘鼠标、手柄、触屏
    */
   getPlayerClientInputDeviceType(): InputDeviceType {
@@ -13092,6 +13426,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 角色实体
    *
    * @returns
+   *
+   * Affiliated Player Entity
    *
    * 所属玩家实体
    */
@@ -13161,11 +13497,17 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
    *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
+   *
    * @returns
+   *
+   * Result Count
    *
    * 结果数量
    */
@@ -13199,9 +13541,13 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    *
    * @returns
    *
@@ -13236,9 +13582,13 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    */
   getPreAimingRayHitInfo(
     preAimingIndex: IntValue,
@@ -13292,9 +13642,13 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    */
   getPreAimingResult(
     preAimingIndex: IntValue,
@@ -13372,6 +13726,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   getPresetStatus(entity: EntityValue, presetStatusIndex: IntValue): bigint {
@@ -13401,6 +13757,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 上限
    *
    * @returns
+   *
+   * Random Number
    *
    * 随机数
    */
@@ -13530,6 +13888,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getRayFilterTypeList(types?: RayFilterType[]): RayFilterType[] {
@@ -13562,6 +13922,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Self Entity
+   *
    * 自身实体
    */
   getSelfEntity(): clientEntity<'character_control_skill', Mode> {
@@ -13586,6 +13948,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 技能实例ID
    *
    * @returns
+   *
+   * Skill Config ID
    *
    * 技能配置ID
    */
@@ -13615,6 +13979,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 挂接点名称
    *
    * @returns
+   *
+   * Attachment Point Location
    *
    * 挂接点位置
    */
@@ -13646,6 +14012,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Attachment Point Rotation
+   *
    * 挂接点旋转
    */
   getTargetAttachmentPointRotation(targetEntity: EntityValue, attachmentPointName: StrValue): vec3 {
@@ -13668,6 +14036,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 获取目标实体: 获取目标实体，根据过滤器节点图被引用的功能模块不同，其指代含义会有区别
    *
    * @returns
+   *
+   * Target Entity
    *
    * 目标实体
    */
@@ -13693,6 +14063,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 指定实体
    *
    * @returns
+   *
+   * Aggro List
    *
    * 仇恨列表
    */
@@ -13722,6 +14094,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Aggro Target
+   *
    * 仇恨目标
    */
   getTheAggroTargetOfTheSpecifiedEntity(
@@ -13750,6 +14124,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Attack Target Entity
+   *
    * 攻击目标实体
    */
   getUnitAttackTarget(unitEntity: EntityValue): clientEntity<'character_control_skill', Mode> {
@@ -13777,6 +14153,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 目标操控运动器
    *
    * @returns
+   *
+   * Grounded
    *
    * 是否接地
    */
@@ -13828,9 +14206,13 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    *
    * @returns
    *
@@ -13870,6 +14252,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   greaterThan(input1: FloatValue, input2: FloatValue): boolean
@@ -13902,6 +14286,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -14012,6 +14398,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThan(input1: FloatValue, input2: FloatValue): boolean
@@ -14045,6 +14433,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -14077,6 +14467,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -14171,6 +14563,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalAndOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -14197,6 +14591,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 条件
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -14227,6 +14623,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalOrOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -14256,6 +14654,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 条件2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -14452,6 +14852,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   multiplication(input1: FloatValue, input2: FloatValue): number
@@ -14524,6 +14926,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 朝向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -14680,6 +15084,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Length
+   *
    * 长度
    */
   queryDictionarySLength(dictionary: DictValue): bigint
@@ -14710,6 +15116,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Value
    *
    * 值
    */
@@ -14747,6 +15155,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity
+   *
    * 实体
    */
   queryEntityByGuid(gUID: GuidValue): clientEntity<'character_control_skill', Mode> {
@@ -14773,6 +15183,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Faction
+   *
    * 阵营
    */
   queryEntityFaction(targetEntity: EntityValue): faction {
@@ -14798,6 +15210,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * GUID
    *
    * GUID
    */
@@ -14827,6 +15241,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -14861,6 +15277,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Include
+   *
    * 是否包含
    */
   queryIfDictionaryContainsSpecificValue<
@@ -14891,6 +15309,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * On the Field
+   *
    * 是否在场
    */
   queryIfEntityIsOnTheField(targetEntity: EntityValue): boolean {
@@ -14920,6 +15340,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Hostile
+   *
    * 是否敌对
    */
   queryIfFactionIsHostile(faction1: FactionValue, faction2: FactionValue): boolean {
@@ -14942,6 +15364,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 查询自身是否已入战: 查询该节点图关联的实体是否入战
    *
    * @returns
+   *
+   * In Combat
    *
    * 是否入战
    */
@@ -14967,6 +15391,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * In Combat
    *
    * 是否入战
    */
@@ -15059,6 +15485,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Skill Instance ID List
+   *
    * 技能实例ID列表
    */
   querySkillInstanceListBySpecifiedSlot(skillSlot: CharacterSkillSlot): bigint[] {
@@ -15086,6 +15514,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 仅支持字面量，不能连接其他节点的输出。
    *
    * @returns
+   *
+   * Variable Value
    *
    * 变量值
    */
@@ -15117,6 +15547,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Currently in Voice Chat?
+   *
    * 是否正在语音
    */
   queryWhetherPlayerIsCurrentlyInVoiceChat(playerEntity: EntityValue): boolean {
@@ -15142,6 +15574,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Angle
    *
    * 角度
    */
@@ -15370,6 +15804,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 深度值
    *
    * @returns
+   *
+   * World Coordinates
    *
    * 世界坐标
    */
@@ -15704,6 +16140,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   sineFunction(radian: FloatValue): number {
@@ -15788,6 +16226,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   subtraction(input1: FloatValue, input2: FloatValue): number
@@ -15824,6 +16264,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -18996,6 +19438,8 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Has the Status
+   *
    * 是否携带
    */
   whetherTheEntityHasTheSpecifiedUnitStatus(
@@ -19079,6 +19523,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorAddition(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -19108,6 +19554,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 三维向量2
    *
    * @returns
+   *
+   * Angle (°)
    *
    * 夹角(角度)
    */
@@ -19139,6 +19587,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorCrossProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -19169,6 +19619,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorDotProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): number {
@@ -19196,6 +19648,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorModuloOperation(_3DVector: Vec3Value): number {
@@ -19221,6 +19675,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 三维向量
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -19250,6 +19706,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 旋转
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -19281,6 +19739,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorSubtraction(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -19311,6 +19771,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorZoom(zoomMultiplier: FloatValue, _3DVector: Vec3Value): vec3 {
@@ -19337,6 +19799,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -19404,6 +19868,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   addition(input1: FloatValue, input2: FloatValue): number
@@ -19441,6 +19907,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arccosineFunction(input: FloatValue): number {
@@ -19466,6 +19934,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Radian
    *
    * 弧度
    */
@@ -19493,6 +19963,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arctangentFunction(input: FloatValue): number {
@@ -19518,6 +19990,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 键值对: 至多50个键值对
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -19954,6 +20428,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character ID
+   *
    * 角色编号
    */
   checkClassicModeCharacterId(targetCharacter: EntityValue): bigint {
@@ -19982,6 +20458,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 预设状态索引
    *
    * @returns
+   *
+   * Preset Status Value
    *
    * 预设状态值
    */
@@ -20091,6 +20569,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   cosineFunction(radian: FloatValue): number {
@@ -20119,6 +20599,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 值列表
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -20345,6 +20827,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * 3D Vector
+   *
    * 三维向量
    */
   create3dVector(xComponent: FloatValue, yComponent: FloatValue, zComponent: FloatValue): vec3 {
@@ -20445,6 +20929,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   degreesToRadians(angle: FloatValue): number {
@@ -20473,6 +20959,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 向上向量: 定义单位的上方向（用于确定旋转的旋转角度），默认值为世界坐标系Y轴正方向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -20503,6 +20991,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -20584,6 +21074,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 枚举2
    *
    * @returns Output True if equal, False if not equal
+   *
+   * Result
    *
    * 结果: 相等输出“是”，不相等输出“否”
    */
@@ -20706,6 +21198,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   equal(input1: FloatValue, input2: FloatValue): boolean
@@ -20791,6 +21285,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Filter Results
+   *
    * 筛选结果
    */
   filterEntityListWithinSphericalRange(
@@ -20839,6 +21335,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 筛选规则: 分为默认排序、随机排序、从近到远排序
    *
    * @returns
+   *
+   * Filter Results
    *
    * 筛选结果
    */
@@ -21005,6 +21503,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getActiveCharacterOfSpecifiedPlayer(
@@ -21035,6 +21535,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 触发器序号
    *
    * @returns
+   *
+   * Entity List
    *
    * 实体列表
    */
@@ -21068,6 +21570,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 数据列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -21190,6 +21694,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Target Entity
+   *
    * 目标实体
    */
   getCreationSCurrentTarget(creation: EntityValue): clientEntity<'creation_skill', Mode> {
@@ -21206,6 +21712,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the hit results for the local always-visible cursor, including the On-Hit Entity List, On-Hit Position List, and number of hits. Only available in Beyond Mode.
+   *
    * 获取光标命中结果: 获取本机持久光标的命中结果，包含命中实体列表、命中位置列表与命中数量，仅在超限模式可用
    */
   getCursorHitResult(): {
@@ -21254,6 +21762,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the screen X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标屏幕坐标: 获取本机持久光标的屏幕坐标X与Y，仅在超限模式可用
    */
   getCursorScreenCoordinates(): {
@@ -21291,6 +21801,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the viewport X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标视口坐标: 获取本机持久光标的视口坐标X与Y，仅在超限模式可用
    */
   getCursorViewportCoordinates(): {
@@ -21368,6 +21880,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity List
+   *
    * 实体列表
    */
   getEntityListByUnitTag(unitTagIndex: IntValue): clientEntity<'creation_skill', Mode>[] {
@@ -21393,6 +21907,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * Location
    *
    * 位置
    */
@@ -21420,6 +21936,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Rotate
+   *
    * 旋转
    */
   getEntityRotation(entity: EntityValue): vec3 {
@@ -21445,6 +21963,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * Entity Type
    *
    * 实体类型
    */
@@ -21472,6 +21992,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getEntitySUnitTagList(targetEntity: EntityValue): bigint[] {
@@ -21497,6 +22019,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -21530,6 +22054,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 输入列表
    *
    * @returns
+   *
+   * Length
    *
    * 长度
    */
@@ -21594,6 +22120,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Key List
+   *
    * 键列表
    */
   getListOfKeysFromDictionary<K extends DictKeyType, V extends DictValueType>(
@@ -21617,6 +22145,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 获取在场玩家实体列表: 获取在场所有玩家实体组成的列表
    *
    * @returns
+   *
+   * Player Entity List
    *
    * 玩家实体列表
    */
@@ -21642,6 +22172,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 字典
    *
    * @returns
+   *
+   * Value List
    *
    * 值列表
    */
@@ -21703,6 +22235,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Maximum Value
+   *
    * 最大值
    */
   getMaximumValueFromList(listValue: FloatValue[]): number
@@ -21743,6 +22277,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Minimum Value
+   *
    * 最小值
    */
   getMinimumValueFromList(listValue: FloatValue[]): number
@@ -21781,6 +22317,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Affiliated Player Entity
+   *
    * 所属玩家实体
    */
   getPlayerEntityToWhichTheCharacterBelongs(
@@ -21808,6 +22346,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 玩家实体
    *
    * @returns
+   *
+   * Character List
    *
    * 角色列表
    */
@@ -21838,6 +22378,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   getPresetStatus(entity: EntityValue, presetStatusIndex: IntValue): bigint {
@@ -21867,6 +22409,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 上限
    *
    * @returns
+   *
+   * Random Number
    *
    * 随机数
    */
@@ -21996,6 +22540,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getRayFilterTypeList(types?: RayFilterType[]): RayFilterType[] {
@@ -22028,6 +22574,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Self Entity
+   *
    * 自身实体
    */
   getSelfEntity(): clientEntity<'creation_skill', Mode> {
@@ -22052,6 +22600,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * Sub-Entity List
    *
    * 子实体列表
    */
@@ -22081,6 +22631,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 挂接点名称
    *
    * @returns
+   *
+   * Attachment Point Location
    *
    * 挂接点位置
    */
@@ -22112,6 +22664,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Attachment Point Rotation
+   *
    * 挂接点旋转
    */
   getTargetAttachmentPointRotation(targetEntity: EntityValue, attachmentPointName: StrValue): vec3 {
@@ -22138,6 +22692,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 指定实体
    *
    * @returns
+   *
+   * Aggro List
    *
    * 仇恨列表
    */
@@ -22167,6 +22723,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Aggro Target
+   *
    * 仇恨目标
    */
   getTheAggroTargetOfTheSpecifiedEntity(
@@ -22190,6 +22748,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 获取复杂造物当前施放的技能: 返回复杂造物当前正在施放的技能的序号
    *
    * @returns
+   *
+   * Skill ID
    *
    * 技能序号
    */
@@ -22215,6 +22775,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 单位实体
    *
    * @returns
+   *
+   * Attack Target Entity
    *
    * 攻击目标实体
    */
@@ -22268,6 +22830,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   greaterThan(input1: FloatValue, input2: FloatValue): boolean
@@ -22300,6 +22864,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -22396,6 +22962,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThan(input1: FloatValue, input2: FloatValue): boolean
@@ -22429,6 +22997,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -22461,6 +23031,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -22555,6 +23127,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalAndOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -22581,6 +23155,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 条件
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -22610,6 +23186,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 条件2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -22641,6 +23219,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalXorOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -22670,6 +23250,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -22743,6 +23325,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 朝向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -22830,6 +23414,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Length
+   *
    * 长度
    */
   queryDictionarySLength(dictionary: DictValue): bigint
@@ -22860,6 +23446,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Value
    *
    * 值
    */
@@ -22897,6 +23485,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity
+   *
    * 实体
    */
   queryEntityByGuid(gUID: GuidValue): clientEntity<'creation_skill', Mode> {
@@ -22923,6 +23513,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Faction
+   *
    * 阵营
    */
   queryEntityFaction(targetEntity: EntityValue): faction {
@@ -22948,6 +23540,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * GUID
    *
    * GUID
    */
@@ -22977,6 +23571,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -23011,6 +23607,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Include
+   *
    * 是否包含
    */
   queryIfDictionaryContainsSpecificValue<
@@ -23041,6 +23639,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * On the Field
+   *
    * 是否在场
    */
   queryIfEntityIsOnTheField(targetEntity: EntityValue): boolean {
@@ -23070,6 +23670,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Hostile
+   *
    * 是否敌对
    */
   queryIfFactionIsHostile(faction1: FactionValue, faction2: FactionValue): boolean {
@@ -23096,6 +23698,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 目标实体
    *
    * @returns
+   *
+   * In Combat
    *
    * 是否入战
    */
@@ -23124,6 +23728,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 仅支持字面量，不能连接其他节点的输出。
    *
    * @returns
+   *
+   * Variable Value
    *
    * 变量值
    */
@@ -23154,6 +23760,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Angle
    *
    * 角度
    */
@@ -23371,6 +23979,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 深度值
    *
    * @returns
+   *
+   * World Coordinates
    *
    * 世界坐标
    */
@@ -23760,6 +24370,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   sineFunction(radian: FloatValue): number {
@@ -23844,6 +24456,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   subtraction(input1: FloatValue, input2: FloatValue): number
@@ -23880,6 +24494,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -27049,6 +27665,8 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * @returns
    *
+   * Has the Status
+   *
    * 是否携带
    */
   whetherTheEntityHasTheSpecifiedUnitStatus(
@@ -27132,6 +27750,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorAddition(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -27161,6 +27781,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 三维向量2
    *
    * @returns
+   *
+   * Angle (°)
    *
    * 夹角(角度)
    */
@@ -27192,6 +27814,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorCrossProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -27222,6 +27846,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorDotProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): number {
@@ -27249,6 +27875,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorModuloOperation(_3DVector: Vec3Value): number {
@@ -27274,6 +27902,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 三维向量
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -27303,6 +27933,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 旋转
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -27334,6 +27966,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorSubtraction(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -27364,6 +27998,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorZoom(zoomMultiplier: FloatValue, _3DVector: Vec3Value): vec3 {
@@ -27390,6 +28026,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -27422,6 +28060,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -27460,6 +28100,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arccosineFunction(input: FloatValue): number {
@@ -27485,6 +28127,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Radian
    *
    * 弧度
    */
@@ -27512,6 +28156,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arctangentFunction(input: FloatValue): number {
@@ -27537,6 +28183,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 键值对: 至多50个键值对
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -27952,6 +28600,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Is in the Territory
+   *
    * 是否在领地中
    */
   checkIfSelfIsInTheTerritory(): boolean {
@@ -27972,6 +28622,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 查询目标点是否寻路可达: 查询造物当前的目标点是否可以正常寻路到达
    *
    * @returns
+   *
+   * Is Pathfinding Achievable?
    *
    * 是否寻路可达
    */
@@ -28033,6 +28685,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Distance
+   *
    * 距离
    */
   checkTheDistanceFromSelfToTarget(): number {
@@ -28053,6 +28707,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 查询自身距离目标的水平角度: 查询造物自身距离目标实体的水平角度，当且仅当造物存在目标时有效
    *
    * @returns
+   *
+   * Horizontal Angle
    *
    * 水平角度
    */
@@ -28075,6 +28731,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Horizontal Distance
+   *
    * 水平距离
    */
   checkTheHorizontalDistanceFromSelfToTarget(): number {
@@ -28095,6 +28753,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 查询自身距离目标的垂直角度: 查询造物自身距离目标实体的垂直角度，当且仅当造物存在目标时有效
    *
    * @returns
+   *
+   * Vertical Angle
    *
    * 垂直角度
    */
@@ -28117,6 +28777,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Vertical Distance
+   *
    * 垂直距离
    */
   checkTheVerticalDistanceFromSelfToTarget(): number {
@@ -28137,6 +28799,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 查询自身是否处于交战中: 查询造物自身当前是否在交战
    *
    * @returns
+   *
+   * Whether in Battle
    *
    * 是否交战中
    */
@@ -28221,6 +28885,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   cosineFunction(radian: FloatValue): number {
@@ -28249,6 +28915,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 值列表
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -28475,6 +29143,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * 3D Vector
+   *
    * 三维向量
    */
   create3dVector(xComponent: FloatValue, yComponent: FloatValue, zComponent: FloatValue): vec3 {
@@ -28556,6 +29226,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   degreesToRadians(angle: FloatValue): number {
@@ -28584,6 +29256,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 向上向量: 定义单位的上方向（用于确定旋转的旋转角度），默认值为世界坐标系Y轴正方向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -28614,6 +29288,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -28695,6 +29371,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 枚举2
    *
    * @returns Output True if equal, False if not equal
+   *
+   * Result
    *
    * 结果: 相等输出“是”，不相等输出“否”
    */
@@ -28820,6 +29498,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   equal(input1: FloatValue, input2: FloatValue): boolean
@@ -28933,6 +29613,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 数据列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -29051,6 +29733,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Status Node Graph Configuration ID
+   *
    * 状态节点图配置ID
    */
   getCurrentExecutionStatus(): configId {
@@ -29111,6 +29795,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Location
+   *
    * 位置
    */
   getEntityLocation(targetEntity: TargetEntity): vec3 {
@@ -29139,6 +29825,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 仅支持字面量，不能连接其他节点的输出。
    *
    * @returns
+   *
+   * Rotation
    *
    * 旋转
    */
@@ -29169,6 +29857,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity Type
+   *
    * 实体类型
    */
   getEntitySType(targetEntity: TargetEntity): EntityType {
@@ -29195,6 +29885,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -29228,6 +29920,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 输入列表
    *
    * @returns
+   *
+   * Length
    *
    * 长度
    */
@@ -29292,6 +29986,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Key List
+   *
    * 键列表
    */
   getListOfKeysFromDictionary<K extends DictKeyType, V extends DictValueType>(
@@ -29319,6 +30015,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 字典
    *
    * @returns
+   *
+   * Value List
    *
    * 值列表
    */
@@ -29350,6 +30048,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Maximum Value
    *
    * 最大值
    */
@@ -29390,6 +30090,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Minimum Value
    *
    * 最小值
    */
@@ -29434,6 +30136,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   getObjectPresetStatus(targetEntity: TargetEntity, presetStatusIndex: IntValue): bigint {
@@ -29458,6 +30162,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Status Node Graph Configuration ID
+   *
    * 状态节点图配置ID
    */
   getPreviousFrameExecutionStatus(): configId {
@@ -29473,6 +30179,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
+   * Obtain the Tactic executed by Creations in the previous frame
+   *
    * 获取前一帧执行战术: 获取造物前一帧执行的战术
    */
   getPreviousFrameExecutionTactic(): {
@@ -29533,6 +30241,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 上限
    *
    * @returns
+   *
+   * Random Number
    *
    * 随机数
    */
@@ -29666,6 +30376,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getRayFilterTypeList(types?: RayHitFilterType[]): RayHitFilterType[] {
@@ -29698,6 +30410,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Self Entity
+   *
    * 自身实体
    */
   getSelfEntity(): clientEntity<'creation_status', Mode> {
@@ -29722,6 +30436,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 预设状态索引
    *
    * @returns
+   *
+   * Preset Status Value
    *
    * 预设状态值
    */
@@ -29783,6 +30499,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 获取关卡实体: 获取关卡实体
    *
    * @returns
+   *
+   * Stage Entity
    *
    * 关卡实体
    */
@@ -29851,6 +30569,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 获取目标实体: 获取目标实体，根据过滤器节点图被引用的功能模块不同，其指代含义会有区别
    *
    * @returns
+   *
+   * Target Entity
    *
    * 目标实体
    */
@@ -29937,6 +30657,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Current Level
+   *
    * 当前等级
    */
   getTargetLevel(targetEntity: TargetEntity): bigint {
@@ -29966,6 +30688,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -30000,6 +30724,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   greaterThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -30032,6 +30758,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -30066,6 +30794,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -30098,6 +30828,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -30192,6 +30924,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalAndOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -30218,6 +30952,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 条件
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -30248,6 +30984,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalOrOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -30277,6 +31015,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 条件2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -30470,6 +31210,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   multiplication(input1: FloatValue, input2: FloatValue): number
@@ -30537,6 +31279,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Length
+   *
    * 长度
    */
   queryDictionarySLength(dictionary: DictValue): bigint
@@ -30567,6 +31311,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Value
    *
    * 值
    */
@@ -30608,6 +31354,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Faction
+   *
    * 阵营
    */
   queryEntityFaction(targetEntity: TargetEntity): faction {
@@ -30637,6 +31385,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -30670,6 +31420,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 值
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -30705,6 +31457,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * On the Field
+   *
    * 是否在场
    */
   queryIfEntityIsOnTheField(targetEntity: TargetEntity): boolean {
@@ -30735,6 +31489,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Hostile
+   *
    * 是否敌对
    */
   queryIfFactionIsHostile(faction1: FactionValue, faction2: FactionValue): boolean {
@@ -30762,6 +31518,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Angle
+   *
    * 角度
    */
   radiansToDegrees(radian: FloatValue): number {
@@ -30787,6 +31545,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -30871,6 +31631,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -32857,6 +33619,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   tangentFunction(radian: FloatValue): number {
@@ -32885,6 +33649,8 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * 单位状态
    *
    * @returns
+   *
+   * Has the Status
    *
    * 是否携带
    */
@@ -32923,6 +33689,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorAddition(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -32952,6 +33720,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 三维向量2
    *
    * @returns
+   *
+   * Angle (°)
    *
    * 夹角(角度)
    */
@@ -32983,6 +33753,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorCrossProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -33013,6 +33785,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorDotProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): number {
@@ -33040,6 +33814,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorModuloOperation(_3DVector: Vec3Value): number {
@@ -33065,6 +33841,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 三维向量
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -33094,6 +33872,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 旋转
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -33125,6 +33905,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorSubtraction(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -33155,6 +33937,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorZoom(zoomMultiplier: FloatValue, _3DVector: Vec3Value): vec3 {
@@ -33181,6 +33965,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -33213,6 +33999,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -33251,6 +34039,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arccosineFunction(input: FloatValue): number {
@@ -33276,6 +34066,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Radian
    *
    * 弧度
    */
@@ -33303,6 +34095,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arctangentFunction(input: FloatValue): number {
@@ -33328,6 +34122,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 键值对: 至多50个键值对
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -33749,6 +34545,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Is in the Territory
+   *
    * 是否在领地中
    */
   checkIfSelfIsInTheTerritory(): boolean {
@@ -33769,6 +34567,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 查询目标点是否寻路可达: 查询造物当前的目标点是否可以正常寻路到达
    *
    * @returns
+   *
+   * Is Pathfinding Achievable?
    *
    * 是否寻路可达
    */
@@ -33830,6 +34630,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Distance
+   *
    * 距离
    */
   checkTheDistanceFromSelfToTarget(): number {
@@ -33850,6 +34652,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 查询自身距离目标的水平角度: 查询造物自身距离目标实体的水平角度，当且仅当造物存在目标时有效
    *
    * @returns
+   *
+   * Horizontal Angle
    *
    * 水平角度
    */
@@ -33872,6 +34676,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Horizontal Distance
+   *
    * 水平距离
    */
   checkTheHorizontalDistanceFromSelfToTarget(): number {
@@ -33892,6 +34698,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 查询自身距离目标的垂直角度: 查询造物自身距离目标实体的垂直角度，当且仅当造物存在目标时有效
    *
    * @returns
+   *
+   * Vertical Angle
    *
    * 垂直角度
    */
@@ -33914,6 +34722,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Vertical Distance
+   *
    * 垂直距离
    */
   checkTheVerticalDistanceFromSelfToTarget(): number {
@@ -33934,6 +34744,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 查询自身是否处于交战中: 查询造物自身当前是否在交战
    *
    * @returns
+   *
+   * Whether in Battle
    *
    * 是否交战中
    */
@@ -33999,6 +34811,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   cosineFunction(radian: FloatValue): number {
@@ -34027,6 +34841,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 值列表
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -34253,6 +35069,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * 3D Vector
+   *
    * 三维向量
    */
   create3dVector(xComponent: FloatValue, yComponent: FloatValue, zComponent: FloatValue): vec3 {
@@ -34334,6 +35152,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   degreesToRadians(angle: FloatValue): number {
@@ -34362,6 +35182,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 向上向量: 定义单位的上方向（用于确定旋转的旋转角度），默认值为世界坐标系Y轴正方向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -34392,6 +35214,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -34473,6 +35297,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 枚举2
    *
    * @returns Output True if equal, False if not equal
+   *
+   * Result
    *
    * 结果: 相等输出“是”，不相等输出“否”
    */
@@ -34598,6 +35424,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   equal(input1: FloatValue, input2: FloatValue): boolean
@@ -34676,6 +35504,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 数据列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -34794,6 +35624,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Status Node Graph Configuration ID
+   *
    * 状态节点图配置ID
    */
   getCurrentExecutionStatus(): configId {
@@ -34854,6 +35686,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Location
+   *
    * 位置
    */
   getEntityLocation(targetEntity: TargetEntity): vec3 {
@@ -34882,6 +35716,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 仅支持字面量，不能连接其他节点的输出。
    *
    * @returns
+   *
+   * Rotation
    *
    * 旋转
    */
@@ -34912,6 +35748,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity Type
+   *
    * 实体类型
    */
   getEntitySType(targetEntity: TargetEntity): EntityType {
@@ -34938,6 +35776,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -34971,6 +35811,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 输入列表
    *
    * @returns
+   *
+   * Length
    *
    * 长度
    */
@@ -35035,6 +35877,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Key List
+   *
    * 键列表
    */
   getListOfKeysFromDictionary<K extends DictKeyType, V extends DictValueType>(
@@ -35065,6 +35909,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 字典
    *
    * @returns
+   *
+   * Value List
    *
    * 值列表
    */
@@ -35099,6 +35945,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Maximum Value
    *
    * 最大值
    */
@@ -35139,6 +35987,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Minimum Value
    *
    * 最小值
    */
@@ -35183,6 +36033,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   getObjectPresetStatus(targetEntity: TargetEntity, presetStatusIndex: IntValue): bigint {
@@ -35207,6 +36059,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Status Node Graph Configuration ID
+   *
    * 状态节点图配置ID
    */
   getPreviousFrameExecutionStatus(): configId {
@@ -35222,6 +36076,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
   }
 
   /**
+   * Obtain the Tactic executed by Creations in the previous frame
+   *
    * 获取前一帧执行战术: 获取造物前一帧执行的战术
    */
   getPreviousFrameExecutionTactic(): {
@@ -35282,6 +36138,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 上限
    *
    * @returns
+   *
+   * Random Number
    *
    * 随机数
    */
@@ -35415,6 +36273,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getRayFilterTypeList(types?: RayHitFilterType[]): RayHitFilterType[] {
@@ -35447,6 +36307,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Self Entity
+   *
    * 自身实体
    */
   getSelfEntity(): clientEntity<'creation_status_decision', Mode> {
@@ -35471,6 +36333,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 预设状态索引
    *
    * @returns
+   *
+   * Preset Status Value
    *
    * 预设状态值
    */
@@ -35532,6 +36396,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 获取关卡实体: 获取关卡实体
    *
    * @returns
+   *
+   * Stage Entity
    *
    * 关卡实体
    */
@@ -35600,6 +36466,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 获取目标实体: 获取目标实体，根据过滤器节点图被引用的功能模块不同，其指代含义会有区别
    *
    * @returns
+   *
+   * Target Entity
    *
    * 目标实体
    */
@@ -35686,6 +36554,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Current Level
+   *
    * 当前等级
    */
   getTargetLevel(targetEntity: TargetEntity): bigint {
@@ -35715,6 +36585,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -35749,6 +36621,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   greaterThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -35781,6 +36655,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -35815,6 +36691,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -35847,6 +36725,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -35941,6 +36821,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalAndOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -35967,6 +36849,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 条件
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -35997,6 +36881,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalOrOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -36026,6 +36912,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 条件2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -36222,6 +37110,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   multiplication(input1: FloatValue, input2: FloatValue): number
@@ -36289,6 +37179,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Length
+   *
    * 长度
    */
   queryDictionarySLength(dictionary: DictValue): bigint
@@ -36319,6 +37211,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Value
    *
    * 值
    */
@@ -36360,6 +37254,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Faction
+   *
    * 阵营
    */
   queryEntityFaction(targetEntity: TargetEntity): faction {
@@ -36389,6 +37285,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -36422,6 +37320,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 值
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -36457,6 +37357,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * On the Field
+   *
    * 是否在场
    */
   queryIfEntityIsOnTheField(targetEntity: TargetEntity): boolean {
@@ -36487,6 +37389,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Hostile
+   *
    * 是否敌对
    */
   queryIfFactionIsHostile(faction1: FactionValue, faction2: FactionValue): boolean {
@@ -36514,6 +37418,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Angle
+   *
    * 角度
    */
   radiansToDegrees(radian: FloatValue): number {
@@ -36539,6 +37445,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -36623,6 +37531,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -36722,6 +37632,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   tangentFunction(radian: FloatValue): number {
@@ -36750,6 +37662,8 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    * 单位状态
    *
    * @returns
+   *
+   * Has the Status
    *
    * 是否携带
    */
@@ -36788,6 +37702,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorAddition(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -36817,6 +37733,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 三维向量2
    *
    * @returns
+   *
+   * Angle (°)
    *
    * 夹角(角度)
    */
@@ -36848,6 +37766,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorCrossProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -36878,6 +37798,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorDotProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): number {
@@ -36905,6 +37827,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorModuloOperation(_3DVector: Vec3Value): number {
@@ -36930,6 +37854,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 三维向量
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -36959,6 +37885,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 旋转
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -36990,6 +37918,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorSubtraction(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -37020,6 +37950,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorZoom(zoomMultiplier: FloatValue, _3DVector: Vec3Value): vec3 {
@@ -37046,6 +37978,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -37078,6 +38012,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -37116,6 +38052,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arccosineFunction(input: FloatValue): number {
@@ -37141,6 +38079,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Radian
    *
    * 弧度
    */
@@ -37168,6 +38108,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arctangentFunction(input: FloatValue): number {
@@ -37193,6 +38135,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 键值对: 至多50个键值对
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -37612,6 +38556,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character ID
+   *
    * 角色编号
    */
   checkClassicModeCharacterId(targetCharacter: EntityValue): bigint {
@@ -37640,6 +38586,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 预设状态索引
    *
    * @returns
+   *
+   * Preset Status Value
    *
    * 预设状态值
    */
@@ -37671,6 +38619,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   cosineFunction(radian: FloatValue): number {
@@ -37699,6 +38649,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 值列表
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -37925,6 +38877,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * 3D Vector
+   *
    * 三维向量
    */
   create3dVector(xComponent: FloatValue, yComponent: FloatValue, zComponent: FloatValue): vec3 {
@@ -38006,6 +38960,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   degreesToRadians(angle: FloatValue): number {
@@ -38034,6 +38990,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 向上向量: 定义单位的上方向（用于确定旋转的旋转角度），默认值为世界坐标系Y轴正方向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -38064,6 +39022,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -38104,6 +39064,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 枚举2
    *
    * @returns Output True if equal, False if not equal
+   *
+   * Result
    *
    * 结果: 相等输出“是”，不相等输出“否”
    */
@@ -38226,6 +39188,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   equal(input1: FloatValue, input2: FloatValue): boolean
@@ -38311,6 +39275,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Filter Results
+   *
    * 筛选结果
    */
   filterEntityListWithinSphericalRange(
@@ -38360,6 +39326,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Filter Results
+   *
    * 筛选结果
    */
   filterEntityListWithinSquareRange(
@@ -38405,6 +39373,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getActiveCharacterOfSpecifiedPlayer(
@@ -38436,6 +39406,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity List
+   *
    * 实体列表
    */
   getAllEntitiesWithinTheCollisionTrigger(
@@ -38461,6 +39433,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 获取扫描组件可扫描的所有合法对象: 获取扫描组件可扫描的所有合法对象，此处的合法对象指代所有携带扫描组件且过滤器返回为“是”的单位，与单位的可扫描状态无关
    *
    * @returns
+   *
+   * Object List
    *
    * 对象列表
    */
@@ -38488,11 +39462,17 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
    *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
+   *
    * @returns
+   *
+   * Base Object
    *
    * 基准对象
    */
@@ -38525,6 +39505,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getCharacterEntityOfSpecifiedPlayer(
@@ -38555,6 +39537,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 数据列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -38696,6 +39680,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getCurrentCharacter(): clientEntity<'bool_filter', Mode> {
@@ -38716,6 +39702,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 获取当前客户端时间: 获取当前客户端的时间; 如需对玩家展示节点内容，奇匠应在简介等处提前告知玩家获取客户端时间后的相关效果
    *
    * @returns
+   *
+   * Client Time
    *
    * 客户端时间
    */
@@ -38860,6 +39848,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the hit results for the local always-visible cursor, including the On-Hit Entity List, On-Hit Position List, and number of hits. Only available in Beyond Mode.
+   *
    * 获取光标命中结果: 获取本机持久光标的命中结果，包含命中实体列表、命中位置列表与命中数量，仅在超限模式可用
    */
   getCursorHitResult(): {
@@ -38908,6 +39898,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the screen X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标屏幕坐标: 获取本机持久光标的屏幕坐标X与Y，仅在超限模式可用
    */
   getCursorScreenCoordinates(): {
@@ -38945,6 +39937,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the viewport X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标视口坐标: 获取本机持久光标的视口坐标X与Y，仅在超限模式可用
    */
   getCursorViewportCoordinates(): {
@@ -39061,6 +40055,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Location
+   *
    * 位置
    */
   getEntityLocation(entity: EntityValue): vec3 {
@@ -39086,6 +40082,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -39113,6 +40111,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Scan Tag Config ID
+   *
    * 扫描标签配置ID
    */
   getEntitySCurrentActiveScanTags(targetEntity: EntityValue): configId {
@@ -39138,6 +40138,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 目标实体
    *
    * @returns Options: Invisible, Current Scan Target, Candidate Target, Not Eligible
+   *
+   * Scan Status
    *
    * 扫描状态: 分为不可见、当前扫描目标、候选目标、不满足条件
    */
@@ -39165,6 +40167,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity Type
+   *
    * 实体类型
    */
   getEntitySType(targetEntity: EntityValue): EntityType {
@@ -39190,6 +40194,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -39223,6 +40229,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 输入列表
    *
    * @returns
+   *
+   * Length
    *
    * 长度
    */
@@ -39287,6 +40295,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Key List
+   *
    * 键列表
    */
   getListOfKeysFromDictionary<K extends DictKeyType, V extends DictValueType>(
@@ -39310,6 +40320,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 获取在场玩家实体列表: 获取在场所有玩家实体组成的列表
    *
    * @returns
+   *
+   * Player Entity List
    *
    * 玩家实体列表
    */
@@ -39335,6 +40347,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 字典
    *
    * @returns
+   *
+   * Value List
    *
    * 值列表
    */
@@ -39366,6 +40380,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Maximum Value
    *
    * 最大值
    */
@@ -39407,6 +40423,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Minimum Value
+   *
    * 最小值
    */
   getMinimumValueFromList(listValue: FloatValue[]): number
@@ -39441,6 +40459,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns Includes keyboard/mouse, gamepad, touchscreen
    *
+   * Input Device Type
+   *
    * 输入设备类型: 分为键盘鼠标、手柄、触屏
    */
   getPlayerClientInputDeviceType(): InputDeviceType {
@@ -39465,6 +40485,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 角色实体
    *
    * @returns
+   *
+   * Affiliated Player Entity
    *
    * 所属玩家实体
    */
@@ -39533,6 +40555,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character List
+   *
    * 角色列表
    */
   getPlayerSCharacterList(playerEntity: EntityValue): clientEntity<'bool_filter', Mode>[] {
@@ -39560,11 +40584,17 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
    *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
+   *
    * @returns
+   *
+   * Result Count
    *
    * 结果数量
    */
@@ -39598,9 +40628,13 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    *
    * @returns
    *
@@ -39635,9 +40669,13 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    */
   getPreAimingRayHitInfo(
     preAimingIndex: IntValue,
@@ -39691,9 +40729,13 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    */
   getPreAimingResult(
     preAimingIndex: IntValue,
@@ -39771,6 +40813,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   getPresetStatus(entity: EntityValue, presetStatusIndex: IntValue): bigint {
@@ -39800,6 +40844,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 上限
    *
    * @returns
+   *
+   * Random Number
    *
    * 随机数
    */
@@ -39929,6 +40975,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getRayFilterTypeList(types?: RayFilterType[]): RayFilterType[] {
@@ -39961,6 +41009,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Self Entity
+   *
    * 自身实体
    */
   getSelfEntity(): clientEntity<'bool_filter', Mode> {
@@ -39985,6 +41035,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 技能实例ID
    *
    * @returns
+   *
+   * Skill Config ID
    *
    * 技能配置ID
    */
@@ -40014,6 +41066,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 挂接点名称
    *
    * @returns
+   *
+   * Attachment Point Location
    *
    * 挂接点位置
    */
@@ -40045,6 +41099,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Attachment Point Rotation
+   *
    * 挂接点旋转
    */
   getTargetAttachmentPointRotation(targetEntity: EntityValue, attachmentPointName: StrValue): vec3 {
@@ -40067,6 +41123,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 获取目标实体: 获取目标实体，根据过滤器节点图被引用的功能模块不同，其指代含义会有区别
    *
    * @returns
+   *
+   * Target Entity
    *
    * 目标实体
    */
@@ -40092,6 +41150,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 单位实体
    *
    * @returns
+   *
+   * Attack Target Entity
    *
    * 攻击目标实体
    */
@@ -40143,9 +41203,13 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    *
    * @returns
    *
@@ -40185,6 +41249,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   greaterThan(input1: FloatValue, input2: FloatValue): boolean
@@ -40217,6 +41283,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -40251,6 +41319,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThan(input1: FloatValue, input2: FloatValue): boolean
@@ -40284,6 +41354,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -40316,6 +41388,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -40410,6 +41484,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalAndOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -40436,6 +41512,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 条件
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -40465,6 +41543,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 条件2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -40496,6 +41576,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalXorOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -40525,6 +41607,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -40562,6 +41646,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 朝向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -40619,6 +41705,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Length
+   *
    * 长度
    */
   queryDictionarySLength(dictionary: DictValue): bigint
@@ -40649,6 +41737,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Value
    *
    * 值
    */
@@ -40686,6 +41776,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity
+   *
    * 实体
    */
   queryEntityByGuid(gUID: GuidValue): clientEntity<'bool_filter', Mode> {
@@ -40712,6 +41804,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Faction
+   *
    * 阵营
    */
   queryEntityFaction(targetEntity: EntityValue): faction {
@@ -40737,6 +41831,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * GUID
    *
    * GUID
    */
@@ -40766,6 +41862,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -40800,6 +41898,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Include
+   *
    * 是否包含
    */
   queryIfDictionaryContainsSpecificValue<
@@ -40830,6 +41930,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * On the Field
+   *
    * 是否在场
    */
   queryIfEntityIsOnTheField(targetEntity: EntityValue): boolean {
@@ -40859,6 +41961,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Hostile
+   *
    * 是否敌对
    */
   queryIfFactionIsHostile(faction1: FactionValue, faction2: FactionValue): boolean {
@@ -40881,6 +41985,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 查询自身是否已入战: 查询该节点图关联的实体是否入战
    *
    * @returns
+   *
+   * In Combat
    *
    * 是否入战
    */
@@ -40972,6 +42078,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Skill Instance ID List
+   *
    * 技能实例ID列表
    */
   querySkillInstanceListBySpecifiedSlot(skillSlot: CharacterSkillSlot): bigint[] {
@@ -40999,6 +42107,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 仅支持字面量，不能连接其他节点的输出。
    *
    * @returns
+   *
+   * Variable Value
    *
    * 变量值
    */
@@ -41030,6 +42140,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Currently in Voice Chat?
+   *
    * 是否正在语音
    */
   queryWhetherPlayerIsCurrentlyInVoiceChat(playerEntity: EntityValue): boolean {
@@ -41055,6 +42167,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Angle
    *
    * 角度
    */
@@ -41143,6 +42257,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * World Coordinates
+   *
    * 世界坐标
    */
   screenCoordinatesToWorldCoordinates(
@@ -41174,6 +42290,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -41259,6 +42377,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   subtraction(input1: FloatValue, input2: FloatValue): number
@@ -41295,6 +42415,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -41377,6 +42499,8 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * 单位状态
    *
    * @returns
+   *
+   * Has the Status
    *
    * 是否携带
    */
@@ -41461,6 +42585,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorAddition(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -41490,6 +42616,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 三维向量2
    *
    * @returns
+   *
+   * Angle (°)
    *
    * 夹角(角度)
    */
@@ -41521,6 +42649,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorCrossProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -41551,6 +42681,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorDotProduct(_3DVector1: Vec3Value, _3DVector2: Vec3Value): number {
@@ -41578,6 +42710,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorModuloOperation(_3DVector: Vec3Value): number {
@@ -41603,6 +42737,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 三维向量
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -41632,6 +42768,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 旋转
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -41663,6 +42801,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Calculation Result
+   *
    * 计算结果
    */
   _3dVectorSubtraction(_3DVector1: Vec3Value, _3DVector2: Vec3Value): vec3 {
@@ -41693,6 +42833,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   _3dVectorZoom(zoomMultiplier: FloatValue, _3DVector: Vec3Value): vec3 {
@@ -41719,6 +42861,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -41751,6 +42895,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -41789,6 +42935,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arccosineFunction(input: FloatValue): number {
@@ -41814,6 +42962,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 输入
    *
    * @returns
+   *
+   * Radian
    *
    * 弧度
    */
@@ -41841,6 +42991,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   arctangentFunction(input: FloatValue): number {
@@ -41866,6 +43018,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 键值对: 至多50个键值对
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -42285,6 +43439,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character ID
+   *
    * 角色编号
    */
   checkClassicModeCharacterId(targetCharacter: EntityValue): bigint {
@@ -42313,6 +43469,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 预设状态索引
    *
    * @returns
+   *
+   * Preset Status Value
    *
    * 预设状态值
    */
@@ -42344,6 +43502,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   cosineFunction(radian: FloatValue): number {
@@ -42372,6 +43532,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 值列表
    *
    * @returns
+   *
+   * Dictionary
    *
    * 字典
    */
@@ -42598,6 +43760,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * 3D Vector
+   *
    * 三维向量
    */
   create3dVector(xComponent: FloatValue, yComponent: FloatValue, zComponent: FloatValue): vec3 {
@@ -42679,6 +43843,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Radian
+   *
    * 弧度
    */
   degreesToRadians(angle: FloatValue): number {
@@ -42707,6 +43873,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 向上向量: 定义单位的上方向（用于确定旋转的旋转角度），默认值为世界坐标系Y轴正方向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -42737,6 +43905,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -42777,6 +43947,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 枚举2
    *
    * @returns Output True if equal, False if not equal
+   *
+   * Result
    *
    * 结果: 相等输出“是”，不相等输出“否”
    */
@@ -42899,6 +44071,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   equal(input1: FloatValue, input2: FloatValue): boolean
@@ -42984,6 +44158,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Filter Results
+   *
    * 筛选结果
    */
   filterEntityListWithinSphericalRange(
@@ -43033,6 +44209,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Filter Results
+   *
    * 筛选结果
    */
   filterEntityListWithinSquareRange(
@@ -43078,6 +44256,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getActiveCharacterOfSpecifiedPlayer(playerEntity: EntityValue): clientEntity<'int_filter', Mode> {
@@ -43107,6 +44287,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity List
+   *
    * 实体列表
    */
   getAllEntitiesWithinTheCollisionTrigger(
@@ -43132,6 +44314,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 获取扫描组件可扫描的所有合法对象: 获取扫描组件可扫描的所有合法对象，此处的合法对象指代所有携带扫描组件且过滤器返回为“是”的单位，与单位的可扫描状态无关
    *
    * @returns
+   *
+   * Object List
    *
    * 对象列表
    */
@@ -43159,11 +44343,17 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
    *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
+   *
    * @returns
+   *
+   * Base Object
    *
    * 基准对象
    */
@@ -43196,6 +44386,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getCharacterEntityOfSpecifiedPlayer(playerEntity: EntityValue): clientEntity<'int_filter', Mode> {
@@ -43224,6 +44416,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 数据列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -43365,6 +44559,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getCurrentCharacter(): clientEntity<'int_filter', Mode> {
@@ -43385,6 +44581,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 获取当前客户端时间: 获取当前客户端的时间; 如需对玩家展示节点内容，奇匠应在简介等处提前告知玩家获取客户端时间后的相关效果
    *
    * @returns
+   *
+   * Client Time
    *
    * 客户端时间
    */
@@ -43529,6 +44727,8 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the hit results for the local always-visible cursor, including the On-Hit Entity List, On-Hit Position List, and number of hits. Only available in Beyond Mode.
+   *
    * 获取光标命中结果: 获取本机持久光标的命中结果，包含命中实体列表、命中位置列表与命中数量，仅在超限模式可用
    */
   getCursorHitResult(): {
@@ -43577,6 +44777,8 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the screen X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标屏幕坐标: 获取本机持久光标的屏幕坐标X与Y，仅在超限模式可用
    */
   getCursorScreenCoordinates(): {
@@ -43614,6 +44816,8 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
+   * Retrieves the viewport X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.
+   *
    * 获取光标视口坐标: 获取本机持久光标的视口坐标X与Y，仅在超限模式可用
    */
   getCursorViewportCoordinates(): {
@@ -43730,6 +44934,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Location
+   *
    * 位置
    */
   getEntityLocation(entity: EntityValue): vec3 {
@@ -43755,6 +44961,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -43782,6 +44990,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Scan Tag Config ID
+   *
    * 扫描标签配置ID
    */
   getEntitySCurrentActiveScanTags(targetEntity: EntityValue): configId {
@@ -43807,6 +45017,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 目标实体
    *
    * @returns Options: Invisible, Current Scan Target, Candidate Target, Not Eligible
+   *
+   * Scan Status
    *
    * 扫描状态: 分为不可见、当前扫描目标、候选目标、不满足条件
    */
@@ -43834,6 +45046,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity Type
+   *
    * 实体类型
    */
   getEntitySType(targetEntity: EntityValue): EntityType {
@@ -43859,6 +45073,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 类型0~9: 使用源码数组提供类型，元素可以连线，至多10个；省略时使用编辑器默认值
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -43892,6 +45108,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 输入列表
    *
    * @returns
+   *
+   * Length
    *
    * 长度
    */
@@ -43956,6 +45174,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Key List
+   *
    * 键列表
    */
   getListOfKeysFromDictionary<K extends DictKeyType, V extends DictValueType>(
@@ -43979,6 +45199,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 获取在场玩家实体列表: 获取在场所有玩家实体组成的列表
    *
    * @returns
+   *
+   * Player Entity List
    *
    * 玩家实体列表
    */
@@ -44004,6 +45226,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 字典
    *
    * @returns
+   *
+   * Value List
    *
    * 值列表
    */
@@ -44035,6 +45259,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Maximum Value
    *
    * 最大值
    */
@@ -44076,6 +45302,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Minimum Value
+   *
    * 最小值
    */
   getMinimumValueFromList(listValue: FloatValue[]): number
@@ -44110,6 +45338,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns Includes keyboard/mouse, gamepad, touchscreen
    *
+   * Input Device Type
+   *
    * 输入设备类型: 分为键盘鼠标、手柄、触屏
    */
   getPlayerClientInputDeviceType(): InputDeviceType {
@@ -44134,6 +45364,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 角色实体
    *
    * @returns
+   *
+   * Affiliated Player Entity
    *
    * 所属玩家实体
    */
@@ -44202,6 +45434,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Character List
+   *
    * 角色列表
    */
   getPlayerSCharacterList(playerEntity: EntityValue): clientEntity<'int_filter', Mode>[] {
@@ -44229,11 +45463,17 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
    *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
+   *
    * @returns
+   *
+   * Result Count
    *
    * 结果数量
    */
@@ -44267,9 +45507,13 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    *
    * @returns
    *
@@ -44304,9 +45548,13 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    */
   getPreAimingRayHitInfo(
     preAimingIndex: IntValue,
@@ -44360,9 +45608,13 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    */
   getPreAimingResult(
     preAimingIndex: IntValue,
@@ -44440,6 +45692,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   getPresetStatus(entity: EntityValue, presetStatusIndex: IntValue): bigint {
@@ -44469,6 +45723,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 上限
    *
    * @returns
+   *
+   * Random Number
    *
    * 随机数
    */
@@ -44598,6 +45854,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * List
+   *
    * 列表
    */
   getRayFilterTypeList(types?: RayFilterType[]): RayFilterType[] {
@@ -44630,6 +45888,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Self Entity
+   *
    * 自身实体
    */
   getSelfEntity(): clientEntity<'int_filter', Mode> {
@@ -44654,6 +45914,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 技能实例ID
    *
    * @returns
+   *
+   * Skill Config ID
    *
    * 技能配置ID
    */
@@ -44683,6 +45945,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 挂接点名称
    *
    * @returns
+   *
+   * Attachment Point Location
    *
    * 挂接点位置
    */
@@ -44714,6 +45978,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Attachment Point Rotation
+   *
    * 挂接点旋转
    */
   getTargetAttachmentPointRotation(targetEntity: EntityValue, attachmentPointName: StrValue): vec3 {
@@ -44736,6 +46002,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 获取目标实体: 获取目标实体，根据过滤器节点图被引用的功能模块不同，其指代含义会有区别
    *
    * @returns
+   *
+   * Target Entity
    *
    * 目标实体
    */
@@ -44761,6 +46029,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 单位实体
    *
    * @returns
+   *
+   * Attack Target Entity
    *
    * 攻击目标实体
    */
@@ -44812,9 +46082,13 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 预瞄准序号
    * @param resultDataType
    *
+   * GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.
+   *
    * Get Type
    *
    * 获取类型
+   *
+   * GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。
    *
    * @returns
    *
@@ -44854,6 +46128,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   greaterThan(input1: FloatValue, input2: FloatValue): boolean
@@ -44886,6 +46162,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -44920,6 +46198,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThan(input1: FloatValue, input2: FloatValue): boolean
@@ -44953,6 +46233,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   lessThanOrEqualTo(input1: FloatValue, input2: FloatValue): boolean
@@ -44985,6 +46267,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 列表
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -45079,6 +46363,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalAndOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -45105,6 +46391,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 条件
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -45134,6 +46422,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 条件2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -45165,6 +46455,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   logicalXorOperation(condition1: BoolValue, condition2: BoolValue): boolean {
@@ -45194,6 +46486,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * input2
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -45231,6 +46525,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 朝向
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -45288,6 +46584,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Length
+   *
    * 长度
    */
   queryDictionarySLength(dictionary: DictValue): bigint
@@ -45318,6 +46616,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Value
    *
    * 值
    */
@@ -45355,6 +46655,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Entity
+   *
    * 实体
    */
   queryEntityByGuid(gUID: GuidValue): clientEntity<'int_filter', Mode> {
@@ -45381,6 +46683,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Faction
+   *
    * 阵营
    */
   queryEntityFaction(targetEntity: EntityValue): faction {
@@ -45406,6 +46710,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 实体
    *
    * @returns
+   *
+   * GUID
    *
    * GUID
    */
@@ -45435,6 +46741,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 键
    *
    * @returns
+   *
+   * Include
    *
    * 是否包含
    */
@@ -45469,6 +46777,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Include
+   *
    * 是否包含
    */
   queryIfDictionaryContainsSpecificValue<
@@ -45499,6 +46809,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * On the Field
+   *
    * 是否在场
    */
   queryIfEntityIsOnTheField(targetEntity: EntityValue): boolean {
@@ -45528,6 +46840,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Hostile
+   *
    * 是否敌对
    */
   queryIfFactionIsHostile(faction1: FactionValue, faction2: FactionValue): boolean {
@@ -45550,6 +46864,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 查询自身是否已入战: 查询该节点图关联的实体是否入战
    *
    * @returns
+   *
+   * In Combat
    *
    * 是否入战
    */
@@ -45641,6 +46957,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Skill Instance ID List
+   *
    * 技能实例ID列表
    */
   querySkillInstanceListBySpecifiedSlot(skillSlot: CharacterSkillSlot): bigint[] {
@@ -45668,6 +46986,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 仅支持字面量，不能连接其他节点的输出。
    *
    * @returns
+   *
+   * Variable Value
    *
    * 变量值
    */
@@ -45699,6 +47019,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Currently in Voice Chat?
+   *
    * 是否正在语音
    */
   queryWhetherPlayerIsCurrentlyInVoiceChat(playerEntity: EntityValue): boolean {
@@ -45724,6 +47046,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Angle
    *
    * 角度
    */
@@ -45812,6 +47136,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * World Coordinates
+   *
    * 世界坐标
    */
   screenCoordinatesToWorldCoordinates(
@@ -45843,6 +47169,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -45928,6 +47256,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * @returns
    *
+   * Result
+   *
    * 结果
    */
   subtraction(input1: FloatValue, input2: FloatValue): number
@@ -45964,6 +47294,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 弧度
    *
    * @returns
+   *
+   * Result
    *
    * 结果
    */
@@ -46046,6 +47378,8 @@ export class ClientIntFilterExecutionFlowFunctions<
    * 单位状态
    *
    * @returns
+   *
+   * Has the Status
    *
    * 是否携带
    */
@@ -46134,11 +47468,15 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   readonly activeCharacter: clientEntity<T, Mode>
 
   /**
+   * Adds temporary Acceleration. If the Vehicle is grounded, Acceleration is added only along the ground plane (its planar component)
+   *
    * 添加临时加速度: 添加临时加速度，若载具处于接地状态，则只会受到地面所在平面的加速度（在平面上的分量）。
    *
    * @param acceleration
@@ -46215,6 +47553,8 @@ export interface ClientEntityHelperMethods<
   addUnitStatus(stacks: IntValue, unitStatusConfigID: ConfigIdValue): void
 
   /**
+   * Adds Temporary Speed. If the Vehicle is grounded, Speed is added only along the ground plane (its planar component); The added Speed persists even after the Duration expires
+   *
    * Add Acceleration
    *
    * 添加速度: 添加临时速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承
@@ -46242,6 +47582,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Aggro List
+   *
    * 仇恨列表
    */
   aggroList(): clientEntity<T, Mode>[]
@@ -46252,6 +47594,8 @@ export interface ClientEntityHelperMethods<
    * 获取指定实体的仇恨目标: 仅自定义仇恨模式可用; 获取指定实体的仇恨目标
    *
    * @returns
+   *
+   * Aggro Target
    *
    * 仇恨目标
    */
@@ -46264,6 +47608,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Character List
+   *
    * 角色列表
    */
   readonly characters: clientEntity<T, Mode>[]
@@ -46274,6 +47620,8 @@ export interface ClientEntityHelperMethods<
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览
    *
    * @returns
+   *
+   * Character ID
    *
    * 角色编号
    */
@@ -46290,6 +47638,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   checkThePresetStatusValueOfTheComplexCreation(presetStatusIndex: IntValue): bigint
@@ -46300,6 +47650,8 @@ export interface ClientEntityHelperMethods<
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览
    *
    * @returns
+   *
+   * Character ID
    *
    * 角色编号
    */
@@ -46320,6 +47672,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Target Entity
+   *
    * 目标实体
    */
   readonly currentTarget: clientEntity<T, Mode>
@@ -46330,6 +47684,8 @@ export interface ClientEntityHelperMethods<
    * 查询实体阵营: 查询目标实体的阵营
    *
    * @returns
+   *
+   * Faction
    *
    * 阵营
    */
@@ -46363,11 +47719,15 @@ export interface ClientEntityHelperMethods<
   ): void
 
   /**
+   * Returns the forward direction vector of the specified control motion device
+   *
    * Get Control Motion Device's Forward Direction
    *
    * 获取操控运动器前向: 获取指定操控运动器的前向方向向量
    *
    * @returns
+   *
+   * Forward Direction
    *
    * 前向
    */
@@ -46395,6 +47755,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Character Entity
+   *
    * 角色实体
    */
   getActiveCharacterOfSpecifiedPlayer(): clientEntity<T, Mode>
@@ -46410,6 +47772,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Entity List
+   *
    * 实体列表
    */
   getAllEntitiesWithinTheCollisionTrigger(triggerID: IntValue): clientEntity<T, Mode>[]
@@ -46420,6 +47784,8 @@ export interface ClientEntityHelperMethods<
    * 获取指定玩家的角色实体: 获取指定玩家实体的角色实体
    *
    * @returns
+   *
+   * Character Entity
    *
    * 角色实体
    */
@@ -46449,11 +47815,15 @@ export interface ClientEntityHelperMethods<
   }
 
   /**
+   * Returns the forward direction vector of the specified control motion device
+   *
    * Get Control Motion Device's Forward Direction
    *
    * 获取操控运动器前向: 获取指定操控运动器的前向方向向量
    *
    * @returns
+   *
+   * Forward Direction
    *
    * 前向
    */
@@ -46513,6 +47883,8 @@ export interface ClientEntityHelperMethods<
   }
 
   /**
+   * Returns the target steering direction of the control motion device (the movement joystick input converted into the control motion device's target steering direction)
+   *
    * Get Control Motion Device's Target Turn Direction
    *
    * 获取操控运动器目标转向方向: 获取操控运动器目标转向方向（移动轮盘输入后，转换成操控运动器的目标转向）
@@ -46531,6 +47903,8 @@ export interface ClientEntityHelperMethods<
    * 获取造物当前目标: 返回指定造物当前的目标
    *
    * @returns
+   *
+   * Target Entity
    *
    * 目标实体
    */
@@ -46558,6 +47932,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Location
+   *
    * 位置
    */
   getEntityLocation(): vec3
@@ -46568,6 +47944,8 @@ export interface ClientEntityHelperMethods<
    * 获取实体旋转: 获取指定实体以欧拉角表示的旋转
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -46580,6 +47958,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Scan Tag Config ID
+   *
    * 扫描标签配置ID
    */
   getEntitySCurrentActiveScanTags(): configId
@@ -46590,6 +47970,8 @@ export interface ClientEntityHelperMethods<
    * 获取实体扫描状态: 获取实体扫描状态
    *
    * @returns Options: Invisible, Current Scan Target, Candidate Target, Not Eligible
+   *
+   * Scan Status
    *
    * 扫描状态: 分为不可见、当前扫描目标、候选目标、不满足条件
    */
@@ -46602,6 +47984,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Entity Type
+   *
    * 实体类型
    */
   getEntitySType(): EntityType
@@ -46612,6 +47996,8 @@ export interface ClientEntityHelperMethods<
    * 获取实体的单位标签列表: 获取目标实体上携带的所有单位标签组成的列表
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -46624,6 +48010,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Affiliated Player Entity
+   *
    * 所属玩家实体
    */
   getPlayerEntityToWhichTheCharacterBelongs(): clientEntity<T, Mode>
@@ -46634,6 +48022,8 @@ export interface ClientEntityHelperMethods<
    * 获取玩家的角色列表: 仅经典模式可用，获取玩家队伍内的角色列表
    *
    * @returns
+   *
+   * Character List
    *
    * 角色列表
    */
@@ -46650,6 +48040,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Preset Status Value
+   *
    * 预设状态值
    */
   getPreset(presetStatusIndex: IntValue): bigint
@@ -46664,6 +48056,8 @@ export interface ClientEntityHelperMethods<
    * 预设状态索引
    *
    * @returns
+   *
+   * Preset Status Value
    *
    * 预设状态值
    */
@@ -46722,6 +48116,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Sub-Entity List
+   *
    * 子实体列表
    */
   getSubEntityList(): clientEntity<T, Mode>[]
@@ -46736,6 +48132,8 @@ export interface ClientEntityHelperMethods<
    * 挂接点名称
    *
    * @returns
+   *
+   * Attachment Point Location
    *
    * 挂接点位置
    */
@@ -46752,6 +48150,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Attachment Point Rotation
+   *
    * 挂接点旋转
    */
   getTargetAttachmentPointRotation(attachmentPointName: StrValue): vec3
@@ -46762,6 +48162,8 @@ export interface ClientEntityHelperMethods<
    * 获取指定实体的仇恨列表: 仅自定义仇恨模式可用; 获取指定实体的仇恨列表
    *
    * @returns
+   *
+   * Aggro List
    *
    * 仇恨列表
    */
@@ -46774,6 +48176,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Aggro Target
+   *
    * 仇恨目标
    */
   getTheAggroTargetOfTheSpecifiedEntity(): clientEntity<T, Mode>
@@ -46784,6 +48188,8 @@ export interface ClientEntityHelperMethods<
    * 获取单位攻击目标: 获取单位实体当前正在攻击的目标实体
    *
    * @returns
+   *
+   * Attack Target Entity
    *
    * 攻击目标实体
    */
@@ -46798,6 +48204,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Grounded
+   *
    * 是否接地
    */
   getWhetherControlMotorIsGrounded(): boolean
@@ -46808,6 +48216,8 @@ export interface ClientEntityHelperMethods<
    * 以实体查询GUID: 查询指定实体的GUID
    *
    * @returns
+   *
+   * GUID
    *
    * GUID
    */
@@ -46823,6 +48233,8 @@ export interface ClientEntityHelperMethods<
    * 单位状态
    *
    * @returns
+   *
+   * Has the Status
    *
    * 是否携带
    */
@@ -46852,6 +48264,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns Includes keyboard/mouse, gamepad, touchscreen
    *
+   * Input Device Type
+   *
    * 输入设备类型: 分为键盘鼠标、手柄、触屏
    */
   readonly inputDevice: InputDeviceType
@@ -46862,6 +48276,8 @@ export interface ClientEntityHelperMethods<
    * 查询指定实体是否入战: 仅自定义仇恨模式可用; 查询指定实体是否已经入战
    *
    * @returns
+   *
+   * In Combat
    *
    * 是否入战
    */
@@ -46874,6 +48290,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * On the Field
+   *
    * 是否在场
    */
   isOnField(): boolean
@@ -46884,6 +48302,8 @@ export interface ClientEntityHelperMethods<
    * 获取角色归属的玩家实体: 获取角色实体所归属的玩家实体
    *
    * @returns
+   *
+   * Affiliated Player Entity
    *
    * 所属玩家实体
    */
@@ -46896,6 +48316,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Location
+   *
    * 位置
    */
   readonly pos: vec3
@@ -46906,6 +48328,8 @@ export interface ClientEntityHelperMethods<
    * 查询实体阵营: 查询目标实体的阵营
    *
    * @returns
+   *
+   * Faction
    *
    * 阵营
    */
@@ -46919,6 +48343,8 @@ export interface ClientEntityHelperMethods<
    * @returns
    *
    * GUID
+   *
+   * GUID
    */
   queryGuidByEntity(): guid
 
@@ -46928,6 +48354,8 @@ export interface ClientEntityHelperMethods<
    * 查询实体是否在场: 查询指定实体是否在场; 注意角色实体即使处于倒下状态，仍然认为在场
    *
    * @returns
+   *
+   * On the Field
    *
    * 是否在场
    */
@@ -46940,6 +48368,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * In Combat
+   *
    * 是否入战
    */
   queryIfSpecifiedEntityIsInCombat(): boolean
@@ -46950,6 +48380,8 @@ export interface ClientEntityHelperMethods<
    * 查询玩家是否正在语音聊天: 当检测到该玩家客户端有麦克风输入时，会返回是; 注意该节点必须在多人游戏(多人试玩、多人正式游玩)中逻辑才会生效，单人游戏(单人试玩、单人正式游玩)均不会生效
    *
    * @returns
+   *
+   * Currently in Voice Chat?
    *
    * 是否正在语音
    */
@@ -47028,6 +48460,8 @@ export interface ClientEntityHelperMethods<
    * 获取实体旋转: 获取指定实体以欧拉角表示的旋转
    *
    * @returns
+   *
+   * Rotate
    *
    * 旋转
    */
@@ -47261,6 +48695,8 @@ export interface ClientEntityHelperMethods<
    *
    * @returns
    *
+   * Entity Type
+   *
    * 实体类型
    */
   readonly type: EntityType
@@ -47271,6 +48707,8 @@ export interface ClientEntityHelperMethods<
    * 获取实体的单位标签列表: 获取目标实体上携带的所有单位标签组成的列表
    *
    * @returns
+   *
+   * List
    *
    * 列表
    */
@@ -47286,6 +48724,8 @@ export interface ClientEntityHelperMethods<
    * 单位状态
    *
    * @returns
+   *
+   * Has the Status
    *
    * 是否携带
    */

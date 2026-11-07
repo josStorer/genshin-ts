@@ -1090,7 +1090,7 @@
     ],
     "returns": null,
     "docs": {
-      "en": "",
+      "en": "Adds temporary Acceleration. If the Vehicle is grounded, Acceleration is added only along the ground plane (its planar component)",
       "zh": "添加临时加速度，若载具处于接地状态，则只会受到地面所在平面的加速度（在平面上的分量）。"
     },
     "modes": [
@@ -1274,7 +1274,7 @@
     ],
     "returns": null,
     "docs": {
-      "en": "",
+      "en": "Adds Temporary Speed. If the Vehicle is grounded, Speed is added only along the ground plane (its planar component); The added Speed persists even after the Duration expires",
       "zh": "添加临时速度，若载具处于接地状态，则只会添加地面所在平面的速度（在平面上的分量）; 添加的速度会在持续时间结束后仍然继承"
     },
     "modes": [
@@ -4191,7 +4191,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Returns the forward direction vector of the specified control motion device",
       "zh": "获取指定操控运动器的前向方向向量"
     },
     "modes": [
@@ -4305,7 +4305,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Returns the target steering direction of the control motion device (the movement joystick input converted into the control motion device's target steering direction)",
       "zh": "获取操控运动器目标转向方向（移动轮盘输入后，转换成操控运动器的目标转向）"
     },
     "modes": [
@@ -4952,7 +4952,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Retrieves the hit results for the local always-visible cursor, including the On-Hit Entity List, On-Hit Position List, and number of hits. Only available in Beyond Mode.",
       "zh": "获取本机持久光标的命中结果，包含命中实体列表、命中位置列表与命中数量，仅在超限模式可用"
     },
     "modes": [
@@ -5018,7 +5018,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Retrieves the screen X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.",
       "zh": "获取本机持久光标的屏幕坐标X与Y，仅在超限模式可用"
     },
     "modes": [
@@ -5084,7 +5084,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Retrieves the viewport X and Y coordinates of the local always-visible cursor. Only available in Beyond Mode.",
       "zh": "获取本机持久光标的视口坐标X与Y，仅在超限模式可用"
     },
     "modes": [
@@ -6857,7 +6857,7 @@
       }
     ],
     "docs": {
-      "en": "",
+      "en": "Obtain the Tactic executed by Creations in the previous frame",
       "zh": "获取造物前一帧执行的战术"
     },
     "modes": [

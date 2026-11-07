@@ -665,6 +665,40 @@ function alignSection(
   return { matches, unresolvedZh: zhPool, unresolvedEn: enPool }
 }
 
+/** Pins added in 7.2 that the seeds do not list. */
+const SEED_PARAM_FALLBACK: Record<string, string> = { 获取类型: 'Result Data Type' }
+
+/**
+ * Match for a seeded zh entry. When the en page has an entry under the seeded
+ * name (alignment left it unpaired because its pins differ), its description is kept.
+ */
+function seedMatch(
+  zh: DocNodeEntry,
+  seed: (typeof ZH_ONLY_SEED)[string],
+  enEntries: DocNodeEntry[]
+): SectionMatch {
+  const en = enEntries.find((entry) => canonicalEnName(entry.name) === canonicalEnName(seed.en))
+  return {
+    zh,
+    en: {
+      page: zh.page,
+      section: zh.section,
+      name: seed.en,
+      functions: en?.functions ?? [],
+      params: zh.params.map((p) => {
+        const name = seed.params?.[p.name] ?? SEED_PARAM_FALLBACK[p.name] ?? ''
+        return {
+          io: p.io,
+          name,
+          dataType: p.dataType,
+          description: en?.params.find((param) => param.name === name)?.description ?? ''
+        }
+      })
+    },
+    provenance: 'seed'
+  }
+}
+
 export function buildDocNameAlignment(defsPath = 'resources/node_definitions.json'): DocAlignment {
   const defs = JSON.parse(fs.readFileSync(defsPath, 'utf8')) as Record<string, unknown>
 
@@ -690,23 +724,7 @@ export function buildDocNameAlignment(defsPath = 'resources/node_definitions.jso
       zhOnlyPages.push({ page: slug, entries: zhAll.length })
       for (const zh of zhAll) {
         const seed = ZH_ONLY_SEED[zh.name]
-        if (!seed) continue
-        allMatches.push({
-          zh,
-          en: {
-            page: zh.page,
-            section: zh.section,
-            name: seed.en,
-            functions: [],
-            params: zh.params.map((p) => ({
-              io: p.io,
-              name: seed.params?.[p.name] ?? '',
-              dataType: p.dataType,
-              description: ''
-            }))
-          },
-          provenance: 'seed'
-        })
+        if (seed) allMatches.push(seedMatch(zh, seed, []))
       }
       continue
     }
@@ -738,22 +756,7 @@ export function buildDocNameAlignment(defsPath = 'resources/node_definitions.jso
         // new pins. Keep the reviewed Chinese-name mapping for these entries.
         const seed = ZH_ONLY_SEED[zh.name]
         if (seed) {
-          allMatches.push({
-            zh,
-            en: {
-              page: zh.page,
-              section: zh.section,
-              name: seed.en,
-              functions: [],
-              params: zh.params.map((p) => ({
-                io: p.io,
-                name: seed.params?.[p.name] ?? (p.name === '获取类型' ? 'Result Data Type' : ''),
-                dataType: p.dataType,
-                description: ''
-              }))
-            },
-            provenance: 'seed'
-          })
+          allMatches.push(seedMatch(zh, seed, enAll))
           continue
         }
         unresolved.push({

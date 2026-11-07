@@ -993,7 +993,15 @@ function buildMethodSpec(
       reflective: false,
       connectable: b.pin.connectable !== false,
       ...(enumClass ? { enumClass } : {}),
-      ...(enumClass === 'PreAimResultDataType' ? { optional: true } : {}),
+      // 7.2 added this pin to the existing pre-aim queries; calls written before it stay valid.
+      ...(enumClass === 'PreAimResultDataType'
+        ? {
+            optional: true,
+            noteEn:
+              'GSTS Note: May be omitted; the editor default PreAimResultDataType.Default is used.',
+            noteZh: 'GSTS 注: 可省略，省略时使用编辑器默认值 PreAimResultDataType.Default（默认）。'
+          }
+        : {}),
       editorNameEn: officialNameEn || '',
       docEnName: b.doc.en.name,
       docEnDesc: sanitizeDocText(b.doc.en.description),
@@ -1183,10 +1191,8 @@ function buildJsdoc(spec: MethodSpec): string {
     lines.push('')
     const r = spec.returns[0]
     lines.push(`@returns${r.docEnDesc ? ` ${r.docEnDesc}` : ''}`)
-    if (
-      r.editorNameEn &&
-      normalizedEditorLabel(r.editorNameEn) !== normalizedEditorLabel(r.ident)
-    ) {
+    // A single return has no visible name, so its English label is always worth showing.
+    if (r.editorNameEn) {
       lines.push('')
       lines.push(r.editorNameEn)
     }
@@ -1562,7 +1568,7 @@ function controlFlowJsdoc(
     editorNameEn?: string
     literalOnly?: boolean
   }>,
-  returns?: { en: string; zh: string }
+  returns?: { en: string; label?: string; zh: string }
 ): string {
   const lines: string[] = []
   const enDocs = sanitizeDocText(doc?.en.functions.join('; ') ?? '')
@@ -1592,6 +1598,10 @@ function controlFlowJsdoc(
   if (returns) {
     lines.push('')
     lines.push(`@returns${returns.en ? ` ${returns.en}` : ''}`)
+    if (returns.label) {
+      lines.push('')
+      lines.push(returns.label)
+    }
     lines.push('')
     lines.push(returns.zh)
   }
@@ -2238,11 +2248,12 @@ function docParamTextByZhName(
 function docReturnText(
   doc: AlignedDocNode | undefined,
   zhFallback: string
-): { en: string; zh: string } {
+): { en: string; label: string; zh: string } {
   const zh = doc?.zh.params.find((p) => p.io === 'out')
   const en = doc?.en.params.find((p) => p.io === 'out')
   return {
     en: sanitizeDocText(en?.description ?? ''),
+    label: en?.name ?? '',
     zh: zh
       ? `${zh.name}${zh.description ? `: ${sanitizeDocText(zh.description)}` : ''}`
       : zhFallback
