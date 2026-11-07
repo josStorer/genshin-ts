@@ -262,7 +262,7 @@ export interface HostEnums {
      */
     readonly PlayerSelf: CustomVariableEntityType
     /**
-     * Character itself
+     * Character/Avatar Itself
      *
      * 角色自身
      */
@@ -543,49 +543,49 @@ export interface HostEnums {
    */
   readonly CursorEventType: {
     /**
-     * Cursor Down
+     * When the cursor is pressed down
      *
      * 光标按下
      */
     readonly CursorDown: CursorEventType
     /**
-     * Cursor Up
+     * When the cursor is released
      *
      * 光标抬起
      */
     readonly CursorUp: CursorEventType
     /**
-     * Cursor Enters Detection Area
+     * Cursor enters detection area
      *
      * 光标进入检测区域
      */
     readonly CursorEnter: CursorEventType
     /**
-     * Cursor Leaves Detection Area
+     * Cursor leaves detection area
      *
      * 光标离开检测区域
      */
     readonly CursorExit: CursorEventType
     /**
-     * Cursor Drag
+     * Cursor drag
      *
      * 光标拖拽
      */
     readonly CursorDrag: CursorEventType
     /**
-     * Begin Drag
+     * Begin drag
      *
      * 开始拖拽
      */
     readonly CursorBeginDrag: CursorEventType
     /**
-     * End Drag
+     * End drag
      *
      * 结束拖拽
      */
     readonly CursorEndDrag: CursorEventType
     /**
-     * Complete Press
+     * Cursor click completed
      *
      * 完成点击
      */
@@ -598,13 +598,13 @@ export interface HostEnums {
    */
   readonly ScrollDirection: {
     /**
-     * Horizontal Scroll
+     * Horizontal scroll
      *
      * 水平滚动
      */
     readonly Horizontal: ScrollDirection
     /**
-     * Vertical Scroll
+     * Vertical scroll
      *
      * 垂直滚动
      */
@@ -617,13 +617,13 @@ export interface HostEnums {
    */
   readonly ScrollLayoutConstraint: {
     /**
-     * Auto Wrap Layout
+     * Auto wrap layout
      *
      * 自动换行布局
      */
     readonly AutoWrap: ScrollLayoutConstraint
     /**
-     * Fixed Row/Column Layout
+     * Fixed row/column layout
      *
      * 固定行数或列数布局
      */
@@ -636,19 +636,19 @@ export interface HostEnums {
    */
   readonly ScrollAlignType: {
     /**
-     * Align Bottom
+     * Bottom alignment
      *
      * 底部对齐
      */
     readonly Bottom: ScrollAlignType
     /**
-     * Center Alignment
+     * Center alignment
      *
      * 居中对齐
      */
     readonly Center: ScrollAlignType
     /**
-     * Align Top
+     * Top alignment
      *
      * 顶部对齐
      */
@@ -710,55 +710,55 @@ export interface HostEnums {
      */
     readonly Focus: ControllerNavigationEventType
     /**
-     * Lose focus
+     * Lost focus
      *
      * 退出聚焦
      */
     readonly LostFocus: ControllerNavigationEventType
     /**
-     * Right Stick Up
+     * Right stick up
      *
      * 右摇杆向上
      */
     readonly RightStickUp: ControllerNavigationEventType
     /**
-     * Right Stick Down
+     * Right stick down
      *
      * 右摇杆向下
      */
     readonly RightStickDown: ControllerNavigationEventType
     /**
-     * Right Stick Right
+     * Right stick right
      *
      * 右摇杆向右
      */
     readonly RightStickRight: ControllerNavigationEventType
     /**
-     * Right Stick Left
+     * Right stick left
      *
      * 右摇杆向左
      */
     readonly RightStickLeft: ControllerNavigationEventType
     /**
-     * Left Stick Up
+     * Left stick up
      *
      * 左摇杆向上
      */
     readonly LeftStickUp: ControllerNavigationEventType
     /**
-     * Left Stick Down
+     * Left stick down
      *
      * 左摇杆向下
      */
     readonly LeftStickDown: ControllerNavigationEventType
     /**
-     * Left Stick Right
+     * Left stick right
      *
      * 左摇杆向右
      */
     readonly LeftStickRight: ControllerNavigationEventType
     /**
-     * Left Stick Left
+     * Left stick left
      *
      * 左摇杆向左
      */
@@ -777,13 +777,13 @@ export interface HostEnums {
      */
     readonly None: ControllerNavigationMode
     /**
-     * Navigate to Nearest UI Control
+     * Navigate to nearest UI control
      *
      * 导航至最近控件
      */
     readonly NearestControl: ControllerNavigationMode
     /**
-     * Navigate to Specified UI Control
+     * Navigate to specified UI control
      *
      * 导航至指定控件
      */
@@ -802,13 +802,13 @@ export interface HostEnums {
      */
     readonly Left: TextHorizontalAlignment
     /**
-     * Center (Horizontal)
+     * Center (Horizontal) alignment
      *
      * 水平居中
      */
     readonly Middle: TextHorizontalAlignment
     /**
-     * Right Alignment
+     * Right alignment
      *
      * 右对齐
      */
@@ -821,19 +821,19 @@ export interface HostEnums {
    */
   readonly TextVerticalAlignment: {
     /**
-     * Align Top
+     * Top alignment
      *
      * 顶部对齐
      */
     readonly Top: TextVerticalAlignment
     /**
-     * Center (Vertical)
+     * Center alignment
      *
      * 垂直居中
      */
     readonly Middle: TextVerticalAlignment
     /**
-     * Align Bottom
+     * Bottom alignment
      *
      * 底部对齐
      */
@@ -865,7 +865,7 @@ export interface HostEnums {
    */
   readonly ImageSource: {
     /**
-     * Static Reference
+     * Static reference
      *
      * 静态引用
      */
@@ -883,13 +883,13 @@ export interface HostEnums {
      */
     readonly Equipment: ImageSource
     /**
-     * Skills
+     * Skill
      *
      * 技能
      */
     readonly Skill: ImageSource
     /**
-     * Unit Status
+     * Unit status
      *
      * 单位状态
      */
@@ -920,7 +920,7 @@ export interface HostEnums {
    */
   readonly ImageFillType: {
     /**
-     * No Fill
+     * No fill
      *
      * 不使用填充
      */
@@ -963,13 +963,13 @@ export interface HostEnums {
    */
   readonly ImageFillHorizontalType: {
     /**
-     * Starts from the Left
+     * Start from the left
      *
      * 从左侧开始
      */
     readonly Left: ImageFillHorizontalType
     /**
-     * Starts from the Right
+     * Start from the right
      *
      * 从右侧开始
      */
@@ -982,13 +982,13 @@ export interface HostEnums {
    */
   readonly ImageFillVerticalType: {
     /**
-     * Starts from the Bottom
+     * Start from the bottom
      *
      * 从底部开始
      */
     readonly Bottom: ImageFillVerticalType
     /**
-     * Starts from the Top
+     * Start from the top
      *
      * 从顶部开始
      */
@@ -1001,25 +1001,25 @@ export interface HostEnums {
    */
   readonly ImageFillRadial90Type: {
     /**
-     * Bottom Left
+     * Bottom left
      *
      * 左下
      */
     readonly BottomLeft: ImageFillRadial90Type
     /**
-     * Top Left
+     * Top left
      *
      * 左上
      */
     readonly TopLeft: ImageFillRadial90Type
     /**
-     * Top Right
+     * Top right
      *
      * 右上
      */
     readonly TopRight: ImageFillRadial90Type
     /**
-     * Bottom Right
+     * Bottom right
      *
      * 右下
      */
@@ -1082,13 +1082,13 @@ export interface HostEnums {
    */
   readonly UIAnimationLayer: {
     /**
-     * Above all UI Controls
+     * Above all UI controls
      *
      * 所有控件之上
      */
     readonly AboveAllControls: UIAnimationLayer
     /**
-     * Below all UI Controls
+     * Below all UI controls
      *
      * 所有控件之下
      */
@@ -1619,985 +1619,985 @@ export interface HostEnums {
    */
   readonly KeyEventType: {
     /**
-     * Keyboard/Mouse: Craftsperson Key 1 Down
+     * Keyboard/Mouse: Craftsperson Key 1 (Press Down)
      *
      * 键鼠：奇匠按键1（按下）
      */
     readonly KeyboardCraftspersonKey1Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 2 Down
+     * Keyboard/Mouse: Craftsperson Key 2 (Press Down)
      *
      * 键鼠：奇匠按键2（按下）
      */
     readonly KeyboardCraftspersonKey2Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 3 Down
+     * Keyboard/Mouse: Craftsperson Key 3 (Press Down)
      *
      * 键鼠：奇匠按键3（按下）
      */
     readonly KeyboardCraftspersonKey3Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 4 Down
+     * Keyboard/Mouse: Craftsperson Key 4 (Press Down)
      *
      * 键鼠：奇匠按键4（按下）
      */
     readonly KeyboardCraftspersonKey4Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 5 Down
+     * Keyboard/Mouse: Craftsperson Key 5 (Press Down)
      *
      * 键鼠：奇匠按键5（按下）
      */
     readonly KeyboardCraftspersonKey5Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 6 Down
+     * Keyboard/Mouse: Craftsperson Key 6 (Press Down)
      *
      * 键鼠：奇匠按键6（按下）
      */
     readonly KeyboardCraftspersonKey6Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 7 Down
+     * Keyboard/Mouse: Craftsperson Key 7 (Press Down)
      *
      * 键鼠：奇匠按键7（按下）
      */
     readonly KeyboardCraftspersonKey7Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 8 Down
+     * Keyboard/Mouse: Craftsperson Key 8 (Press Down)
      *
      * 键鼠：奇匠按键8（按下）
      */
     readonly KeyboardCraftspersonKey8Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 9 Down
+     * Keyboard/Mouse: Craftsperson Key 9 (Press Down)
      *
      * 键鼠：奇匠按键9（按下）
      */
     readonly KeyboardCraftspersonKey9Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 10 Down
+     * Keyboard/Mouse: Craftsperson Key 10 (Press Down)
      *
      * 键鼠：奇匠按键10（按下）
      */
     readonly KeyboardCraftspersonKey10Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 11 Down
+     * Keyboard/Mouse: Craftsperson Key 11 (Press Down)
      *
      * 键鼠：奇匠按键11（按下）
      */
     readonly KeyboardCraftspersonKey11Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 12 Down
+     * Keyboard/Mouse: Craftsperson Key 12 (Press Down)
      *
      * 键鼠：奇匠按键12（按下）
      */
     readonly KeyboardCraftspersonKey12Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 13 Down
+     * Keyboard/Mouse: Craftsperson Key 13 (Press Down)
      *
      * 键鼠：奇匠按键13（按下）
      */
     readonly KeyboardCraftspersonKey13Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 14 Down
+     * Keyboard/Mouse: Craftsperson Key 14 (Press Down)
      *
      * 键鼠：奇匠按键14（按下）
      */
     readonly KeyboardCraftspersonKey14Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 15 Down
+     * Keyboard/Mouse: Craftsperson Key 15 (Press Down)
      *
      * 键鼠：奇匠按键15（按下）
      */
     readonly KeyboardCraftspersonKey15Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 16 Down
+     * Keyboard/Mouse: Craftsperson Key 16 (Press Down)
      *
      * 键鼠：奇匠按键16（按下）
      */
     readonly KeyboardCraftspersonKey16Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 17 Down
+     * Keyboard/Mouse: Craftsperson Key 17 (Press Down)
      *
      * 键鼠：奇匠按键17（按下）
      */
     readonly KeyboardCraftspersonKey17Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 18 Down
+     * Keyboard/Mouse: Craftsperson Key 18 (Press Down)
      *
      * 键鼠：奇匠按键18（按下）
      */
     readonly KeyboardCraftspersonKey18Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 19 Down
+     * Keyboard/Mouse: Craftsperson Key 19 (Press Down)
      *
      * 键鼠：奇匠按键19（按下）
      */
     readonly KeyboardCraftspersonKey19Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 20 Down
+     * Keyboard/Mouse: Craftsperson Key 20 (Press Down)
      *
      * 键鼠：奇匠按键20（按下）
      */
     readonly KeyboardCraftspersonKey20Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 21 Down
+     * Keyboard/Mouse: Craftsperson Key 21 (Press Down)
      *
      * 键鼠：奇匠按键21（按下）
      */
     readonly KeyboardCraftspersonKey21Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 22 Down
+     * Keyboard/Mouse: Craftsperson Key 22 (Press Down)
      *
      * 键鼠：奇匠按键22（按下）
      */
     readonly KeyboardCraftspersonKey22Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 23 Down
+     * Keyboard/Mouse: Craftsperson Key 23 (Press Down)
      *
      * 键鼠：奇匠按键23（按下）
      */
     readonly KeyboardCraftspersonKey23Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 24 Down
+     * Keyboard/Mouse: Craftsperson Key 24 (Press Down)
      *
      * 键鼠：奇匠按键24（按下）
      */
     readonly KeyboardCraftspersonKey24Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 25 Down
+     * Keyboard/Mouse: Craftsperson Key 25 (Press Down)
      *
      * 键鼠：奇匠按键25（按下）
      */
     readonly KeyboardCraftspersonKey25Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 26 Down
+     * Keyboard/Mouse: Craftsperson Key 26 (Press Down)
      *
      * 键鼠：奇匠按键26（按下）
      */
     readonly KeyboardCraftspersonKey26Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 27 Down
+     * Keyboard/Mouse: Craftsperson Key 27 (Press Down)
      *
      * 键鼠：奇匠按键27（按下）
      */
     readonly KeyboardCraftspersonKey27Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 28 Down
+     * Keyboard/Mouse: Craftsperson Key 28 (Press Down)
      *
      * 键鼠：奇匠按键28（按下）
      */
     readonly KeyboardCraftspersonKey28Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 29 Down
+     * Keyboard/Mouse: Craftsperson Key 29 (Press Down)
      *
      * 键鼠：奇匠按键29（按下）
      */
     readonly KeyboardCraftspersonKey29Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 30 Down
+     * Keyboard/Mouse: Craftsperson Key 30 (Press Down)
      *
      * 键鼠：奇匠按键30（按下）
      */
     readonly KeyboardCraftspersonKey30Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 31 Down
+     * Keyboard/Mouse: Craftsperson Key 31 (Press Down)
      *
      * 键鼠：奇匠按键31（按下）
      */
     readonly KeyboardCraftspersonKey31Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 32 Down
+     * Keyboard/Mouse: Craftsperson Key 32 (Press Down)
      *
      * 键鼠：奇匠按键32（按下）
      */
     readonly KeyboardCraftspersonKey32Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 33 Down
+     * Keyboard/Mouse: Craftsperson Key 33 (Press Down)
      *
      * 键鼠：奇匠按键33（按下）
      */
     readonly KeyboardCraftspersonKey33Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 34 Down
+     * Keyboard/Mouse: Craftsperson Key 34 (Press Down)
      *
      * 键鼠：奇匠按键34（按下）
      */
     readonly KeyboardCraftspersonKey34Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 35 Down
+     * Keyboard/Mouse: Craftsperson Key 35 (Press Down)
      *
      * 键鼠：奇匠按键35（按下）
      */
     readonly KeyboardCraftspersonKey35Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 36 Down
+     * Keyboard/Mouse: Craftsperson Key 36 (Press Down)
      *
      * 键鼠：奇匠按键36（按下）
      */
     readonly KeyboardCraftspersonKey36Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 37 Down
+     * Keyboard/Mouse: Craftsperson Key 37 (Press Down)
      *
      * 键鼠：奇匠按键37（按下）
      */
     readonly KeyboardCraftspersonKey37Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 38 Down
+     * Keyboard/Mouse: Craftsperson Key 38 (Press Down)
      *
      * 键鼠：奇匠按键38（按下）
      */
     readonly KeyboardCraftspersonKey38Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 39 Down
+     * Keyboard/Mouse: Craftsperson Key 39 (Press Down)
      *
      * 键鼠：奇匠按键39（按下）
      */
     readonly KeyboardCraftspersonKey39Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 40 Down
+     * Keyboard/Mouse: Craftsperson Key 40 (Press Down)
      *
      * 键鼠：奇匠按键40（按下）
      */
     readonly KeyboardCraftspersonKey40Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 41 Down
+     * Keyboard/Mouse: Craftsperson Key 41 (Press Down)
      *
      * 键鼠：奇匠按键41（按下）
      */
     readonly KeyboardCraftspersonKey41Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 42 Down
+     * Keyboard/Mouse: Craftsperson Key 42 (Press Down)
      *
      * 键鼠：奇匠按键42（按下）
      */
     readonly KeyboardCraftspersonKey42Down: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 43 Down
+     * Keyboard/Mouse: Craftsperson Key 43 (Press Down)
      *
      * 键鼠：奇匠按键43（按下）
      */
     readonly KeyboardCraftspersonKey43Down: KeyEventType
     /**
-     * Keyboard/Mouse: Move Forward Down
+     * Keyboard/Mouse: Move Forward (Press Down)
      *
      * 键鼠：向前移动（按下）
      */
     readonly KeyboardMoveForwardKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Move Backward Down
+     * Keyboard/Mouse: Move Backward (Press Down)
      *
      * 键鼠：向后移动（按下）
      */
     readonly KeyboardMoveBackwardKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Move Left Down
+     * Keyboard/Mouse: Move Left (Press Down)
      *
      * 键鼠：向左移动（按下）
      */
     readonly KeyboardMoveLeftKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Move Right Down
+     * Keyboard/Mouse: Move Right (Press Down)
      *
      * 键鼠：向右移动（按下）
      */
     readonly KeyboardMoveRightKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Toggle walk/run state Down
+     * Keyboard/Mouse: Toggle walk/run state (Press Down)
      *
      * 键鼠：切换行走/奔跑状态（按下）
      */
     readonly KeyboardSwitchToWalkOrRunKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Sprint Down
+     * Keyboard/Mouse: Sprint (Press Down)
      *
      * 键鼠：冲刺（按下）
      */
     readonly KeyboardSprintKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Jump Down
+     * Keyboard/Mouse: Jump (Press Down)
      *
      * 键鼠：跳跃（按下）
      */
     readonly KeyboardJumpKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Drop Down
+     * Keyboard/Mouse: Drop (Press Down)
      *
      * 键鼠：落下（按下）
      */
     readonly KeyboardDropKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Open Shortcut Wheel Down
+     * Keyboard/Mouse: Open Shortcut Wheel (Press Down)
      *
      * 键鼠：呼出快捷轮盘（按下）
      */
     readonly KeyboardOpenShortcutWheelKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Pick Up/Interact Down
+     * Keyboard/Mouse: Pick Up/Interact (Press Down)
      *
      * 键鼠：拾取/交互（按下）
      */
     readonly KeyboardInteractKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Normal Attack Down
+     * Keyboard/Mouse: Normal Attack (Press Down)
      *
      * 键鼠：普通攻击（按下）
      */
     readonly KeyboardNormalAttackKeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Character Skill 1 Down
+     * Keyboard/Mouse: Character Skill 1 (Press Down)
      *
      * 键鼠：角色技能1（按下）
      */
     readonly KeyboardCharacterSkill1KeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Character Skill 2 Down
+     * Keyboard/Mouse: Character Skill 2 (Press Down)
      *
      * 键鼠：角色技能2（按下）
      */
     readonly KeyboardCharacterSkill2KeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Character Skill 3 Down
+     * Keyboard/Mouse: Character Skill 3 (Press Down)
      *
      * 键鼠：角色技能3（按下）
      */
     readonly KeyboardCharacterSkill3KeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Character Skill 4 Down
+     * Keyboard/Mouse: Character Skill 4 (Press Down)
      *
      * 键鼠：角色技能4（按下）
      */
     readonly KeyboardCharacterSkill4KeyDown: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 1 Up
+     * Keyboard/Mouse: Craftsperson Key 1 (Lift Up)
      *
      * 键鼠：奇匠按键1（抬起）
      */
     readonly KeyboardCraftspersonKey1Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 2 Up
+     * Keyboard/Mouse: Craftsperson Key 2 (Lift Up)
      *
      * 键鼠：奇匠按键2（抬起）
      */
     readonly KeyboardCraftspersonKey2Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 3 Up
+     * Keyboard/Mouse: Craftsperson Key 3 (Lift Up)
      *
      * 键鼠：奇匠按键3（抬起）
      */
     readonly KeyboardCraftspersonKey3Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 4 Up
+     * Keyboard/Mouse: Craftsperson Key 4 (Lift Up)
      *
      * 键鼠：奇匠按键4（抬起）
      */
     readonly KeyboardCraftspersonKey4Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 5 Up
+     * Keyboard/Mouse: Craftsperson Key 5 (Lift Up)
      *
      * 键鼠：奇匠按键5（抬起）
      */
     readonly KeyboardCraftspersonKey5Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 6 Up
+     * Keyboard/Mouse: Craftsperson Key 6 (Lift Up)
      *
      * 键鼠：奇匠按键6（抬起）
      */
     readonly KeyboardCraftspersonKey6Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 7 Up
+     * Keyboard/Mouse: Craftsperson Key 7 (Lift Up)
      *
      * 键鼠：奇匠按键7（抬起）
      */
     readonly KeyboardCraftspersonKey7Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 8 Up
+     * Keyboard/Mouse: Craftsperson Key 8 (Lift Up)
      *
      * 键鼠：奇匠按键8（抬起）
      */
     readonly KeyboardCraftspersonKey8Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 9 Up
+     * Keyboard/Mouse: Craftsperson Key 9 (Lift Up)
      *
      * 键鼠：奇匠按键9（抬起）
      */
     readonly KeyboardCraftspersonKey9Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 10 Up
+     * Keyboard/Mouse: Craftsperson Key 10 (Lift Up)
      *
      * 键鼠：奇匠按键10（抬起）
      */
     readonly KeyboardCraftspersonKey10Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 11 Up
+     * Keyboard/Mouse: Craftsperson Key 11 (Lift Up)
      *
      * 键鼠：奇匠按键11（抬起）
      */
     readonly KeyboardCraftspersonKey11Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 12 Up
+     * Keyboard/Mouse: Craftsperson Key 12 (Lift Up)
      *
      * 键鼠：奇匠按键12（抬起）
      */
     readonly KeyboardCraftspersonKey12Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 13 Up
+     * Keyboard/Mouse: Craftsperson Key 13 (Lift Up)
      *
      * 键鼠：奇匠按键13（抬起）
      */
     readonly KeyboardCraftspersonKey13Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 14 Up
+     * Keyboard/Mouse: Craftsperson Key 14 (Lift Up)
      *
      * 键鼠：奇匠按键14（抬起）
      */
     readonly KeyboardCraftspersonKey14Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 15 Up
+     * Keyboard/Mouse: Craftsperson Key 15 (Lift Up)
      *
      * 键鼠：奇匠按键15（抬起）
      */
     readonly KeyboardCraftspersonKey15Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 16 Up
+     * Keyboard/Mouse: Craftsperson Key 16 (Lift Up)
      *
      * 键鼠：奇匠按键16（抬起）
      */
     readonly KeyboardCraftspersonKey16Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 17 Up
+     * Keyboard/Mouse: Craftsperson Key 17 (Lift Up)
      *
      * 键鼠：奇匠按键17（抬起）
      */
     readonly KeyboardCraftspersonKey17Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 18 Up
+     * Keyboard/Mouse: Craftsperson Key 18 (Lift Up)
      *
      * 键鼠：奇匠按键18（抬起）
      */
     readonly KeyboardCraftspersonKey18Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 19 Up
+     * Keyboard/Mouse: Craftsperson Key 19 (Lift Up)
      *
      * 键鼠：奇匠按键19（抬起）
      */
     readonly KeyboardCraftspersonKey19Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 20 Up
+     * Keyboard/Mouse: Craftsperson Key 20 (Lift Up)
      *
      * 键鼠：奇匠按键20（抬起）
      */
     readonly KeyboardCraftspersonKey20Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 21 Up
+     * Keyboard/Mouse: Craftsperson Key 21 (Lift Up)
      *
      * 键鼠：奇匠按键21（抬起）
      */
     readonly KeyboardCraftspersonKey21Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 22 Up
+     * Keyboard/Mouse: Craftsperson Key 22 (Lift Up)
      *
      * 键鼠：奇匠按键22（抬起）
      */
     readonly KeyboardCraftspersonKey22Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 23 Up
+     * Keyboard/Mouse: Craftsperson Key 23 (Lift Up)
      *
      * 键鼠：奇匠按键23（抬起）
      */
     readonly KeyboardCraftspersonKey23Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 24 Up
+     * Keyboard/Mouse: Craftsperson Key 24 (Lift Up)
      *
      * 键鼠：奇匠按键24（抬起）
      */
     readonly KeyboardCraftspersonKey24Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 25 Up
+     * Keyboard/Mouse: Craftsperson Key 25 (Lift Up)
      *
      * 键鼠：奇匠按键25（抬起）
      */
     readonly KeyboardCraftspersonKey25Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 26 Up
+     * Keyboard/Mouse: Craftsperson Key 26 (Lift Up)
      *
      * 键鼠：奇匠按键26（抬起）
      */
     readonly KeyboardCraftspersonKey26Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 27 Up
+     * Keyboard/Mouse: Craftsperson Key 27 (Lift Up)
      *
      * 键鼠：奇匠按键27（抬起）
      */
     readonly KeyboardCraftspersonKey27Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 28 Up
+     * Keyboard/Mouse: Craftsperson Key 28 (Lift Up)
      *
      * 键鼠：奇匠按键28（抬起）
      */
     readonly KeyboardCraftspersonKey28Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 29 Up
+     * Keyboard/Mouse: Craftsperson Key 29 (Lift Up)
      *
      * 键鼠：奇匠按键29（抬起）
      */
     readonly KeyboardCraftspersonKey29Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 30 Up
+     * Keyboard/Mouse: Craftsperson Key 30 (Lift Up)
      *
      * 键鼠：奇匠按键30（抬起）
      */
     readonly KeyboardCraftspersonKey30Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 31 Up
+     * Keyboard/Mouse: Craftsperson Key 31 (Lift Up)
      *
      * 键鼠：奇匠按键31（抬起）
      */
     readonly KeyboardCraftspersonKey31Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 32 Up
+     * Keyboard/Mouse: Craftsperson Key 32 (Lift Up)
      *
      * 键鼠：奇匠按键32（抬起）
      */
     readonly KeyboardCraftspersonKey32Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 33 Up
+     * Keyboard/Mouse: Craftsperson Key 33 (Lift Up)
      *
      * 键鼠：奇匠按键33（抬起）
      */
     readonly KeyboardCraftspersonKey33Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 34 Up
+     * Keyboard/Mouse: Craftsperson Key 34 (Lift Up)
      *
      * 键鼠：奇匠按键34（抬起）
      */
     readonly KeyboardCraftspersonKey34Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 35 Up
+     * Keyboard/Mouse: Craftsperson Key 35 (Lift Up)
      *
      * 键鼠：奇匠按键35（抬起）
      */
     readonly KeyboardCraftspersonKey35Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 36 Up
+     * Keyboard/Mouse: Craftsperson Key 36 (Lift Up)
      *
      * 键鼠：奇匠按键36（抬起）
      */
     readonly KeyboardCraftspersonKey36Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 37 Up
+     * Keyboard/Mouse: Craftsperson Key 37 (Lift Up)
      *
      * 键鼠：奇匠按键37（抬起）
      */
     readonly KeyboardCraftspersonKey37Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 38 Up
+     * Keyboard/Mouse: Craftsperson Key 38 (Lift Up)
      *
      * 键鼠：奇匠按键38（抬起）
      */
     readonly KeyboardCraftspersonKey38Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 39 Up
+     * Keyboard/Mouse: Craftsperson Key 39 (Lift Up)
      *
      * 键鼠：奇匠按键39（抬起）
      */
     readonly KeyboardCraftspersonKey39Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 40 Up
+     * Keyboard/Mouse: Craftsperson Key 40 (Lift Up)
      *
      * 键鼠：奇匠按键40（抬起）
      */
     readonly KeyboardCraftspersonKey40Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 41 Up
+     * Keyboard/Mouse: Craftsperson Key 41 (Lift Up)
      *
      * 键鼠：奇匠按键41（抬起）
      */
     readonly KeyboardCraftspersonKey41Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 42 Up
+     * Keyboard/Mouse: Craftsperson Key 42 (Lift Up)
      *
      * 键鼠：奇匠按键42（抬起）
      */
     readonly KeyboardCraftspersonKey42Up: KeyEventType
     /**
-     * Keyboard/Mouse: Craftsperson Key 43 Up
+     * Keyboard/Mouse: Craftsperson Key 43 (Lift Up)
      *
      * 键鼠：奇匠按键43（抬起）
      */
     readonly KeyboardCraftspersonKey43Up: KeyEventType
     /**
-     * Keyboard/Mouse: Move Forward Up
+     * Keyboard/Mouse: Move Forward (Lift Up)
      *
      * 键鼠：向前移动（抬起）
      */
     readonly KeyboardMoveForwardKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Move Backward Up
+     * Keyboard/Mouse: Move Backward (Lift Up)
      *
      * 键鼠：向后移动（抬起）
      */
     readonly KeyboardMoveBackwardKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Move Left Up
+     * Keyboard/Mouse: Move Left (Lift Up)
      *
      * 键鼠：向左移动（抬起）
      */
     readonly KeyboardMoveLeftKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Move Right Up
+     * Keyboard/Mouse: Move Right (Lift Up)
      *
      * 键鼠：向右移动（抬起）
      */
     readonly KeyboardMoveRightKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Toggle Walk/Run State Up
+     * Keyboard/Mouse: Toggle Walk/Run State (Lift Up)
      *
      * 键鼠：切换行走/奔跑状态（抬起）
      */
     readonly KeyboardSwitchToWalkOrRunKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Sprint Up
+     * Keyboard/Mouse: Sprint (Lift Up)
      *
      * 键鼠：冲刺（抬起）
      */
     readonly KeyboardSprintKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Jump Up
+     * Keyboard/Mouse: Jump (Lift Up)
      *
      * 键鼠：跳跃（抬起）
      */
     readonly KeyboardJumpKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Drop Up
+     * Keyboard/Mouse: Drop (Lift Up)
      *
      * 键鼠：落下（抬起）
      */
     readonly KeyboardDropKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Open Shortcut Wheel Up
+     * Keyboard/Mouse: Open Shortcut Wheel (Lift Up)
      *
      * 键鼠：呼出快捷轮盘（抬起）
      */
     readonly KeyboardOpenShortcutWheelKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Pick Up/Interact Up
+     * Keyboard/Mouse: Pick Up/Interact (Lift Up)
      *
      * 键鼠：拾取/交互（抬起）
      */
     readonly KeyboardInteractKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Normal Attack Up
+     * Keyboard/Mouse: Normal Attack (Lift Up)
      *
      * 键鼠：普通攻击（抬起）
      */
     readonly KeyboardNormalAttackKeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Character Skill 1 Up
+     * Keyboard/Mouse: Character Skill 1 (Lift Up)
      *
      * 键鼠：角色技能1（抬起）
      */
     readonly KeyboardCharacterSkill1KeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Character Skill 2 Up
+     * Keyboard/Mouse: Character Skill 2 (Lift Up)
      *
      * 键鼠：角色技能2（抬起）
      */
     readonly KeyboardCharacterSkill2KeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Character Skill 3 Up
+     * Keyboard/Mouse: Character Skill 3 (Lift Up)
      *
      * 键鼠：角色技能3（抬起）
      */
     readonly KeyboardCharacterSkill3KeyUp: KeyEventType
     /**
-     * Keyboard/Mouse: Character Skill 4 Up
+     * Keyboard/Mouse: Character Skill 4 (Lift Up)
      *
      * 键鼠：角色技能4（抬起）
      */
     readonly KeyboardCharacterSkill4KeyUp: KeyEventType
     /**
-     * Controller: Craftsperson Key 1 Down
+     * Controller: Craftsperson Key 1 (Press Down)
      *
      * 手柄：奇匠按键1（按下）
      */
     readonly ControllerCraftspersonKey1Down: KeyEventType
     /**
-     * Controller: Craftsperson Key 2 Down
+     * Controller: Craftsperson Key 2 (Press Down)
      *
      * 手柄：奇匠按键2（按下）
      */
     readonly ControllerCraftspersonKey2Down: KeyEventType
     /**
-     * Controller: Craftsperson Key 3 Down
+     * Controller: Craftsperson Key 3 (Press Down)
      *
      * 手柄：奇匠按键3（按下）
      */
     readonly ControllerCraftspersonKey3Down: KeyEventType
     /**
-     * Controller: Craftsperson Key 4 Down
+     * Controller: Craftsperson Key 4 (Press Down)
      *
      * 手柄：奇匠按键4（按下）
      */
     readonly ControllerCraftspersonKey4Down: KeyEventType
     /**
-     * Craftsperson Key 5 Down
+     * Craftsperson Key 5 (Press Down)
      *
      * 手柄：奇匠按键5（按下）
      */
     readonly ControllerCraftspersonKey5Down: KeyEventType
     /**
-     * Craftsperson Key 6 Down
+     * Craftsperson Key 6 (Press Down)
      *
      * 手柄：奇匠按键6（按下）
      */
     readonly ControllerCraftspersonKey6Down: KeyEventType
     /**
-     * Controller: Craftsperson Key 7 Down
+     * Controller: Craftsperson Key 7 (Press Down)
      *
      * 手柄：奇匠按键7（按下）
      */
     readonly ControllerCraftspersonKey7Down: KeyEventType
     /**
-     * Controller: Craftsperson Key 8 Down
+     * Controller: Craftsperson Key 8 (Press Down)
      *
      * 手柄：奇匠按键8（按下）
      */
     readonly ControllerCraftspersonKey8Down: KeyEventType
     /**
-     * Controller: Craftsperson Key 9 Down
+     * Controller: Craftsperson Key 9 (Press Down)
      *
      * 手柄：奇匠按键9（按下）
      */
     readonly ControllerCraftspersonKey9Down: KeyEventType
     /**
-     * Controller: Craftsperson Key 10 Down
+     * Controller: Craftsperson Key 10 (Press Down)
      *
      * 手柄：奇匠按键10（按下）
      */
     readonly ControllerCraftspersonKey10Down: KeyEventType
     /**
-     * Craftsperson Key 11 Down
+     * Craftsperson Key 11 (Press Down)
      *
      * 手柄：奇匠按键11（按下）
      */
     readonly ControllerCraftspersonKey11Down: KeyEventType
     /**
-     * Craftsperson Key 12 Down
+     * Craftsperson Key 12 (Press Down)
      *
      * 手柄：奇匠按键12（按下）
      */
     readonly ControllerCraftspersonKey12Down: KeyEventType
     /**
-     * Craftsperson Key 13 Down
+     * Craftsperson Key 13 (Press Down)
      *
      * 手柄：奇匠按键13（按下）
      */
     readonly ControllerCraftspersonKey13Down: KeyEventType
     /**
-     * Controller: Craftsperson Key 14 Down
+     * Controller: Craftsperson Key 14 (Press Down)
      *
      * 手柄：奇匠按键14（按下）
      */
     readonly ControllerCraftspersonKey14Down: KeyEventType
     /**
-     * Controller: Sprint Down
+     * Controller: Sprint (Press Down)
      *
      * 手柄：冲刺（按下）
      */
     readonly ControllerSprintKeyDown: KeyEventType
     /**
-     * Controller: Jump Down
+     * Controller: Jump (Press Down)
      *
      * 手柄：跳跃（按下）
      */
     readonly ControllerJumpKeyDown: KeyEventType
     /**
-     * Controller: Pick Up/Interact Down
+     * Controller: Pick Up/Interact (Press Down)
      *
      * 手柄：拾取/交互（按下）
      */
     readonly ControllerInteractKeyDown: KeyEventType
     /**
-     * Controller: Normal Attack Down
+     * Controller: Normal Attack (Press Down)
      *
      * 手柄：普通攻击（按下）
      */
     readonly ControllerNormalAttackKeyDown: KeyEventType
     /**
-     * Controller: Character Skill 1 Down
+     * Controller: Character Skill 1 (Press Down)
      *
      * 手柄：角色技能1（按下）
      */
     readonly ControllerCharacterSkill1KeyDown: KeyEventType
     /**
-     * Controller: Character Skill 2 Down
+     * Controller: Character Skill 2 (Press Down)
      *
      * 手柄：角色技能2（按下）
      */
     readonly ControllerCharacterSkill2KeyDown: KeyEventType
     /**
-     * Controller: Character Skill 3 Down
+     * Controller: Character Skill 3 (Press Down)
      *
      * 手柄：角色技能3（按下）
      */
     readonly ControllerCharacterSkill3KeyDown: KeyEventType
     /**
-     * Controller: Character Skill 4 Down
+     * Controller: Character Skill 4 (Press Down)
      *
      * 手柄：角色技能4（按下）
      */
     readonly ControllerCharacterSkill4KeyDown: KeyEventType
     /**
-     * Controller: Menu Confirm Down
+     * Controller: Menu Confirm (Press Down)
      *
      * 手柄：菜单确认（按下）
      */
     readonly ControllerMenuConfirmKeyDown: KeyEventType
     /**
-     * Controller: Menu Back Down
+     * Controller: Menu Back (Press Down)
      *
      * 手柄：菜单返回（按下）
      */
     readonly ControllerMenuBackKeyDown: KeyEventType
     /**
-     * Controller: Craftsperson Key 1 Up
+     * Controller: Craftsperson Key 1 (Lift Up)
      *
      * 手柄：奇匠按键1（抬起）
      */
     readonly ControllerCraftspersonKey1Up: KeyEventType
     /**
-     * Controller: Craftsperson Key 2 Up
+     * Controller: Craftsperson Key 2 (Lift Up)
      *
      * 手柄：奇匠按键2（抬起）
      */
     readonly ControllerCraftspersonKey2Up: KeyEventType
     /**
-     * Controller: Craftsperson Key 3 Up
+     * Controller: Craftsperson Key 3 (Lift Up)
      *
      * 手柄：奇匠按键3（抬起）
      */
     readonly ControllerCraftspersonKey3Up: KeyEventType
     /**
-     * Controller: Craftsperson Key 4 Up
+     * Controller: Craftsperson Key 4 (Lift Up)
      *
      * 手柄：奇匠按键4（抬起）
      */
     readonly ControllerCraftspersonKey4Up: KeyEventType
     /**
-     * Craftsperson Key 5 Up
+     * Craftsperson Key 5 (Lift Up)
      *
      * 手柄：奇匠按键5（抬起）
      */
     readonly ControllerCraftspersonKey5Up: KeyEventType
     /**
-     * Craftsperson Key 6 Up
+     * Craftsperson Key 6 (Lift Up)
      *
      * 手柄：奇匠按键6（抬起）
      */
     readonly ControllerCraftspersonKey6Up: KeyEventType
     /**
-     * Controller: Craftsperson Key 7 Up
+     * Controller: Craftsperson Key 7 (Lift Up)
      *
      * 手柄：奇匠按键7（抬起）
      */
     readonly ControllerCraftspersonKey7Up: KeyEventType
     /**
-     * Controller: Craftsperson Key 8 Up
+     * Controller: Craftsperson Key 8 (Lift Up)
      *
      * 手柄：奇匠按键8（抬起）
      */
     readonly ControllerCraftspersonKey8Up: KeyEventType
     /**
-     * Controller: Craftsperson Key 9 Up
+     * Controller: Craftsperson Key 9 (Lift Up)
      *
      * 手柄：奇匠按键9（抬起）
      */
     readonly ControllerCraftspersonKey9Up: KeyEventType
     /**
-     * Controller: Craftsperson Key 10 Up
+     * Controller: Craftsperson Key 10 (Lift Up)
      *
      * 手柄：奇匠按键10（抬起）
      */
     readonly ControllerCraftspersonKey10Up: KeyEventType
     /**
-     * Craftsperson Key 11 Up
+     * Craftsperson Key 11 (Lift Up)
      *
      * 手柄：奇匠按键11（抬起）
      */
     readonly ControllerCraftspersonKey11Up: KeyEventType
     /**
-     * Craftsperson Key 12 Up
+     * Craftsperson Key 12 (Lift Up)
      *
      * 手柄：奇匠按键12（抬起）
      */
     readonly ControllerCraftspersonKey12Up: KeyEventType
     /**
-     * Craftsperson Key 13 Up
+     * Craftsperson Key 13 (Lift Up)
      *
      * 手柄：奇匠按键13（抬起）
      */
     readonly ControllerCraftspersonKey13Up: KeyEventType
     /**
-     * Controller: Craftsperson Key 14 Up
+     * Controller: Craftsperson Key 14 (Lift Up)
      *
      * 手柄：奇匠按键14（抬起）
      */
     readonly ControllerCraftspersonKey14Up: KeyEventType
     /**
-     * Controller: Sprint Up
+     * Controller: Sprint (Lift Up)
      *
      * 手柄：冲刺（抬起）
      */
     readonly ControllerSprintKeyUp: KeyEventType
     /**
-     * Controller: Jump Up
+     * Controller: Jump (Lift Up)
      *
      * 手柄：跳跃（抬起）
      */
     readonly ControllerJumpKeyUp: KeyEventType
     /**
-     * Controller: Pick Up/Interact Up
+     * Controller: Pick Up/Interact (Lift Up)
      *
      * 手柄：拾取/交互（抬起）
      */
     readonly ControllerInteractKeyUp: KeyEventType
     /**
-     * Controller: Normal Attack Up
+     * Controller: Normal Attack (Lift Up)
      *
      * 手柄：普通攻击（抬起）
      */
     readonly ControllerNormalAttackKeyUp: KeyEventType
     /**
-     * Controller: Character Skill 1 Up
+     * Controller: Character Skill 1 (Lift Up)
      *
      * 手柄：角色技能1（抬起）
      */
     readonly ControllerCharacterSkill1KeyUp: KeyEventType
     /**
-     * Controller: Character Skill 2 Up
+     * Controller: Character Skill 2 (Lift Up)
      *
      * 手柄：角色技能2（抬起）
      */
     readonly ControllerCharacterSkill2KeyUp: KeyEventType
     /**
-     * Controller: Character Skill 3 Up
+     * Controller: Character Skill 3 (Lift Up)
      *
      * 手柄：角色技能3（抬起）
      */
     readonly ControllerCharacterSkill3KeyUp: KeyEventType
     /**
-     * Controller: Character Skill 4 Up
+     * Controller: Character Skill 4 (Lift Up)
      *
      * 手柄：角色技能4（抬起）
      */
     readonly ControllerCharacterSkill4KeyUp: KeyEventType
     /**
-     * Controller: Menu Confirm Up
+     * Controller: Menu Confirm (Lift Up)
      *
      * 手柄：菜单确认（抬起）
      */
     readonly ControllerMenuConfirmKeyUp: KeyEventType
     /**
-     * Controller: Menu Back Up
+     * Controller: Menu Back (Lift Up)
      *
      * 手柄：菜单返回（抬起）
      */
@@ -2648,13 +2648,13 @@ export interface Script {
    */
   GetParam(this: Script, paramName: string): unknown
   /**
-   * Calls the global function named funcName in the current Script's UI-script environment. Arguments must use transferable types supported at runtime
+   * Calls the global function named funcName in the current UI script environment. Arguments must use transferable types supported at runtime
    *
    * 在UI脚本内定义的全局方法（脚本内环境）；调用当前脚本中名称为 funcName 的函数；参数应使用运行时支持的可传递类型
    */
   Invoke(this: Script, funcName: string, ...args: unknown[]): LuaMultiReturn<unknown[]>
   /**
-   * Registers a Server Signal monitor for signalName. The callback receives the Signal Name followed by a List of signal parameters
+   * Registers a Server Signal listener for signalName. The callback receives the Signal Name, followed by an array of signal parameters
    *
    * 注册 signalName 对应的服务器信号监听；回调参数依次为信号名称和信号参数数组
    */
@@ -2664,7 +2664,7 @@ export interface Script {
     callback: (this: void, signalName: string, signalParams: unknown[]) => void
   ): void
   /**
-   * Removes the Server Signal monitor for signalName
+   * Removes the Server Signal listener for signalName
    *
    * 移除 signalName 对应的服务器信号监听
    */
@@ -2693,7 +2693,7 @@ export interface Script {
 }
 export interface HostGame {
   /**
-   * Writes the current Local UI Control tree to the log in parent-child Layer order
+   * Writes the current Client UI Control tree to the log in parent-child hierarchical order
    *
    * 将当前客户端控件树按父子层级写入日志
    */
@@ -2709,25 +2709,25 @@ export interface HostGame {
     parent: ClientUIBaseControl
   ): ClientUIBaseControl | undefined
   /**
-   * Destroys the specified Local UI Control Entity
+   * Destroys the specified Client UI Control Entity
    *
    * 销毁指定客户端控件实例
    */
   DestroyClientUIControl(this: void, control: ClientUIBaseControl): void
   /**
-   * Obtains a UI Control by its Local UI Control runtime ID. The argument is a runtime id, not the control index from the editor.
+   * Obtains a UI Control by its Client UI Control runtime ID. The argument is a runtime id, not the control index from the editor.
    *
    * 按客户端控件运行时ID获取控件。参数是运行时 id，不是编辑器的控件索引。
    */
   GetClientUIControl(this: void, controlId: RuntimeControlId): ClientUIBaseControl | undefined
   /**
-   * Finds the root UI Control named nodeName
+   * Finds the UI Root Control named nodeName
    *
    * 查找名称为 nodeName 的 UI 根控件
    */
   FindClientUIRoot(this: void, nodeName: string): ClientUIBaseControl | undefined
   /**
-   * Obtains all root UI Controls - that is, the default Vessel Nodes on the displayed Local UI Control Vessel Canvas
+   * Obtains all UI Root Controls - that is, the default Container Nodes on the displayed Client UI Control Canvas
    *
    * 获取全部 UI 根控件。即实际显示的客户端控件容器画布中的默认容器节点
    */
@@ -2775,7 +2775,7 @@ export interface HostGame {
    */
   GetControllerRightStickAxis(this: void): LuaMultiReturn<[number, number]>
   /**
-   * Creates a Tween Animation for an object using target fields and a duration. Pass the target object, a table whose keys are tweenable field names and whose values are their targets, and the duration.
+   * Creates a Tween Animation for an object using target fields and a duration. Parameters: target object, table of tweenable field names mapped to target values, and the duration
    *
    * 按目标字段和持续时间为对象创建补间动画。传入参数分别为传入对象、传入对象的tweenable字段名为键，目标值为值组成的table，持续时间。
    */
@@ -2792,13 +2792,13 @@ export interface HostGame {
    */
   TweenSequence(this: void): TweenSequence
   /**
-   * Creates a server signal using the server-agreed signal name signalName
+   * Creates a server signal using the predefined signal name signalName
    *
    * 使用服务器约定的信号名称 signalName 创建服务器信号
    */
   ServerSignal(this: void, signalName: string): ServerSignal
   /**
-   * Loads the global custom variable identified by entityType and customVariableName, including complex data structures such as Lists, Dictionaries, and Structs
+   * Reads the global custom variable identified by entityType and customVariableName, including complex data structures such as Lists, Dictionaries, and Structs
    *
    * 读取 entityType 和 customVariableName 对应的全局自定义变量，支持复杂变量结构（列表、字典、结构体）
    */
@@ -2814,7 +2814,7 @@ export interface HostGame {
    */
   PauseLevelTime(this: void, pause: boolean): void
   /**
-   * Searches the current Stage status to determine whether time is paused
+   * Checks whether the Stage time is paused
    *
    * 查询是否处于关卡时停
    */
@@ -2856,7 +2856,7 @@ export interface HostGame {
    */
   IsTestPlay(this: void): boolean
   /**
-   * Obtains localized Text using the configured Text Map ID
+   * Obtains localized text using the configured Text Map ID
    *
    * 按已配置的文本映射 ID 获取本地化文本
    */
@@ -2950,7 +2950,7 @@ export interface Tween {
    */
   SetOnStepComplete(this: Tween, onStepComplete: (this: void) => void): Tween
   /**
-   * Sets the Loop Count and returns the current Entity; a negative value specifies an Infinite Loop
+   * Sets the Loop Count and returns the current Entity; a negative value represents an Infinite Loop
    *
    * 设置循环次数并返回当前实例；负数表示无限循环
    */
@@ -3024,7 +3024,7 @@ export interface TweenSequence {
    */
   Complete(this: TweenSequence): void
   /**
-   * Destroys the sequence; true completes it first, false stops it in the current status
+   * Destroys the sequence. If true, completes the sequence first; if false, stops it in its current state
    *
    * 销毁序列；true 表示先完成，false 表示保持当前状态结束
    */
@@ -3056,31 +3056,31 @@ export interface ServerSignal {
    */
   AddParam(this: ServerSignal, paramType: ParamType, paramValue: unknown): void
   /**
-   * Sends the built server signal
+   * Sends the constructed server signal
    *
    * 发送已构建的服务器信号
    */
   SendSignal(this: ServerSignal): void
   /**
-   * Adds an integer parameter
+   * Adds an Integer parameter
    *
    * 添加整数参数
    */
   AddInt(this: ServerSignal, intValue: number): void
   /**
-   * Adds an integer List parameter
+   * Adds an Integer List parameter
    *
    * 添加整数列表参数
    */
   AddIntList(this: ServerSignal, intListValue: number[]): void
   /**
-   * Adds a float parameter
+   * Adds a Float parameter
    *
    * 添加浮点数参数
    */
   AddFloat(this: ServerSignal, floatValue: number): void
   /**
-   * Adds a float list parameter
+   * Adds a Float List parameter
    *
    * 添加浮点数列表参数
    */
@@ -3098,13 +3098,13 @@ export interface ServerSignal {
    */
   AddStringList(this: ServerSignal, stringListValue: string[]): void
   /**
-   * Adds a 3D Vector parameter. Pass a table keyed by x, y, and z with the corresponding target values
+   * Adds a 3D Vector parameter. Pass a table with x, y, and z keys mapped to their corresponding target values
    *
    * 添加三维向量参数；传入以x,y,z为键，目标值为值组成的table
    */
   AddVector3(this: ServerSignal, value: Vector3Value): void
   /**
-   * Adds a 3D Vector List parameter. Pass a List of tables keyed by x, y, and z with their corresponding target values.
+   * Adds a 3D Vector List parameter. Pass a List of tables with x, y, and z keys mapped to their corresponding target values
    *
    * 添加三维向量列表参数；传入以x,y,z为键，目标值为值组成的table列表。
    */
@@ -3158,13 +3158,13 @@ export interface ServerSignal {
    */
   AddPrefabIdList(this: ServerSignal, prefabIdListValue: number[]): void
   /**
-   * Adds a config ID parameter
+   * Adds a Config ID parameter
    *
    * 添加配置 ID 参数
    */
   AddConfigId(this: ServerSignal, configIdValue: number): void
   /**
-   * Adds a configuration ID List parameter
+   * Adds a Config ID List parameter
    *
    * 添加配置 ID 列表参数
    */
@@ -3184,13 +3184,13 @@ export interface ClientUIBaseControl {
    */
   readonly id: RuntimeControlId
   /**
-   * UI Control Template Index. Used to instantiate templates; not a runtime id.
+   * UI Control template index. Used to instantiate templates; not a runtime id.
    *
    * 控件模板索引。用于模板实例化，不是运行时 id。
    */
   readonly prefabIndex: ControlPrefabIndex
   /**
-   * Active state. When true, the UI Control is visible and its mounted Script logic runs. When false, the UI Control is hidden and its Script logic stops. Default: false.
+   * Active state. When true, the UI Control is visible and its mounted Script logic runs. When false, the UI Control is hidden and its Script logic stops. Default: false
    *
    * 激活状态；true 时控件可见且挂载脚本逻辑运行，false 时控件不可见且脚本逻辑停止运行。默认为false。
    */
@@ -3208,7 +3208,7 @@ export interface ClientUIBaseControl {
    */
   readonly visible: boolean
   /**
-   * UI Control Name
+   * UI Control name
    *
    * 控件名称
    */
@@ -3316,7 +3316,7 @@ export interface ClientUIBaseControl {
    */
   localRotationZ: number
   /**
-   * Can receive focus via Controller Joystick Navigation
+   * Focusable via controller joystick navigation
    *
    * 可被手柄导航摇杆聚焦
    */
@@ -3340,7 +3340,7 @@ export interface ClientUIBaseControl {
    */
   FindChild(this: ClientUIBaseControl, path: string): ClientUIBaseControl | undefined
   /**
-   * Sets the active state; when deactivated, the UI Control becomes invisible and the mounted Script logic stops running.
+   * Sets the active state; when deactivated, the UI Control becomes invisible and the mounted Script logic stops running
    *
    * 设置激活状态；关闭后控件不可见且挂载脚本逻辑停止运行。
    */
@@ -3358,7 +3358,7 @@ export interface ClientUIBaseControl {
    */
   GetSiblingIndex(this: ClientUIBaseControl): number
   /**
-   * Sets the sibling Sort Index from 0 to one less than the parent UI Control's child UI Control count. Larger values usually appear later in the Layer and render on top
+   * Sets the sibling Sort Index from 0 to one less than the parent UI Control's child UI Control count. Larger values usually appear later in the hierarchy and render on top
    *
    * 设置同级排序索引；index 范围为 0 到父控件的子控件数量减一；数值越大通常越靠后、显示越靠上
    */
@@ -3376,25 +3376,25 @@ export interface ClientUIBaseControl {
    */
   SetAsLastSibling(this: ClientUIBaseControl): boolean
   /**
-   * With no parent Layer, obtains the Location relative to the Canvas's bottom-left origin; with a parent Layer, obtains the offset from the parent Layer's center.
+   * Without a parent hierarchy, obtains the position relative to the bottom-left origin of the canvas; with a parent hierarchy, obtains the offset relative to the center of the parent
    *
    * 无父层级时，以画布左下为原点获取位置；存在父层级时，获取与父层级中心的相对偏移。
    */
   GetAnchoredPosition(this: ClientUIBaseControl): LuaMultiReturn<[number, number]>
   /**
-   * With no parent Layer, sets the Location relative to the Canvas's bottom-left origin; with a parent Layer, sets the offset from the parent Layer's center.
+   * Without a parent hierarchy, sets the position relative to the bottom-left origin of the canvas; with a parent hierarchy, sets the offset relative to the center of the parent
    *
    * 无父层级时，以画布左下为原点设置位置；存在父层级时，设置与父层级中心的相对偏移。
    */
   SetAnchoredPosition(this: ClientUIBaseControl, x: number, y: number): void
   /**
-   * Obtains Size
+   * Obtains size
    *
    * 获取大小
    */
   GetSizeDelta(this: ClientUIBaseControl): LuaMultiReturn<[number, number]>
   /**
-   * Sets Size
+   * Sets size
    *
    * 设置大小
    */
@@ -3424,37 +3424,37 @@ export interface ClientUIBaseControl {
    */
   SetAnchorMax(this: ClientUIBaseControl, x: number, y: number): void
   /**
-   * Obtains Pivot
+   * Obtains pivot
    *
    * 获取中心
    */
   GetPivot(this: ClientUIBaseControl): LuaMultiReturn<[number, number]>
   /**
-   * Sets Pivot
+   * Sets pivot
    *
    * 设置中心
    */
   SetPivot(this: ClientUIBaseControl, x: number, y: number): void
   /**
-   * Obtains Zoom
+   * Obtains zoom
    *
    * 获取缩放
    */
   GetLocalScale(this: ClientUIBaseControl): LuaMultiReturn<[number, number, number]>
   /**
-   * Sets Zoom
+   * Sets zoom
    *
    * 设置缩放
    */
   SetLocalScale(this: ClientUIBaseControl, x: number, y: number, z: number): void
   /**
-   * Obtains Rotation
+   * Obtains rotation
    *
    * 获取旋转
    */
   GetLocalRotation(this: ClientUIBaseControl): LuaMultiReturn<[number, number, number]>
   /**
-   * Sets Rotation
+   * Sets rotation
    *
    * 设置旋转
    */
@@ -3478,7 +3478,7 @@ export interface ClientUIBaseControl {
    */
   GetScripts(this: ClientUIBaseControl): Script[]
   /**
-   * Registers a monitor for the specified key Event. The callback returns a boolean; retain its reference to remove that monitor individually. If a Lua callback handles an interaction key Event within a Vessel and marks it as handled, other keys in that Vessel do not respond to the same Event
+   * Registers a listener for the specified key Event. The callback returns a boolean; retain its reference to remove that listener individually. If a Lua callback handles an interaction key Event within a container and marks it as handled, other keys in that container do not respond to the same Event
    *
    * 注册指定按键事件监听；回调返回 boolean；移除单个监听时需保留该回调引用。同一个容器中，如果交互按键事件被lua回调响应，并标记为已处理，容器内的其他按键不会也响应此次按键事件
    */
@@ -3488,7 +3488,7 @@ export interface ClientUIBaseControl {
     callback: (this: void) => boolean
   ): void
   /**
-   * Removes the monitor for the specified key Event and callback; the callback must be the same reference used during registration
+   * Removes the listener for the specified key Event and callback; the callback must be the same reference used during registration
    *
    * 移除指定按键事件和回调的监听；回调必须与注册时的引用相同
    */
@@ -3498,19 +3498,19 @@ export interface ClientUIBaseControl {
     callback: (this: void) => boolean
   ): void
   /**
-   * Removes all monitors for the specified key Event
+   * Removes all listeners for the specified key Event
    *
    * 移除指定按键事件的全部监听
    */
   RemoveKeyEventListeners(this: ClientUIBaseControl, eventType: KeyEventType): void
   /**
-   * Removes all key Event monitors
+   * Removes all key Event listeners
    *
    * 移除全部按键事件监听
    */
   RemoveAllKeyEventListeners(this: ClientUIBaseControl): void
   /**
-   * Registers a monitor for the specified Controller Navigation Event
+   * Registers a listener for the specified controller navigation Event
    *
    * 注册指定手柄导航事件监听
    */
@@ -3520,7 +3520,7 @@ export interface ClientUIBaseControl {
     callback: (this: void) => void
   ): void
   /**
-   * Removes the monitor for the specified Controller Navigation Event and callback
+   * Removes the listener for the specified controller navigation Event and callback
    *
    * 移除指定手柄导航事件和回调的监听
    */
@@ -3530,7 +3530,7 @@ export interface ClientUIBaseControl {
     callback: (this: void) => void
   ): void
   /**
-   * Removes all monitors for the specified Controller Navigation Event
+   * Removes all listeners for the specified controller navigation Event
    *
    * 移除指定手柄导航事件的全部监听
    */
@@ -3539,7 +3539,7 @@ export interface ClientUIBaseControl {
     eventType: ControllerNavigationEventType
   ): void
   /**
-   * Removes all Controller Navigation Event monitors
+   * Removes all controller navigation Event listeners
    *
    * 移除全部手柄导航事件监听
    */
@@ -3621,7 +3621,7 @@ export interface ClientUIImageControl extends ClientUIBaseControl {
    */
   softEdgeWidthY: number
   /**
-   * Horizontal soft edge range, Tweenable, Tweenable
+   * Horizontal soft edge range, Tweenable
    *
    * 水平边缘羽化范围、Tweenable
    */
@@ -3645,25 +3645,25 @@ export interface ClientUIImageControl extends ClientUIBaseControl {
    */
   fillType: ImageFillType
   /**
-   * Horizontal Fill Orientation
+   * Horizontal fill orientation
    *
    * 水平填充方向
    */
   fillHorizontalType: ImageFillHorizontalType
   /**
-   * Vertical Fill Orientation
+   * Vertical fill orientation
    *
    * 垂直填充方向
    */
   fillVerticalType: ImageFillVerticalType
   /**
-   * 90-degree radial Start Point
+   * 90-degree radial fill starting point
    *
    * 90度环绕起点
    */
   fillRadial90Type: ImageFillRadial90Type
   /**
-   * Start Point for 180-degree and 360-degree (Full FOV) radial fills
+   * Starting point for 180-degree and 360-degree radial fills
    *
    * 180度环绕和 360度环绕的起点
    */
@@ -3807,7 +3807,7 @@ export interface ClientUITextBoxControl extends ClientUIBaseControl {
 }
 export interface ClientUITextWindowControl extends ClientUIBaseControl {
   /**
-   * Whether it is interactable; when this and showScrollBar are both false, the Controller cannot scroll the Text Window
+   * Whether it is interactable; when this and showScrollBar are both false, the controller cannot scroll the text window
    *
    * 是否可交互；与 showScrollBar 同时为 false 时，手柄无法滚动文本视窗
    */
@@ -3887,19 +3887,19 @@ export interface ClientUIPresetButtonControl extends ClientUIBaseControl {
    */
   interactable: boolean
   /**
-   * Press Sound Effect ID
+   * Click sound effect ID
    *
    * 点击音效 ID
    */
   clickAudioId: number
   /**
-   * Detectable by Cursor Raycast
+   * Detectable by cursor raycast
    *
    * 可被光标射线检测
    */
   raycastTarget: boolean
   /**
-   * Registers a monitor for the specified cursor Event; the callback receives CursorEventData
+   * Registers a listener for the specified cursor event; the callback receives CursorEventData
    *
    * 注册指定光标事件监听；回调接收 CursorEventData
    */
@@ -3909,7 +3909,7 @@ export interface ClientUIPresetButtonControl extends ClientUIBaseControl {
     callback: (this: void, event: CursorEventData) => void
   ): void
   /**
-   * Removes the monitor for the specified cursor Event and callback
+   * Removes the listener for the specified cursor event and callback
    *
    * 移除指定光标事件和回调的监听
    */
@@ -3919,13 +3919,13 @@ export interface ClientUIPresetButtonControl extends ClientUIBaseControl {
     callback: (this: void, event: CursorEventData) => void
   ): void
   /**
-   * Removes all monitors for the specified cursor Event
+   * Removes all listeners for the specified cursor event
    *
    * 移除指定光标事件的全部监听
    */
   RemoveCursorEventListeners(this: ClientUIPresetButtonControl, eventType: CursorEventType): void
   /**
-   * Removes all cursor Event monitors
+   * Removes all cursor event listeners
    *
    * 移除全部光标事件监听
    */
@@ -3939,13 +3939,13 @@ export interface ClientUIPresetButtonControl extends ClientUIBaseControl {
 }
 export interface ClientUICursorEventAreaControl extends ClientUIBaseControl {
   /**
-   * Detectable by Cursor Raycast
+   * Detectable by cursor raycast
    *
    * 可被光标射线检测
    */
   raycastTarget: boolean
   /**
-   * Registers a monitor for the specified cursor Event; the callback receives CursorEventData
+   * Registers a listener for the specified cursor event; the callback receives CursorEventData
    *
    * 注册指定光标事件监听；回调接收 CursorEventData
    */
@@ -3955,7 +3955,7 @@ export interface ClientUICursorEventAreaControl extends ClientUIBaseControl {
     callback: (this: void, event: CursorEventData) => void
   ): void
   /**
-   * Removes the monitor for the specified cursor Event and callback
+   * Removes the listener for the specified cursor event and callback
    *
    * 移除指定光标事件和回调的监听
    */
@@ -3965,13 +3965,13 @@ export interface ClientUICursorEventAreaControl extends ClientUIBaseControl {
     callback: (this: void, event: CursorEventData) => void
   ): void
   /**
-   * Removes all monitors for the specified cursor Event
+   * Removes all listeners for the specified cursor event
    *
    * 移除指定光标事件的全部监听
    */
   RemoveCursorEventListeners(this: ClientUICursorEventAreaControl, eventType: CursorEventType): void
   /**
-   * Removes all cursor Event monitors
+   * Removes all cursor event listeners
    *
    * 移除全部光标事件监听
    */
@@ -3997,7 +3997,7 @@ export interface CursorEventData {
    */
   readonly touchId: number
   /**
-   * Obtains the current screen UI Location relative to the Canvas's bottom-left origin. Its scale matches the layout Location scale.
+   * Obtains the current screen UI Location relative to the Canvas's bottom-left origin. Its scale matches the layout Location scale
    *
    * 以画布左下角为原点，获取当前屏幕 UI 坐标。坐标比例和布局坐标一致。
    */
@@ -4009,7 +4009,7 @@ export interface CursorEventData {
    */
   GetPressUIPos(this: CursorEventData): LuaMultiReturn<[number, number]>
   /**
-   * Obtains the screen UI displacement of this event
+   * Obtains the screen UI displacement of this Event
    *
    * 获取本次事件的屏幕 UI 位移
    */
@@ -4023,13 +4023,13 @@ export interface ClientUIGridScrollerControl extends ClientUIBaseControl {
    */
   readonly itemCount: number
   /**
-   * List item UI Control Template Index
+   * List item UI Control template index
    *
    * 列表项控件模板索引
    */
   itemPrefabIndex: number
   /**
-   * Detectable by Cursor Raycast
+   * Detectable by cursor raycast
    *
    * 可被光标射线检测
    */
@@ -4047,7 +4047,7 @@ export interface ClientUIGridScrollerControl extends ClientUIBaseControl {
    */
   interactable: boolean
   /**
-   * Scroll Direction
+   * Scroll direction
    *
    * 滚动方向
    */
@@ -4071,7 +4071,7 @@ export interface ClientUIGridScrollerControl extends ClientUIBaseControl {
    */
   scrollProgress: number
   /**
-   * Refreshes each List Item and calls its callback. The callback signature is funcontrol: ClientUIBaseControl, index: integer; the arguments are the current List Item UI Control and its index
+   * Refreshes each List Item and calls its callback. The callback signature is fun(control: ClientUIBaseControl, index: integer), where the arguments are the current List Item UI Control and its index
    *
    * 刷新列表项并逐项调用回调；刷新回调形式为 fun(control: ClientUIBaseControl, index: integer)，参数依次为当前列表项控件和列表项索引
    */
@@ -4115,7 +4115,7 @@ export interface ClientUIGridScrollerControl extends ClientUIBaseControl {
     scrollAlignType: ScrollAlignType
   ): void
   /**
-   * Obtains the length of the scroll content in the scroll direction
+   * Obtains the length of the scroll content along the scroll direction
    *
    * 获取滚动内容在滚动方向上的长度
    */
@@ -4155,13 +4155,13 @@ export interface ClientUIAnimationControl extends ClientUIBaseControl {
    */
   layer: UIAnimationLayer
   /**
-   * Play Interface Animation
+   * Play UI Animation
    *
    * 播放界面动效
    */
   PlayAnimation(this: ClientUIAnimationControl): void
   /**
-   * Stop Interface Animation
+   * Stop UI Animation
    *
    * 停止界面动效
    */
@@ -4183,25 +4183,25 @@ export interface ClientUIFullscreenAnimationControl extends ClientUIBaseControl 
 }
 export interface ClientUIContainerControl extends ClientUIBaseControl {
   /**
-   * Whether to isolate Controller navigation
+   * Whether to isolate controller navigation
    *
    * 是否隔离手柄导航
    */
   isolateNavigation: boolean
   /**
-   * Whether to disable key event passthrough
+   * Whether to disable key Event passthrough within the area
    *
    * 是否屏蔽按键事件穿透
    */
   disableKeyEventPassthrough: boolean
   /**
-   * Whether to disable press event passthrough within the area
+   * Whether to disable cursor event passthrough within the area
    *
    * 是否屏蔽区域内点击事件穿透
    */
   disableCursorEventPassthrough: boolean
   /**
-   * Whether to display the persistent cursor; all CursorEvent-related methods require this parameter to be set to true to function properly
+   * Whether to display a persistent cursor. All cursor event-related methods require this parameter to be set to true to function properly
    *
    * 是否显示常驻光标；CursorEvent相关方法都需设置该参数为真后才可正常使用
    */

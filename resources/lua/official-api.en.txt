@@ -1,7 +1,7 @@
-This document covers the public API for Local Lua UI Scripts, including interface signatures, types, fields, functions, methods, and enumerations.
+This document covers the public API for Client Lua UI Scripts, including interface signatures, types, fields, functions, methods, and enumerations.
 I. Terminology Conventions
-This section defines Chinese and English equivalents for API-specific terminology; it does not represent actual interface or field names.
-| Term | English Term
+This section defines API-specific terminology; it does not represent actual interface or field names.
+| Term | API Term
 | Script | Script
 | Signal | ServerSignal
 | Custom Variables | CustomVariable
@@ -14,19 +14,19 @@ This section defines Chinese and English equivalents for API-specific terminolog
 | Radial 90 | Radial90
 | Radial 180 | Radial180
 | Radial 360 | Radial360
-| Local UI Control Runtime ID | ClientControlID
-| Local UI Control Runtime ID List | ClientControlIDList
+| Client UI Control Runtime ID | ClientControlID
+| Client UI Control Runtime ID List | ClientControlIDList
 | Stage Time Pause | LevelTimePaused
-| Vessel Node | ContainerControl
+| Container Node | ContainerControl
 | Text Box | TextBoxControl
 | Text Window | TextWindowControl
 | Image | ImageControl
-| Interface Animation | UIAnimationControl
-| Fullscreen Animation | FullscreenUIAnimationControl
+| User Interface Animation | UIAnimationControl
+| Fullscreen UI Animation | FullscreenUIAnimationControl
 | Key Hint | KeyHintControl
 | Grid View | GridScrollerControl
 | Cursor Detection Area | CursorEventArea
-| Template Reference UI Control | ReferenceControl
+| Template Reference Control | ReferenceControl
 | Preset Button | PresetButton
 | Alive | alive
 | Enable | enable
@@ -34,191 +34,192 @@ This section defines Chinese and English equivalents for API-specific terminolog
 | Visible | visible
 | Isolate Controller Navigation | IsolateNavigation
 | Disable Key Event Passthrough | disableKeyEventPassthrough
-| Disable Press Event Passthrough Within Area | disableCursorEventPassthrough
-| Show Persistent Cursor | showCursor
+| Disable Cursor Event Passthrough Within Area | disableCursorEventPassthrough
+| Always Show Cursor | showCursor
 | Detectable by Cursor Raycast | Raycast Target
 II. API Scope
-This page covers the Script Life Cycle, global functions, Color, Script, game, Server Signals, Tween Animations, input events, Controller Navigation, all Local UI Control types, and enumerations.
+This page covers the Script Lifecycle, Global Functions, Color, Script, game, Server Signals, Tween Animations, Input Events, Controller Navigation, all Client UI Control types, and Enumerations.
 III. Runtime Environment
 Lua Version
 The runtime uses Lua 5.3
 The following standard library features are unavailable:
 string.dump
 io.*
-os.* except os.time, os.date, os.clock, and os.difftime
-debug.* except debug.traceback
-math except math.modf, math.ult, math.isnann, and math.isnafn
+os.*, except os.time, os.date, os.clock, and os.difftime
+debug.*, except debug.traceback
+math, except math.modf, math.ult, math.isnan(n), and math.isnaf(n)
 IV. Detailed Introduction
-1. Script Life Cycle
-At runtime, the following Life Cycle callbacks are located and called by their fixed names.
+1. Script Lifecycle
+At runtime, the system automatically searches for and calls the following Lifecycle callbacks by their predefined names.
 | Function | Parameters | Description
-| OnInit | None | Called when the script is initialized
-| OnStart | None | Called when the script starts
-| OnEnable | None | Called when the script is enabled
-| OnDisable | None | Called when the script is disabled
-| OnUpdatedt | dt: number | Called every frame when the Script updates; unaffected by Stage Time Pause
-| OnLevelUpdatedt | dt: number | Called every frame when the Stage updates; affected by Stage Time Pause
-| OnDestroy | None | Called when the script is destroyed
+| OnInit() | None | Called when the script is initialized
+| OnStart() | None | Called when the script starts
+| OnEnable() | None | Called when the script is enabled
+| OnDisable() | None | Called when the script is disabled
+| OnUpdate(dt) | dt: number | Called every frame when the Script updates; unaffected by Stage Time Pause
+| OnLevelUpdate(dt) | dt: number | Called every frame when the Stage updates; affected by Stage Time Pause
+| OnDestroy() | None | Called when the script is destroyed
 2. Frame-by-Frame Control
 | Method | Return Value | Description
-| script:EnableUpdateenabled: boolean | — | Controls the per-frame update of the current script; false to disable, true to re-enable
+| script:EnableUpdate(enabled: boolean) | — | Controls the per-frame update of the current script; false to disable, true to re-enable
 3. Global API
-1. Type Search
+(1) Type Search
 | Function | Return Value | Description
-| typeofvalue | string | Returns the runtime type name for identifying host objects
-2 Logs and Debugging
+| typeof(value) | string | Returns the runtime type name for identifying host objects
+(2) Logs and Debugging
 | Function | Return Value | Description
-| print... | — | Writes the supplied values to the standard log without blocking execution
-| printerr... | — | Writes the supplied values to the error log without throwing a Lua error or blocking execution
-| debug.traceback[message[, level]] | string | Generates and returns call-stack text. message adds text at the beginning, and level specifies the starting stack level. This function returns text only and does not write to the log automatically
-| game.PrintClientUITree | — | Writes the current Local UI Control tree to the log in parent-child Layer order
-3 Value Check
-Use these two functions to validate finite numbers when handling external values such as Joystick input, coordinates, or Tween Animation parameters.
+| print(...) | — | Writes the supplied values to the standard log without blocking execution
+| printerr(...) | — | Writes the supplied values to the error log without throwing a Lua error or blocking execution
+| debug.traceback([message[, level]]) | string | Generates and returns call-stack text. message adds text at the beginning, and level specifies the starting stack level. This function returns text only and does not write to the log automatically
+| game.PrintClientUITree() | — | Writes the current Client UI Control tree to the log in parent-child hierarchical order
+(3) Value Check
+Use these two functions to validate finite numbers when handling external values such as joystick input, coordinates, or Tween Animation parameters.
 | Function | Return Value | Description
-| math.isnann | boolean | Checks if the value is NaN
-| math.isinfn | boolean | Checks if the value is positive or negative infinity
-4 Global Variables
+| math.isnan(n) | boolean | Checks if the value is NaN
+| math.isinf(n) | boolean | Checks if the value is positive or negative infinity
+(4) Global Variables
 | Name | Type | Description
 | script | Script | Current script
-| Enum | Enum | Enum
-4.Color
-1 Constructor
+| Enum | Enum | Enumerate
+4. Color
+(1) Constructor
 | Constructor | Return Value | Description
-| Colorr: number, g: number, b: number, a: number? | ColorValue | Creates a Color from 0-255 RGBA values. a may be omitted or set to nil; nil is treated as 255 (fully opaque)
-2 Functions
+| Color(r: number, g: number, b: number, a: number?) | ColorValue | Creates a Color from 0-255 RGBA values. a may be omitted or set to nil; nil is treated as 255 (fully opaque)
+(2) Functions
 | Function | Return Value | Description
-| Color.FromRGBr: number, g: number, b: number | ColorValue | Creates a color from 0-255 RGB
-| Color.FromRGBAr: number, g: number, b: number, a: number? | ColorValue | Creates a Color from 0-255 RGBA values. a may be omitted or set to nil; nil is treated as 255 (fully opaque)
-| Color.ToRGBAcolorValue: ColorValue | r, g, b, a: number | Splits a Color into four RGBA values from 0-255
-5.Script
+| Color.FromRGB(r: number, g: number, b: number) | ColorValue | Creates a color from 0-255 RGB
+| Color.FromRGBA(r: number, g: number, b: number, a: number?) | ColorValue | Creates a Color from 0-255 RGBA values. a may be omitted or set to nil; nil is treated as 255 (fully opaque)
+| Color.ToRGBA(colorValue: ColorValue) | r, g, b, a: number | Splits a Color into four RGBA values from 0-255
+5. Script
 Represents a Script Entity. At runtime, the current Script Entity is provided through the global variable script.
-1 Fields
+(1) Fields
 | Field | Type | Access | Description
 | alive | boolean | Read-only | Whether the Script Entity is alive
+| scriptMappingRuntimeId | integer | Read-only | Script mapping runtime ID
 | scriptMappingId | integer | Read-only | Script mapping ID
 | object | any | Read-only | Host object to which the script is mounted
 | path | string | Read-only | Script path
 | enabled | boolean | Read/Write | Script enabled status
-2 Method
+(2) Method
 | Method | Return Value | Description
 | script:GetParam(paramName: string) | any | Loads the parameter of the corresponding variable in the current Script by the variable name paramName
-| script:InvokefuncName: string, ...: any | — | Calls the global function named funcName in the current Script's UI-script environment. Arguments must use transferable types supported at runtime
-| script:EnableUpdateenabled: boolean | — | Controls the Tick update of the current script; false to disable, true to re-enable
-| script:RegisterServerSignalHandlersignalName: string, callback: funsignalName: string, signalParams: any[] | — | Registers a Server Signal monitor for signalName. The callback receives the Signal Name followed by a List of signal parameters
-| script:UnregisterServerSignalHandlersignalName: string | — | Removes the Server Signal monitor for signalName
-| script:RegisterCustomVariableChangedHandlerentityType: CustomVariableEntityType, customVariableName: string, callback: funentityType: CustomVariableEntityType, customVariableName: string | — | Monitors changes to the Global Custom Variable identified by entityType and customVariableName. The callback provides only the Entity Type and Variable Name; use game.GetGlobalCustomVariableValue to load the Current Value
-| script:UnregisterCustomVariableChangedHandlerentityType: CustomVariableEntityType, customVariableName: string | — | Removes the Custom Variable monitor for entityType and customVariableName
-6.game
-game is a global table provided by the Local runtime. Call the following functions using dot notation.
-1. UI and Layers
+| script:Invoke(funcName: string, ...: any) | — | Calls the global function named funcName in the current UI script environment. Arguments must use transferable types supported at runtime
+| script:EnableUpdate(enabled: boolean) | — | Controls the Tick update of the current script; false to disable, true to re-enable
+| script:RegisterServerSignalHandler(signalName: string, callback: fun(signalName: string, signalParams: any[])) | — | Registers a Server Signal listener for signalName. The callback receives the Signal Name, followed by an array of signal parameters
+| script:UnregisterServerSignalHandler(signalName: string) | — | Removes the Server Signal listener for signalName
+| script:RegisterCustomVariableChangedHandler(entityType: CustomVariableEntityType, customVariableName: string, callback: fun(entityType: CustomVariableEntityType, customVariableName: string)) | — | Monitors changes to the Global Custom Variable identified by entityType and customVariableName. The callback provides only the Entity Type and Variable Name; use game.GetGlobalCustomVariableValue to load the Current Value
+| script:UnregisterCustomVariableChangedHandler(entityType: CustomVariableEntityType, customVariableName: string) | — | Removes the Custom Variable monitor for entityType and customVariableName
+6. Game
+game is a global table provided by the Client runtime. Call the following functions using dot notation.
+(1) UI and Hierarchy
 | Function | Return Value | Description
-| game.InstantiateClientUIControlcontrolPrefabIndex: integer, parent: ClientUIBaseControl | ClientUIBaseControl | Creates a UI Control Entity under parent using the configured UI Control Template Index
-| game.DestroyClientUIControlcontrol: ClientUIBaseControl | — | Destroys the specified Local UI Control Entity
-| game.GetClientUIControlcontrolId: integer | ClientUIBaseControl | Obtains a UI Control by its Local UI Control runtime ID
-| game.FindClientUIRootnodeName: string | ClientUIBaseControl | Finds the root UI Control named nodeName
-| game.GetClientUIRoots | ClientUIBaseControl[] | Obtains all root UI Controls - that is, the default Vessel Nodes on the displayed Local UI Control Vessel Canvas
-| game.GetUICanvasSize | x, y: number | Obtains the UI Canvas width and height
-| game.GetCursorUIPos | x, y: number | Obtains the cursor's UI coordinates
-2 Input and Focus
-After loading the Joystick-axis values, apply finite-number validation, safe zones, clamping, and coordinate-system conversion as required.
+| game.InstantiateClientUIControl(controlPrefabIndex: integer, parent: ClientUIBaseControl) | ClientUIBaseControl | Creates a UI Control Entity under parent using the configured UI Control Template Index
+| game.DestroyClientUIControl(control: ClientUIBaseControl) | — | Destroys the specified Client UI Control Entity
+| game.GetClientUIControl(controlId: integer) | ClientUIBaseControl | Obtains a UI Control by its Client UI Control runtime ID
+| game.FindClientUIRoot(nodeName: string) | ClientUIBaseControl | Finds the UI Root Control named nodeName
+| game.GetClientUIRoots() | ClientUIBaseControl[] | Obtains all UI Root Controls - that is, the default Container Nodes on the displayed Client UI Control Canvas
+| game.GetUICanvasSize() | x, y: number | Obtains the UI Canvas width and height
+| game.GetCursorUIPos() | x, y: number | Obtains the cursor's UI coordinates
+(2) Input and Focus
+After loading the joystick-axis values, apply finite-number validation, deadzones, clamping, and coordinate-system conversion as required.
 | Function | Return Value | Description
-| game.GetDevice | Device | Obtains the current input device type
-| game.SetControllerFocuscontrol: ClientUIBaseControl | — | Sets the Controller's currently focused UI Control
-| game.GetControllerFocus | ClientUIBaseControl | Obtains the currently focused UI Control
-| game.GetControllerLeftStickAxis | horizontal, vertical: number | Obtains the Left Stick axis value
-| game.GetControllerRightStickAxis | horizontal, vertical: number | Obtains the Right Stick axis value
-3. Tween Animations, Server Signals, and Custom Variables
+| game.GetDevice() | Device | Obtains the current input device type
+| game.SetControllerFocus(control: ClientUIBaseControl) | — | Sets the Controller's currently focused UI Control
+| game.GetControllerFocus() | ClientUIBaseControl | Obtains the currently focused UI Control
+| game.GetControllerLeftStickAxis() | horizontal, vertical: number | Obtains the Left Stick axis value
+| game.GetControllerRightStickAxis() | horizontal, vertical: number | Obtains the Right Stick axis value
+(3) Tween Animations, Server Signals, and Custom Variables
 | Function | Return Value | Description
-| game.Tweenobject: any, tweenDataTable: table, duration: number | Tween | Creates a Tween Animation for an object using target fields and a duration. Pass the target object, a table whose keys are tweenable field names and whose values are their targets, and the duration.
-| game.TweenSequence | TweenSequence | Creates an empty tween sequence
-| game.ServerSignalsignalName: string | ServerSignal | Creates a server signal using the server-agreed signal name signalName
-| game.GetGlobalCustomVariableValueentityType: CustomVariableEntityType, customVariableName: string | any | Loads the global custom variable identified by entityType and customVariableName, including complex data structures such as Lists, Dictionaries, and Structs
-4. Stages, Sound Effects, and Localization
+| game.Tween(object: any, tweenDataTable: table, duration: number) | Tween | Creates a Tween Animation for an object using target fields and a duration. Parameters: target object, table of tweenable field names mapped to target values, and the duration
+| game.TweenSequence() | TweenSequence | Creates an empty tween sequence
+| game.ServerSignal(signalName: string) | ServerSignal | Creates a server signal using the server-agreed signal name signalName
+| game.GetGlobalCustomVariableValue(entityType: CustomVariableEntityType, customVariableName: string) | any | Reads the global custom variable identified by entityType and customVariableName, including complex data structures such as Lists, Dictionaries, and Structs
+(4) Stages, Sound Effects, and Localization
 | Function | Return Value | Description
-| game.PauseLevelTimepause: boolean | — | Sets the Stage time pause status in single-player mode; true to enable, false to disable; does not pause the script itself
-| game.IsLevelTimePaused | boolean | Searches the current Stage status to determine whether time is paused
-| game.PlayAudio2DaudioId: integer | integer | Plays the configured 2D Sound Effect and returns its Sound Effect Entity ID
-| game.StopAudioaudioInstanceId: integer | — | Stops the specified Sound Effect Entity
-| game.IsAudioAliveaudioInstanceId: integer | boolean | Searches the Sound Effect Entity's status to determine whether it is alive
-| game.GetLanguageType | LanguageType | Obtains the current language
-| game.GetStageMode | StageMode | Obtains the current Stage mode
-| game.IsTestPlay | boolean | Searches the current status to determine whether the game is in playtest mode
-| game.GetTexttextMapId: string | string | Obtains localized Text using the configured Text Map ID
-7.Tween
+| game.PauseLevelTime(pause: boolean) | — | Sets the Stage time pause status in single-player mode; true to enable, false to disable; does not pause the script itself
+| game.IsLevelTimePaused() | boolean | Checks whether the Stage time is paused
+| game.PlayAudio2D(audioId: integer) | integer | Plays the configured 2D Sound Effect and returns its Sound Effect Entity ID
+| game.StopAudio(audioInstanceId: integer) | — | Stops the specified Sound Effect Entity
+| game.IsAudioAlive(audioInstanceId: integer) | boolean | Searches the Sound Effect Entity's status to determine whether it is alive
+| game.GetLanguageType() | LanguageType | Obtains the current language
+| game.GetStageMode() | StageMode | Obtains the current Stage mode
+| game.IsTestPlay() | boolean | Searches the current status to determine whether the game is in playtest mode
+| game.GetText(textMapId: string) | string | Obtains localized text using the configured Text Map ID
+7. Tween
 Tween Animation class that interpolates a target object's Tweenable fields.
-1. Create
+(1) Create
 | Function | Return Value | Description
-| game.Tweenobject: any, tweenDataTable: table, duration: number | Tween | Creates a Tween Animation for an object using target fields and a duration. Pass the target object, a table whose keys are tweenable field names and whose values are their targets, and the duration.
-2 Method
+| game.Tween(object: any, tweenDataTable: table, duration: number) | Tween | Creates a Tween Animation for an object using target fields and a duration. Parameters: target object, table of tweenable field names mapped to target values, and the duration
+(2) Method
 | Method | Return Value | Description
-| Tween:SetEaseeaseType: EaseType | Tween | Sets the Ease Type and returns the current Entity
-| Tween:SetRelativerelative: boolean | Tween | Sets how the target values in tweenDataTable are interpreted; false indicates an absolute target value, and true indicates an increment relative to the current value
-| Tween:Play | Tween | Starts playback and returns the current Entity
-| Tween:Pause | — | Pauses and retains the current progress
-| Tween:Resume | — | Resumes playback from where it was paused
-| Tween:Restart | — | Returns to the initial status and restarts playback
-| Tween:Complete | — | Immediately switches to the end status and completes
-| Tween:Killcomplete: boolean | — | Destroys the Entity; true first switches it to the End status and triggers the Complete callback, while false ends it in its Current status without triggering the Complete callback
-| Tween:SetOnCompleteonComplete: fun | Tween | Sets the callback triggered after all loops complete and returns the current Entity
-| Tween:SetOnStepCompleteonStepComplete: fun | Tween | Sets the step complete callback and returns the current Entity
-| Tween:SetLoopstimes: integer | Tween | Sets the Loop Count and returns the current Entity; a negative value specifies an Infinite Loop
-8.TweenSequence
+| Tween:SetEase(easeType: EaseType) | Tween | Sets the Ease Type and returns the current Entity
+| Tween:SetRelative(relative: boolean) | Tween | Sets how the target values in tweenDataTable are interpreted; false indicates an absolute target value, and true indicates an increment relative to the current value
+| Tween:Play() | Tween | Starts playback and returns the current Entity
+| Tween:Pause() | — | Pauses and retains the current progress
+| Tween:Resume() | — | Resumes playback from where it was paused
+| Tween:Restart() | — | Returns to the initial status and restarts playback
+| Tween:Complete() | — | Immediately switches to the end status and completes
+| Tween:Kill(complete: boolean) | — | Destroys the Entity; true first switches it to the End status and triggers the Complete callback, while false ends it in its Current status without triggering the Complete callback
+| Tween:SetOnComplete(onComplete: fun()) | Tween | Sets the callback triggered after all loops complete and returns the current Entity
+| Tween:SetOnStepComplete(onStepComplete: fun()) | Tween | Sets the step complete callback and returns the current Entity
+| Tween:SetLoops(times: integer) | Tween | Sets the Loop Count and returns the current Entity; a negative value represents an Infinite Loop
+8. TweenSequence
 Arranges multiple Tweens, intervals, and callbacks on one timeline.
-1. Create
+(1) Create
 | Function | Return Value | Description
-| game.TweenSequence | TweenSequence | Creates an empty tween sequence
-2 Method
+| game.TweenSequence() | TweenSequence | Creates an empty tween sequence
+(2) Method
 | Method | Return Value | Description
-| TweenSequence:Appendtween: Tween | TweenSequence | Appends a tween to the end of the sequence
-| TweenSequence:AppendIntervalinterval: number | TweenSequence | Appends a wait time of the specified number of seconds to the end of the sequence
-| TweenSequence:AppendCallbackcallback: fun | TweenSequence | Appends a callback to the end of the sequence
-| TweenSequence:Jointween: Tween | TweenSequence | Plays simultaneously with the current last step; this step ends with whichever finishes last
-| TweenSequence:Inserttime: number, tween: Tween | TweenSequence | Inserts a parallel tween animation at the specified time
-| TweenSequence:InsertCallbacktime: number, callback: fun | TweenSequence | Inserts a callback at the specified time
-| TweenSequence:Play | TweenSequence | Starts playback and returns the current Entity
-| TweenSequence:Pause | — | Pauses the sequence
-| TweenSequence:Resume | — | Resumes the sequence
-| TweenSequence:Restart | — | Returns to the initial status and restarts playback
-| TweenSequence:Complete | — | Immediately completes the entire sequence
-| TweenSequence:Killcomplete: boolean | — | Destroys the sequence; true completes it first, false stops it in the current status
-| TweenSequence:SetOnCompleteonComplete: fun | TweenSequence | Sets the callback triggered when the entire sequence completes and returns the current Entity
-| TweenSequence:SetOnStepCompleteonStepComplete: fun | TweenSequence | Sets the step complete callback and returns the current Entity
-| TweenSequence:SetLoopstimes: integer | TweenSequence | Sets the Loop Count and returns the current Entity; a negative value specifies an Infinite Loop
-9.ServerSignal
+| TweenSequence:Append(tween: Tween) | TweenSequence | Appends a tween to the end of the sequence
+| TweenSequence:AppendInterval(interval: number) | TweenSequence | Appends a wait time of the specified number of seconds to the end of the sequence
+| TweenSequence:AppendCallback(callback: fun()) | TweenSequence | Appends a callback to the end of the sequence
+| TweenSequence:Join(tween: Tween) | TweenSequence | Plays simultaneously with the current last step; this step ends with whichever finishes last
+| TweenSequence:Insert(time: number, tween: Tween) | TweenSequence | Inserts a parallel tween animation at the specified time
+| TweenSequence:InsertCallback(time: number, callback: fun()) | TweenSequence | Inserts a callback at the specified time
+| TweenSequence:Play() | TweenSequence | Starts playback and returns the current Entity
+| TweenSequence:Pause() | — | Pauses the sequence
+| TweenSequence:Resume() | — | Resumes the sequence
+| TweenSequence:Restart() | — | Returns to the initial status and restarts playback
+| TweenSequence:Complete() | — | Immediately completes the entire sequence
+| TweenSequence:Kill(complete: boolean) | — | Destroys the sequence. If true, completes the sequence first; if false, stops it in its current state
+| TweenSequence:SetOnComplete(onComplete: fun()) | TweenSequence | Sets the callback triggered when the entire sequence completes and returns the current Entity
+| TweenSequence:SetOnStepComplete(onStepComplete: fun()) | TweenSequence | Sets the step complete callback and returns the current Entity
+| TweenSequence:SetLoops(times: integer) | TweenSequence | Sets the Loop Count and returns the current Entity; a negative value specifies an Infinite Loop
+9. ServerSignal
 Creates and sends a signal to the server. Parameters are added sequentially according to server conventions.
-1. Create
+(1) Create
 | Function | Return Value | Description
-| game.ServerSignalsignalName: string | ServerSignal | Creates a server signal using the server-agreed signal name signalName
-2 Method
+| game.ServerSignal(signalName: string) | ServerSignal | Creates a server signal using the predefined signal name signalName
+(2) Method
 | Method | Return Value | Description
-| ServerSignal:AddParamparamType: ParamType, paramValue: any | — | paramType specifies the parameter type, and paramValue specifies the parameter value
-| ServerSignal:SendSignal | — | Sends the built server signal
-| ServerSignal:AddIntintValue: integer | — | Adds an integer parameter
-| ServerSignal:AddIntListintListValue: integer[] | — | Adds an integer List parameter
-| ServerSignal:AddFloatfloatValue: number | — | Adds a float parameter
-| ServerSignal:AddFloatListfloatListValue: number[] | — | Adds a float list parameter
-| ServerSignal:AddStringstringValue: string | — | Adds a String parameter
-| ServerSignal:AddStringListstringListValue: string[] | — | Adds a String List parameter
-| ServerSignal:AddVector3vector3Value: table | — | Adds a 3D Vector parameter. Pass a table keyed by x, y, and z with the corresponding target values
-| ServerSignal:AddVector3Listvector3ListValue: table[] | — | Adds a 3D Vector List parameter. Pass a List of tables keyed by x, y, and z with their corresponding target values.
-| ServerSignal:AddBoolboolValue: boolean | — | Adds a boolean parameter
-| ServerSignal:AddBoolListboolListValue: boolean[] | — | Adds a boolean list parameter
-| ServerSignal:AddGuidguidValue: integer | — | Adds a GUID parameter
-| ServerSignal:AddGuidListguidListValue: integer[] | — | Adds a GUID List parameter
-| ServerSignal:AddEntityentityValue: integer | — | Adds an Entity parameter
-| ServerSignal:AddEntityListentityListValue: integer[] | — | Adds an Entity List parameter
-| ServerSignal:AddPrefabIdprefabIdValue: integer | — | Adds a Prefab ID parameter
-| ServerSignal:AddPrefabIdListprefabIdListValue: integer[] | — | Adds a Prefab ID List parameter
-| ServerSignal:AddConfigIdconfigIdValue: integer | — | Adds a config ID parameter
-| ServerSignal:AddConfigIdListconfigIdListValue: integer[] | — | Adds a configuration ID List parameter
-10.EnumItem
-1 Fields
+| ServerSignal:AddParam(paramType: ParamType, paramValue: any) | — | paramType specifies the parameter type, and paramValue specifies the parameter value
+| ServerSignal:SendSignal() | — | Sends the constructed server signal
+| ServerSignal:AddInt(intValue: integer) | — | Adds an Integer parameter
+| ServerSignal:AddIntListint(ListValue: integer[]) | — | Adds an Integer List parameter
+| ServerSignal:AddFloat(floatValue: number) | — | Adds a Float parameter
+| ServerSignal:AddFloatList(floatListValue: number[]) | — | Adds a Float List parameter
+| ServerSignal:AddString(stringValue: string) | — | Adds a String parameter
+| ServerSignal:AddStringList(stringListValue: string[]) | — | Adds a String List parameter
+| ServerSignal:AddVector3(vector3Value: table) | — | Adds a 3D Vector parameter. Pass a table with x, y, and z keys mapped to their corresponding target values
+| ServerSignal:AddVector3List(vector3ListValue: table[]) | — | Adds a 3D Vector List parameter. Pass a List of tables with x, y, and z keys mapped to their corresponding target values
+| ServerSignal:AddBool(boolValue: boolean) | — | Adds a boolean parameter
+| ServerSignal:AddBoolList(boolListValue: boolean[]) | — | Adds a boolean list parameter
+| ServerSignal:AddGuid(guidValue: integer) | — | Adds a GUID parameter
+| ServerSignal:AddGuidList(guidListValue: integer[]) | — | Adds a GUID List parameter
+| ServerSignal:AddEntity(entityValue: integer) | — | Adds an Entity parameter
+| ServerSignal:AddEntityList(entityListValue: integer[]) | — | Adds an Entity List parameter
+| ServerSignal:AddPrefabId(prefabIdValue: integer) | — | Adds a Prefab ID parameter
+| ServerSignal:AddPrefabIdList(prefabIdListValue: integer[]) | — | Adds a Prefab ID List parameter
+| ServerSignal:AddConfigId(configIdValue: integer) | — | Adds a Config ID parameter
+| ServerSignal:AddConfigIdList(configIdListValue: integer[]) | — | Adds a Config ID List parameter
+10. EnumItem
+(1) Fields
 | Field | Type | Access | Description
 | Name | string | Read-only | Enum value name
 | FullName | string | Read-only | Full name of the enum value
 | EnumType | string | Read-only | Enum type name
 11. Enum System
-1Enum.EaseType
+(1) Enum.EaseType
 | Enum Name | Enum Value | Description
 | Enum.EaseType | Linear | Linear
 | Enum.EaseType | InSine | Sine Ease In
@@ -251,22 +252,22 @@ Creates and sends a signal to the server. Parameters are added sequentially acco
 | Enum.EaseType | InBounce | Bounce Ease In
 | Enum.EaseType | OutBounce | Bounce Ease Out
 | Enum.EaseType | InOutBounce | Bounce Ease In Out
-2Enum.CustomVariableEntityType
+(2) Enum.CustomVariableEntityType
 | Enum Name | Enum Value | Description
 | Enum.CustomVariableEntityType | Level | Stage
 | Enum.CustomVariableEntityType | PlayerSelf | Player Self
-| Enum.CustomVariableEntityType | AvatarSelf | Character itself
-3Enum.Device
+| Enum.CustomVariableEntityType | AvatarSelf | Character/Avatar Itself
+(3) Enum.Device
 | Enum Name | Enum Value | Description
 | Enum.Device | KeyboardAndMouse | Keyboard/Mouse
 | Enum.Device | Mobile | Mobile Touchscreen
 | Enum.Device | Controller | Console Controller
 | Enum.Device | MobileController | Mobile Controller
-4Enum.StageMode
+(4) Enum.StageMode
 | Enum Name | Enum Value | Description
 | Enum.StageMode | Beyond | Beyond Mode
 | Enum.StageMode | Classic | Classic Mode
-5Enum.LanguageType
+(5) Enum.LanguageType
 | Enum Name | Enum Value | Description
 | Enum.LanguageType | LanguageNone | Unspecified
 | Enum.LanguageType | LanguageEng | English
@@ -284,7 +285,7 @@ Creates and sends a signal to the server. Parameters are added sequentially acco
 | Enum.LanguageType | LanguageInd | Indonesian
 | Enum.LanguageType | LanguageTur | Turkish
 | Enum.LanguageType | LanguageIta | Italian
-6Enum.ParamType
+(6) Enum.ParamType
 | Enum Name | Enum Value | Description
 | Enum.ParamType | Entity | Entity
 | Enum.ParamType | EntityList | Entity List
@@ -304,140 +305,140 @@ Creates and sends a signal to the server. Parameters are added sequentially acco
 | Enum.ParamType | PrefabId | Prefab ID
 | Enum.ParamType | ConfigIdList | Config ID List
 | Enum.ParamType | PrefabIdList | Prefab ID List
-7Enum.CursorEventType
+(7) Enum.CursorEventType
 | Enum Name | Enum Value | Description
-| Enum.CursorEventType | CursorDown | Cursor Down
-| Enum.CursorEventType | CursorUp | Cursor Up
-| Enum.CursorEventType | CursorEnter | Cursor Enters Detection Area
-| Enum.CursorEventType | CursorExit | Cursor Leaves Detection Area
-| Enum.CursorEventType | CursorDrag | Cursor Drag
-| Enum.CursorEventType | CursorBeginDrag | Begin Drag
-| Enum.CursorEventType | CursorEndDrag | End Drag
-| Enum.CursorEventType | CursorClick | Complete Press
-8Enum.ScrollDirection
+| Enum.CursorEventType | CursorDown | When the cursor is pressed down
+| Enum.CursorEventType | CursorUp | When the cursor is released
+| Enum.CursorEventType | CursorEnter | Cursor enters detection area
+| Enum.CursorEventType | CursorExit | Cursor leaves detection area
+| Enum.CursorEventType | CursorDrag | Cursor drag
+| Enum.CursorEventType | CursorBeginDrag | Begin drag
+| Enum.CursorEventType | CursorEndDrag | End drag
+| Enum.CursorEventType | CursorClick | Cursor click completed
+(8) Enum.ScrollDirection
 | Enum Name | Enum Value | Description
-| Enum.ScrollDirection | Horizontal | Horizontal Scroll
-| Enum.ScrollDirection | Vertical | Vertical Scroll
-9Enum.ScrollLayoutConstraint
+| Enum.ScrollDirection | Horizontal | Horizontal scroll
+| Enum.ScrollDirection | Vertical | Vertical scroll
+(9) Enum.ScrollLayoutConstraint
 | Enum Name | Enum Value | Description
-| Enum.ScrollLayoutConstraint | AutoWrap | Auto Wrap Layout
-| Enum.ScrollLayoutConstraint | Fixed | Fixed Row/Column Layout
-10Enum.ScrollAlignType
+| Enum.ScrollLayoutConstraint | AutoWrap | Auto wrap layout
+| Enum.ScrollLayoutConstraint | Fixed | Fixed row/column layout
+(10) Enum.ScrollAlignType
 | Enum Name | Enum Value | Description
-| Enum.ScrollAlignType | Bottom | Align Bottom
-| Enum.ScrollAlignType | Center | Center Alignment
-| Enum.ScrollAlignType | Top | Align Top
-11Enum.ControllerNavigationDir
+| Enum.ScrollAlignType | Bottom | Bottom alignment
+| Enum.ScrollAlignType | Center | Center alignment
+| Enum.ScrollAlignType | Top | Top alignment
+(11) Enum.ControllerNavigationDir
 | Enum Name | Enum Value | Description
 | Enum.ControllerNavigationDir | Up | Up
 | Enum.ControllerNavigationDir | Down | Down
 | Enum.ControllerNavigationDir | Left | Left
 | Enum.ControllerNavigationDir | Right | Right
-12Enum.ControllerNavigationEventType
+(12) Enum.ControllerNavigationEventType
 | Enum Name | Enum Value | Description
 | Enum.ControllerNavigationEventType | Confirm | Confirm
 | Enum.ControllerNavigationEventType | Cancel | Cancel
 | Enum.ControllerNavigationEventType | Focus | Focus
-| Enum.ControllerNavigationEventType | LostFocus | Lose focus
-| Enum.ControllerNavigationEventType | RightStickUp | Right Stick Up
-| Enum.ControllerNavigationEventType | RightStickDown | Right Stick Down
-| Enum.ControllerNavigationEventType | RightStickRight | Right Stick Right
-| Enum.ControllerNavigationEventType | RightStickLeft | Right Stick Left
-| Enum.ControllerNavigationEventType | LeftStickUp | Left Stick Up
-| Enum.ControllerNavigationEventType | LeftStickDown | Left Stick Down
-| Enum.ControllerNavigationEventType | LeftStickRight | Left Stick Right
-| Enum.ControllerNavigationEventType | LeftStickLeft | Left Stick Left
-13Enum.ControllerNavigationMode
+| Enum.ControllerNavigationEventType | LostFocus | Lost focus
+| Enum.ControllerNavigationEventType | RightStickUp | Right stick up
+| Enum.ControllerNavigationEventType | RightStickDown | Right stick down
+| Enum.ControllerNavigationEventType | RightStickRight | Right stick right
+| Enum.ControllerNavigationEventType | RightStickLeft | Right stick left
+| Enum.ControllerNavigationEventType | LeftStickUp | Left stick up
+| Enum.ControllerNavigationEventType | LeftStickDown | Left stick down
+| Enum.ControllerNavigationEventType | LeftStickRight | Left stick right
+| Enum.ControllerNavigationEventType | LeftStickLeft | Left stick left
+(13) Enum.ControllerNavigationMode
 | Enum Name | Enum Value | Description
 | Enum.ControllerNavigationMode | None | No navigation
-| Enum.ControllerNavigationMode | NearestControl | Navigate to Nearest UI Control
-| Enum.ControllerNavigationMode | Specified | Navigate to Specified UI Control
-14Enum.TextHorizontalAlignment
+| Enum.ControllerNavigationMode | NearestControl | Navigate to nearest UI control
+| Enum.ControllerNavigationMode | Specified | Navigate to specified UI control
+(14) Enum.TextHorizontalAlignment
 | Enum Name | Enum Value | Description
 | Enum.TextHorizontalAlignment | Left | Left alignment
-| Enum.TextHorizontalAlignment | Middle | Center (Horizontal)
-| Enum.TextHorizontalAlignment | Right | Right Alignment
-15Enum.TextVerticalAlignment
+| Enum.TextHorizontalAlignment | Middle | Center (Horizontal) alignment
+| Enum.TextHorizontalAlignment | Right | Right alignment
+(15) Enum.TextVerticalAlignment
 | Enum Name | Enum Value | Description
-| Enum.TextVerticalAlignment | Top | Align Top
-| Enum.TextVerticalAlignment | Middle | Center (Vertical)
-| Enum.TextVerticalAlignment | Bottom | Align Bottom
-16Enum.ImageType
+| Enum.TextVerticalAlignment | Top | Top alignment
+| Enum.TextVerticalAlignment | Middle | Center alignment
+| Enum.TextVerticalAlignment | Bottom | Bottom alignment
+(16) Enum.ImageType
 | Enum Name | Enum Value | Description
 | Enum.ImageType | Basic | Basic
 | Enum.ImageType | Stretch | Stretch
-17Enum.ImageSource
+(17) Enum.ImageSource
 | Enum Name | Enum Value | Description
-| Enum.ImageSource | StaticReference | Static Reference
+| Enum.ImageSource | StaticReference | Static reference
 | Enum.ImageSource | Item | Item
 | Enum.ImageSource | Equipment | Equipment
-| Enum.ImageSource | Skill | Skills
-| Enum.ImageSource | UnitStatus | Unit Status
+| Enum.ImageSource | Skill | Skill
+| Enum.ImageSource | UnitStatus | Unit status
 | Enum.ImageSource | Faction | Faction
 | Enum.ImageSource | Currency | Currency
 | Enum.ImageSource | Prefab | Prefab
-18Enum.ImageFillType
+(18) Enum.ImageFillType
 | Enum Name | Enum Value | Description
-| Enum.ImageFillType | Unused | No Fill
+| Enum.ImageFillType | Unused | No fill
 | Enum.ImageFillType | Horizontal | Horizontal
 | Enum.ImageFillType | Vertical | Vertical
 | Enum.ImageFillType | Radial90 | Radial 90
 | Enum.ImageFillType | Radial180 | Radial 180
 | Enum.ImageFillType | Radial360 | Radial 360
-19Enum.ImageFillHorizontalType
+(19) Enum.ImageFillHorizontalType
 | Enum Name | Enum Value | Description
-| Enum.ImageFillHorizontalType | Left | Starts from the Left
-| Enum.ImageFillHorizontalType | Right | Starts from the Right
-20Enum.ImageFillVerticalType
+| Enum.ImageFillHorizontalType | Left | Start from the left
+| Enum.ImageFillHorizontalType | Right | Start from the right
+(20) Enum.ImageFillVerticalType
 | Enum Name | Enum Value | Description
-| Enum.ImageFillVerticalType | Bottom | Starts from the Bottom
-| Enum.ImageFillVerticalType | Top | Starts from the Top
-21Enum.ImageFillRadial90Type
+| Enum.ImageFillVerticalType | Bottom | Start from the bottom
+| Enum.ImageFillVerticalType | Top | Start from the top
+(21) Enum.ImageFillRadial90Type
 | Enum Name | Enum Value | Description
-| Enum.ImageFillRadial90Type | BottomLeft | Bottom Left
-| Enum.ImageFillRadial90Type | TopLeft | Top Left
-| Enum.ImageFillRadial90Type | TopRight | Top Right
-| Enum.ImageFillRadial90Type | BottomRight | Bottom Right
-22Enum.ImageFillRadialType
+| Enum.ImageFillRadial90Type | BottomLeft | Bottom left
+| Enum.ImageFillRadial90Type | TopLeft | Top left
+| Enum.ImageFillRadial90Type | TopRight | Top right
+| Enum.ImageFillRadial90Type | BottomRight | Bottom right
+(22) Enum.ImageFillRadialType
 | Enum Name | Enum Value | Description
 | Enum.ImageFillRadialType | Bottom | Bottom
 | Enum.ImageFillRadialType | Left | Left
 | Enum.ImageFillRadialType | Top | Top
 | Enum.ImageFillRadialType | Right | Right
-23Enum.ImageMaskSoftEdgeMode
+(23) Enum.ImageMaskSoftEdgeMode
 | Enum Name | Enum Value | Description
 | Enum.ImageMaskSoftEdgeMode | Percentage | Sets soft edge by percentage
 | Enum.ImageMaskSoftEdgeMode | Pixel | Sets soft edge by pixels
-24Enum.UIAnimationLayer
+(24) Enum.UIAnimationLayer
 | Enum Name | Enum Value | Description
-| Enum.UIAnimationLayer | AboveAllControls | Above all UI Controls
-| Enum.UIAnimationLayer | BelowAllControls | Below all UI Controls
-12. Local UI Controls
-1. Inheritance Relationship
+| Enum.UIAnimationLayer | AboveAllControls | Above all UI controls
+| Enum.UIAnimationLayer | BelowAllControls | Below all UI controls
+12. Client UI Controls
+(1) Inheritance Relationship
 All specific UI Controls inherit from ClientUIBaseControl:
 | Type | UI Control Name
 | ClientUIImageControl | Image
-| ClientUITextBoxControl | Text Box
-| ClientUITextWindowControl | Text Window
-| ClientUIPresetButtonControl | Preset Button
-| ClientUICursorEventAreaControl | Cursor Detection Area
-| ClientUIGridScrollerControl | Grid View
-| ClientUIKeyHintControl | Key Hint
-| ClientUIAnimationControl | Interface Animation
-| ClientUIFullscreenAnimationControl | Fullscreen Animation
-| ClientUIContainerControl | Vessel Node
-| ClientUIReferenceControl | Template Reference UI Control
-13.ClientUIBaseControl
-Local UI Control base class providing Layer structure, layout, Script access, input monitoring, and Controller Navigation.
-1 Fields
+| ClientUITextBoxControl | Text box
+| ClientUITextWindowControl | Text window
+| ClientUIPresetButtonControl | Preset button
+| ClientUICursorEventAreaControl | Cursor detection area
+| ClientUIGridScrollerControl | Grid scroll viewport
+| ClientUIKeyHintControl | Key hint
+| ClientUIAnimationControl | Interface animation
+| ClientUIFullscreenAnimationControl | Fullscreen animation
+| ClientUIContainerControl | Container node
+| ClientUIReferenceControl | Template reference UI control
+13. ClientUIBaseControl
+Client UI control base class providing hierarchy, layout, script access, input monitoring, and controller navigation.
+(1) Fields
 | Field | Type | Access | Description
 | alive | boolean | Read-only | Whether the UI Control is alive
-| Id | integer | Read-only | Runtime ID
-| prefabIndex | integer | Read-only | UI Control Template Index
-| active | boolean | Read-only | Active state. When true, the UI Control is visible and its mounted Script logic runs. When false, the UI Control is hidden and its Script logic stops. Default: false.
+| runtimeId | integer | Read-only | Runtime ID
+| prefabIndex | integer | Read-only | UI Control template index
+| active | boolean | Read-only | Active state. When true, the UI Control is visible and its mounted Script logic runs. When false, the UI Control is hidden and its Script logic stops. Default: false
 | activeInHierarchy | boolean | Read-only | Actual active state after accounting for all parent UI Controls
 | visible | boolean | Read-only | Only controls visibility, without changing the active state or script logic execution state
-| name | string | Read/Write | UI Control Name
+| name | string | Read/Write | UI Control name
 | parent | ClientUIBaseControl | Read/Write | Parent UI Control
 | anchoredPositionX, anchoredPositionY | number | Read/Write | Position, Tweenable
 | sizeDeltaX, sizeDeltaY | number | Read/Write | Size Delta, Tweenable
@@ -446,61 +447,61 @@ Local UI Control base class providing Layer structure, layout, Script access, in
 | pivotX, pivotY | number | Read/Write | Center, Tweenable
 | localScaleX, localScaleY, localScaleZ | number | Read/Write | Zoom, Tweenable
 | localRotationX, localRotationY, localRotationZ | number | Read/Write | Rotation, Tweenable
-| canControllerFocus | boolean | Read/Write | Can receive focus via Controller Joystick Navigation
-2. Layer and Visibility
-The sibling order of List Items generated by a recycled List is not guaranteed to be stable.
+| canControllerFocus | boolean | Read/Write | Focusable via controller joystick navigation
+(2) Hierarchy and Visibility
+List Items generated by a recycled List are not guaranteed to maintain a stable sibling order.
 | Method | Return Value | Description
-| GetChildren | ClientUIBaseControl[] | Obtains the direct child UI Controls
-| GetChildname | ClientUIBaseControl | Obtains the direct child UI Control named name in the current UI Control
-| FindChildpath | ClientUIBaseControl | Finds a child UI Control by path
-| SetActiveactive | — | Sets the active state; when deactivated, the UI Control becomes invisible and the mounted Script logic stops running.
-| SetVisiblevisible | — | Sets visibility only, without changing the active state or stopping script logic
-| GetSiblingIndex | integer | Obtains the sibling Sort Index; the return value ranges from 0 to one less than the parent UI Control's child UI Control count
-| SetSiblingIndexindex | boolean | Sets the sibling Sort Index from 0 to one less than the parent UI Control's child UI Control count. Larger values usually appear later in the Layer and render on top
-| SetAsFirstSibling | boolean | Move to the first sibling position
-| SetAsLastSibling | boolean | Move to the last sibling position
-3. Layout and Transformation
-Movement, Zoom, visibility, Alpha, mirroring, and clipping in a parent-child Layer are jointly determined by the runtime UI Layer. Verify the actual display result when combining layouts.
+| GetChildren() | ClientUIBaseControl[] | Obtains the direct child UI Controls
+| GetChild(name) | ClientUIBaseControl | Obtains the direct child UI Control named name in the current UI Control
+| FindChild(path) | ClientUIBaseControl | Finds a child UI Control by path
+| SetActive(active) | — | Sets the active state; when deactivated, the UI Control becomes invisible and the mounted Script logic stops running
+| SetVisible(visible) | — | Sets visibility only, without changing the active state or stopping script logic
+| GetSiblingIndex() | integer | Obtains the sibling Sort Index; the return value ranges from 0 to one less than the parent UI Control's child UI Control count
+| SetSiblingIndex(index) | boolean | Sets the sibling Sort Index from 0 to one less than the parent UI Control's child UI Control count. Larger values usually appear later in the hierarchy and render on top
+| SetAsFirstSibling() | boolean | Move to the first sibling position
+| SetAsLastSibling() | boolean | Move to the last sibling position
+(3) Layout and Transformation
+Movement, zoom, visibility, Alpha, mirroring, and clipping in a parent-child hierarchy are jointly determined by the runtime UI hierarchy. Verify the actual display result when combining layouts.
 | Method | Return Value | Description
-| GetAnchoredPosition | x, y | With no parent Layer, obtains the Location relative to the Canvas's bottom-left origin; with a parent Layer, obtains the offset from the parent Layer's center.
-| SetAnchoredPositionx, y | — | With no parent Layer, sets the Location relative to the Canvas's bottom-left origin; with a parent Layer, sets the offset from the parent Layer's center.
-| GetSizeDelta | x, y | Obtains Size
-| SetSizeDeltax, y | — | Sets Size
-| GetAnchorMin | x, y | Obtains Minimum Anchor Point
-| SetAnchorMinx, y | — | Sets Minimum Anchor Point
-| GetAnchorMax | x, y | Obtains Maximum Anchor Point
-| SetAnchorMaxx, y | — | Sets Maximum Anchor Point
-| GetPivot | x, y | Obtains Pivot
-| SetPivotx, y | — | Sets Pivot
-| GetLocalScale | x, y, z | Obtains Zoom
-| SetLocalScalex, y, z | — | Sets Zoom
-| GetLocalRotation | x, y, z | Obtains Rotation
-| SetLocalRotationx, y, z | — | Sets Rotation
-4. Script Access
+| GetAnchoredPosition() | x, y | Without a parent hierarchy, obtains the position relative to the bottom-left origin of the canvas; with a parent hierarchy, obtains the offset relative to the center of the parent
+| SetAnchoredPosition(x, y) | — | Without a parent hierarchy, sets the position relative to the bottom-left origin of the canvas; with a parent hierarchy, sets the offset relative to the center of the parent
+| GetSizeDelta() | x, y | Obtains size
+| SetSizeDelta(x, y) | — | Sets size
+| GetAnchorMin() | x, y | Obtains Minimum Anchor Point
+| SetAnchorMin(x, y) | — | Sets Minimum Anchor Point
+| GetAnchorMax() | x, y | Obtains Maximum Anchor Point
+| SetAnchorMax(x, y) | — | Sets Maximum Anchor Point
+| GetPivot() | x, y | Obtains pivot
+| SetPivot(x, y) | — | Sets pivot
+| GetLocalScale() | x, y, z | Obtains zoom
+| SetLocalScale(x, y, z) | — | Sets zoom
+| GetLocalRotation() | x, y, z | Obtains rotation
+| SetLocalRotation(x, y, z) | — | Sets rotation
+(4) Script Access
 The returned Script Entity may have been destroyed. Check script.alive before use.
 | Method | Return Value | Description
-| GetScriptByPathscriptPath | Script | Obtains the mounted Script by Path
-| GetScriptscriptMappingId | Script | Obtains the Script by Script Mapping ID
-| GetScripts | Script[] | Obtains all Scripts on the UI Control
-5 Keyboard/Mouse/Controller Button Events
+| GetScriptByPath(scriptPath) | Script | Obtains the mounted Script by Path
+| GetScript(scriptMappingId) | Script | Obtains the Script by Script Mapping ID
+| GetScripts() | Script[] | Obtains all Scripts on the UI Control
+(5) Keyboard/Mouse/Controller Button Events
 | Method | Return Value | Description
-| AddKeyEventListenereventType, callback | — | Registers a monitor for the specified key Event. The callback returns a boolean; retain its reference to remove that monitor individually. If a Lua callback handles an interaction key Event within a Vessel and marks it as handled, other keys in that Vessel do not respond to the same Event
-| RemoveKeyEventListenereventType, callback | — | Removes the monitor for the specified key Event and callback; the callback must be the same reference used during registration
-| RemoveKeyEventListenerseventType | — | Removes all monitors for the specified key Event
-| RemoveAllKeyEventListeners | — | Removes all key Event monitors
-6. Controller Navigation Events
+| AddKeyEventListener(eventType, callback) | — | Registers a listener for the specified key Event. The callback returns a boolean; retain its reference to remove that listener individually. If a Lua callback handles an interaction key Event within a container and marks it as handled, other keys in that container do not respond to the same Event
+| RemoveKeyEventListener(eventType, callback) | — | Removes the listener for the specified key Event and callback; the callback must be the same reference used during registration
+| RemoveKeyEventListeners(eventType) | — | Removes all listeners for the specified key Event
+| RemoveAllKeyEventListeners() | — | Removes all key Event listeners
+(6) Controller Navigation Events
 | Method | Return Value | Description
-| AddNavigationEventListenereventType, callback | — | Registers a monitor for the specified Controller Navigation Event
-| RemoveNavigationEventListenereventType, callback | — | Removes the monitor for the specified Controller Navigation Event and callback
-| RemoveNavigationEventListenerseventType | — | Removes all monitors for the specified Controller Navigation Event
-| RemoveAllNavigationEventListeners | — | Removes all Controller Navigation Event monitors
-7. Controller Navigation Configuration
+| AddNavigationEventListener(eventType, callback) | — | Registers a listener for the specified controller navigation Event
+| RemoveNavigationEventListener(eventType, callback) | — | Removes the listener for the specified controller navigation Event and callback
+| RemoveNavigationEventListeners(eventType) | — | Removes all listeners for the specified controller navigation Event
+| RemoveAllNavigationEventListeners() | — | Removes all controller navigation Event listeners
+(7) Controller Navigation Configuration
 | Method | Return Value | Description
-| SetControllerNavigationnavigationDir, navigationMode, navigationTarget | — | Sets the navigation mode and target UI Control for the specified direction; the target may be nil
-| GetControllerNavigationnavigationDir | navigationMode, navigationTarget | Obtains the Navigation Mode and target UI Control for the Specified Direction
-14.ClientUIImageControl
+| SetControllerNavigation(navigationDir, navigationMode, navigationTarget) | — | Sets the navigation mode and target UI Control for the specified direction; the target may be nil
+| GetControllerNavigation(navigationDir) | navigationMode, navigationTarget | Obtains the Navigation Mode and target UI Control for the Specified Direction
+14. ClientUIImageControl
 Image UI Control for displaying images and controlling Color, Masking, and fill effects.
-1 Fields
+(1) Fields
 | Field | Type | Access | Description
 | imageSource | ImageSource | Read-only | Image source
 | imageId | integer | Read-only | Image ID
@@ -511,28 +512,28 @@ Image UI Control for displaying images and controlling Color, Masking, and fill 
 | softEdgeMode | ImageMaskSoftEdgeMode | Read/Write | Soft edge mode
 | softEdgeWidthX | number | Read/Write | Horizontal soft edge width, Tweenable
 | softEdgeWidthY | number | Read/Write | Vertical soft edge width, Tweenable
-| horizontalSoftRange | number | Read/Write | Horizontal soft edge range, Tweenable, Tweenable
+| horizontalSoftRange | number | Read/Write | Horizontal soft edge range, Tweenable
 | verticalSoftRange | number | Read/Write | Vertical soft edge range, Tweenable
 | reverseMaskArea | boolean | Read/Write | Whether to reverse the masking area
 | fillType | ImageFillType | Read/Write | Current fill type
-| fillHorizontalType | ImageFillHorizontalType | Read/Write | Horizontal Fill Orientation
-| fillVerticalType | ImageFillVerticalType | Read/Write | Vertical Fill Orientation
-| fillRadial90Type | ImageFillRadial90Type | Read/Write | 90-degree radial Start Point
-| fillRadialType | ImageFillRadialType | Read/Write | Start Point for 180-degree and 360-degree (Full FOV) radial fills
+| fillHorizontalType | ImageFillHorizontalType | Read/Write | Horizontal fill orientation
+| fillVerticalType | ImageFillVerticalType | Read/Write | Vertical fill orientation
+| fillRadial90Type | ImageFillRadial90Type | Read/Write | 90-degree radial fill starting point
+| fillRadialType | ImageFillRadialType | Read/Write | Starting point for 180-degree and 360-degree radial fills
 | fillAmount | number | Read/Write, Tweenable | Progress
-2 Method
+(2) Method
 | Method | Return Value | Description
-| SetImageimageSource, imageId | — | Sets the image source and image ID
-| SetSoftEdgeWidthwidthX, widthY | — | Sets the horizontal and vertical soft edge widths
-| SetFillUnused | — | Disables fill
-| SetFillHorizontalfillHorizontalType, fillAmount | — | Sets horizontal fill
-| SetFillVerticalfillVerticalType, fillAmount | — | Sets vertical fill
-| SetFillRadial90fillRadial90Type, fillAmount | — | Sets 90-degree radial fill
-| SetFillRadial180fillRadialType, fillAmount | — | Sets 180-degree radial fill
-| SetFillRadial360fillRadialType, fillAmount | — | Sets 360-degree radial fill
-15.ClientUITextBoxControl
-Text Box UI Control for displaying plain Text.
-1 Fields
+| SetImage(imageSource, imageId) | — | Sets the image source and image ID
+| SetSoftEdgeWidth(widthX, widthY) | — | Sets the horizontal and vertical soft edge widths
+| SetFillUnused() | — | Disables fill
+| SetFillHorizontal(fillHorizontalType, fillAmount) | — | Sets horizontal fill
+| SetFillVertical(fillVerticalType, fillAmount) | — | Sets vertical fill
+| SetFillRadial90(fillRadial90Type, fillAmount) | — | Sets 90-degree radial fill
+| SetFillRadial180(fillRadialType, fillAmount) | — | Sets 180-degree radial fill
+| SetFillRadial360(fillRadialType, fillAmount) | — | Sets 360-degree radial fill
+15. ClientUITextBoxControl
+Text Box UI Control for displaying plain text.
+(1) Fields
 | Field | Type | Access | Description
 | text | string | Read/Write | Displayed text
 | fontSize | integer | Read/Write | Font size, Tweenable
@@ -544,11 +545,11 @@ Text Box UI Control for displaying plain Text.
 | verticalAlignment | TextVerticalAlignment | Read/Write | Vertical alignment
 | adaptiveFontSize | boolean | Read/Write | Adaptive font size
 | minimumFontSize | integer | Read/Write | Minimum font size for adaptive font size, Tweenable
-16.ClientUITextWindowControl
+16. ClientUITextWindowControl
 Text Window UI Control for displaying scrollable Text.
-1 Fields
+(1) Fields
 | Field | Type | Access | Description
-| interactable | boolean | Read/Write | Whether it is interactable; when this and showScrollBar are both false, the Controller cannot scroll the Text Window
+| interactable | boolean | Read/Write | Whether it is interactable; when this and showScrollBar are both false, the controller cannot scroll the text window
 | showScrollBar | boolean | Read/Write | Whether to show the scrollbar
 | text | string | Read/Write | Displayed text
 | fontSize | integer | Read/Write | Font size, Tweenable
@@ -560,103 +561,103 @@ Text Window UI Control for displaying scrollable Text.
 | verticalAlignment | TextVerticalAlignment | Read/Write | Vertical alignment
 | adaptiveFontSize | boolean | Read/Write | Adaptive font size
 | minimumFontSize | integer | Read/Write | Minimum font size for adaptive font size, Tweenable
-17.ClientUIPresetButtonControl
-Preset Button UI Control providing Button interaction and cursor Event monitoring.
-1 Fields
+17. ClientUIPresetButtonControl
+Preset Button UI Control providing button interaction and cursor event monitoring.
+(1) Fields
 | Field | Type | Access | Description
 | interactable | boolean | Read/Write | Whether it is interactable
-| clickAudioId | integer | Read/Write | Press Sound Effect ID
-| raycastTarget | boolean | Read/Write | Detectable by Cursor Raycast
-2 Method
+| clickAudioId | integer | Read/Write | Click sound effect ID
+| raycastTarget | boolean | Read/Write | Detectable by cursor raycast
+(2) Method
 | Method | Return Value | Description
-| AddCursorEventListenereventType, callback | — | Registers a monitor for the specified cursor Event; the callback receives CursorEventData
-| RemoveCursorEventListenereventType, callback | — | Removes the monitor for the specified cursor Event and callback
-| RemoveCursorEventListenerseventType | — | Removes all monitors for the specified cursor Event
-| RemoveAllCursorEventListeners | — | Removes all cursor Event monitors
-| SimulateCursorClick | — | Simulates CursorDown, CursorUp, and CursorClick in sequence
-18.ClientUICursorEventAreaControl
-Cursor Detection Area UI Control that detects cursor Events within its area.
-1 Fields
+| AddCursorEventListener(eventType, callback) | — | Registers a listener for the specified cursor event; the callback receives CursorEventData
+| RemoveCursorEventListener(eventType, callback) | — | Removes the listener for the specified cursor event and callback
+| RemoveCursorEventListeners(eventType) | — | Removes all listeners for the specified cursor event
+| RemoveAllCursorEventListeners() | — | Removes all cursor event listeners
+| SimulateCursorClick() | — | Simulates CursorDown, CursorUp, and CursorClick in sequence
+18. ClientUICursorEventAreaControl
+Cursor Detection Area UI Control that detects cursor events within its area.
+(1) Fields
 | Field | Type | Access | Description
-| raycastTarget | boolean | Read/Write | Detectable by Cursor Raycast
-2 Method
+| raycastTarget | boolean | Read/Write | Detectable by cursor raycast
+(2) Method
 | Method | Return Value | Description
-| AddCursorEventListenereventType, callback | — | Registers a monitor for the specified cursor Event; the callback receives CursorEventData
-| RemoveCursorEventListenereventType, callback | — | Removes the monitor for the specified cursor Event and callback
-| RemoveCursorEventListenerseventType | — | Removes all monitors for the specified cursor Event
-| RemoveAllCursorEventListeners | — | Removes all cursor Event monitors
-| SimulateCursorClick | — | Simulates CursorDown, CursorUp, and CursorClick in sequence
-19.CursorEventData
-1 Fields
+| AddCursorEventListener(eventType, callback) | — | Registers a listener for the specified cursor event; the callback receives CursorEventData
+| RemoveCursorEventListener(eventType, callback) | — | Removes the listener for the specified cursor event and callback
+| RemoveCursorEventListeners(eventType) | — | Removes all listeners for the specified cursor event
+| RemoveAllCursorEventListeners() | — | Removes all cursor event listeners
+| SimulateCursorClick() | — | Simulates CursorDown, CursorUp, and CursorClick in sequence
+19. CursorEventData
+(1) Fields
 | Field | Type | Access | Description
 | dragging | boolean | Read-only | Whether currently dragging
 | touchId | integer | Read-only | Touch ID
-2 Method
+(2) Method
 | Method | Return Value | Description
-| CursorEventData:GetUIPos | x, y: number | Obtains the current screen UI Location relative to the Canvas's bottom-left origin. Its scale matches the layout Location scale.
-| CursorEventData:GetPressUIPos | x, y: number | Obtains the screen UI coordinates when pressed
-| CursorEventData:GetUIPosDelta | x, y: number | Obtains the screen UI displacement of this event
-20.ClientUIGridScrollerControl
+| CursorEventData:GetUIPos() | x, y: number | Obtains the current screen UI Location relative to the Canvas's bottom-left origin. Its scale matches the layout Location scale
+| CursorEventData:GetPressUIPos() | x, y: number | Obtains the screen UI coordinates when pressed
+| CursorEventData:GetUIPosDelta() | x, y: number | Obtains the screen UI displacement of this Event
+20. ClientUIGridScrollerControl
 Grid View UI Control for displaying and scrolling recycled List Items.
-1 Fields
+(1) Fields
 | Field | Type | Access | Description
 | itemCount | integer | Read-only | Number of list items
-| itemPrefabIndex | integer | Read/Write | List item UI Control Template Index
-| raycastTarget | boolean | Read/Write | Detectable by Cursor Raycast
+| itemPrefabIndex | integer | Read/Write | List item UI Control template index
+| raycastTarget | boolean | Read/Write | Detectable by cursor raycast
 | showScrollBar | boolean | Read/Write | Whether to show the scrollbar
 | interactable | boolean | Read/Write | Whether it is interactable
-| scrollDirection | ScrollDirection | Read-only | Scroll Direction
+| scrollDirection | ScrollDirection | Read-only | Scroll direction
 | layoutConstraint | ScrollLayoutConstraint | Read-only | List item layout constraint
 | layoutConstraintFixedCount | number | Read-only | Number of list items per row or column in a fixed layout
 | scrollProgress | number | Read/Write | Scroll Progress, Tweenable
-2 Method
+(2) Method
 The list item index is determined by the index passed and returned at runtime.
 | Method | Return Value | Description
-| RefreshItemsitemCount, refreshCallback | — | Refreshes each List Item and calls its callback. The callback signature is funcontrol: ClientUIBaseControl, index: integer; the arguments are the current List Item UI Control and its index
-| GetItemIndexcontrol | integer | Obtains the index of the List Item UI Control
-| GetItemSize | x, y: number | Obtains the width and height of the list item
-| GetItemSpacing | x, y: number | Obtains the horizontal and vertical spacings of list items
-| GetPadding | top, bottom, left, right: number | Obtains the top, bottom, left, and right padding of the content area
-| ScrollToItemAtindex, scrollAlignType | — | Scrolls to the List Item at index and aligns it according to scrollAlignType
-| GetContentLength | number | Obtains the length of the scroll content in the scroll direction
-21.ClientUIKeyHintControl
+| RefreshItems(itemCount, refreshCallback) | — | Refreshes each List Item and calls its callback. The callback signature is fun(control: ClientUIBaseControl, index: integer), where the arguments are the current List Item UI Control and its index
+| GetItemIndex(control) | integer | Obtains the index of the List Item UI Control
+| GetItemSize() | x, y: number | Obtains the width and height of the list item
+| GetItemSpacing() | x, y: number | Obtains the horizontal and vertical spacings of list items
+| GetPadding() | top, bottom, left, right: number | Obtains the top, bottom, left, and right padding of the content area
+| ScrollToItemAt(index, scrollAlignType) | — | Scrolls to the List Item at index and aligns it according to scrollAlignType
+| GetContentLength() | number | Obtains the length of the scroll content along the scroll direction
+21. ClientUIKeyHintControl
 Key Hint UI Control that displays the appropriate key for the current input device.
-1 Fields
+(1) Fields
 | Field | Type | Access | Description
 | keyboardKeyCode | KeyboardKeyCode | Read/Write | Keyboard/Mouse key enum value
 | controllerKeyCode | ControllerKeyCode | Read/Write | Controller key enum value
-22.ClientUIAnimationControl
-Interface Animation UI Control for playing or stopping the configured animations.
-1 Fields
+22. ClientUIAnimationControl
+UI Animation Control for playing or stopping the configured animations.
+(1) Fields
 | Field | Type | Access | Description
 | animationId | integer | Read/Write | Animation ID
 | playSoundEffect | boolean | Read/Write | Whether to play animation sound effects
 | layer | UIAnimationLayer | Read/Write | Animation layer
-2 Method
+(2) Method
 | Method | Return Value | Description
-| PlayAnimation | — | Play Interface Animation
-| StopAnimation | — | Stop Interface Animation
-23.ClientUIFullscreenAnimationControl
-Fullscreen Interface Animation UI Control for displaying a configured Animation over the Interface.
-1 Fields
+| PlayAnimation() | — | Play UI Animation
+| StopAnimation() | — | Stop UI Animation
+23. ClientUIFullscreenAnimationControl
+Fullscreen UI Animation Control for displaying a configured Animation over the interface.
+(1) Fields
 | Field | Type | Access | Description
 | animationId | integer | Read/Write | Animation ID
 | playSoundEffect | boolean | Read/Write | Whether to play animation sound effects
-24.ClientUIContainerControl
-Vessel Node UI Control for organizing child UI Controls.
-1 Fields
+24. ClientUIContainerControl
+Container Node UI Control for organizing child UI Controls.
+(1) Fields
 | Field | Type | Access | Description
-| isolateNavigation | boolean | Read/Write | Whether to isolate Controller navigation
-| disableKeyEventPassthrough | boolean | Read/Write | Whether to disable key event passthrough
-| disableCursorEventPassthrough | boolean | Read/Write | Whether to disable press event passthrough within the area
-| showCursor | boolean | Read/Write | Whether to display the persistent cursor; all CursorEvent-related methods require this parameter to be set to true to function properly
-25.ClientUIReferenceControl
+| isolateNavigation | boolean | Read/Write | Whether to isolate controller navigation
+| disableKeyEventPassthrough | boolean | Read/Write | Whether to disable key Event passthrough within the area
+| disableCursorEventPassthrough | boolean | Read/Write | Whether to disable cursor event passthrough within the area
+| showCursor | boolean | Read/Write | Whether to display a persistent cursor. All cursor event-related methods require this parameter to be set to true to function properly
+25. ClientUIReferenceControl
 Template Reference UI Control for referencing a configured UI Control Template.
-1 Fields
+(1) Fields
 | Field | Type | Access | Description
 | referencedPrefabIndex | integer | Read-only | Referenced UI Control Template Index
 26. Key Input
-1Enum.KeyboardKeyCode
+(1) Enum.KeyboardKeyCode
 | Enum Name | Enum Value | Description | Default Physical Key
 | Enum.KeyboardKeyCode | CraftspersonKey1 | Craftsperson Key 1 | 1
 | Enum.KeyboardKeyCode | CraftspersonKey2 | Craftsperson Key 2 | 2
@@ -717,7 +718,7 @@ Template Reference UI Control for referencing a configured UI Control Template.
 | Enum.KeyboardKeyCode | CharacterSkill3Key | Character Skill 3 | R
 | Enum.KeyboardKeyCode | CharacterSkill4Key | Character Skill 4 | T
 | Enum.KeyboardKeyCode | None | None | None
-2Enum.ControllerKeyCode
+(2) Enum.ControllerKeyCode
 | Enum Name | Enum Value | Description | Default Physical Key
 | Enum.ControllerKeyCode | CraftspersonKey1 | Craftsperson Key 1 | D-pad Up
 | Enum.ControllerKeyCode | CraftspersonKey2 | Craftsperson Key 2 | D-pad Down
@@ -732,7 +733,7 @@ Template Reference UI Control for referencing a configured UI Control Template.
 | Enum.ControllerKeyCode | CraftspersonKey11 | Craftsperson Key 11 | LB + RB
 | Enum.ControllerKeyCode | CraftspersonKey12 | Craftsperson Key 12 | LB + LT
 | Enum.ControllerKeyCode | CraftspersonKey13 | Craftsperson Key 13 | LB + RT
-| Enum.ControllerKeyCode | CraftspersonKey14 | Craftsperson Key 14 | LB + LS Press
+| Enum.ControllerKeyCode | CraftspersonKey14 | Craftsperson Key 14 | LB + LS (Press Down)
 | Enum.ControllerKeyCode | SprintKey | Sprint | RB
 | Enum.ControllerKeyCode | JumpKey | Jump | A
 | Enum.ControllerKeyCode | InteractKey | Pick Up/Interact | X
@@ -741,172 +742,172 @@ Template Reference UI Control for referencing a configured UI Control Template.
 | Enum.ControllerKeyCode | CharacterSkill2Key | Character Skill 2 | Y
 | Enum.ControllerKeyCode | CharacterSkill3Key | Character Skill 3 | D-pad Up
 | Enum.ControllerKeyCode | CharacterSkill4Key | Character Skill 4 | D-pad Down
-| Enum.ControllerKeyCode | MenuConfirmKey | Menu Confirm | - Determined by Controller Navigation configuration
-| Enum.ControllerKeyCode | MenuBackKey | Menu Back | - Determined by Controller Navigation configuration
+| Enum.ControllerKeyCode | MenuConfirmKey | Menu Confirm | - (Determined by Controller Navigation configuration)
+| Enum.ControllerKeyCode | MenuBackKey | Menu Back | - (Determined by Controller Navigation configuration)
 | Enum.ControllerKeyCode | None | None | None
-3Enum.KeyEventType
+(3) Enum.KeyEventType
 | Enum Name | Enum Value | Description | Default Physical Key
-| Enum.KeyEventType | KeyboardCraftspersonKey1Down | Keyboard/Mouse: Craftsperson Key 1 Down | 1
-| Enum.KeyEventType | KeyboardCraftspersonKey2Down | Keyboard/Mouse: Craftsperson Key 2 Down | 2
-| Enum.KeyEventType | KeyboardCraftspersonKey3Down | Keyboard/Mouse: Craftsperson Key 3 Down | 3
-| Enum.KeyEventType | KeyboardCraftspersonKey4Down | Keyboard/Mouse: Craftsperson Key 4 Down | 4
-| Enum.KeyEventType | KeyboardCraftspersonKey5Down | Keyboard/Mouse: Craftsperson Key 5 Down | 5
-| Enum.KeyEventType | KeyboardCraftspersonKey6Down | Keyboard/Mouse: Craftsperson Key 6 Down | 6
-| Enum.KeyEventType | KeyboardCraftspersonKey7Down | Keyboard/Mouse: Craftsperson Key 7 Down | 7
-| Enum.KeyEventType | KeyboardCraftspersonKey8Down | Keyboard/Mouse: Craftsperson Key 8 Down | 8
-| Enum.KeyEventType | KeyboardCraftspersonKey9Down | Keyboard/Mouse: Craftsperson Key 9 Down | 9
-| Enum.KeyEventType | KeyboardCraftspersonKey10Down | Keyboard/Mouse: Craftsperson Key 10 Down | 0
-| Enum.KeyEventType | KeyboardCraftspersonKey11Down | Keyboard/Mouse: Craftsperson Key 11 Down | U
-| Enum.KeyEventType | KeyboardCraftspersonKey12Down | Keyboard/Mouse: Craftsperson Key 12 Down | Z
-| Enum.KeyEventType | KeyboardCraftspersonKey13Down | Keyboard/Mouse: Craftsperson Key 13 Down | Y
-| Enum.KeyEventType | KeyboardCraftspersonKey14Down | Keyboard/Mouse: Craftsperson Key 14 Down | G
-| Enum.KeyEventType | KeyboardCraftspersonKey15Down | Keyboard/Mouse: Craftsperson Key 15 Down | H
-| Enum.KeyEventType | KeyboardCraftspersonKey16Down | Keyboard/Mouse: Craftsperson Key 16 Down | I
-| Enum.KeyEventType | KeyboardCraftspersonKey17Down | Keyboard/Mouse: Craftsperson Key 17 Down | O
-| Enum.KeyEventType | KeyboardCraftspersonKey18Down | Keyboard/Mouse: Craftsperson Key 18 Down | P
-| Enum.KeyEventType | KeyboardCraftspersonKey19Down | Keyboard/Mouse: Craftsperson Key 19 Down | J
-| Enum.KeyEventType | KeyboardCraftspersonKey20Down | Keyboard/Mouse: Craftsperson Key 20 Down | K
-| Enum.KeyEventType | KeyboardCraftspersonKey21Down | Keyboard/Mouse: Craftsperson Key 21 Down | L
-| Enum.KeyEventType | KeyboardCraftspersonKey22Down | Keyboard/Mouse: Craftsperson Key 22 Down | V
-| Enum.KeyEventType | KeyboardCraftspersonKey23Down | Keyboard/Mouse: Craftsperson Key 23 Down | F5
-| Enum.KeyEventType | KeyboardCraftspersonKey24Down | Keyboard/Mouse: Craftsperson Key 24 Down | F6
-| Enum.KeyEventType | KeyboardCraftspersonKey25Down | Keyboard/Mouse: Craftsperson Key 25 Down | F7
-| Enum.KeyEventType | KeyboardCraftspersonKey26Down | Keyboard/Mouse: Craftsperson Key 26 Down | F8
-| Enum.KeyEventType | KeyboardCraftspersonKey27Down | Keyboard/Mouse: Craftsperson Key 27 Down | F9
-| Enum.KeyEventType | KeyboardCraftspersonKey28Down | Keyboard/Mouse: Craftsperson Key 28 Down | F10
-| Enum.KeyEventType | KeyboardCraftspersonKey29Down | Keyboard/Mouse: Craftsperson Key 29 Down | `
-| Enum.KeyEventType | KeyboardCraftspersonKey30Down | Keyboard/Mouse: Craftsperson Key 30 Down | -
-| Enum.KeyEventType | KeyboardCraftspersonKey31Down | Keyboard/Mouse: Craftsperson Key 31 Down | =
-| Enum.KeyEventType | KeyboardCraftspersonKey32Down | Keyboard/Mouse: Craftsperson Key 32 Down | [
-| Enum.KeyEventType | KeyboardCraftspersonKey33Down | Keyboard/Mouse: Craftsperson Key 33 Down | ,
-| Enum.KeyEventType | KeyboardCraftspersonKey34Down | Keyboard/Mouse: Craftsperson Key 34 Down | .
-| Enum.KeyEventType | KeyboardCraftspersonKey35Down | Keyboard/Mouse: Craftsperson Key 35 Down | /
-| Enum.KeyEventType | KeyboardCraftspersonKey36Down | Keyboard/Mouse: Craftsperson Key 36 Down | ↑
-| Enum.KeyEventType | KeyboardCraftspersonKey37Down | Keyboard/Mouse: Craftsperson Key 37 Down | ↓
-| Enum.KeyEventType | KeyboardCraftspersonKey38Down | Keyboard/Mouse: Craftsperson Key 38 Down | ←
-| Enum.KeyEventType | KeyboardCraftspersonKey39Down | Keyboard/Mouse: Craftsperson Key 39 Down | →
-| Enum.KeyEventType | KeyboardCraftspersonKey40Down | Keyboard/Mouse: Craftsperson Key 40 Down | Right Ctrl
-| Enum.KeyEventType | KeyboardCraftspersonKey41Down | Keyboard/Mouse: Craftsperson Key 41 Down | Right Shift
-| Enum.KeyEventType | KeyboardCraftspersonKey42Down | Keyboard/Mouse: Craftsperson Key 42 Down | Backspace
-| Enum.KeyEventType | KeyboardCraftspersonKey43Down | Keyboard/Mouse: Craftsperson Key 43 Down | CapsLock
-| Enum.KeyEventType | KeyboardMoveForwardKeyDown | Keyboard/Mouse: Move Forward Down | W
-| Enum.KeyEventType | KeyboardMoveBackwardKeyDown | Keyboard/Mouse: Move Backward Down | S
-| Enum.KeyEventType | KeyboardMoveLeftKeyDown | Keyboard/Mouse: Move Left Down | A
-| Enum.KeyEventType | KeyboardMoveRightKeyDown | Keyboard/Mouse: Move Right Down | D
-| Enum.KeyEventType | KeyboardSwitchToWalkOrRunKeyDown | Keyboard/Mouse: Toggle walk/run state Down | Left Ctrl
-| Enum.KeyEventType | KeyboardSprintKeyDown | Keyboard/Mouse: Sprint Down | Right Mouse Button
-| Enum.KeyEventType | KeyboardJumpKeyDown | Keyboard/Mouse: Jump Down | Space
-| Enum.KeyEventType | KeyboardDropKeyDown | Keyboard/Mouse: Drop Down | X
-| Enum.KeyEventType | KeyboardOpenShortcutWheelKeyDown | Keyboard/Mouse: Open Shortcut Wheel Down | Tab
-| Enum.KeyEventType | KeyboardInteractKeyDown | Keyboard/Mouse: Pick Up/Interact Down | F
-| Enum.KeyEventType | KeyboardNormalAttackKeyDown | Keyboard/Mouse: Normal Attack Down | Left Mouse Button
-| Enum.KeyEventType | KeyboardCharacterSkill1KeyDown | Keyboard/Mouse: Character Skill 1 Down | E
-| Enum.KeyEventType | KeyboardCharacterSkill2KeyDown | Keyboard/Mouse: Character Skill 2 Down | Q
-| Enum.KeyEventType | KeyboardCharacterSkill3KeyDown | Keyboard/Mouse: Character Skill 3 Down | R
-| Enum.KeyEventType | KeyboardCharacterSkill4KeyDown | Keyboard/Mouse: Character Skill 4 Down | T
-| Enum.KeyEventType | KeyboardCraftspersonKey1Up | Keyboard/Mouse: Craftsperson Key 1 Up | 1
-| Enum.KeyEventType | KeyboardCraftspersonKey2Up | Keyboard/Mouse: Craftsperson Key 2 Up | 2
-| Enum.KeyEventType | KeyboardCraftspersonKey3Up | Keyboard/Mouse: Craftsperson Key 3 Up | 3
-| Enum.KeyEventType | KeyboardCraftspersonKey4Up | Keyboard/Mouse: Craftsperson Key 4 Up | 4
-| Enum.KeyEventType | KeyboardCraftspersonKey5Up | Keyboard/Mouse: Craftsperson Key 5 Up | 5
-| Enum.KeyEventType | KeyboardCraftspersonKey6Up | Keyboard/Mouse: Craftsperson Key 6 Up | 6
-| Enum.KeyEventType | KeyboardCraftspersonKey7Up | Keyboard/Mouse: Craftsperson Key 7 Up | 7
-| Enum.KeyEventType | KeyboardCraftspersonKey8Up | Keyboard/Mouse: Craftsperson Key 8 Up | 8
-| Enum.KeyEventType | KeyboardCraftspersonKey9Up | Keyboard/Mouse: Craftsperson Key 9 Up | 9
-| Enum.KeyEventType | KeyboardCraftspersonKey10Up | Keyboard/Mouse: Craftsperson Key 10 Up | 0
-| Enum.KeyEventType | KeyboardCraftspersonKey11Up | Keyboard/Mouse: Craftsperson Key 11 Up | U
-| Enum.KeyEventType | KeyboardCraftspersonKey12Up | Keyboard/Mouse: Craftsperson Key 12 Up | Z
-| Enum.KeyEventType | KeyboardCraftspersonKey13Up | Keyboard/Mouse: Craftsperson Key 13 Up | Y
-| Enum.KeyEventType | KeyboardCraftspersonKey14Up | Keyboard/Mouse: Craftsperson Key 14 Up | G
-| Enum.KeyEventType | KeyboardCraftspersonKey15Up | Keyboard/Mouse: Craftsperson Key 15 Up | H
-| Enum.KeyEventType | KeyboardCraftspersonKey16Up | Keyboard/Mouse: Craftsperson Key 16 Up | I
-| Enum.KeyEventType | KeyboardCraftspersonKey17Up | Keyboard/Mouse: Craftsperson Key 17 Up | O
-| Enum.KeyEventType | KeyboardCraftspersonKey18Up | Keyboard/Mouse: Craftsperson Key 18 Up | P
-| Enum.KeyEventType | KeyboardCraftspersonKey19Up | Keyboard/Mouse: Craftsperson Key 19 Up | J
-| Enum.KeyEventType | KeyboardCraftspersonKey20Up | Keyboard/Mouse: Craftsperson Key 20 Up | K
-| Enum.KeyEventType | KeyboardCraftspersonKey21Up | Keyboard/Mouse: Craftsperson Key 21 Up | L
-| Enum.KeyEventType | KeyboardCraftspersonKey22Up | Keyboard/Mouse: Craftsperson Key 22 Up | V
-| Enum.KeyEventType | KeyboardCraftspersonKey23Up | Keyboard/Mouse: Craftsperson Key 23 Up | F5
-| Enum.KeyEventType | KeyboardCraftspersonKey24Up | Keyboard/Mouse: Craftsperson Key 24 Up | F6
-| Enum.KeyEventType | KeyboardCraftspersonKey25Up | Keyboard/Mouse: Craftsperson Key 25 Up | F7
-| Enum.KeyEventType | KeyboardCraftspersonKey26Up | Keyboard/Mouse: Craftsperson Key 26 Up | F8
-| Enum.KeyEventType | KeyboardCraftspersonKey27Up | Keyboard/Mouse: Craftsperson Key 27 Up | F9
-| Enum.KeyEventType | KeyboardCraftspersonKey28Up | Keyboard/Mouse: Craftsperson Key 28 Up | F10
-| Enum.KeyEventType | KeyboardCraftspersonKey29Up | Keyboard/Mouse: Craftsperson Key 29 Up | `
-| Enum.KeyEventType | KeyboardCraftspersonKey30Up | Keyboard/Mouse: Craftsperson Key 30 Up | -
-| Enum.KeyEventType | KeyboardCraftspersonKey31Up | Keyboard/Mouse: Craftsperson Key 31 Up | =
-| Enum.KeyEventType | KeyboardCraftspersonKey32Up | Keyboard/Mouse: Craftsperson Key 32 Up | [
-| Enum.KeyEventType | KeyboardCraftspersonKey33Up | Keyboard/Mouse: Craftsperson Key 33 Up | ,
-| Enum.KeyEventType | KeyboardCraftspersonKey34Up | Keyboard/Mouse: Craftsperson Key 34 Up | .
-| Enum.KeyEventType | KeyboardCraftspersonKey35Up | Keyboard/Mouse: Craftsperson Key 35 Up | /
-| Enum.KeyEventType | KeyboardCraftspersonKey36Up | Keyboard/Mouse: Craftsperson Key 36 Up | ↑
-| Enum.KeyEventType | KeyboardCraftspersonKey37Up | Keyboard/Mouse: Craftsperson Key 37 Up | ↓
-| Enum.KeyEventType | KeyboardCraftspersonKey38Up | Keyboard/Mouse: Craftsperson Key 38 Up | ←
-| Enum.KeyEventType | KeyboardCraftspersonKey39Up | Keyboard/Mouse: Craftsperson Key 39 Up | →
-| Enum.KeyEventType | KeyboardCraftspersonKey40Up | Keyboard/Mouse: Craftsperson Key 40 Up | Right Ctrl
-| Enum.KeyEventType | KeyboardCraftspersonKey41Up | Keyboard/Mouse: Craftsperson Key 41 Up | Right Shift
-| Enum.KeyEventType | KeyboardCraftspersonKey42Up | Keyboard/Mouse: Craftsperson Key 42 Up | Backspace
-| Enum.KeyEventType | KeyboardCraftspersonKey43Up | Keyboard/Mouse: Craftsperson Key 43 Up | CapsLock
-| Enum.KeyEventType | KeyboardMoveForwardKeyUp | Keyboard/Mouse: Move Forward Up | W
-| Enum.KeyEventType | KeyboardMoveBackwardKeyUp | Keyboard/Mouse: Move Backward Up | S
-| Enum.KeyEventType | KeyboardMoveLeftKeyUp | Keyboard/Mouse: Move Left Up | A
-| Enum.KeyEventType | KeyboardMoveRightKeyUp | Keyboard/Mouse: Move Right Up | D
-| Enum.KeyEventType | KeyboardSwitchToWalkOrRunKeyUp | Keyboard/Mouse: Toggle Walk/Run State Up | Left Ctrl
-| Enum.KeyEventType | KeyboardSprintKeyUp | Keyboard/Mouse: Sprint Up | Right Mouse Button
-| Enum.KeyEventType | KeyboardJumpKeyUp | Keyboard/Mouse: Jump Up | Space
-| Enum.KeyEventType | KeyboardDropKeyUp | Keyboard/Mouse: Drop Up | X
-| Enum.KeyEventType | KeyboardOpenShortcutWheelKeyUp | Keyboard/Mouse: Open Shortcut Wheel Up | Tab
-| Enum.KeyEventType | KeyboardInteractKeyUp | Keyboard/Mouse: Pick Up/Interact Up | F
-| Enum.KeyEventType | KeyboardNormalAttackKeyUp | Keyboard/Mouse: Normal Attack Up | Left Mouse Button
-| Enum.KeyEventType | KeyboardCharacterSkill1KeyUp | Keyboard/Mouse: Character Skill 1 Up | E
-| Enum.KeyEventType | KeyboardCharacterSkill2KeyUp | Keyboard/Mouse: Character Skill 2 Up | Q
-| Enum.KeyEventType | KeyboardCharacterSkill3KeyUp | Keyboard/Mouse: Character Skill 3 Up | R
-| Enum.KeyEventType | KeyboardCharacterSkill4KeyUp | Keyboard/Mouse: Character Skill 4 Up | T
-| Enum.KeyEventType | ControllerCraftspersonKey1Down | Controller: Craftsperson Key 1 Down | D-pad Up
-| Enum.KeyEventType | ControllerCraftspersonKey2Down | Controller: Craftsperson Key 2 Down | D-pad Down
-| Enum.KeyEventType | ControllerCraftspersonKey3Down | Controller: Craftsperson Key 3 Down | LT
-| Enum.KeyEventType | ControllerCraftspersonKey4Down | Controller: Craftsperson Key 4 Down | LB + Y
-| Enum.KeyEventType | ControllerCraftspersonKey5Down | Craftsperson Key 5 Down | LB + X
-| Enum.KeyEventType | ControllerCraftspersonKey6Down | Craftsperson Key 6 Down | LB + A
-| Enum.KeyEventType | ControllerCraftspersonKey7Down | Controller: Craftsperson Key 7 Down | LB + D-pad Up
-| Enum.KeyEventType | ControllerCraftspersonKey8Down | Controller: Craftsperson Key 8 Down | LB + D-pad Right
-| Enum.KeyEventType | ControllerCraftspersonKey9Down | Controller: Craftsperson Key 9 Down | LB + D-pad Left
-| Enum.KeyEventType | ControllerCraftspersonKey10Down | Controller: Craftsperson Key 10 Down | LB + D-pad Down
-| Enum.KeyEventType | ControllerCraftspersonKey11Down | Craftsperson Key 11 Down | LB + RB
-| Enum.KeyEventType | ControllerCraftspersonKey12Down | Craftsperson Key 12 Down | LB + LT
-| Enum.KeyEventType | ControllerCraftspersonKey13Down | Craftsperson Key 13 Down | LB + RT
-| Enum.KeyEventType | ControllerCraftspersonKey14Down | Controller: Craftsperson Key 14 Down | LB + LS Down
-| Enum.KeyEventType | ControllerSprintKeyDown | Controller: Sprint Down | RB
-| Enum.KeyEventType | ControllerJumpKeyDown | Controller: Jump Down | A
-| Enum.KeyEventType | ControllerInteractKeyDown | Controller: Pick Up/Interact Down | X
-| Enum.KeyEventType | ControllerNormalAttackKeyDown | Controller: Normal Attack Down | B
-| Enum.KeyEventType | ControllerCharacterSkill1KeyDown | Controller: Character Skill 1 Down | RT
-| Enum.KeyEventType | ControllerCharacterSkill2KeyDown | Controller: Character Skill 2 Down | Y
-| Enum.KeyEventType | ControllerCharacterSkill3KeyDown | Controller: Character Skill 3 Down | D-pad Up
-| Enum.KeyEventType | ControllerCharacterSkill4KeyDown | Controller: Character Skill 4 Down | D-pad Down
-| Enum.KeyEventType | ControllerMenuConfirmKeyDown | Controller: Menu Confirm Down | - Determined by Controller Navigation configuration
-| Enum.KeyEventType | ControllerMenuBackKeyDown | Controller: Menu Back Down | - Determined by Controller Navigation configuration
-| Enum.KeyEventType | ControllerCraftspersonKey1Up | Controller: Craftsperson Key 1 Up | D-pad Up
-| Enum.KeyEventType | ControllerCraftspersonKey2Up | Controller: Craftsperson Key 2 Up | D-pad Down
-| Enum.KeyEventType | ControllerCraftspersonKey3Up | Controller: Craftsperson Key 3 Up | LT
-| Enum.KeyEventType | ControllerCraftspersonKey4Up | Controller: Craftsperson Key 4 Up | LB + Y
-| Enum.KeyEventType | ControllerCraftspersonKey5Up | Craftsperson Key 5 Up | LB + X
-| Enum.KeyEventType | ControllerCraftspersonKey6Up | Craftsperson Key 6 Up | LB + A
-| Enum.KeyEventType | ControllerCraftspersonKey7Up | Controller: Craftsperson Key 7 Up | LB + D-pad Up
-| Enum.KeyEventType | ControllerCraftspersonKey8Up | Controller: Craftsperson Key 8 Up | LB + D-pad Right
-| Enum.KeyEventType | ControllerCraftspersonKey9Up | Controller: Craftsperson Key 9 Up | LB + D-pad Left
-| Enum.KeyEventType | ControllerCraftspersonKey10Up | Controller: Craftsperson Key 10 Up | LB + D-pad Down
-| Enum.KeyEventType | ControllerCraftspersonKey11Up | Craftsperson Key 11 Up | LB + RB
-| Enum.KeyEventType | ControllerCraftspersonKey12Up | Craftsperson Key 12 Up | LB + LT
-| Enum.KeyEventType | ControllerCraftspersonKey13Up | Craftsperson Key 13 Up | LB + RT
-| Enum.KeyEventType | ControllerCraftspersonKey14Up | Controller: Craftsperson Key 14 Up | LB + LS Down
-| Enum.KeyEventType | ControllerSprintKeyUp | Controller: Sprint Up | RB
-| Enum.KeyEventType | ControllerJumpKeyUp | Controller: Jump Up | A
-| Enum.KeyEventType | ControllerInteractKeyUp | Controller: Pick Up/Interact Up | X
-| Enum.KeyEventType | ControllerNormalAttackKeyUp | Controller: Normal Attack Up | B
-| Enum.KeyEventType | ControllerCharacterSkill1KeyUp | Controller: Character Skill 1 Up | RT
-| Enum.KeyEventType | ControllerCharacterSkill2KeyUp | Controller: Character Skill 2 Up | Y
-| Enum.KeyEventType | ControllerCharacterSkill3KeyUp | Controller: Character Skill 3 Up | D-pad Up
-| Enum.KeyEventType | ControllerCharacterSkill4KeyUp | Controller: Character Skill 4 Up | D-pad Down
-| Enum.KeyEventType | ControllerMenuConfirmKeyUp | Controller: Menu Confirm Up | - Determined by Controller Navigation configuration
-| Enum.KeyEventType | ControllerMenuBackKeyUp | Controller: Menu Back Up | - Determined by Controller Navigation configuration
+| Enum.KeyEventType | KeyboardCraftspersonKey1Down | Keyboard/Mouse: Craftsperson Key 1 (Press Down) | 1
+| Enum.KeyEventType | KeyboardCraftspersonKey2Down | Keyboard/Mouse: Craftsperson Key 2 (Press Down) | 2
+| Enum.KeyEventType | KeyboardCraftspersonKey3Down | Keyboard/Mouse: Craftsperson Key 3 (Press Down) | 3
+| Enum.KeyEventType | KeyboardCraftspersonKey4Down | Keyboard/Mouse: Craftsperson Key 4 (Press Down) | 4
+| Enum.KeyEventType | KeyboardCraftspersonKey5Down | Keyboard/Mouse: Craftsperson Key 5 (Press Down) | 5
+| Enum.KeyEventType | KeyboardCraftspersonKey6Down | Keyboard/Mouse: Craftsperson Key 6 (Press Down) | 6
+| Enum.KeyEventType | KeyboardCraftspersonKey7Down | Keyboard/Mouse: Craftsperson Key 7 (Press Down) | 7
+| Enum.KeyEventType | KeyboardCraftspersonKey8Down | Keyboard/Mouse: Craftsperson Key 8 (Press Down) | 8
+| Enum.KeyEventType | KeyboardCraftspersonKey9Down | Keyboard/Mouse: Craftsperson Key 9 (Press Down) | 9
+| Enum.KeyEventType | KeyboardCraftspersonKey10Down | Keyboard/Mouse: Craftsperson Key 10 (Press Down) | 0
+| Enum.KeyEventType | KeyboardCraftspersonKey11Down | Keyboard/Mouse: Craftsperson Key 11 (Press Down) | U
+| Enum.KeyEventType | KeyboardCraftspersonKey12Down | Keyboard/Mouse: Craftsperson Key 12 (Press Down) | Z
+| Enum.KeyEventType | KeyboardCraftspersonKey13Down | Keyboard/Mouse: Craftsperson Key 13 (Press Down) | Y
+| Enum.KeyEventType | KeyboardCraftspersonKey14Down | Keyboard/Mouse: Craftsperson Key 14 (Press Down) | G
+| Enum.KeyEventType | KeyboardCraftspersonKey15Down | Keyboard/Mouse: Craftsperson Key 15 (Press Down) | H
+| Enum.KeyEventType | KeyboardCraftspersonKey16Down | Keyboard/Mouse: Craftsperson Key 16 (Press Down) | I
+| Enum.KeyEventType | KeyboardCraftspersonKey17Down | Keyboard/Mouse: Craftsperson Key 17 (Press Down) | O
+| Enum.KeyEventType | KeyboardCraftspersonKey18Down | Keyboard/Mouse: Craftsperson Key 18 (Press Down) | P
+| Enum.KeyEventType | KeyboardCraftspersonKey19Down | Keyboard/Mouse: Craftsperson Key 19 (Press Down) | J
+| Enum.KeyEventType | KeyboardCraftspersonKey20Down | Keyboard/Mouse: Craftsperson Key 20 (Press Down) | K
+| Enum.KeyEventType | KeyboardCraftspersonKey21Down | Keyboard/Mouse: Craftsperson Key 21 (Press Down) | L
+| Enum.KeyEventType | KeyboardCraftspersonKey22Down | Keyboard/Mouse: Craftsperson Key 22 (Press Down) | V
+| Enum.KeyEventType | KeyboardCraftspersonKey23Down | Keyboard/Mouse: Craftsperson Key 23 (Press Down) | F5
+| Enum.KeyEventType | KeyboardCraftspersonKey24Down | Keyboard/Mouse: Craftsperson Key 24 (Press Down) | F6
+| Enum.KeyEventType | KeyboardCraftspersonKey25Down | Keyboard/Mouse: Craftsperson Key 25 (Press Down) | F7
+| Enum.KeyEventType | KeyboardCraftspersonKey26Down | Keyboard/Mouse: Craftsperson Key 26 (Press Down) | F8
+| Enum.KeyEventType | KeyboardCraftspersonKey27Down | Keyboard/Mouse: Craftsperson Key 27 (Press Down) | F9
+| Enum.KeyEventType | KeyboardCraftspersonKey28Down | Keyboard/Mouse: Craftsperson Key 28 (Press Down) | F10
+| Enum.KeyEventType | KeyboardCraftspersonKey29Down | Keyboard/Mouse: Craftsperson Key 29 (Press Down) | `
+| Enum.KeyEventType | KeyboardCraftspersonKey30Down | Keyboard/Mouse: Craftsperson Key 30 (Press Down) | -
+| Enum.KeyEventType | KeyboardCraftspersonKey31Down | Keyboard/Mouse: Craftsperson Key 31 (Press Down) | =
+| Enum.KeyEventType | KeyboardCraftspersonKey32Down | Keyboard/Mouse: Craftsperson Key 32 (Press Down) | [
+| Enum.KeyEventType | KeyboardCraftspersonKey33Down | Keyboard/Mouse: Craftsperson Key 33 (Press Down) | ,
+| Enum.KeyEventType | KeyboardCraftspersonKey34Down | Keyboard/Mouse: Craftsperson Key 34 (Press Down) | .
+| Enum.KeyEventType | KeyboardCraftspersonKey35Down | Keyboard/Mouse: Craftsperson Key 35 (Press Down) | /
+| Enum.KeyEventType | KeyboardCraftspersonKey36Down | Keyboard/Mouse: Craftsperson Key 36 (Press Down) | ↑
+| Enum.KeyEventType | KeyboardCraftspersonKey37Down | Keyboard/Mouse: Craftsperson Key 37 (Press Down) | ↓
+| Enum.KeyEventType | KeyboardCraftspersonKey38Down | Keyboard/Mouse: Craftsperson Key 38 (Press Down) | ←
+| Enum.KeyEventType | KeyboardCraftspersonKey39Down | Keyboard/Mouse: Craftsperson Key 39 (Press Down) | →
+| Enum.KeyEventType | KeyboardCraftspersonKey40Down | Keyboard/Mouse: Craftsperson Key 40 (Press Down) | Right Ctrl
+| Enum.KeyEventType | KeyboardCraftspersonKey41Down | Keyboard/Mouse: Craftsperson Key 41 (Press Down) | Right Shift
+| Enum.KeyEventType | KeyboardCraftspersonKey42Down | Keyboard/Mouse: Craftsperson Key 42 (Press Down) | Backspace
+| Enum.KeyEventType | KeyboardCraftspersonKey43Down | Keyboard/Mouse: Craftsperson Key 43 (Press Down) | CapsLock
+| Enum.KeyEventType | KeyboardMoveForwardKeyDown | Keyboard/Mouse: Move Forward (Press Down) | W
+| Enum.KeyEventType | KeyboardMoveBackwardKeyDown | Keyboard/Mouse: Move Backward (Press Down) | S
+| Enum.KeyEventType | KeyboardMoveLeftKeyDown | Keyboard/Mouse: Move Left (Press Down) | A
+| Enum.KeyEventType | KeyboardMoveRightKeyDown | Keyboard/Mouse: Move Right (Press Down) | D
+| Enum.KeyEventType | KeyboardSwitchToWalkOrRunKeyDown | Keyboard/Mouse: Toggle walk/run state (Press Down) | Left Ctrl
+| Enum.KeyEventType | KeyboardSprintKeyDown | Keyboard/Mouse: Sprint (Press Down) | Right Mouse Button
+| Enum.KeyEventType | KeyboardJumpKeyDown | Keyboard/Mouse: Jump (Press Down) | Space
+| Enum.KeyEventType | KeyboardDropKeyDown | Keyboard/Mouse: Drop (Press Down) | X
+| Enum.KeyEventType | KeyboardOpenShortcutWheelKeyDown | Keyboard/Mouse: Open Shortcut Wheel (Press Down) | Tab
+| Enum.KeyEventType | KeyboardInteractKeyDown | Keyboard/Mouse: Pick Up/Interact (Press Down) | F
+| Enum.KeyEventType | KeyboardNormalAttackKeyDown | Keyboard/Mouse: Normal Attack (Press Down) | Left Mouse Button
+| Enum.KeyEventType | KeyboardCharacterSkill1KeyDown | Keyboard/Mouse: Character Skill 1 (Press Down) | E
+| Enum.KeyEventType | KeyboardCharacterSkill2KeyDown | Keyboard/Mouse: Character Skill 2 (Press Down) | Q
+| Enum.KeyEventType | KeyboardCharacterSkill3KeyDown | Keyboard/Mouse: Character Skill 3 (Press Down) | R
+| Enum.KeyEventType | KeyboardCharacterSkill4KeyDown | Keyboard/Mouse: Character Skill 4 (Press Down) | T
+| Enum.KeyEventType | KeyboardCraftspersonKey1Up | Keyboard/Mouse: Craftsperson Key 1 (Lift Up) | 1
+| Enum.KeyEventType | KeyboardCraftspersonKey2Up | Keyboard/Mouse: Craftsperson Key 2 (Lift Up) | 2
+| Enum.KeyEventType | KeyboardCraftspersonKey3Up | Keyboard/Mouse: Craftsperson Key 3 (Lift Up) | 3
+| Enum.KeyEventType | KeyboardCraftspersonKey4Up | Keyboard/Mouse: Craftsperson Key 4 (Lift Up) | 4
+| Enum.KeyEventType | KeyboardCraftspersonKey5Up | Keyboard/Mouse: Craftsperson Key 5 (Lift Up) | 5
+| Enum.KeyEventType | KeyboardCraftspersonKey6Up | Keyboard/Mouse: Craftsperson Key 6 (Lift Up) | 6
+| Enum.KeyEventType | KeyboardCraftspersonKey7Up | Keyboard/Mouse: Craftsperson Key 7 (Lift Up) | 7
+| Enum.KeyEventType | KeyboardCraftspersonKey8Up | Keyboard/Mouse: Craftsperson Key 8 (Lift Up) | 8
+| Enum.KeyEventType | KeyboardCraftspersonKey9Up | Keyboard/Mouse: Craftsperson Key 9 (Lift Up) | 9
+| Enum.KeyEventType | KeyboardCraftspersonKey10Up | Keyboard/Mouse: Craftsperson Key 10 (Lift Up) | 0
+| Enum.KeyEventType | KeyboardCraftspersonKey11Up | Keyboard/Mouse: Craftsperson Key 11 (Lift Up) | U
+| Enum.KeyEventType | KeyboardCraftspersonKey12Up | Keyboard/Mouse: Craftsperson Key 12 (Lift Up) | Z
+| Enum.KeyEventType | KeyboardCraftspersonKey13Up | Keyboard/Mouse: Craftsperson Key 13 (Lift Up) | Y
+| Enum.KeyEventType | KeyboardCraftspersonKey14Up | Keyboard/Mouse: Craftsperson Key 14 (Lift Up) | G
+| Enum.KeyEventType | KeyboardCraftspersonKey15Up | Keyboard/Mouse: Craftsperson Key 15 (Lift Up) | H
+| Enum.KeyEventType | KeyboardCraftspersonKey16Up | Keyboard/Mouse: Craftsperson Key 16 (Lift Up) | I
+| Enum.KeyEventType | KeyboardCraftspersonKey17Up | Keyboard/Mouse: Craftsperson Key 17 (Lift Up) | O
+| Enum.KeyEventType | KeyboardCraftspersonKey18Up | Keyboard/Mouse: Craftsperson Key 18 (Lift Up) | P
+| Enum.KeyEventType | KeyboardCraftspersonKey19Up | Keyboard/Mouse: Craftsperson Key 19 (Lift Up) | J
+| Enum.KeyEventType | KeyboardCraftspersonKey20Up | Keyboard/Mouse: Craftsperson Key 20 (Lift Up) | K
+| Enum.KeyEventType | KeyboardCraftspersonKey21Up | Keyboard/Mouse: Craftsperson Key 21 (Lift Up) | L
+| Enum.KeyEventType | KeyboardCraftspersonKey22Up | Keyboard/Mouse: Craftsperson Key 22 (Lift Up) | V
+| Enum.KeyEventType | KeyboardCraftspersonKey23Up | Keyboard/Mouse: Craftsperson Key 23 (Lift Up) | F5
+| Enum.KeyEventType | KeyboardCraftspersonKey24Up | Keyboard/Mouse: Craftsperson Key 24 (Lift Up) | F6
+| Enum.KeyEventType | KeyboardCraftspersonKey25Up | Keyboard/Mouse: Craftsperson Key 25 (Lift Up) | F7
+| Enum.KeyEventType | KeyboardCraftspersonKey26Up | Keyboard/Mouse: Craftsperson Key 26 (Lift Up) | F8
+| Enum.KeyEventType | KeyboardCraftspersonKey27Up | Keyboard/Mouse: Craftsperson Key 27 (Lift Up) | F9
+| Enum.KeyEventType | KeyboardCraftspersonKey28Up | Keyboard/Mouse: Craftsperson Key 28 (Lift Up) | F10
+| Enum.KeyEventType | KeyboardCraftspersonKey29Up | Keyboard/Mouse: Craftsperson Key 29 (Lift Up) | `
+| Enum.KeyEventType | KeyboardCraftspersonKey30Up | Keyboard/Mouse: Craftsperson Key 30 (Lift Up) | -
+| Enum.KeyEventType | KeyboardCraftspersonKey31Up | Keyboard/Mouse: Craftsperson Key 31 (Lift Up) | =
+| Enum.KeyEventType | KeyboardCraftspersonKey32Up | Keyboard/Mouse: Craftsperson Key 32 (Lift Up) | [
+| Enum.KeyEventType | KeyboardCraftspersonKey33Up | Keyboard/Mouse: Craftsperson Key 33 (Lift Up) | ,
+| Enum.KeyEventType | KeyboardCraftspersonKey34Up | Keyboard/Mouse: Craftsperson Key 34 (Lift Up) | .
+| Enum.KeyEventType | KeyboardCraftspersonKey35Up | Keyboard/Mouse: Craftsperson Key 35 (Lift Up) | /
+| Enum.KeyEventType | KeyboardCraftspersonKey36Up | Keyboard/Mouse: Craftsperson Key 36 (Lift Up) | ↑
+| Enum.KeyEventType | KeyboardCraftspersonKey37Up | Keyboard/Mouse: Craftsperson Key 37 (Lift Up) | ↓
+| Enum.KeyEventType | KeyboardCraftspersonKey38Up | Keyboard/Mouse: Craftsperson Key 38 (Lift Up) | ←
+| Enum.KeyEventType | KeyboardCraftspersonKey39Up | Keyboard/Mouse: Craftsperson Key 39 (Lift Up) | →
+| Enum.KeyEventType | KeyboardCraftspersonKey40Up | Keyboard/Mouse: Craftsperson Key 40 (Lift Up) | Right Ctrl
+| Enum.KeyEventType | KeyboardCraftspersonKey41Up | Keyboard/Mouse: Craftsperson Key 41 (Lift Up) | Right Shift
+| Enum.KeyEventType | KeyboardCraftspersonKey42Up | Keyboard/Mouse: Craftsperson Key 42 (Lift Up) | Backspace
+| Enum.KeyEventType | KeyboardCraftspersonKey43Up | Keyboard/Mouse: Craftsperson Key 43 (Lift Up) | CapsLock
+| Enum.KeyEventType | KeyboardMoveForwardKeyUp | Keyboard/Mouse: Move Forward (Lift Up) | W
+| Enum.KeyEventType | KeyboardMoveBackwardKeyUp | Keyboard/Mouse: Move Backward (Lift Up) | S
+| Enum.KeyEventType | KeyboardMoveLeftKeyUp | Keyboard/Mouse: Move Left (Lift Up) | A
+| Enum.KeyEventType | KeyboardMoveRightKeyUp | Keyboard/Mouse: Move Right (Lift Up) | D
+| Enum.KeyEventType | KeyboardSwitchToWalkOrRunKeyUp | Keyboard/Mouse: Toggle Walk/Run State (Lift Up) | Left Ctrl
+| Enum.KeyEventType | KeyboardSprintKeyUp | Keyboard/Mouse: Sprint (Lift Up) | Right Mouse Button
+| Enum.KeyEventType | KeyboardJumpKeyUp | Keyboard/Mouse: Jump (Lift Up) | Space
+| Enum.KeyEventType | KeyboardDropKeyUp | Keyboard/Mouse: Drop (Lift Up) | X
+| Enum.KeyEventType | KeyboardOpenShortcutWheelKeyUp | Keyboard/Mouse: Open Shortcut Wheel (Lift Up) | Tab
+| Enum.KeyEventType | KeyboardInteractKeyUp | Keyboard/Mouse: Pick Up/Interact (Lift Up) | F
+| Enum.KeyEventType | KeyboardNormalAttackKeyUp | Keyboard/Mouse: Normal Attack (Lift Up) | Left Mouse Button
+| Enum.KeyEventType | KeyboardCharacterSkill1KeyUp | Keyboard/Mouse: Character Skill 1 (Lift Up) | E
+| Enum.KeyEventType | KeyboardCharacterSkill2KeyUp | Keyboard/Mouse: Character Skill 2 (Lift Up) | Q
+| Enum.KeyEventType | KeyboardCharacterSkill3KeyUp | Keyboard/Mouse: Character Skill 3 (Lift Up) | R
+| Enum.KeyEventType | KeyboardCharacterSkill4KeyUp | Keyboard/Mouse: Character Skill 4 (Lift Up) | T
+| Enum.KeyEventType | ControllerCraftspersonKey1Down | Controller: Craftsperson Key 1 (Press Down) | D-pad Up
+| Enum.KeyEventType | ControllerCraftspersonKey2Down | Controller: Craftsperson Key 2 (Press Down) | D-pad Down
+| Enum.KeyEventType | ControllerCraftspersonKey3Down | Controller: Craftsperson Key 3 (Press Down) | LT
+| Enum.KeyEventType | ControllerCraftspersonKey4Down | Controller: Craftsperson Key 4 (Press Down) | LB + Y
+| Enum.KeyEventType | ControllerCraftspersonKey5Down | Craftsperson Key 5 (Press Down) | LB + X
+| Enum.KeyEventType | ControllerCraftspersonKey6Down | Craftsperson Key 6 (Press Down) | LB + A
+| Enum.KeyEventType | ControllerCraftspersonKey7Down | Controller: Craftsperson Key 7 (Press Down) | LB + D-pad Up
+| Enum.KeyEventType | ControllerCraftspersonKey8Down | Controller: Craftsperson Key 8 (Press Down) | LB + D-pad Right
+| Enum.KeyEventType | ControllerCraftspersonKey9Down | Controller: Craftsperson Key 9 (Press Down) | LB + D-pad Left
+| Enum.KeyEventType | ControllerCraftspersonKey10Down | Controller: Craftsperson Key 10 (Press Down) | LB + D-pad Down
+| Enum.KeyEventType | ControllerCraftspersonKey11Down | Craftsperson Key 11 (Press Down) | LB + RB
+| Enum.KeyEventType | ControllerCraftspersonKey12Down | Craftsperson Key 12 (Press Down) | LB + LT
+| Enum.KeyEventType | ControllerCraftspersonKey13Down | Craftsperson Key 13 (Press Down) | LB + RT
+| Enum.KeyEventType | ControllerCraftspersonKey14Down | Controller: Craftsperson Key 14 (Press Down) | LB + LS Down
+| Enum.KeyEventType | ControllerSprintKeyDown | Controller: Sprint (Press Down) | RB
+| Enum.KeyEventType | ControllerJumpKeyDown | Controller: Jump (Press Down) | A
+| Enum.KeyEventType | ControllerInteractKeyDown | Controller: Pick Up/Interact (Press Down) | X
+| Enum.KeyEventType | ControllerNormalAttackKeyDown | Controller: Normal Attack (Press Down) | B
+| Enum.KeyEventType | ControllerCharacterSkill1KeyDown | Controller: Character Skill 1 (Press Down) | RT
+| Enum.KeyEventType | ControllerCharacterSkill2KeyDown | Controller: Character Skill 2 (Press Down) | Y
+| Enum.KeyEventType | ControllerCharacterSkill3KeyDown | Controller: Character Skill 3 (Press Down) | D-pad Up
+| Enum.KeyEventType | ControllerCharacterSkill4KeyDown | Controller: Character Skill 4 (Press Down) | D-pad Down
+| Enum.KeyEventType | ControllerMenuConfirmKeyDown | Controller: Menu Confirm (Press Down) | - (Determined by Controller Navigation configuration)
+| Enum.KeyEventType | ControllerMenuBackKeyDown | Controller: Menu Back (Press Down) | - (Determined by Controller Navigation configuration)
+| Enum.KeyEventType | ControllerCraftspersonKey1Up | Controller: Craftsperson Key 1 (Lift Up) | D-pad Up
+| Enum.KeyEventType | ControllerCraftspersonKey2Up | Controller: Craftsperson Key 2 (Lift Up) | D-pad Down
+| Enum.KeyEventType | ControllerCraftspersonKey3Up | Controller: Craftsperson Key 3 (Lift Up) | LT
+| Enum.KeyEventType | ControllerCraftspersonKey4Up | Controller: Craftsperson Key 4 (Lift Up) | LB + Y
+| Enum.KeyEventType | ControllerCraftspersonKey5Up | Craftsperson Key 5 (Lift Up) | LB + X
+| Enum.KeyEventType | ControllerCraftspersonKey6Up | Craftsperson Key 6 (Lift Up) | LB + A
+| Enum.KeyEventType | ControllerCraftspersonKey7Up | Controller: Craftsperson Key 7 (Lift Up) | LB + D-pad Up
+| Enum.KeyEventType | ControllerCraftspersonKey8Up | Controller: Craftsperson Key 8 (Lift Up) | LB + D-pad Right
+| Enum.KeyEventType | ControllerCraftspersonKey9Up | Controller: Craftsperson Key 9 (Lift Up) | LB + D-pad Left
+| Enum.KeyEventType | ControllerCraftspersonKey10Up | Controller: Craftsperson Key 10 (Lift Up) | LB + D-pad Down
+| Enum.KeyEventType | ControllerCraftspersonKey11Up | Craftsperson Key 11 (Lift Up) | LB + RB
+| Enum.KeyEventType | ControllerCraftspersonKey12Up | Craftsperson Key 12 (Lift Up) | LB + LT
+| Enum.KeyEventType | ControllerCraftspersonKey13Up | Craftsperson Key 13 (Lift Up) | LB + RT
+| Enum.KeyEventType | ControllerCraftspersonKey14Up | Controller: Craftsperson Key 14 (Lift Up) | LB + LS Down
+| Enum.KeyEventType | ControllerSprintKeyUp | Controller: Sprint (Lift Up) | RB
+| Enum.KeyEventType | ControllerJumpKeyUp | Controller: Jump (Lift Up) | A
+| Enum.KeyEventType | ControllerInteractKeyUp | Controller: Pick Up/Interact (Lift Up) | X
+| Enum.KeyEventType | ControllerNormalAttackKeyUp | Controller: Normal Attack (Lift Up) | B
+| Enum.KeyEventType | ControllerCharacterSkill1KeyUp | Controller: Character Skill 1 (Lift Up) | RT
+| Enum.KeyEventType | ControllerCharacterSkill2KeyUp | Controller: Character Skill 2 (Lift Up) | Y
+| Enum.KeyEventType | ControllerCharacterSkill3KeyUp | Controller: Character Skill 3 (Lift Up) | D-pad Up
+| Enum.KeyEventType | ControllerCharacterSkill4KeyUp | Controller: Character Skill 4 (Lift Up) | D-pad Down
+| Enum.KeyEventType | ControllerMenuConfirmKeyUp | Controller: Menu Confirm (Lift Up) | - Determined by Controller Navigation configuration
+| Enum.KeyEventType | ControllerMenuBackKeyUp | Controller: Menu Back (Lift Up) | - Determined by Controller Navigation configuration

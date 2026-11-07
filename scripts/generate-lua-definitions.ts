@@ -83,7 +83,8 @@ let englishOwner = ''
 for (const line of fs
   .readFileSync(path.join(root, 'resources/lua/official-api.en.txt'), 'utf8')
   .split(/\r?\n/)) {
-  const heading = /^\d+\.([A-Za-z][A-Za-z0-9]*)$/.exec(line)
+  // 小节标题：英文页 7.2 起写成 "13. ClientUIBaseControl"，之前没有空格
+  const heading = /^\d+\.\s*([A-Za-z][A-Za-z0-9]*)$/.exec(line)
   if (heading) englishOwner = heading[1]
   if (!line.startsWith('|')) continue
   const cells = line
