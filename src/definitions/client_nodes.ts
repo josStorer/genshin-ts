@@ -46814,6 +46814,21 @@ export interface ClientEntityHelperMethods<
   readonly guid: guid
 
   /**
+   * Query whether the entity has the specified unit status
+   *
+   * 实体是否携带指定单位状态: 查询目标实体是否携带指定的单位状态
+   *
+   * @param unitStatus
+   *
+   * 单位状态
+   *
+   * @returns
+   *
+   * 是否携带
+   */
+  hasUnitStatus(unitStatus: ConfigIdValue): boolean
+
+  /**
    * Available only in Custom Aggro Mode; Modify the aggro value of the specified entity for the aggro owner entity; the increase value can be negative.
    *
    * 增加指定实体的仇恨值: 仅自定义仇恨模式可用; 修改指定实体在仇恨拥有者实体上的仇恨值，增加值可以为负

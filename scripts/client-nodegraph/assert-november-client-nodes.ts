@@ -68,21 +68,25 @@ for (const mode of ['beyond', 'classic']) {
 }
 assert.deepEqual([...found].sort(), [...expected.keys()].sort())
 
-for (const helper of [false, true]) {
+for (const [index, variant] of (['f', 'helper', 'alias'] as const).entries()) {
   g.creationStatusDecision({
-    id: helper ? 1082131991 : 1082131990,
+    id: 1082131990 + index,
     name: 'NovemberHelper',
     mode: 'beyond'
   }).on('start1', (_evt, f) => {
     const target = f.getSelfEntity()
-    const active = helper
-      ? target.whetherTheEntityHasTheSpecifiedUnitStatus(new configId(1))
-      : f.whetherTheEntityHasTheSpecifiedUnitStatus(target, new configId(1))
+    const active =
+      variant === 'helper'
+        ? target.whetherTheEntityHasTheSpecifiedUnitStatus(new configId(1))
+        : variant === 'alias'
+          ? target.hasUnitStatus(new configId(1))
+          : f.whetherTheEntityHasTheSpecifiedUnitStatus(target, new configId(1))
     f.switchToSelfExecutionStatus(active, new configId(2), 1n)
   })
 }
 const docs = buildClientGraphRegistriesIRDocuments()
 docs[1].graph.id = docs[0].graph.id
+docs[2].graph.id = docs[0].graph.id
 const originalNow = Date.now
 const originalRandom = Math.random
 try {
@@ -92,6 +96,8 @@ try {
   const direct = irToGia(docs[0], { protoPath })
   counter_dynamic_id.reset()
   assert.deepEqual(direct, irToGia(docs[1], { protoPath }))
+  counter_dynamic_id.reset()
+  assert.deepEqual(direct, irToGia(docs[2], { protoPath }))
 } finally {
   Date.now = originalNow
   Math.random = originalRandom

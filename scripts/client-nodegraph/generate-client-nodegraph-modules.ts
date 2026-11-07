@@ -124,7 +124,9 @@ type ClientEntityHelperBindings = Record<
 >
 
 const CLIENT_ENTITY_METHOD_ALIAS_SOURCE_OVERRIDES: Readonly<Record<string, string>> = {
-  unitTags: 'getEntitySUnitTagList'
+  unitTags: 'getEntitySUnitTagList',
+  // Same short name as the server helper (queryIfEntityHasUnitStatus).
+  hasUnitStatus: 'whetherTheEntityHasTheSpecifiedUnitStatus'
 }
 
 const CLIENT_HAND_ENTITY_METHOD_INSERT_INDEX: Readonly<Record<string, number>> = {

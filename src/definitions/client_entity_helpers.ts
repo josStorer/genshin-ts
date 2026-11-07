@@ -149,6 +149,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
         methodName: 'queryGuidByEntity',
         insertIndex: 0
       },
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       increaseTheAggroValueOfTheSpecifiedEntity: {
         kind: 'method',
         methodName: 'increaseTheAggroValueOfTheSpecifiedEntity',
@@ -454,6 +459,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
         methodName: 'queryGuidByEntity',
         insertIndex: 0
       },
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       increaseTheAggroValueOfTheSpecifiedEntity: {
         kind: 'method',
         methodName: 'increaseTheAggroValueOfTheSpecifiedEntity',
@@ -719,6 +729,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
         methodName: 'queryGuidByEntity',
         insertIndex: 0
       },
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       increaseTheAggroValueOfTheSpecifiedEntity: {
         kind: 'method',
         methodName: 'increaseTheAggroValueOfTheSpecifiedEntity',
@@ -966,6 +981,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
         methodName: 'queryGuidByEntity',
         insertIndex: 0
       },
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       isOnField: {
         kind: 'method',
         methodName: 'queryIfEntityIsOnTheField',
@@ -1030,6 +1050,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
   },
   creation_status: {
     beyond: {
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       tacticMoveToTheTargetEntity: {
         kind: 'method',
         methodName: 'tacticMoveToTheTargetEntity',
@@ -1047,6 +1072,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
       }
     },
     classic: {
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       tacticMoveToTheTargetEntity: {
         kind: 'method',
         methodName: 'tacticMoveToTheTargetEntity',
@@ -1066,6 +1096,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
   },
   creation_status_decision: {
     beyond: {
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       whetherTheEntityHasTheSpecifiedUnitStatus: {
         kind: 'method',
         methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
@@ -1073,6 +1108,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
       }
     },
     classic: {
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       whetherTheEntityHasTheSpecifiedUnitStatus: {
         kind: 'method',
         methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
@@ -1175,6 +1215,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
       guid: {
         kind: 'getter',
         methodName: 'queryGuidByEntity',
+        insertIndex: 0
+      },
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
         insertIndex: 0
       },
       inputDevice: {
@@ -1342,6 +1387,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
       guid: {
         kind: 'getter',
         methodName: 'queryGuidByEntity',
+        insertIndex: 0
+      },
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
         insertIndex: 0
       },
       inputDevice: {
@@ -1498,6 +1548,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
         methodName: 'queryGuidByEntity',
         insertIndex: 0
       },
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
+        insertIndex: 0
+      },
       inputDevice: {
         kind: 'getter',
         methodName: 'getPlayerClientInputDeviceType',
@@ -1663,6 +1718,11 @@ export const CLIENT_ENTITY_HELPER_BINDINGS_BY_SUB_TYPE_AND_MODE = {
       guid: {
         kind: 'getter',
         methodName: 'queryGuidByEntity',
+        insertIndex: 0
+      },
+      hasUnitStatus: {
+        kind: 'method',
+        methodName: 'whetherTheEntityHasTheSpecifiedUnitStatus',
         insertIndex: 0
       },
       inputDevice: {
