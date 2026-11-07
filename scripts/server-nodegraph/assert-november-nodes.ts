@@ -79,9 +79,23 @@ const originalRandom = Math.random
 try {
   Date.now = () => 1790000000000
   Math.random = () => 0.3141592653589793
+  // irToGia rewrites the document it gets, so keep an untouched copy for the limit checks.
+  const pristine = structuredClone(docs[0])
   const direct = irToGia(docs[0], { protoPath })
   assert.deepEqual(direct, irToGia(docs[1], { protoPath }))
   assert.deepEqual(direct, irToGia(docs[2], { protoPath }))
+
+  // Editor limit: at most 100 node graph variables per graph.
+  const withVariables = (count: number) => ({
+    ...structuredClone(pristine),
+    variables: Array.from({ length: count }, (_, i) => ({
+      name: `v${i}`,
+      type: 'int' as const,
+      value: 0
+    }))
+  })
+  assert.doesNotThrow(() => irToGia(withVariables(100), { protoPath }))
+  assert.throws(() => irToGia(withVariables(101), { protoPath }), /101[^0-9]+100/)
 } finally {
   Date.now = originalNow
   Math.random = originalRandom

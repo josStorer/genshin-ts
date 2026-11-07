@@ -80,6 +80,7 @@
   "err_mergeServerSubTypeMismatch": "[error] 无法合并不同 server sub_type（id={{id}}）：{{a}} vs {{b}}",
   "err_mergeServerModeMismatch": "[error] 无法合并不同 server mode（id={{id}}）：{{a}} vs {{b}}",
   "err_mergeClientSubTypeMismatch": "[error] 无法合并不同 client sub_type（id={{id}}）：{{a}} vs {{b}}",
+  "err_graphVariableLimit": "[error] 节点图 {{id}} 有 {{count}} 个节点图变量，超过编辑器上限 {{max}} 个（其中 {{generated}} 个是 gsts 为定时器等自动生成的 __gsts 变量）",
   "err_mergeClientModeMismatch": "[error] 无法合并不同 client mode（id={{id}}）：{{a}} vs {{b}}",
   "err_mergeDuplicateClientGraphId": "[error] 客户端节点图 id 只能声明一次（id={{id}}）；客户端节点图只有单一入口，不能像服务器节点图一样合并多个声明",
   "err_mergeDuplicateVarsByName": "[error] 合并后变量名重复（{{count}} 个）。\\n{{lines}}\\n{{truncated}}{{hint}}",

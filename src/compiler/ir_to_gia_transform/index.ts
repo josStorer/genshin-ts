@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks'
 
 import { SERVER_LITERAL_ARGUMENT_INDEXES_BY_NODE_TYPE } from '../../definitions/server_node_metadata.js'
+import { t } from '../../i18n/index.js'
 import { loadGiaProto } from '../../injector/proto.js'
 import { resolveGraphIdForGraph } from '../../runtime/graph_defaults.js'
 import type {
@@ -162,7 +163,20 @@ function buildDictValue(variable: Variable): unknown[] {
   return out
 }
 
-function applyGraphVariables(graph: GiaGraph, variables: Variable[]) {
+/** Editor limit (编辑项范围限制): at most 100 node graph variables per graph. */
+const MAX_GRAPH_VARIABLES = 100
+
+function applyGraphVariables(graph: GiaGraph, graphId: number, variables: Variable[]) {
+  if (variables.length > MAX_GRAPH_VARIABLES) {
+    throw new Error(
+      t('err_graphVariableLimit', {
+        id: graphId,
+        count: variables.length,
+        max: MAX_GRAPH_VARIABLES,
+        generated: variables.filter((v) => v.name.startsWith('__gsts')).length
+      })
+    )
+  }
   for (const v of variables) {
     let nodeType: NodeType
     let value: unknown
@@ -301,7 +315,7 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
   const connectionIndexMs = profiling ? performance.now() - connectionIndexStart : 0
   const varsByName = buildVarsByName(ir)
   const variablesStart = profiling ? performance.now() : 0
-  applyGraphVariables(graph, ir.variables ?? [])
+  applyGraphVariables(graph, graphId, ir.variables ?? [])
   const variablesMs = profiling ? performance.now() - variablesStart : 0
 
   // 以下为引脚设置逻辑
