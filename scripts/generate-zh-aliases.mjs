@@ -53,7 +53,36 @@ const SKIP_TITLE_PREFIX = [
 // 仅写入 SERVER_F_ZH_TO_EN，SERVER_F_EN_TO_ZH 维持最新中文名。
 const ZH_COMPAT_ALIASES = {
   查询对应礼盒消耗数量: 'queryCorrespondingGiftBoxConsumption',
-  模运算: 'moduloOperation'
+  模运算: 'moduloOperation',
+  对列表修改值: 'modifyValueInList',
+  修改实体阵营: 'modifyEntityFaction',
+  传送玩家: 'teleportPlayer',
+  修改环境配置: 'modifyEnvironmentSettings',
+  修改全局计时器: 'modifyGlobalTimer',
+  修改角色扰动装置: 'modifyingCharacterDisruptorDevice',
+  修改界面布局内界面控件状态: 'modifyUiControlStatusWithinTheInterfaceLayout',
+  按最大冷却时间修改技能冷却百分比: 'modifySkillCdPercentageBasedOnMaxCd',
+  修改技能资源量: 'modifySkillResourceAmount',
+  修改角色技能冷却: 'modifyCharacterSkillCd',
+  绑定自定义技能实例到槽位: 'bindCustomSkillInstanceToSpecifiedSlot',
+  修改玩家背景音乐: 'modifyPlayerBackgroundMusic',
+  修改背包商店商品出售信息: 'modifyInventoryShopItemSalesInfo',
+  修改物品收购表中道具收购信息: 'modifyItemPurchaseInfoInThePurchaseList',
+  修改自定义商店商品出售信息: 'modifyCustomShopItemSalesInfo',
+  修改装备词条值: 'modifyEquipmentAffixValue',
+  修改背包道具数量: 'modifyInventoryItemQuantity',
+  修改背包货币数量: 'modifyInventoryCurrencyQuantity',
+  修改掉落物组件道具数量: 'modifyLootItemComponentQuantity',
+  修改掉落物组件货币数量: 'modifyLootComponentCurrencyAmount',
+  修改可见小地图标识的玩家列表: 'modifyPlayerListForVisibleMiniMapMarkers',
+  修改小地图标识的玩家标记: 'modifyPlayerMarkersOnTheMiniMap',
+  修改小地图标识生效状态: 'modifyMiniMapMarkerActivationStatus',
+  修改小地图缩放: 'modifyMiniMapZoom',
+  修改追踪小地图标识的玩家列表: 'modifyPlayerListForTrackingMiniMapMarkers',
+  变更成就进度计数: 'changeAchievementProgressTally',
+  修改玩家频道权限: 'modifyPlayerChannelPermission',
+  按位取补运算: 'bitwiseComplement',
+  获取造物的经典模式仇恨列表: 'getAggroListOfCreationInDefaultMode'
 }
 
 function extractZhTitle(lines) {
