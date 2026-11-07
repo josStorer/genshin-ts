@@ -60,9 +60,27 @@ ruleTester.run('no-outer-graph-assignment', noOuterGraphAssignment, {
       g.server().on('whenEntityIsCreated', () => { setTimeout(() => { outside = 2n }, 1000) }) }
       // timer-outer-capture owns this cross-level local write.`
     },
-    { filename, code: `function unrelated() { let local = 0; local++ }` }
+    { filename, code: `function unrelated() { let local = 0; local++ }` },
+    {
+      filename,
+      code: `const g = { server: () => ({ on: (_name: string, fn: () => void) => fn }) }; let shared = 0n;
+      g.server().on('whenEntityIsCreated', () => { shared = 1n })
+      // An unrelated object named g is not a node graph.`
+    }
   ],
   invalid: [
+    {
+      filename,
+      code: `import { g as graph } from 'genshin-ts/runtime/core'; let shared = 0n;
+      graph.server().on('whenEntityIsCreated', (_evt, f) => { shared = f.queryGameTimeElapsed() })`,
+      errors: 1
+    },
+    {
+      filename,
+      code: `import * as core from 'genshin-ts/runtime/core'; let shared = 0n;
+      core.g.server().on('whenEntityIsCreated', (_evt, f) => { shared = f.queryGameTimeElapsed() })`,
+      errors: 1
+    },
     {
       filename,
       code: `${importG}; let shared = 0n;
