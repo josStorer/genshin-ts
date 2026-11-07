@@ -87,6 +87,7 @@
   "err_mergeDuplicateVarsByName": "[error] 合并后变量名重复（{{count}} 个）。\n{{lines}}\n{{truncated}}{{hint}}",
   "err_mergeTruncated": "...（已截断）\n",
   "err_mergeDuplicateVarsHint": "[hint] 请重命名变量",
+  "err_mergeSharedTimer": "[error] 合并节点图（id={{id}}）时，{{files}} 都会启动同一处 {{call}}（{{timer}}，在它们共同调用的函数里），合并后它的回调每次会执行多遍。请只在其中一个文件里调用该函数，或给这些文件不同的节点图 id",
   "lua_compileFailed": "Lua 编译失败；未更新本地产物和游戏文件。",
   "lua_injectionFailed": "Lua 本地编译成功，但注入未完成。{{arg0}}",
   "lua_installationMissing": "找不到 genshin-ts 安装目录。",

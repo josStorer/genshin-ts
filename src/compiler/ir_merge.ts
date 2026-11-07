@@ -69,15 +69,15 @@ function isIrDocumentLike(doc: unknown): doc is IRDocument {
   return true
 }
 
-/** gstsServer return slots: each merged file keeps its own copy. */
-function isPerFileGstsVarName(name: string): boolean {
+function isInternalGstsVarName(name: string): boolean {
   return /^_gsts/i.test(name)
 }
 
-/** Graph-level variables gsts generates (stage entity, timer pools and captures): files share identical ones. */
-function isSharedGstsVarName(name: string): boolean {
-  return name.startsWith('__gsts_')
-}
+/** The stage entity variable is the same in every file, so merged files share one. */
+const STAGE_VAR_NAME = '__gsts_stage'
+
+/** Timer names gsts generates: `__gsts_<kind>_<call site>_<pool slot>_<graph id suffix>`. */
+const GENERATED_TIMER_NAME = /^__gsts_(timeout|interval)_(\d+)_\d+_\d+$/
 
 function buildSourceTag(outDirAbs: string, sourceJsonPath: string, sourceIndex: number): string {
   const rel = path.relative(outDirAbs, sourceJsonPath)
@@ -111,36 +111,49 @@ function rewriteVariablesInPlace(doc: AnyIRDocument, rename: Map<string, string>
   }
 }
 
-function collectRenamedVarNames(doc: AnyIRDocument, conflicting: Set<string>): Set<string> {
-  const renamed = (name: string) => isPerFileGstsVarName(name) || conflicting.has(name)
+function collectInternalVarNames(doc: AnyIRDocument): Set<string> {
   const out = new Set<string>()
   for (const v of doc.variables ?? []) {
-    if (renamed(v.name)) out.add(v.name)
+    if (isInternalGstsVarName(v.name)) out.add(v.name)
   }
   for (const n of getNodes(doc)) {
     const type = n.type
     if (type !== 'get_node_graph_variable' && type !== 'set_node_graph_variable') continue
     const a0 = n.args?.[0]
     if (!a0 || a0.type !== 'str') continue
-    if (renamed(a0.value)) out.add(a0.value)
+    if (isInternalGstsVarName(a0.value)) out.add(a0.value)
   }
   return out
 }
 
-/** Shared gsts variables whose definitions differ between the merged files; those are renamed per file instead. */
-function collectConflictingSharedVarNames(docs: AnyIRDocument[]): Set<string> {
-  const definitions = new Map<string, string>()
-  const out = new Set<string>()
-  for (const doc of docs) {
-    for (const v of doc.variables ?? []) {
-      if (!isSharedGstsVarName(v.name)) continue
-      const definition = JSON.stringify(v)
-      const previous = definitions.get(v.name)
-      if (previous === undefined) definitions.set(v.name, definition)
-      else if (previous !== definition) out.add(v.name)
+/**
+ * A timer started inside a gstsServer function called from several of the merged files: each file
+ * brings its own handler for the same timer names, so the merged graph would run the callback once per file.
+ */
+function assertNoSharedTimers(outDirAbs: string, graphId: number, items: IrSource[]) {
+  const filesByTimer = new Map<string, string[]>()
+  for (const it of items) {
+    const timers = new Set<string>()
+    for (const n of getNodes(it.doc as AnyIRDocument)) {
+      for (const arg of n.args ?? []) {
+        const match = arg?.type === 'str' ? GENERATED_TIMER_NAME.exec(arg.value) : null
+        if (match) timers.add(`__gsts_${match[1]}_${match[2]}`)
+      }
     }
+    const file = path.relative(outDirAbs, it.sourceJsonPath).replace(/\.json$/i, '.ts')
+    for (const timer of timers) filesByTimer.set(timer, [...(filesByTimer.get(timer) ?? []), file])
   }
-  return out
+  for (const [timer, files] of filesByTimer) {
+    if (files.length < 2) continue
+    throw new Error(
+      t('err_mergeSharedTimer', {
+        id: String(graphId),
+        files: [...new Set(files)].join(', '),
+        call: timer.startsWith('__gsts_timeout_') ? 'setTimeout' : 'setInterval',
+        timer
+      })
+    )
+  }
 }
 
 function pickTopmostDir(outDirAbs: string, paths: string[]): string {
@@ -162,8 +175,7 @@ function mergeVariablesOrThrowByName(
   const byName = new Map<string, Set<string>>()
   for (const it of items) {
     for (const v of it.vars ?? []) {
-      // Shared gsts variables left with one name are identical (conflicts were renamed): keep one.
-      if (isSharedGstsVarName(v.name) && byName.has(v.name)) continue
+      if (v.name === STAGE_VAR_NAME && byName.has(v.name)) continue
       all.push(v)
       const s = byName.get(v.name) ?? new Set<string>()
       s.add(it.source)
@@ -402,6 +414,8 @@ function mergeIrSources(outDirAbs: string, items: IrSource[]): MergeGroupResult[
       )
     }
 
+    assertNoSharedTimers(outDirAbs, graphId, ordered)
+
     const topDir = pickTopmostDir(
       outDirAbs,
       ordered.map((x) => x.sourceJsonPath)
@@ -431,16 +445,12 @@ function mergeIrSources(outDirAbs: string, items: IrSource[]): MergeGroupResult[
     const mergedNodes: AnyIRNode[] = []
     let nextId = 1
     const varsAfterRename: { source: string; vars: Variable[] | undefined }[] = []
-    const conflicting = collectConflictingSharedVarNames(
-      ordered.map((it) => it.doc as AnyIRDocument)
-    )
     for (const it of ordered) {
       const sourceDoc = it.doc as AnyIRDocument
 
-      // 变量重命名：_gsts* 返回值变量，以及定义不一致的 __gsts_* 变量按源文件打 tag，避免合并后同名互相覆盖；
-      // 定义一致的 __gsts_* 变量（stage、定时器池等）合并后共用一份
+      // 变量重命名：把所有 _gsts* 变量按源文件打 tag，避免合并后同名互相覆盖
       const tag = buildSourceTag(outDirAbs, it.sourceJsonPath, it.sourceIndex)
-      const internalNames = collectRenamedVarNames(sourceDoc, conflicting)
+      const internalNames = collectInternalVarNames(sourceDoc)
       const rename = new Map<string, string>()
       for (const name of internalNames) {
         rename.set(name, `${name}__${tag}`)

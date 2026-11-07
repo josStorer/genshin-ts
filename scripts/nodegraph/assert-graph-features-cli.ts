@@ -113,23 +113,14 @@ g.server({ id: 1073741931 }).on('whenEntityIsCreated', () => {
   assert.equal(names.size, 2, 'Merged files keep distinct call-site numbers')
   for (const name of names) assert.ok(name.endsWith('_41931'), name)
 
-  // Merged files share gsts' own variables (stage entity, timer state); user variables still clash.
-  fs.writeFileSync(
-    `${dir}/shared-helper.ts`,
-    `export function gstsServerPing(value: bigint) {
-  setTimeout(() => print(str(value)), 1000)
-}
-`
-  )
+  // Merged files share the stage entity variable; a timer in a shared function and user variables clash.
   const shared = [0, 1].map((index) => {
     const file = `${dir}/shared-${index}.ts`
     fs.writeFileSync(
       file,
       `import { g } from 'genshin-ts/runtime/core'
-import { gstsServerPing } from './shared-helper'
-g.server({ id: 1073741933 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073741933 }).on('whenEntityIsCreated', () => {
   stage.set('probe_${index}', 1n)
-  gstsServerPing(f.queryGameTimeElapsed())
 })
 `
     )
@@ -146,6 +137,32 @@ g.server({ id: 1073741933 }).on('whenEntityIsCreated', (_evt, f) => {
     proto
   ).graph.graph!.inner.graph.graphValues.map((v) => v.name)
   assert.equal(sharedVariables.filter((name) => name === '__gsts_stage').length, 1)
+  fs.writeFileSync(
+    `${dir}/shared-timer.ts`,
+    `export function gstsServerTick() {
+  setInterval(() => print('tick'), 1000)
+}
+`
+  )
+  const sharedTimer = [0, 1].map((index) => {
+    const file = `${dir}/shared-timer-${index}.ts`
+    fs.writeFileSync(
+      file,
+      `import { g } from 'genshin-ts/runtime/core'
+import { gstsServerTick } from './shared-timer'
+g.server({ id: 1073741938 }).on('whenEntityIsCreated', () => {
+  gstsServerTick()
+})
+`
+    )
+    return file
+  })
+  const sharedTimerResult = compile(sharedTimer, `${dir}/shared-timer`)
+  assert.notEqual(sharedTimerResult.code, 0)
+  assert.match(
+    sharedTimerResult.output,
+    /shared-timer-0\.ts, \S*shared-timer-1\.ts all start the same setInterval \(__gsts_interval_\d+,/
+  )
   const clash = [0, 1].map((index) => {
     const file = `${dir}/clash-${index}.ts`
     fs.writeFileSync(
@@ -205,7 +222,7 @@ g.server().on('whenEntityIsCreated', () => { setTimeout(() => print('default'), 
     /__gsts_timeout_0_0_41825/
   )
   console.log(
-    '[ok] Graph features CLI: exposed types, both timer dispatch modes, cross-event rejection, merged files, shared gsts variables, import forms of g and default graph ID'
+    '[ok] Graph features CLI: exposed types, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g and default graph ID'
   )
 } finally {
   fs.rmSync(config, { force: true })

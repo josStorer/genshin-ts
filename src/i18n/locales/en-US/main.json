@@ -87,6 +87,7 @@
   "err_mergeDuplicateVarsByName": "[error] duplicate variables by name after merge ({{count}}).\n{{lines}}\n{{truncated}}{{hint}}",
   "err_mergeTruncated": "... (truncated)\n",
   "err_mergeDuplicateVarsHint": "[hint] rename variables",
+  "err_mergeSharedTimer": "[error] while merging graph id={{id}}, {{files}} all start the same {{call}} ({{timer}}, inside a function they share); merged, its callback would run several times on every trigger. Call that function from only one of these files, or give the files different graph ids",
   "lua_compileFailed": "Lua compilation failed; local output and game files were not updated.",
   "lua_injectionFailed": "Lua compiled locally, but injection did not complete. {{arg0}}",
   "lua_installationMissing": "Cannot find the genshin-ts installation directory.",
