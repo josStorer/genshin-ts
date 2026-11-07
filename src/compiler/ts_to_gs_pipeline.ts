@@ -609,6 +609,9 @@ export async function compileTsToGs(params: TsToGsCompileParams): Promise<TsToGs
   let sourceFilesReused = 0
   let sourceFilesCreated = 0
   let prg: ts.Program
+  const host = ts.createCompilerHost(options)
+  // Doc comments are never read while compiling, so the node docs in the runtime declarations are not parsed.
+  host.jsDocParsingMode = ts.JSDocParsingMode.ParseForTypeErrors
   const programCache = params.programCache
   if (programCache) {
     const optionsKey = JSON.stringify(options)
@@ -619,7 +622,6 @@ export async function compileTsToGs(params: TsToGsCompileParams): Promise<TsToGs
     }
     invalidateTsToGsProgramCache(programCache, params.invalidatedFiles ?? [])
 
-    const host = ts.createCompilerHost(options)
     const readSourceFile = host.getSourceFile.bind(host)
     const reusedKeys = new Set<string>()
     const createdKeys = new Set<string>()
@@ -679,7 +681,7 @@ export async function compileTsToGs(params: TsToGsCompileParams): Promise<TsToGs
     })
     programCache.program = prg
   } else {
-    prg = ts.createProgram({ rootNames, options })
+    prg = ts.createProgram({ rootNames, options, host })
   }
   const createProgramMs = profiling ? performance.now() - createProgramStart : 0
   const getTypeCheckerStart = profiling ? performance.now() : 0

@@ -241,6 +241,8 @@ function resolveLuaHost(input: LuaBuildOptions, cache?: LuaCompileCache) {
   )
   let sourceReads = 0
   const host = ts.createCompilerHost(options)
+  // Doc comments are never read while compiling, so the node docs in the runtime declarations are not parsed.
+  host.jsDocParsingMode = ts.JSDocParsingMode.ParseForTypeErrors
   const runtimeMap: Record<string, string> = {
     'genshin-ts/runtime/core': 'lua_core.d.ts',
     'genshin-ts/runtime/lua': 'lua.d.ts'
