@@ -5,6 +5,7 @@ import {
   CLIENT_GSTS_FUNCTION_PREFIXES,
   getClientGraphSubTypeForGstsFunctionName
 } from '../../definitions/client_graph_modes.js'
+import { isGraphFactory } from '../../shared/ts_type_utils.js'
 import type { ClientGraphSubType } from '../../thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/client_node_metadata.js'
 
 export const DEFAULT_GSTS_SERVER_PREFIX = 'gstsServer'
@@ -132,12 +133,12 @@ function unwrapExpression(expr: ts.Expression): ts.Expression {
   }
 }
 
-function isGServerCall(expr: ts.Expression): boolean {
+function isGServerCall(expr: ts.Expression, checker: ts.TypeChecker): boolean {
   const target = unwrapExpression(expr)
   if (!ts.isCallExpression(target)) return false
   const callee = target.expression
   if (!ts.isPropertyAccessExpression(callee) || callee.name.text !== 'server') return false
-  return ts.isIdentifier(callee.expression) && callee.expression.text === 'g'
+  return isGraphFactory(callee.expression, checker)
 }
 
 function isServerInstanceExpression(
@@ -155,7 +156,7 @@ function isServerInstanceExpression(
       return isServerInstanceExpression(callee.expression, checker, seen)
     }
   }
-  if (isGServerCall(target)) return true
+  if (isGServerCall(target, checker)) return true
   if (!ts.isIdentifier(target)) return false
 
   const symbol = checker.getSymbolAtLocation(target)
@@ -193,13 +194,9 @@ function getClientInstanceInfo(
   const target = unwrapExpression(expr)
   if (ts.isCallExpression(target)) {
     const callee = target.expression
-    if (
-      ts.isPropertyAccessExpression(callee) &&
-      ts.isIdentifier(callee.expression) &&
-      callee.expression.text === 'g'
-    ) {
+    if (ts.isPropertyAccessExpression(callee)) {
       const subType = CLIENT_GRAPH_SUB_TYPE_BY_METHOD[callee.name.text]
-      if (subType) return { subType }
+      if (subType && isGraphFactory(callee.expression, checker)) return { subType }
     }
   }
   if (!ts.isIdentifier(target)) return undefined

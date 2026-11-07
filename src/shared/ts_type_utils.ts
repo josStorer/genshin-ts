@@ -2,6 +2,50 @@ import ts from 'typescript'
 
 import { looksLikeEntityTypeString } from './type_string_utils.js'
 
+const CORE_RUNTIME_FILE = /[\\/]runtime[\\/]core\.(?:d\.)?ts$/
+const CORE_RUNTIME_MODULE = /^genshin-ts\/runtime\/core(?:\.js)?$/
+
+/** Module and imported name of a local import binding (`import { g as graph }` / `import * as core`). */
+function importOf(symbol: ts.Symbol | undefined): { module: string; name?: string } | undefined {
+  const decl = symbol?.declarations?.[0]
+  if (decl && ts.isImportSpecifier(decl)) {
+    const module = decl.parent.parent.parent.moduleSpecifier
+    if (ts.isStringLiteral(module))
+      return { module: module.text, name: (decl.propertyName ?? decl.name).text }
+  }
+  if (decl && ts.isNamespaceImport(decl)) {
+    const module = decl.parent.parent.moduleSpecifier
+    if (ts.isStringLiteral(module)) return { module: module.text }
+  }
+  return undefined
+}
+
+/**
+ * Whether `expr` is the node-graph factory `g` exported by genshin-ts/runtime/core, also when
+ * imported under another name (`import { g as graph }`) or through a namespace (`core.g`).
+ */
+export function isGraphFactory(expr: ts.Expression, checker: ts.TypeChecker): boolean {
+  const name = ts.isPropertyAccessExpression(expr) ? expr.name : expr
+  if (!ts.isIdentifier(name)) return false
+  const local = checker.getSymbolAtLocation(name)
+  const target =
+    local && local.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(local) : local
+  if (target?.declarations?.length) {
+    return (
+      target.name === 'g' &&
+      target.declarations.some((decl) => CORE_RUNTIME_FILE.test(decl.getSourceFile().fileName))
+    )
+  }
+  // The module did not resolve (no tsconfig, or a resolution mode without package exports): use the import itself.
+  if (ts.isPropertyAccessExpression(expr)) {
+    if (name.text !== 'g' || !ts.isIdentifier(expr.expression)) return false
+    const source = importOf(checker.getSymbolAtLocation(expr.expression))
+    return !!source && !source.name && CORE_RUNTIME_MODULE.test(source.module)
+  }
+  const source = importOf(local)
+  return source?.name === 'g' && CORE_RUNTIME_MODULE.test(source.module)
+}
+
 const typeTextCache = new WeakMap<ts.TypeChecker, WeakMap<ts.Type, string>>()
 const entityTypeCache = new WeakMap<ts.TypeChecker, WeakMap<ts.Node, ts.Type | null>>()
 const entityLikeCache = new WeakMap<ts.TypeChecker, WeakMap<ts.Node, WeakMap<ts.Type, boolean>>>()
