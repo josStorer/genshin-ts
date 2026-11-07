@@ -1370,7 +1370,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
-   * Makes the character cast the skill that is currently in the foreground for the corresponding skill slot.; For the button to be usable, the skill must be bound to a button and currently be in the foreground
+   * Makes the character cast the skill that is currently in the foreground for the corresponding skill slot. For the button to be usable, the skill must be bound to a button and currently be in the foreground
    *
    * 施放指定槽位的技能: 使角色施放其对应技能槽位当前处于前台的技能; 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
    *
@@ -1393,7 +1393,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
-   * Makes the character cast the skill corresponding to the specified Skill Instance ID.; For the button to be usable, the skill must be bound to a button and currently be in the foreground
+   * Makes the character cast the skill corresponding to the specified Skill Instance ID. For the button to be usable, the skill must be bound to a button and currently be in the foreground
    *
    * 施放指定技能实例: 使角色施放指定技能实例ID对应的技能; 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
    *
@@ -1535,9 +1535,9 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
-   * Create key-value pairs according to the order of the input keys and values list.; This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated.; If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
+   * Create key-value pairs according to the order of the input keys and values list. This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated. If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
    *
-   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。; 此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
+   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
    *
    * @param keyList
    *
@@ -2318,9 +2318,9 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
-   * From the [Loop Start Value] to the [Loop End Value], the loop iterates, incrementing the Integer by 1 each time. On each iteration, it executes the Nodes connected to [Loop Body]. After a full iteration, it executes the Nodes connected to [Loop Complete].; Use [Break Loop] to end the iteration early
+   * From the [Loop Start Value] to the [Loop End Value], the loop iterates, incrementing the Integer by 1 each time. On each iteration, it executes the Nodes connected to [Loop Body]. After a full iteration, it executes the Nodes connected to [Loop Complete]. Use [Break Loop] to end the iteration early
    *
-   * 有限循环: 从【循环起始值】开始到【循环终止值】结束，会遍历其中的循环值，每次整数加一。每次循环会执行一次【循环体】后连接的节点逻辑。完成一次完整遍历后，会执行【循环完成】后连接的节点逻辑。; 可以使用【跳出循环】来提前结束该循环值遍历
+   * 有限循环: 从【循环起始值】开始到【循环终止值】结束，会遍历其中的循环值，每次整数加一。每次循环会执行一次【循环体】后连接的节点逻辑。完成一次完整遍历后，会执行【循环完成】后连接的节点逻辑。可以使用【跳出循环】来提前结束该循环值遍历
    *
    * @param loopStartValue
    *
@@ -4894,7 +4894,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
-   * Takes an input parameter as a control expression (supports integers or strings). Multiple branches can be defined based on the value of the control expression.; Execution follows the output pin whose value matches the control expression. If no matching pin is found, it will proceed through the [Default] pin.
+   * Takes an input parameter as a control expression (supports integers or strings). Multiple branches can be defined based on the value of the control expression. Execution follows the output pin whose value matches the control expression. If no matching pin is found, it will proceed through the [Default] pin.
    *
    * 多分支: 接受一个输入参数作为控制表达式(支持整数或字符串)，根据控制表达式的值可以分出多个不同的分支; 当出引脚上的值与控制表达式的值相等时，会沿该出引脚向后执行逻辑。如果没有找到匹配的引脚，则会走【默认】引脚
    *
@@ -5754,7 +5754,7 @@ export class ClientCharacterSkillExecutionFlowFunctions<
   }
 
   /**
-   * Returns "Yes" when microphone input is detected from this player's client.; Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
+   * Returns "Yes" when microphone input is detected from this player's client. Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
    *
    * 查询玩家是否正在语音聊天: 当检测到该玩家客户端有麦克风输入时，会返回是; 注意该节点必须在多人游戏(多人试玩、多人正式游玩)中逻辑才会生效，单人游戏(单人试玩、单人正式游玩)均不会生效
    *
@@ -10850,7 +10850,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
-   * Makes the character cast the skill that is currently in the foreground for the corresponding skill slot.; For the button to be usable, the skill must be bound to a button and currently be in the foreground
+   * Makes the character cast the skill that is currently in the foreground for the corresponding skill slot. For the button to be usable, the skill must be bound to a button and currently be in the foreground
    *
    * 施放指定槽位的技能: 使角色施放其对应技能槽位当前处于前台的技能; 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
    *
@@ -10873,7 +10873,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
-   * Makes the character cast the skill corresponding to the specified Skill Instance ID.; For the button to be usable, the skill must be bound to a button and currently be in the foreground
+   * Makes the character cast the skill corresponding to the specified Skill Instance ID. For the button to be usable, the skill must be bound to a button and currently be in the foreground
    *
    * 施放指定技能实例: 使角色施放指定技能实例ID对应的技能; 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
    *
@@ -11015,9 +11015,9 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
-   * Create key-value pairs according to the order of the input keys and values list.; This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated.; If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
+   * Create key-value pairs according to the order of the input keys and values list. This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated. If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
    *
-   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。; 此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
+   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
    *
    * @param keyList
    *
@@ -11798,9 +11798,9 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
-   * From the [Loop Start Value] to the [Loop End Value], the loop iterates, incrementing the Integer by 1 each time. On each iteration, it executes the Nodes connected to [Loop Body]. After a full iteration, it executes the Nodes connected to [Loop Complete].; Use [Break Loop] to end the iteration early
+   * From the [Loop Start Value] to the [Loop End Value], the loop iterates, incrementing the Integer by 1 each time. On each iteration, it executes the Nodes connected to [Loop Body]. After a full iteration, it executes the Nodes connected to [Loop Complete]. Use [Break Loop] to end the iteration early
    *
-   * 有限循环: 从【循环起始值】开始到【循环终止值】结束，会遍历其中的循环值，每次整数加一。每次循环会执行一次【循环体】后连接的节点逻辑。完成一次完整遍历后，会执行【循环完成】后连接的节点逻辑。; 可以使用【跳出循环】来提前结束该循环值遍历
+   * 有限循环: 从【循环起始值】开始到【循环终止值】结束，会遍历其中的循环值，每次整数加一。每次循环会执行一次【循环体】后连接的节点逻辑。完成一次完整遍历后，会执行【循环完成】后连接的节点逻辑。可以使用【跳出循环】来提前结束该循环值遍历
    *
    * @param loopStartValue
    *
@@ -14674,7 +14674,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
-   * Takes an input parameter as a control expression (supports integers or strings). Multiple branches can be defined based on the value of the control expression.; Execution follows the output pin whose value matches the control expression. If no matching pin is found, it will proceed through the [Default] pin.
+   * Takes an input parameter as a control expression (supports integers or strings). Multiple branches can be defined based on the value of the control expression. Execution follows the output pin whose value matches the control expression. If no matching pin is found, it will proceed through the [Default] pin.
    *
    * 多分支: 接受一个输入参数作为控制表达式(支持整数或字符串)，根据控制表达式的值可以分出多个不同的分支; 当出引脚上的值与控制表达式的值相等时，会沿该出引脚向后执行逻辑。如果没有找到匹配的引脚，则会走【默认】引脚
    *
@@ -15537,7 +15537,7 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
   }
 
   /**
-   * Returns "Yes" when microphone input is detected from this player's client.; Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
+   * Returns "Yes" when microphone input is detected from this player's client. Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
    *
    * 查询玩家是否正在语音聊天: 当检测到该玩家客户端有麦克风输入时，会返回是; 注意该节点必须在多人游戏(多人试玩、多人正式游玩)中逻辑才会生效，单人游戏(单人试玩、单人正式游玩)均不会生效
    *
@@ -20591,9 +20591,9 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
-   * Create key-value pairs according to the order of the input keys and values list.; This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated.; If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
+   * Create key-value pairs according to the order of the input keys and values list. This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated. If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
    *
-   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。; 此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
+   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
    *
    * @param keyList
    *
@@ -21377,9 +21377,9 @@ export class ClientCreationSkillExecutionFlowFunctions<
   }
 
   /**
-   * From the [Loop Start Value] to the [Loop End Value], the loop iterates, incrementing the Integer by 1 each time. On each iteration, it executes the Nodes connected to [Loop Body]. After a full iteration, it executes the Nodes connected to [Loop Complete].; Use [Break Loop] to end the iteration early
+   * From the [Loop Start Value] to the [Loop End Value], the loop iterates, incrementing the Integer by 1 each time. On each iteration, it executes the Nodes connected to [Loop Body]. After a full iteration, it executes the Nodes connected to [Loop Complete]. Use [Break Loop] to end the iteration early
    *
-   * 有限循环: 从【循环起始值】开始到【循环终止值】结束，会遍历其中的循环值，每次整数加一。每次循环会执行一次【循环体】后连接的节点逻辑。完成一次完整遍历后，会执行【循环完成】后连接的节点逻辑。; 可以使用【跳出循环】来提前结束该循环值遍历
+   * 有限循环: 从【循环起始值】开始到【循环终止值】结束，会遍历其中的循环值，每次整数加一。每次循环会执行一次【循环体】后连接的节点逻辑。完成一次完整遍历后，会执行【循环完成】后连接的节点逻辑。可以使用【跳出循环】来提前结束该循环值遍历
    *
    * @param loopStartValue
    *
@@ -28907,9 +28907,9 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * Create key-value pairs according to the order of the input keys and values list.; This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated.; If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
+   * Create key-value pairs according to the order of the input keys and values list. This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated. If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
    *
-   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。; 此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
+   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
    *
    * @param keyList
    *
@@ -31039,7 +31039,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * Takes an input parameter as a control expression (supports integers or strings). Multiple branches can be defined based on the value of the control expression.; Execution follows the output pin whose value matches the control expression. If no matching pin is found, it will proceed through the [Default] pin.
+   * Takes an input parameter as a control expression (supports integers or strings). Multiple branches can be defined based on the value of the control expression. Execution follows the output pin whose value matches the control expression. If no matching pin is found, it will proceed through the [Default] pin.
    *
    * 多分支: 接受一个输入参数作为控制表达式(支持整数或字符串)，根据控制表达式的值可以分出多个不同的分支; 当出引脚上的值与控制表达式的值相等时，会沿该出引脚向后执行逻辑。如果没有找到匹配的引脚，则会走【默认】引脚
    *
@@ -31665,7 +31665,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * The creation performs an aerial confrontation action. This multidirectional movement tactic allows the creation to randomly select a destination within the configured probability space around the target and move toward it.; Supports three-dimensional movement behaviors such as pursuing the player, moving away from them, and circling them from either side. It also provides settings to adjust the creation’s distance from the player and to avoid obstacles.; Execution Conditions:
+   * The creation performs an aerial confrontation action. This multidirectional movement tactic allows the creation to randomly select a destination within the configured probability space around the target and move toward it. Supports three-dimensional movement behaviors such as pursuing the player, moving away from them, and circling them from either side. It also provides settings to adjust the creation’s distance from the player and to avoid obstacles. Execution Conditions:
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -31676,7 +31676,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
    * through its [Failure] output to the following statement.
    *
-   * 战术：空中对峙: 造物执行空中对峙行为，空间中的多向移动战术，能基于配置的目标周围概率空间随机选取位置移动。; 能在三维空间中实现追击/远离/左右绕玩家移动等表现，也包含一些与玩家距离调整和避障的配置。; 执行条件：
+   * 战术：空中对峙: 造物执行空中对峙行为，空间中的多向移动战术，能基于配置的目标周围概率空间随机选取位置移动。能在三维空间中实现追击/远离/左右绕玩家移动等表现，也包含一些与玩家距离调整和避障的配置。执行条件：
    *
    * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
    * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
@@ -31895,7 +31895,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * The creation performs an aerial escape action. This tactic causes the creation to flee its target by attempting to turn away and move farther away.; You can configure multiple escape movement segments. The number of segments ranges from [Minimum Escape Segments, Maximum Escape Segments).; The system calculates an escape position for each segment or attempt. Both azimuth and pitch angle settings are supported.; Execution Conditions:
+   * The creation performs an aerial escape action. This tactic causes the creation to flee its target by attempting to turn away and move farther away. You can configure multiple escape movement segments. The number of segments ranges from [Minimum Escape Segments, Maximum Escape Segments). The system calculates an escape position for each segment or attempt. Both azimuth and pitch angle settings are supported. Execution Conditions:
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -31906,7 +31906,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
    * through its [Failure] output to the following statement.
    *
-   * 战术：空中逃跑: 造物执行空中逃跑行为，逃离目标的战术，试图背对目标并向远处移动。; 允许配置多段逃跑移动，段数的取值范围为 [逃跑最少段数，逃跑最多段数); 每段/每次会计算一个逃跑点位，支持方位角和俯仰角的配置。; 执行条件：
+   * 战术：空中逃跑: 造物执行空中逃跑行为，逃离目标的战术，试图背对目标并向远处移动。允许配置多段逃跑移动，段数的取值范围为 [逃跑最少段数，逃跑最多段数); 每段/每次会计算一个逃跑点位，支持方位角和俯仰角的配置。执行条件：
    *
    * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
    * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
@@ -32065,7 +32065,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * The creation performs an aerial idling action, moving randomly within a specified area.; Execution Conditions:; Point Selection Rules:; This is because selecting a valid target point is one of the conditions for entering the tactic.
+   * The creation performs an aerial idling action, moving randomly within a specified area. Execution Conditions:; Point Selection Rules:; This is because selecting a valid target point is one of the conditions for entering the tactic.
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -32199,7 +32199,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * The creation performs an aerial landing action. It calculates a landing point based on the configured angle, then moves toward that point.; The tactic is considered complete when the vertical distance between the creation’s current position and the landing point is less than the Height Threshold for Landing Detection.; Execution Conditions:
+   * The creation performs an aerial landing action. It calculates a landing point based on the configured angle, then moves toward that point. The tactic is considered complete when the vertical distance between the creation’s current position and the landing point is less than the Height Threshold for Landing Detection. Execution Conditions:
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -32312,7 +32312,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * The creation performs an aerial pursuit action.; While pursuing a target, the creation automatically selects a suitable position around the target as its destination.; Execution Conditions:; [Required]; [Meet any one of the Conditions]
+   * The creation performs an aerial pursuit action. While pursuing a target, the creation automatically selects a suitable position around the target as its destination. Execution Conditions:; [Required]; [Meet any one of the Conditions]
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -32455,7 +32455,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * A tactic setting where the Creation executes its patrol , using its configured Patrol Template to drive its motion.; Execution Conditions:
+   * A tactic setting where the Creation executes its patrol , using its configured Patrol Template to drive its motion. Execution Conditions:
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -32466,7 +32466,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
    * through its [Failure] output to the following statement.
    *
-   * 战术：执行巡逻: 造物执行巡逻行为，依据造物自身配置的巡逻模板来进行移动表现的战术。; 执行条件：
+   * 战术：执行巡逻: 造物执行巡逻行为，依据造物自身配置的巡逻模板来进行移动表现的战术。执行条件：
    *
    * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
    * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
@@ -32535,7 +32535,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * The Creation executes a Paving Standoff. It uses four-direction Motion Tactics, with five directions: idle/forward/backward/left/right. Use this to simulate a sustained face-off with the Player.; You can use probability settings to create motion behaviors such as moving left and right around the Player, or preferring to move forward and avoiding moving backward. It also includes settings for adjusting distance to the Player and for obstacle avoidance.; Essentially, it just decides a direction; there is no specific Target Point; Execution Conditions:
+   * The Creation executes a Paving Standoff. It uses four-direction Motion Tactics, with five directions: idle/forward/backward/left/right. Use this to simulate a sustained face-off with the Player. You can use probability settings to create motion behaviors such as moving left and right around the Player, or preferring to move forward and avoiding moving backward. It also includes settings for adjusting distance to the Player and for obstacle avoidance. Essentially, it just decides a direction; there is no specific Target Point; Execution Conditions:
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -32546,7 +32546,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
    * through its [Failure] output to the following statement.
    *
-   * 战术：地面对峙: 造物执行地面对峙行为，四向移动战术，包括静止/前/后/左/右五种方向，可用于来营造与玩家的相持对峙感。; 可以通过概率配置创造出只左右绕玩家移动/喜好前进厌恶后退等移动行为，也包含一些与玩家距离调整和避障的配置。; 本质上是决策出一个方向，并不会有一个具体的目标点; 执行条件：
+   * 战术：地面对峙: 造物执行地面对峙行为，四向移动战术，包括静止/前/后/左/右五种方向，可用于来营造与玩家的相持对峙感。可以通过概率配置创造出只左右绕玩家移动/喜好前进厌恶后退等移动行为，也包含一些与玩家距离调整和避障的配置。本质上是决策出一个方向，并不会有一个具体的目标点; 执行条件：
    *
    * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
    * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
@@ -32684,7 +32684,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * The Creation executes a Paving Escape, a tactic for fleeing from the Target. It attempts to turn its back to the Target and move farther away.; Allows you to configure multiple segments of Escape Motion. Each segment/run calculates one escape point.; Execution Conditions:
+   * The Creation executes a Paving Escape, a tactic for fleeing from the Target. It attempts to turn its back to the Target and move farther away. Allows you to configure multiple segments of Escape Motion. Each segment/run calculates one escape point. Execution Conditions:
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -32695,7 +32695,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
    * through its [Failure] output to the following statement.
    *
-   * 战术：地面逃跑: 造物执行地面逃跑行为，逃离目标的战术，试图背对目标并向远处移动。; 允许配置多段逃跑移动，段数的取值范围为 [逃跑最少段数，逃跑最多段数) ，每段/每次会计算一个逃跑点位。; 执行条件：
+   * 战术：地面逃跑: 造物执行地面逃跑行为，逃离目标的战术，试图背对目标并向远处移动。允许配置多段逃跑移动，段数的取值范围为 [逃跑最少段数，逃跑最多段数) ，每段/每次会计算一个逃跑点位。执行条件：
    *
    * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
    * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
@@ -33199,7 +33199,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
   }
 
   /**
-   * The Creation returns to the Spawn Point after leaving battle; A tactic that makes a unit return to the initial point when leaving battle. While this tactic is running, the Aggro system is disabled and will not be re-enabled until the tactic ends.; Execution Conditions:; Select Target Points:; The Target Point is selected on the frame you enter the Tactic, and it will not be edited while the Tactic is being executed; Check the following conditions in order. When a condition is met, set the Target Point based on that item.
+   * The Creation returns to the Spawn Point after leaving battle; A tactic that makes a unit return to the initial point when leaving battle. While this tactic is running, the Aggro system is disabled and will not be re-enabled until the tactic ends. Execution Conditions:; Select Target Points:; The Target Point is selected on the frame you enter the Tactic, and it will not be edited while the Tactic is being executed; Check the following conditions in order. When a condition is met, set the Target Point based on that item.
    *
    * GSTS Note: This is intentionally different from normal sequential TypeScript.
    * Although statements are written in order, the following statement is not executed unconditionally:
@@ -33210,7 +33210,7 @@ export class ClientCreationStatusExecutionFlowFunctions<
    * GSTS Note: When Execute is false, this tactic is treated as failed, so execution continues
    * through its [Failure] output to the following statement.
    *
-   * 战术：脱战后返回出生点: 造物执行脱战后返回出生点行为; 脱离战斗时，回初始点位的战术。战术执行期间，仇恨系统是关闭的， 直到战术结束才会重新打开。; 执行条件：; 目标点选择：; 目标点选择时机为进入战术那一帧， 不会在战术执行期间修改目标; 以下条件从前往后顺序检查， 若满足对应条件， 则按该条内容确定目标点
+   * 战术：脱战后返回出生点: 造物执行脱战后返回出生点行为; 脱离战斗时，回初始点位的战术。战术执行期间，仇恨系统是关闭的， 直到战术结束才会重新打开。执行条件：; 目标点选择：; 目标点选择时机为进入战术那一帧， 不会在战术执行期间修改目标; 以下条件从前往后顺序检查， 若满足对应条件， 则按该条内容确定目标点
    *
    * GSTS 注: 这是一个容易误解的特殊行为：虽然 TypeScript 代码按顺序书写，
    * 但下一条语句并不是无条件执行，而是连接到本节点的【失败执行】引脚；
@@ -34833,9 +34833,9 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
   }
 
   /**
-   * Create key-value pairs according to the order of the input keys and values list.; This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated.; If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
+   * Create key-value pairs according to the order of the input keys and values list. This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated. If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
    *
-   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。; 此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
+   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
    *
    * @param keyList
    *
@@ -36936,7 +36936,7 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
   }
 
   /**
-   * Takes an input parameter as a control expression (supports integers or strings). Multiple branches can be defined based on the value of the control expression.; Execution follows the output pin whose value matches the control expression. If no matching pin is found, it will proceed through the [Default] pin.
+   * Takes an input parameter as a control expression (supports integers or strings). Multiple branches can be defined based on the value of the control expression. Execution follows the output pin whose value matches the control expression. If no matching pin is found, it will proceed through the [Default] pin.
    *
    * 多分支: 接受一个输入参数作为控制表达式(支持整数或字符串)，根据控制表达式的值可以分出多个不同的分支; 当出引脚上的值与控制表达式的值相等时，会沿该出引脚向后执行逻辑。如果没有找到匹配的引脚，则会走【默认】引脚
    *
@@ -38645,9 +38645,9 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
-   * Create key-value pairs according to the order of the input keys and values list.; This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated.; If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
+   * Create key-value pairs according to the order of the input keys and values list. This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated. If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
    *
-   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。; 此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
+   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
    *
    * @param keyList
    *
@@ -42138,7 +42138,7 @@ export class ClientBoolFilterExecutionFlowFunctions<
   }
 
   /**
-   * Returns "Yes" when microphone input is detected from this player's client.; Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
+   * Returns "Yes" when microphone input is detected from this player's client. Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
    *
    * 查询玩家是否正在语音聊天: 当检测到该玩家客户端有麦克风输入时，会返回是; 注意该节点必须在多人游戏(多人试玩、多人正式游玩)中逻辑才会生效，单人游戏(单人试玩、单人正式游玩)均不会生效
    *
@@ -43532,9 +43532,9 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
-   * Create key-value pairs according to the order of the input keys and values list.; This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated.; If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
+   * Create key-value pairs according to the order of the input keys and values list. This node will create a dictionary based on the shorter of the two lists, and any excess elements will be truncated. If there are duplicate values in the keys list, the creation will fail, and an empty dictionary will be returned.
    *
-   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。; 此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
+   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
    *
    * @param keyList
    *
@@ -47021,7 +47021,7 @@ export class ClientIntFilterExecutionFlowFunctions<
   }
 
   /**
-   * Returns "Yes" when microphone input is detected from this player's client.; Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
+   * Returns "Yes" when microphone input is detected from this player's client. Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
    *
    * 查询玩家是否正在语音聊天: 当检测到该玩家客户端有麦克风输入时，会返回是; 注意该节点必须在多人游戏(多人试玩、多人正式游玩)中逻辑才会生效，单人游戏(单人试玩、单人正式游玩)均不会生效
    *
@@ -48395,7 +48395,7 @@ export interface ClientEntityHelperMethods<
   queryIfSpecifiedEntityIsInCombat(): boolean
 
   /**
-   * Returns "Yes" when microphone input is detected from this player's client.; Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
+   * Returns "Yes" when microphone input is detected from this player's client. Note: This node only takes effect during multiplayer games (multiplayer test play, actual multiplayer play). It will not work in single-player games (single-player test play, actual single-player play).
    *
    * 查询玩家是否正在语音聊天: 当检测到该玩家客户端有麦克风输入时，会返回是; 注意该节点必须在多人游戏(多人试玩、多人正式游玩)中逻辑才会生效，单人游戏(单人试玩、单人正式游玩)均不会生效
    *

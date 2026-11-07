@@ -469,6 +469,18 @@ function sanitizeDocText(text: string): string {
     .trim()
 }
 
+/** Official descriptions come as separate items: "; " between them, unless an item already ends a sentence. */
+function joinOfficialText(items: readonly string[] = []): string {
+  return items
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .reduce((text, item) => {
+      if (!text) return item
+      if (/[。！？]$/.test(text)) return text + item
+      return /[.!?]$/.test(text) ? `${text} ${item}` : `${text}; ${item}`
+    }, '')
+}
+
 function appendDocParagraph(text: string, paragraph: string): string {
   return text ? `${text}\n\n${paragraph}` : paragraph
 }
@@ -1015,8 +1027,8 @@ function buildMethodSpec(
     })
   }
 
-  let docsEn = sanitizeDocText(doc.en.functions.join('; '))
-  let docsZh = sanitizeDocText(doc.zh.functions.join('; '))
+  let docsEn = sanitizeDocText(joinOfficialText(doc.en.functions))
+  let docsZh = sanitizeDocText(joinOfficialText(doc.zh.functions))
   const recordType = record.flows?.length ? 'exec' : 'data'
   const hasFailureSuccessor =
     recordType === 'exec' &&
@@ -1581,12 +1593,12 @@ function controlFlowJsdoc(
   returns?: { en: string; label?: string; zh: string }
 ): string {
   const lines: string[] = []
-  const enDocs = sanitizeDocText(doc?.en.functions.join('; ') ?? '')
+  const enDocs = sanitizeDocText(joinOfficialText(doc?.en.functions))
   if (enDocs) {
     lines.push(enDocs)
     lines.push('')
   }
-  const zhDocs = sanitizeDocText(doc?.zh.functions.join('; ') ?? '')
+  const zhDocs = sanitizeDocText(joinOfficialText(doc?.zh.functions))
   lines.push(zhDocs ? `${zhName}: ${zhDocs}` : zhName)
   if (extraParams.length) {
     lines.push('')
@@ -2978,8 +2990,8 @@ export function generateClientNodes(
     const rec = metadata.find((r) => r.displayName === zhName)
     const doc = rec ? lookupDocNode(alignment, rec.subType, rec.displayName) : undefined
     return {
-      en: sanitizeDocText(doc?.en.functions.join('; ') ?? ''),
-      zh: sanitizeDocText(doc?.zh.functions.join('; ') ?? '')
+      en: sanitizeDocText(joinOfficialText(doc?.en.functions)),
+      zh: sanitizeDocText(joinOfficialText(doc?.zh.functions))
     }
   }
   for (const entry of [
