@@ -147,21 +147,21 @@ export type ServerEventPayloads = {
     postChangeValue: bigint
   }
   /**
-   * This event is triggered when the preset state of a complex creation is changed using the "Set the preset status
-   * value of the complex creation" node (the modified and unmodified values must be different for this event to
-   * trigger).; This node graph event can only be received by the node graph of the complex creation.
+   * This event is triggered when the preset state of a complex creation is changed using the "Set the preset status value of the complex creation" node (the modified and unmodified values must be different for this event to trigger). This node graph event can only be received by the node graph of the complex creation.
    *
-   * 复杂造物预设状态变化时: 使用“设置复杂造物预设状态值”节点更改复杂造物预设状态时触发（修改前后值需不同才触发）；该事件仅复杂造物节点图可接收
+   * 复杂造物预设状态变化时: 使用【设置复杂造物的预设状态值】节点改变了复杂造物的预设状态时，会触发该事件(修改后和修改前必须为不同的值才会触发); 该节点图事件只有复杂造物的节点图能收到
    */
   whenComplexCreationPresetStatusChanges: {
     /**
+     * Complex Creation Entity
      *
-     * 事件源实体
+     * 事件源实体: 复杂造物实体
      */
     eventSourceEntity: entity
     /**
+     * Complex Creation GUID
      *
-     * 事件源GUID
+     * 事件源GUID: 复杂造物的GUID
      */
     eventSourceGuid: guid
     /**
@@ -353,7 +353,7 @@ export type ServerEventPayloads = {
   /**
    * When a Character is Revived, the Node Graph on the Character Entity can trigger this event
    *
-   * 角色复苏时: 角色复苏时，角色实体上的的节点图可以触发该事件
+   * 角色复苏时: 角色复苏时，角色实体上的节点图可以触发该事件
    */
   whenCharacterRevives: {
     /**
@@ -453,7 +453,7 @@ export type ServerEventPayloads = {
   /**
    * The "Collision Trigger Source" range of a runtime entity A enters the "Collision Trigger" range of another runtime entity B; Node graph events will be sent to the entity B configured with "Collision Trigger"
    *
-   * 进入碰撞触发器时: 运行中实体A的”碰撞触发源“范围，进入其他运行中实体B的“碰撞触发器”范围。; 会发送节点图事件给配置“碰撞触发器”的实体B
+   * 进入碰撞触发器时: 运行中实体A的”碰撞触发源“范围，进入其他运行中实体B的“碰撞触发器”范围。会发送节点图事件给配置“碰撞触发器”的实体B
    */
   whenEnteringCollisionTrigger: {
     /**
@@ -695,9 +695,9 @@ export type ServerEventPayloads = {
     hitLevel: HitLevel
   }
   /**
-   * This event is triggered when an Entity is attacked and enters the Vulnerable Status
+   * Available only in Beyond Mode. This event is triggered when an Entity is attacked and enters the Vulnerable Status
    *
-   * 进入易受打断状态时: 实体被攻击进入易受打断状态时触发该事件
+   * 进入易受打断状态时: 仅超限模式可用，实体被攻击进入易受打断状态时触发该事件
    */
   whenEnteringAnInterruptibleState: {
     /**
@@ -856,9 +856,9 @@ export type ServerEventPayloads = {
     timerName: string
   }
   /**
-   * Only UI Controls of the Interactive Button, Item Display, Custom Button, and Custom Switch types trigger this event; The Node Graph event "UI Control Group Triggered" is sent during Stage runtime when such a UI Control Group is interacted with. This event can only be received by the Node Graph of the Player who triggered the interaction
+   * This event is triggered only by UI controls of the following types: Interactive Button, Item Display, Custom Button, and Custom Switch; This event can only be received by the Player Node Graph that triggered the interaction
    *
-   * 界面控件组触发时: 只有交互按钮、道具展示、自定义按钮和自定义开关类型的界面控件，才会触发本事件; 在关卡运行中，此类界面控件制作的界面控件组被执行交互操作时会发送节点图事件“界面控件组触发时”，此事件只有触发交互的玩家节点图可以获取
+   * 界面控件组触发时: 只有交互按钮、道具展示、自定义按钮、自定义开关的界面控件，才会触发本事件; 此事件只有触发交互的玩家节点图可以获取
    */
   whenUiControlGroupIsTriggered: {
     /**
@@ -885,9 +885,9 @@ export type ServerEventPayloads = {
     uiControlGroupIndex: bigint
   }
   /**
-   * Node Functions: When the [Return to Server Event] option is enabled for a tab or single-choice window, confirming the interaction will trigger this event on the corresponding Player Entity's Server Node Graph. If the interaction is with an Interaction Page Close Button, Interactive Button, Item Display, or Custom Button in the floating interaction page, confirming it will also trigger this event on the corresponding Player Entity's Server Node Graph.
+   * When the [Return to Server Event] option is enabled for a tab or single-choice window, confirming the interaction will trigger this event on the corresponding Player Entity's Server Node Graph. If the interaction is with an Interaction Page Close Button, Interactive Button, Item Display, or Custom Button in the floating interaction page, confirming it will also trigger this event on the corresponding Player Entity's Server Node Graph.
    *
-   * 悬浮交互页操作触发时: 页签/单选项视窗启用了【返回服务器事件】开关时，在确认交互后，对应玩家实体的服务器节点图会收到该事件。在悬浮交互页中配置的交互页关闭按钮、交互按钮、道具展示、自定义按钮，在确认交互后，对应玩家实体的玩家服务器节点图也会收到该事件。
+   * 悬浮交互页操作触发时: 页签/单选项视窗启用了【返回服务器事件】开关时，在确认交互后，对应玩家实体的服务器节点图会收到该事件; 当玩家选中页签/单选项视窗时; 交互项索引为对应页签/单选项视窗的索引; 列表索引为对应页签/单选项视窗的索引; 列表选中项为对应页签/单选项视窗的当前点击项的索引; 当玩家用某按钮，关联监听了页签/单选项视窗，则玩家点击按钮时; 交互项索引为对应页签/单选项视窗的索引; 列表索引为按钮对应的所有页签/单选项视窗的索引列表; 列表选中项为对应页签/单选项视窗的当前点击项的索引列表; 在悬浮交互页中配置的交互页关闭按钮、交互按钮、道具展示、自定义按钮，在确认交互后，对应玩家实体的玩家服务器节点图也会收到该事件
    */
   whenFloatingInteractionPageIsTriggered: {
     /**
@@ -1031,7 +1031,7 @@ export type ServerEventPayloads = {
     /**
      * Status Replacement: The Unit Status was removed because it was replaced by another statusDuration Exceeded: The Unit Status exceeded its runtime durationDispelled: The Unit Status was removed directlyStatus Expired: The Unit Status became invalid due to other reasonsClass Changed: The Unit Status was removed due to a class change
      *
-     * 移除原因: 其他单位状态顶替：因被施加了顶替状态导致单位状态被移除超出持续时间：超出单位状态持续事件被驱散：单位状态被直接移除状态失效：因其他原因导致的状态失效职业变更：因职业变更导致的状态被移除
+     * 移除原因: 其他单位状态顶替：因被施加了顶替状态导致单位状态被移除超出持续时间：超出单位状态持续时间被驱散：单位状态被直接移除状态失效：因其他原因导致的状态失效职业变更：因职业变更导致的状态被移除
      */
     removalReason: UnitStatusRemovalReason
     /**
@@ -1405,9 +1405,9 @@ export type ServerEventPayloads = {
      */
     targetPlayer: entity
     /**
-     * When a selection interaction is triggered, valid selection results are returned as this output parameter, and the completion reason is Completed by PlayerWhen a Full Refresh pop-up selection is triggered, the complete selection result list is returned as this output parameter, and the completion reason is Refresh AllWhen a Fixed-Quantity Refresh pop-up selection is triggered, valid selection results are returned as this output parameter, and the completion reason is Fixed-Quantity RefreshWhen the Deck Selector times out with no interaction, the default selection is returned is returned as this output parameter, and the completion reason is TimeoutWhen Allow Discard Selection is enabled and the Deck Selector is closed by the player, the default selection is returned as this output parameter, and the completion reason is Closed ManuallyWhen the Deck Selector is closed via the Node Graph, the default selection is returned as this output parameter, and the completion reason is Closed by Node Graph
+     * When a selection interaction is triggered, valid selection results are returned as this output parameter, and the completion reason is Completed by PlayerWhen a Full Refresh pop-up selection is triggered, the complete selection result list is returned as this output parameter, and the completion reason is Refresh AllWhen a Fixed-Quantity Refresh pop-up selection is triggered, valid selection results are returned as this output parameter, and the completion reason is Fixed-Quantity RefreshWhen the Deck Selector times out with no interaction, the default selection is returned is returned as this output parameter, and the completion reason is TimeoutWhen Allow Discard Selection is enabled and the Deck Selector is closed by the player, the default selection is returned as this output parameter, and the completion reason is Closed ManuallyWhen the Deck Selector is closed via a Node Graph node, this output parameter is empty, and the completion reason is Closed by Node Graph
      *
-     * 选择结果列表: 触发选择选择交互时，合法的选择结果会作为该出参提供，并且完成原因为玩家完成唤起弹窗选择全量刷新，触发刷新交互时，全量的选择结果对应列表会作为该出参提供，并且完成原因为全量刷新唤起弹窗选择部分刷新，触发刷新交互时，合法的选择结果会作为该出参提供，并且完成原因为定量刷新卡牌选择器超时未交互时，默认返回选择会作为该出参提供，并且完成原因为超时关闭卡牌选择器的可放弃选择勾选时，触发关闭交互时，默认返回选择会作为该出参提供，并且完成原因为主动关闭通过节点图关闭卡牌选择器节点造成的卡牌选择器关闭，默认返回选择会作为该出参提供，并且完成原因为节点图关闭
+     * 选择结果列表: 触发选择交互时，合法的选择结果会作为该出参提供，并且完成原因为玩家完成唤起弹窗选择全量刷新，触发刷新交互时，全量的选择结果对应列表会作为该出参提供，并且完成原因为全量刷新唤起弹窗选择部分刷新，触发刷新交互时，合法的选择结果会作为该出参提供，并且完成原因为定量刷新卡牌选择器超时未交互时，默认返回选择会作为该出参提供，并且完成原因为超时关闭卡牌选择器的可放弃选择勾选时，触发关闭交互时，默认返回选择会作为该出参提供，并且完成原因为主动关闭通过节点图关闭卡牌选择器节点造成的卡牌选择器关闭，该出参会为空，并且完成原因为节点图关闭
      */
     selectionResultList: bigint[]
     /**
@@ -1676,12 +1676,12 @@ export type ServerEventPayloads = {
   whenEquipmentIsPurchased: {
     /**
      *
-     * 买入背包持有者实体
+     * 买入的背包持有者实体
      */
     purchasingInventoryOwnerEntity: entity
     /**
      *
-     * 买入背包持有者GUID
+     * 买入的背包持有者GUID
      */
     purchasingInventoryOwnerGuid: guid
     /**
@@ -1701,14 +1701,14 @@ export type ServerEventPayloads = {
      *
      * Selling Inventory Owner Entity
      *
-     * 卖出背包持有者实体
+     * 卖出的背包持有者实体
      */
     purchasingInventoryOwnerEntity: entity
     /**
      *
      * Selling Inventory Owner GUID
      *
-     * 卖出背包持有者GUID
+     * 卖出的背包持有者GUID
      */
     purchasingInventoryOwnerGuid: guid
     /**
@@ -1909,11 +1909,11 @@ export type ServerEventPayloads = {
     nextWaypointId: bigint
   }
   /**
-   * Triggered when a player's active control motor list changes.
+   * Triggered when the player's activated Control Motion Device list changes
    *
    * When Player's Activated Control Motion Device List Changes
    *
-   * 玩家激活操控运动器列表变化时
+   * 玩家激活操控运动器列表变化时: 玩家激活操控运动器列表变化时
    */
   whenPlayerSActiveControlMotorListChanges: {
     /**
@@ -1942,11 +1942,11 @@ export type ServerEventPayloads = {
     currentActiveControlMotorEntities: entity[]
   }
   /**
-   * Triggered when a player follows a control motor.
+   * Triggered when the player follows the Control Motion Device.
    *
    * When Player Follows Control Motion Device
    *
-   * 玩家跟随操控运动器时
+   * 玩家跟随操控运动器时: 玩家跟随操控运动器时
    */
   whenPlayerFollowsControlMotor: {
     /**
@@ -1969,12 +1969,11 @@ export type ServerEventPayloads = {
     followingControlMotorEntity: entity
   }
   /**
-   * Triggered when a player leaves a control motor. A player automatically leaves while being
-   * controlled or teleported.
+   * Triggered when the player exits the Motion Device. The player will automatically exit the Motion Device when they become controlled or are teleported.
    *
    * When Player Leaves Control Motion Device
    *
-   * 玩家离开操控运动器时
+   * 玩家离开操控运动器时: 玩家离开操控运动器时。受控、传送过程中，将使玩家自动离开操控运动器
    */
   whenPlayerLeavesControlMotor: {
     /**

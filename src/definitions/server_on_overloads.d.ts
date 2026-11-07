@@ -102,11 +102,9 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * This event is triggered when the preset state of a complex creation is changed using the "Set the preset status
-   * value of the complex creation" node (the modified and unmodified values must be different for this event to
-   * trigger).; This node graph event can only be received by the node graph of the complex creation.
+   * This event is triggered when the preset state of a complex creation is changed using the "Set the preset status value of the complex creation" node (the modified and unmodified values must be different for this event to trigger). This node graph event can only be received by the node graph of the complex creation.
    *
-   * 复杂造物预设状态变化时: 使用“设置复杂造物预设状态值”节点更改复杂造物预设状态时触发（修改前后值需不同才触发）；该事件仅复杂造物节点图可接收
+   * 复杂造物预设状态变化时: 使用【设置复杂造物的预设状态值】节点改变了复杂造物的预设状态时，会触发该事件(修改后和修改前必须为不同的值才会触发); 该节点图事件只有复杂造物的节点图能收到
    */
   on(
     eventName: EventNameByLang<Mode, 'whenComplexCreationPresetStatusChanges', AllowZh>,
@@ -182,7 +180,7 @@ export interface ServerOnOverloads<
   /**
    * When a Character is Revived, the Node Graph on the Character Entity can trigger this event
    *
-   * 角色复苏时: 角色复苏时，角色实体上的的节点图可以触发该事件
+   * 角色复苏时: 角色复苏时，角色实体上的节点图可以触发该事件
    */
   on(
     eventName: EventNameByLang<Mode, 'whenCharacterRevives', AllowZh>,
@@ -248,7 +246,7 @@ export interface ServerOnOverloads<
   /**
    * The "Collision Trigger Source" range of a runtime entity A enters the "Collision Trigger" range of another runtime entity B; Node graph events will be sent to the entity B configured with "Collision Trigger"
    *
-   * 进入碰撞触发器时: 运行中实体A的”碰撞触发源“范围，进入其他运行中实体B的“碰撞触发器”范围。; 会发送节点图事件给配置“碰撞触发器”的实体B
+   * 进入碰撞触发器时: 运行中实体A的”碰撞触发源“范围，进入其他运行中实体B的“碰撞触发器”范围。会发送节点图事件给配置“碰撞触发器”的实体B
    */
   on(
     eventName: EventNameByLang<Mode, 'whenEnteringCollisionTrigger', AllowZh>,
@@ -306,9 +304,9 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * This event is triggered when an Entity is attacked and enters the Vulnerable Status
+   * Available only in Beyond Mode. This event is triggered when an Entity is attacked and enters the Vulnerable Status
    *
-   * 进入易受打断状态时: 实体被攻击进入易受打断状态时触发该事件
+   * 进入易受打断状态时: 仅超限模式可用，实体被攻击进入易受打断状态时触发该事件
    */
   on(
     eventName: EventNameByLang<Mode, 'whenEnteringAnInterruptibleState', AllowZh>,
@@ -369,9 +367,9 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * Only UI Controls of the Interactive Button, Item Display, Custom Button, and Custom Switch types trigger this event; The Node Graph event "UI Control Group Triggered" is sent during Stage runtime when such a UI Control Group is interacted with. This event can only be received by the Node Graph of the Player who triggered the interaction
+   * This event is triggered only by UI controls of the following types: Interactive Button, Item Display, Custom Button, and Custom Switch; This event can only be received by the Player Node Graph that triggered the interaction
    *
-   * 界面控件组触发时: 只有交互按钮、道具展示、自定义按钮和自定义开关类型的界面控件，才会触发本事件; 在关卡运行中，此类界面控件制作的界面控件组被执行交互操作时会发送节点图事件“界面控件组触发时”，此事件只有触发交互的玩家节点图可以获取
+   * 界面控件组触发时: 只有交互按钮、道具展示、自定义按钮、自定义开关的界面控件，才会触发本事件; 此事件只有触发交互的玩家节点图可以获取
    */
   on(
     eventName: EventNameByLang<Mode, 'whenUiControlGroupIsTriggered', AllowZh>,
@@ -379,9 +377,9 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * This event is triggered on the corresponding player entity's server node graph when a floating interaction page returns to server.
+   * When the [Return to Server Event] option is enabled for a tab or single-choice window, confirming the interaction will trigger this event on the corresponding Player Entity's Server Node Graph. If the interaction is with an Interaction Page Close Button, Interactive Button, Item Display, or Custom Button in the floating interaction page, confirming it will also trigger this event on the corresponding Player Entity's Server Node Graph.
    *
-   * 悬浮交互页操作触发时: 当悬浮交互页配置返回服务端事件时，在对应玩家实体的服务端节点图上触发
+   * 悬浮交互页操作触发时: 页签/单选项视窗启用了【返回服务器事件】开关时，在确认交互后，对应玩家实体的服务器节点图会收到该事件; 当玩家选中页签/单选项视窗时; 交互项索引为对应页签/单选项视窗的索引; 列表索引为对应页签/单选项视窗的索引; 列表选中项为对应页签/单选项视窗的当前点击项的索引; 当玩家用某按钮，关联监听了页签/单选项视窗，则玩家点击按钮时; 交互项索引为对应页签/单选项视窗的索引; 列表索引为按钮对应的所有页签/单选项视窗的索引列表; 列表选中项为对应页签/单选项视窗的当前点击项的索引列表; 在悬浮交互页中配置的交互页关闭按钮、交互按钮、道具展示、自定义按钮，在确认交互后，对应玩家实体的玩家服务器节点图也会收到该事件
    */
   on(
     eventName: EventNameByLang<Mode, 'whenFloatingInteractionPageIsTriggered', AllowZh>,
@@ -638,9 +636,9 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * The inventory owner entity receives this event when it purchases equipment from the inventory shop.
+   * The Inventory Owner Entity receives this event when it purchases equipment; This node is triggered only by item exchanges in the Inventory Shop. Custom shops do not trigger it. The Item Node Graph bound to the purchased equipment also receives this event
    *
-   * 装备买入时: 背包持有者实体在背包商店买入装备时接收该事件
+   * 装备买入时: 当背包持有者实体买入装备时，会收到该事件; 仅有背包商店中的物品交换会触发该节点，自定义商店不会触发。被购买的装备绑定的道具节点图也可以收到这个事件
    */
   on(
     eventName: EventNameByLang<Mode, 'whenEquipmentIsPurchased', AllowZh>,
@@ -648,9 +646,9 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * The inventory owner entity receives this event when it sells equipment from the inventory shop.
+   * The Inventory Owner Entity receives this event when it sells equipment; This node is triggered only by item exchanges in the Inventory Shop. Custom shops do not trigger it. The Item Node Graph bound to the purchased equipment also receives this event
    *
-   * 装备卖出时: 背包持有者实体在背包商店卖出装备时接收该事件
+   * 装备卖出时: 当背包持有者实体卖出装备时，会收到该事件; 仅有背包商店中的物品交换会触发该节点，自定义商店不会触发。被卖出的装备绑定的道具节点图也可以收到这个事件
    */
   on(
     eventName: EventNameByLang<Mode, 'whenEquipmentIsSold', AllowZh>,
@@ -727,11 +725,11 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * Triggered when a player's active control motor list changes.
+   * Triggered when the player's activated Control Motion Device list changes
    *
    * When Player's Activated Control Motion Device List Changes
    *
-   * 玩家激活操控运动器列表变化时: 玩家激活的操控运动器列表发生变化时触发
+   * 玩家激活操控运动器列表变化时: 玩家激活操控运动器列表变化时
    */
   on(
     eventName: EventNameByLang<Mode, 'whenPlayerSActiveControlMotorListChanges', AllowZh>,
@@ -742,11 +740,11 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * Triggered when a player follows a control motor.
+   * Triggered when the player follows the Control Motion Device.
    *
    * When Player Follows Control Motion Device
    *
-   * 玩家跟随操控运动器时: 玩家开始跟随操控运动器时触发
+   * 玩家跟随操控运动器时: 玩家跟随操控运动器时
    */
   on(
     eventName: EventNameByLang<Mode, 'whenPlayerFollowsControlMotor', AllowZh>,
@@ -754,11 +752,11 @@ export interface ServerOnOverloads<
   ): this
 
   /**
-   * Triggered when a player leaves a control motor.
+   * Triggered when the player exits the Motion Device. The player will automatically exit the Motion Device when they become controlled or are teleported.
    *
    * When Player Leaves Control Motion Device
    *
-   * 玩家离开操控运动器时: 玩家离开操控运动器时触发
+   * 玩家离开操控运动器时: 玩家离开操控运动器时。受控、传送过程中，将使玩家自动离开操控运动器
    */
   on(
     eventName: EventNameByLang<Mode, 'whenPlayerLeavesControlMotor', AllowZh>,

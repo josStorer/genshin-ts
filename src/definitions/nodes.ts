@@ -719,7 +719,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Converts input parameter types to another type for output. For specific rules, see Basic Concepts - [Conversion Rules Between Basic Data Types]. Floating point numbers are rounded to integers when converted
    *
-   * 数据类型转换: 将输入的参数类型转换为另一种类型输出。具体规则见基础概念-【基础数据类型之间的转换规则】。浮点数转换为整数时会进行四舍五入
+   * 数据类型转换: 将输入的参数类型转换为另一种类型输出。具体规则见基础概念-【基础数据类型之间的转换规则】; 针对浮点数转整数，会通过四舍五入取整
    *
    * @param input
    *
@@ -1535,6 +1535,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 设置自定义变量: 为目标实体上的指定自定义变量设置值
    *
+   * GSTS Note: When `triggerEvent` is omitted, gsts passes False, so the change does not trigger the change event. The editor defaults to True
+   *
+   * GSTS 注: 省略【是否触发事件】时 gsts 传入“否”，这次修改不会触发变化事件；编辑器中的默认值为“是”
+   *
    * @param targetEntity The variable is mounted on this entity
    *
    * 目标实体: 该变量挂载在该实体上
@@ -1544,9 +1548,9 @@ export class ServerExecutionFlowFunctions {
    * @param variableValue Value assigned to this variable
    *
    * 变量值: 赋予该变量的值
-   * @param triggerEvent Default: False. When set to False, this custom variable editing will not trigger the On Custom Variable Change event
+   * @param triggerEvent Default: True. When set to False, this custom variable editing will not trigger the On Custom Variable Change event
    *
-   * 是否触发事件: 默认为否。选为否时，这次自定义变量修改不会触发自定义变量变化时事件
+   * 是否触发事件: 默认为是。选为否时，这次自定义变量修改不会触发自定义变量变化时事件
    */
   setCustomVariable<
     T extends
@@ -1649,15 +1653,19 @@ export class ServerExecutionFlowFunctions {
    *
    * 设置节点图变量: 为当前节点图内的指定节点图变量设置值
    *
+   * GSTS Note: When `triggerEvent` is omitted, gsts passes False, so the change does not trigger the change event. The editor defaults to True
+   *
+   * GSTS 注: 省略【是否触发事件】时 gsts 传入“否”，这次修改不会触发变化事件；编辑器中的默认值为“是”
+   *
    * @param variableName Name of the Node Graph Variable. Must be unique within the same Node Graph
    *
    * 变量名: 节点图变量的命名，同节点图内不可重复
    * @param variableValue Value assigned to this variable
    *
    * 变量值: 赋予该变量的值
-   * @param triggerEvent Default: False. If set to False, this Node Graph Variable editing will not trigger the Variable Change Event
+   * @param triggerEvent Default: True. If set to False, this Node Graph Variable editing will not trigger the Variable Change Event
    *
-   * 是否触发事件: 默认为否。选为否时，这次节点图变量修改不会触发节点图变量变化时事件
+   * 是否触发事件: 默认为是。选为否时，这次节点图变量修改不会触发节点图变量变化时事件
    */
   setNodeGraphVariable<
     T extends
@@ -2441,7 +2449,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Creates Key-Value Pairs sequentially from the input key and value lists; This node builds the Dictionary using the shorter of the key and value lists; extra items are truncated; If duplicate keys are found in the key list, creation fails and returns an empty Dictionary
    *
-   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。; 此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
+   * 建立字典: 根据输入的键和值列表的顺序依次建立键值对。此节点会按照键和值列表中较短的一个进行字典创建，多余的部分会被截断; 如果键列表中存在重复值，则会创建失败，返回空字典
    *
    * GSTS Note: The dictionary declared by this method cannot be modified, and a node graph variable dictionary must be declared if modification is required.
    *
@@ -2825,9 +2833,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Break out of a Finite Loop or List Iteration Loop. The output pin must connect to the [Break Loop] input parameter of the corresponding loop Node
+   * Break out of a Finite Loop or List Iteration Loop. The output pin must be connected to the [Break Loop] input pin of the [Finite Loop] or [List Iteration Loop] node.
    *
-   * 跳出循环: 从有限循环或列表遍历循环中跳出。出引脚需要与对应循环节点的【跳出循环】入参相连
+   * 跳出循环: 从有限循环或列表迭代循环中跳出。出引脚需要与节点【有限循环】或【列表迭代循环】的【跳出循环】入引脚相连
    */
   breakLoop(...loopNodeIds: IntValue[]): void {
     const loopNodeIdObjs = loopNodeIds.map((id) => parseValue(id, 'int'))
@@ -2842,18 +2850,18 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * From the [Loop Start Value] to the [Loop End Value], the loop iterates, incrementing the Integer by 1 each time. On each iteration, it executes the Nodes connected to [Loop Body]. After a full iteration, it executes the Nodes connected to [Loop Complete].; Use [Break Loop] to end the iteration early. After exiting the loop, the logic connected to the [Loop Complete] node will also be executed.
+   * From the [Loop Start Value] to the [Loop End Value], the loop iterates, incrementing the Integer by 1 each time. On each iteration, it executes the Nodes connected to [Loop Body]. After a full iteration, it executes the Nodes connected to [Loop Complete]. Use [Break Loop] to end the iteration early. After exiting the loop, the logic connected to the [Loop Complete] node will also be executed.
    *
    * 有限循环: 从【循环起始值】开始到【循环终止值】结束，会遍历其中的循环值，每次整数加一。每次循环会执行一次【循环体】后连接的节点逻辑。完成一次完整遍历后，会执行【循环完成】后连接的节点逻辑; 可以使用【跳出循环】来提前结束该循环值遍历，跳出循环后也会执行【循环完成】后连接的节点逻辑
    *
-   * @param loopStartValue Starting integer value for iteration. The loop includes this value
+   * @param loopStartValue Loop includes this value
    *
-   * 循环起始值: 遍历开始的整数值，循环包含该值
-   * @param loopEndValue Integer value at which the iteration ends. The loop includes this value
+   * 循环起始值: 循环包含该值
+   * @param loopEndValue Loop includes this value
    *
    * Loop Termination Value
    *
-   * 循环终止值: 遍历结束的整数值，循环包含该值
+   * 循环终止值: 循环包含该值
    *
    * @returns Integer value of the current execution logic
    *
@@ -3378,9 +3386,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the value at the specified ID Location in the specified List
+   * Sets the value at a specified index position in a specified list.
    *
-   * 对列表修改值: 设置指定列表中指定序号位置的值
+   * Set List Value
+   *
+   * 对列表设置值: 设置指定列表的指定序号位置的值
    *
    * @param list Edited list reference
    *
@@ -3689,7 +3699,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * You can set the preset state value for a specified preset state index of a complex creation
    *
-   * 设置复杂造物预设状态值: 设置复杂造物指定预设状态索引的值
+   * 设置复杂造物的预设状态值: 可以设置复杂造物的指定预设状态索引的预设状态值
    *
    * @param targetEntity Only applies to complex creations
    *
@@ -3898,7 +3908,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Destroying a specified entity will result in a destruction effect and can also trigger logic that only occurs after destruction, such as end-of-life behaviors in local projectiles or the dropping of energy orbs from destroyed creations. The [When Entity Is Destroyed] and [When Entity Is Removed/Destroyed] events can be monitored on Stage Entities
    *
-   * 销毁实体: 销毁指定实体会产生销毁表现，也可能触发销毁后逻辑，例如本地投射物生命周期结束行为，或被销毁造物掉落能量球; 在关卡实体上可以监听到【实体销毁时】以及【实体移除/销毁时】事件
+   * 销毁实体: 销毁指定实体，会有销毁表现，也可以触发一些销毁后才会触发的逻辑，比如本地投射物中的生命周期结束时行为、销毁的造物会掉落能量球; 在关卡实体上可以监听到【实体销毁时】以及【实体移除/销毁时】事件
    *
    * @param targetEntity The entity to be destroyed
    *
@@ -3917,7 +3927,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Removing a specified entity is different from destroying it; there will be no destruction effect, and it will not trigger any logic that would occur after destruction, such as end-of-life behaviors in local projectiles or the dropping of energy orbs from removed creations. Removing an Entity does not trigger the [On Entity Destroyed] event, but it can trigger the [On Entity Removed/Destroyed] event
    *
-   * 移除实体: 移除指定实体与销毁实体不同，不会产生销毁表现，也不会触发销毁后逻辑，例如本地投射物生命周期结束行为，或被移除造物掉落能量球; 移除实体不会触发【实体销毁时】事件，但可以触发【实体移除/销毁时】事件
+   * 移除实体: 移除指定实体，与销毁实体不同的是，不会有销毁表现，也不会触发销毁后才会触发的逻辑，比如移除的造物不会掉落能量球; 移除实体不会触发【实体销毁时】事件，但可以触发【实体移除/销毁时】事件
    *
    * @param targetEntity The entity to be removed
    *
@@ -3988,7 +3998,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set the faction of the specified target entity.
    *
-   * 修改实体阵营: 设置指定目标实体的阵营
+   * Set Entity Faction
+   *
+   * 设置实体阵营: 设置指定目标实体的阵营
    *
    * @param targetEntity Entity whose faction is to be edited
    *
@@ -4011,7 +4023,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Teleport the specified Player Entity. A loading interface may appear depending on teleport distance. If teleporting onto an object, ensure the target Y-coordinate is slightly higher than the landing position
    *
-   * 传送玩家: 传送指定玩家实体。会根据传送距离决定是否显示加载界面；若传送到物体上，需确保目标 Y 坐标略高于落点位置
+   * Teleport Player (Beyond Mode)
+   *
+   * 传送玩家(超限): 传送指定玩家实体。会根据传送距离的远近决定是否有加载界面; 如果要传送到物件上，传送目标位置的Y轴坐标需要比落脚点高一点
    *
    * GSTS Note: There is an internal cd, and it cannot be used for frequent coordinate movement
    *
@@ -4063,9 +4077,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Revive all character entities of a specified player, but this node is only effective when the player is in a state where all their characters are down. In Beyond Mode, since each player has only one character, this node has the same effect as the [Revive Character] node. In Classic Mode, players can have multiple characters. If only some of the characters are down, this node will not take effect, meaning it will not revive the downed characters.
+   * Revive all character entities of a specified player, but this node is only effective when the player is in a state where all their characters are down. In Beyond Mode, since each player has only one character, this node has the same effect as the "Revive Character" node. In Classic Mode, players can have multiple characters. If only some of the characters are down, this node will not take effect, meaning it will not revive the downed characters.
    *
-   * 复苏玩家所有角色: 复苏指定玩家的所有角色实体，但只有该玩家所有角色都倒下时此节点才有效。在超限模式中，每个玩家只有一个角色，效果等同于【复苏角色】; 在经典模式中，若只有部分角色倒下，此节点不会生效
+   * 复苏玩家所有角色: 复苏指定玩家的所有角色实体，只有在玩家处于所有角色倒下状态的时候，该节点才有效。在超限模式中，由于每个玩家只有一个角色，该节点与【复苏角色】的效果相同; 在经典模式中，玩家可以有多个角色，如果仅有部分角色倒下时，此节点不生效，即不会复苏倒下的角色
    *
    * @param playerEntity The Player Entity that owns the Character
    *
@@ -4088,15 +4102,15 @@ export class ServerExecutionFlowFunctions {
   /**
    * Available only in Classic Mode, revive the defeated active character entity of the specified player
    *
-   * Available only in Classic Mode.
+   * Revive the active character
    *
-   * 复苏当前场上角色: 仅经典模式可用，复苏指定玩家已倒下的当前场上角色实体
+   * 复苏当前场上角色: 仅经典模式可用，复苏指定玩家的当前场上倒下的角色实体
    *
    * 仅经典模式可用
    *
-   * @param playerEntity The Player Entity that owns the active character
+   * @param playerEntity
    *
-   * 玩家实体: 当前场上角色归属的玩家实体
+   * 玩家实体
    */
   reviveActiveCharacter(playerEntity: EntityOf<'player'>): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -4199,7 +4213,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Apply the specified Environment Configuration to the designated player. Takes effect immediately upon execution
    *
-   * 修改环境配置: 使指定玩家应用指定的环境配置，运行后会立即生效
+   * Set Environment Configuration
+   *
+   * 设置环境配置: 使指定玩家应用指定的环境配置，运行后会立即生效
    *
    * @param environmentConfigIndex Identifier for this Environment Configuration
    *
@@ -4288,9 +4304,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 激活/关闭额外碰撞: 修改实体额外碰撞组件内的数据，使额外碰撞开启/关闭
    *
-   * @param targetEntity Entity that a Follow Motion Device is attached to
+   * @param targetEntity Active Entity
    *
-   * 目标实体: 挂载跟随运动器的实体
+   * 目标实体: 生效的实体
    * @param extraCollisionId Identifier for this Extra Collision
    *
    * 额外碰撞序号: 该额外碰撞的标识
@@ -4319,9 +4335,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 激活/关闭额外碰撞可攀爬性: 修改实体额外碰撞组件的碰撞的可攀爬性
    *
-   * @param targetEntity Entity that a Follow Motion Device is attached to
+   * @param targetEntity Active Entity
    *
-   * 目标实体: 挂载跟随运动器的实体
+   * 目标实体: 生效的实体
    * @param extraCollisionId Identifier for this Extra Collision
    *
    * 额外碰撞序号: 该额外碰撞的标识
@@ -4350,9 +4366,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 激活/关闭原生碰撞: 修改实体自带的碰撞
    *
-   * @param targetEntity Entity that a Follow Motion Device is attached to
+   * @param targetEntity Active Entity
    *
-   * 目标实体: 挂载跟随运动器的实体
+   * 目标实体: 生效的实体
    * @param activate Set to True to activate
    *
    * 是否激活: “是”为激活
@@ -4423,16 +4439,18 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * You can modify whether the pathfinding obstacle component of the target entity, corresponding to the specified index, is active.
+   * You can modify whether the pathfinding obstacke component of the target entity, corresponding to the specified index, is active.
    *
-   * 激活/关闭寻路阻挡: 修改目标实体的寻路阻挡组件中对应序号的寻路阻挡是否激活
+   * Enable/Disable Pathfinding Obstacle
+   *
+   * 激活/关闭寻路阻挡: 可以修改目标实体的寻路阻挡组件中对应序号的寻路阻挡是否激活
    *
    * @param targetEntity Only applies to objects
    *
    * 目标实体: 仅对物件生效
-   * @param pathfindingObstacleId Identifier for this Pathfinding Obstacle
+   * @param pathfindingObstacleId
    *
-   * 寻路阻挡序号: 该寻路阻挡的标识
+   * 寻路阻挡序号
    * @param activate
    *
    * 是否激活
@@ -4456,7 +4474,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * You can modify whether the pathfinding obstacle function of the target entity is activated.
    *
-   * 激活/关闭寻路阻挡功能: 修改目标实体的寻路阻挡功能是否激活
+   * Enable/Disable Pathfinding Obstacle Feature
+   *
+   * 激活/关闭寻路阻挡功能: 可以修改目标实体的寻路阻挡功能是否激活
    *
    * @param targetEntity Only applies to objects
    *
@@ -4477,9 +4497,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Make the specified Entity initiate an attack. The Entity that uses this node must have the corresponding Ability Unit configured.; There are two usage modes:; When the Ability Unit is [Hitbox Attack], it executes a hitbox attack centered on the Target Entity's Location; When the Ability Unit is [Direct Attack], it directly attacks the Target Entity
+   * Make the specified Entity initiate an attack. The Entity that uses this node must have the corresponding Ability Unit configured. There are two usage modes:; When the Ability Unit is [Hitbox Attack], it executes a hitbox attack centered on the Target Entity's Location; When the Ability Unit is [Direct Attack], it directly attacks the Target Entity
    *
-   * 发起攻击: 使指定实体发起攻击。使用该节点的实体上需要有对应的能力单元配置。; 分为两种使用方式：; 当能力单元为【攻击盒攻击】时，会以目标实体的位置为基准，打出一次攻击盒攻击; 当能力单元为【直接攻击】时，会直接攻击目标实体
+   * 发起攻击: 使指定实体发起攻击。使用该节点的实体上需要有对应的能力单元配置。分为两种使用方式：; 当能力单元为【攻击盒攻击】时，会以目标实体的位置为基准，打出一次攻击盒攻击; 当能力单元为【直接攻击】时，会直接攻击目标实体
    *
    * @param targetEntity Depending on the Ability Unit, this can be treated either as the reference target for the Hitbox Location or as the attack target
    *
@@ -4599,6 +4619,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Directly cause the specified target to lose HP. Losing HP is not an attack, so it does not trigger attack-related events
+   *
+   * Lose HP
    *
    * 损失生命: 使指定目标直接损失生命。损失生命不是攻击，因此不会触发攻击相关的事件
    *
@@ -4837,6 +4859,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Dynamically add a Basic Motion Device with Target-Oriented Rotation to the Target Entity during Stage runtime
+   *
+   * Add Basic Target-Oriented Rotation-Based Motion Device
    *
    * 添加朝向目标旋转型基础运动器: 在关卡运行时为目标实体动态添加一个朝向目标旋转型基础运动器
    *
@@ -5348,7 +5372,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 缩放倍率: 该特效的缩放倍率
    *
-   * @param playBuiltInSoundEffect If set to True, plays the built-in Sound Effect as well
+   * @param playBuiltInSoundEffect Toggle to Yes to play built-in sound effects
    *
    * 是否播放自带的音效: 是则会播放自带的音效
    * @returns The Instance ID automatically generated when mounting this Effect
@@ -5573,7 +5597,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Adjust the time of a running Global Timer via the Node Graph If the timer is paused first and then modified to reduce the time, the modified time will be at least 0 seconds. For countdown timers, pausing followed by modifying the time to 0s will trigger the [When the Global Timer Is Triggered] event upon resuming the timer. If the timer is paused first, then modified to 0s, followed by modifying the time to increase it, and finally resumed, the [When the Global Timer Is Triggered] event will not be triggered.
    *
-   * 修改全局计时器: 通过节点图，可以将运行中的全局计时器时间进行调整; 若计时器先暂停，后修改减少时间，则修改后时间最少为0s; 若为倒计时，则暂停后修改时间为0s且恢复计时器后，会触发【全局计时器触发时】事件; 若计时器先暂停，后修改时间到0s，再修改增加时间，再恢复计时器，则不会触发【全局计时器触发时】事件; 若有界面控件引用对应计时器，则界面控件的计时表现会同步修改
+   * Increase Global Timer Value
+   *
+   * 增加全局计时器的值: 通过节点图，可以将运行中的全局计时器时间进行调整; 若计时器先暂停，后修改减少时间，则修改后时间最少为0s; 若为倒计时，则暂停后修改时间为0s且恢复计时器后，会触发【全局计时器触发时】事件; 若计时器先暂停，后修改时间到0s，再修改增加时间，再恢复计时器，则不会触发【全局计时器触发时】事件; 若有界面控件引用对应计时器，则界面控件的计时表现会同步修改
    *
    * @param targetEntity Active Entity
    *
@@ -5585,7 +5611,7 @@ export class ServerExecutionFlowFunctions {
    *
    * Increase Value
    *
-   * 变化值: 若计时器为倒计时，则正数为增加倒计时剩余时间，负数为减少剩余时间若计时器为正计时，则正数为增加正计时累计时间，负数为减少累计时间
+   * 增加值: 若计时器为倒计时，则正数为增加倒计时剩余时间，负数为减少剩余时间若计时器为正计时，则正数为增加正计时累计时间，负数为减少累计时间
    */
   modifyGlobalTimer(targetEntity: EntityValue, timerName: StrValue, changeValue: FloatValue): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
@@ -5674,7 +5700,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Edit the Character Disruptor Device active on the Target Entity by ID; if the ID does not exist, the Character Disruptor Device will no longer function after the modification
    *
-   * 修改角色扰动装置: 通过序号修改目标实体上生效的角色扰动装置，若序号不存在，则修改过后角色扰动装置将不再生效
+   * Set Character Disruptor Device
+   *
+   * 设置角色扰动装置: 通过序号修改目标实体上生效的角色扰动装置，若序号不存在，则修改过后角色扰动装置将不再生效
    *
    * @param targetEntity Active Entity
    *
@@ -5715,7 +5743,7 @@ export class ServerExecutionFlowFunctions {
    * @param appliedStacks The Stack Count for this Unit Status
    *
    * 施加层数: 该单位状态的层数
-   * @param unitStatusParameterDictionary Can carry a set of parameters to override configuration values in the Unit Status
+   * @param unitStatusParameterDictionary You can carry a set of parameters to override the configuration values in the unit's state.
    *
    * 单位状态参数字典: 可以携带一组参数，用于覆写单位状态中的配置值
    */
@@ -5882,7 +5910,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set the Player's current Class to the Class referenced by the Config ID and process the Player's existing skills
    *
-   * 更改玩家职业: 修改玩家的当前职业为配置ID对应的职业，并处理玩家已有技能
+   * 更改玩家职业: 修改玩家的当前职业为配置ID对应的职业，并对玩家当前所拥有的技能做出处理
    *
    * @param targetPlayer Active Player Entity
    *
@@ -5892,7 +5920,7 @@ export class ServerExecutionFlowFunctions {
    * 职业配置ID: 该职业的标识
    * @param existingSkillHandling Clear All: Clear all existing skills. Preserve Unrelated Skills: Retain skills that are not defined in the default skill sets of either the previous or the new class
    *
-   * 已有技能处理方式: 全部清理：将已有技能全部清理。保留无关技能：保留更换前后两个职业默认配置内均没有的技能
+   * 已有技能处理: 全部清理：将已有技能全部清理。保留无关技能：保留更换前后两个职业默认配置内均没有的技能
    */
   changePlayerClass(
     targetPlayer: EntityOf<'player'>,
@@ -5985,7 +6013,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Edit the state of the UI Control in the Target Player's Interface Layout by its UI Control ID
    *
-   * 修改界面布局内界面控件状态: 通过界面控件索引来修改目标玩家界面布局内对应界面控件的状态
+   * Set UI Control (Group) Status
+   *
+   * 设置界面控件(组)状态: 通过界面控件索引来修改目标玩家界面布局内对应界面控件的状态
    *
    * @param targetPlayer Active Player Entity
    *
@@ -5994,7 +6024,7 @@ export class ServerExecutionFlowFunctions {
    *
    * UI Control (Group) Index
    *
-   * 界面控件索引: 界面控件的标识
+   * 界面控件(组)索引: 界面控件的标识
    * @param displayStatus Off: Invisible and logic not runningOn: Visible and logic running normallyHidden: Invisible and logic running normally
    *
    * 显示状态: 关闭：不可见且逻辑不运行开启：可见+逻辑正常运行隐藏：不可见+逻辑正常运行
@@ -6046,7 +6076,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * The Notification Queue UI Control allows for the transmission of a given set of data to be displayed via a node graph. Once transmitted, the data will be displayed in the specified Notification Queue UI Control according to the graphic-text group template entered
    *
-   * 更新消息队列: 消息队列界面控件可通过节点图传输一组指定数据用于显示。传输后，数据会按照录入的图文组模板在指定消息队列界面控件中显示
+   * 更新消息队列: 针对【消息队列】界面控件，支持通过节点图传输需要显示的一组数据，传输后会在指定【消息队列】界面控件中按照输入的图文组模板显示这组数据
    *
    * @param playerEntity
    *
@@ -6056,7 +6086,7 @@ export class ServerExecutionFlowFunctions {
    * 消息队列索引
    * @param notificationItemId
    *
-   * 消息项ID
+   * 消息项序号
    */
   refreshNotificationQueue(
     playerEntity: EntityOf<'player'>,
@@ -6323,6 +6353,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Remove the UI Control Groups activated via [Activate UI Control Group in Control Group Library] from the Target Player's Interface Layout
    *
+   * Remove UI Control Group From Control Group Library
+   *
    * 移除控件组库内界面控件组: 可以在目标玩家的界面布局上移除已通过节点【激活控件组库内界面控件组】激活的界面控件组
    *
    * @param targetPlayer Active Player Entity
@@ -6349,19 +6381,21 @@ export class ServerExecutionFlowFunctions {
   /**
    * Modify the skill in a character's skill slot by adjusting the percentage of the skill's maximum cooldown time.
    *
-   * 按最大冷却时间修改技能冷却百分比: 通过技能最大冷却时间的百分比调整角色某个技能槽位内的技能
+   * Set Skill CD Based on Maximum CD Percentage
+   *
+   * 按最大冷却时间比例设置技能冷却: 通过技能最大冷却时间的比例来修改角色某个技能槽位内的技能
    *
    * @param targetEntity Active Character Entity
    *
    * 目标实体: 生效的角色实体
-   * @param characterSkillSlot The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
+   * @param characterSkillSlot The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
    *
    * 角色技能槽位: 要修改的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
-   * @param cooldownRatioModifier Actual Cooldown after Editing = Original Cooldown × Cooldown Ratio Edit Value
+   * @param cooldownRatioModifier The revised actual cooldown time is: original cooldown time * ratio value
    *
    * Ratio Value
    *
-   * 冷却比例修改值: 修改后的实际冷却时间为：原冷却时间*冷却比例修改值
+   * 比例值: 修改后的实际冷却时间为：原冷却时间*比例值
    * @param limitMaximumCdTime If set to True, the edited Cooldown cannot be less than the specified minimum value
    *
    * 是否限制最大冷却时间: 为“是”可以限制修改后的冷却时间不小于所限制的值
@@ -6447,9 +6481,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Directly set the cooldown of a specific Skill Slot on the Target Character to a specified value
+   * Directly set the cooldown time of a specific skill slot on the target character to a specified value.
    *
-   * 设置角色技能冷却: 直接设置目标角色某个技能槽位的冷却为指定值
+   * 设置角色技能冷却: 直接设置目标角色某个技能槽位的冷却时间为指定值
    *
    * @param targetEntity Active Character Entity
    *
@@ -6459,9 +6493,11 @@ export class ServerExecutionFlowFunctions {
    * 角色技能槽位: 要修改的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
    * @param remainingCdTime Edited Cooldown will be set to this input value
    *
+   * Cooldown
+   *
    * CD Increase Value
    *
-   * 冷却剩余时间: 修改后的冷却时间为该输入值
+   * 冷却时间: 修改后的冷却时间为该输入值
    * @param limitMaximumCdTime If set to True, the edited Cooldown cannot be less than the specified minimum value
    *
    * 是否限制最大冷却时间: 为“是”可以限制修改后的冷却时间不小于所限制的值
@@ -6485,9 +6521,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Add a skill to the specified Target Character's Skill Slot and process the original skill on that slot
+   * Add a skill to the specified Target Character's Skill Slot
    *
-   * 添加角色技能: 为指定目标角色的某个技能槽位添加技能，并处理该槽位原有技能
+   * 添加角色技能: 为指定目标角色的某个技能槽位添加技能
    *
    * @param targetEntity Active Character Entity
    *
@@ -6500,11 +6536,11 @@ export class ServerExecutionFlowFunctions {
    * 技能槽位: 要添加的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
    * @param originalSlotSkillHandling Destroy: Remove the original skill. Preserve Slot Binding: Retain the current slot binding. When the newly bound skill instance is removed, it is automatically displayed in that slot. Remove Slot Binding: The skill must be reassigned to the specified slot in order to be displayed in that slot
    *
-   * 原槽位技能处理方式: 销毁：销毁原技能。保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上。脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
+   * 原槽位技能处理: 销毁：销毁原技能。保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上。脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
    *
-   * @returns Skill Instance ID of the switched-out skill
+   * @returns
    *
-   * 被切换技能实例ID: 被切换出去的技能实例ID
+   * 替换的技能实例ID
    */
   addCharacterSkill(
     targetEntity: EntityOf<'character'>,
@@ -6530,7 +6566,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Modifying the resource amount of a skill will add an increase to the current value; this increase can be a negative number.
    *
-   * 修改技能资源量: 修改技能的资源量，会在当前值上加上增加值，增加值可以为负数
+   * Increase Skill Resource Amount
+   *
+   * 增加技能资源量: 修改技能的资源量，会在当前值上加上增加值，增加值可以为负数
    *
    * @param targetEntity Active Character Entity
    *
@@ -6538,11 +6576,11 @@ export class ServerExecutionFlowFunctions {
    * @param skillResourceConfigId Skill Resource Identifier
    *
    * 技能资源配置ID: 技能资源的标识
-   * @param changeValue New Value = Original Value + Change Value
+   * @param changeValue The modified value is: original value + increase value.
    *
    * Increase Value
    *
-   * 变更值: 修改后的值为：原值+变更值
+   * 增加值: 修改后的值为：原值+增加值
    */
   modifySkillResourceAmount(
     targetEntity: EntityOf<'character'>,
@@ -6565,11 +6603,11 @@ export class ServerExecutionFlowFunctions {
    *
    * 设置角色元素能量: 仅经典模式可用，设置指定角色的元素能量
    *
-   * @param targetEntity Active Character Entity
+   * @param targetEntity
    *
    * Character Entity
    *
-   * 目标实体: 生效的角色实体
+   * 角色实体
    * @param elementalEnergy
    *
    * 元素能量
@@ -6593,16 +6631,16 @@ export class ServerExecutionFlowFunctions {
    *
    * 增加角色元素能量: 仅经典模式可用，增加指定角色的元素能量
    *
-   * @param targetEntity Active Character Entity
+   * @param targetEntity
    *
    * Character Entity
    *
-   * 目标实体: 生效的角色实体
+   * 角色实体
    * @param increaseValue
    *
    * Elemental Energy Increase Value
    *
-   * 增加值
+   * 元素能量增加值
    */
   increasesCharacterSElementalEnergy(
     targetEntity: EntityOf<'character'>,
@@ -6621,19 +6659,21 @@ export class ServerExecutionFlowFunctions {
   /**
    * Modifying the cooldown of a target character's skill slot will add an increase to the current cooldown time; this increase can be a negative number.
    *
-   * 修改角色技能冷却: 修改目标角色某个技能槽位的冷却，会在当前冷却时间上加上增加值，增加值可以为负数
+   * Increase Character Skill CD
+   *
+   * 增加角色技能冷却: 修改目标角色某个技能槽位的冷却，会在当前冷却时间上加上增加值，增加值可以为负数
    *
    * @param targetEntity Active Character Entity
    *
    * 目标实体: 生效的角色实体
-   * @param characterSkillSlot The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
+   * @param characterSkillSlot The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
    *
    * 角色技能槽位: 要修改的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
-   * @param cdModifier New Value = Original Value + Edit Value
+   * @param cdModifier The modified value is: original value + increase value.
    *
    * CD Increase Value
    *
-   * 冷却时间修改值: 修改后的值为：原值+修改值
+   * 冷却时间增加值: 修改后的值为：原值+增加值
    * @param limitMaximumCdTime If set to True, the edited Cooldown cannot be less than the specified minimum value
    *
    * 是否限制最大冷却时间: 为“是”可以限制修改后的冷却时间不小于所限制的值
@@ -6711,7 +6751,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Bind the specified skill instance to the specified skill slot
    *
-   * 绑定自定义技能实例到槽位: 将指定的技能实例绑定到指定的技能槽位上
+   * 绑定自定义技能实例到指定槽位: 将指定的技能实例绑定到指定的技能槽位上
    *
    * @param targetEntity Active Character Entity
    *
@@ -6726,7 +6766,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 原槽位技能处理: 销毁：销毁原技能。保留槽位关系：继续保留在当前槽位，在新绑定的技能实例被移除后会自动显示在该槽位上。脱离槽位关系：必须被重新绑定到指定槽位才可以显示在槽位上
    *
-   * @returns Original Slot Skill Instance ID
+   * @returns
    *
    * 原槽位技能实例ID
    */
@@ -6869,7 +6909,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Cast the skill currently active in the specified skill slot on the Character Entity. This input works only if the skill is bound to a button and is currently active
    *
-   * 施放指定槽位面板技能: 使角色实体施放其对应技能槽位当前处于前台的技能。该输入仅在技能已绑定按键且当前处于激活状态时有效
+   * 施放指定槽位面板技能: 使角色实体施放其对应技能槽位当前处于前台的技能; 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
    *
    * This input works only if the skill is bound to a button and is currently active
    *
@@ -6904,7 +6944,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Cast the skill corresponding to the specified skill instance ID on the Character Entity. This input works only if the skill is bound to a button and is currently active
    *
-   * 施放指定技能实例: 使角色实体施放指定技能实例ID对应的技能。该输入仅在技能已绑定按键且当前处于激活状态时有效
+   * 施放指定技能实例: 使角色实体施放指定技能实例ID对应的技能; 按键可用需要满足该技能被绑定到了一个按钮上且当前处于前台
    *
    * This input works only if the skill is bound to a button and is currently active
    *
@@ -7201,7 +7241,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set player background music parameters
    *
-   * 修改玩家背景音乐: 设置玩家背景音乐相关参数
+   * Set Player Background Music
+   *
+   * 设置玩家背景音乐: 设置玩家背景音乐相关参数
    *
    * @param targetEntity Active Player Entity
    *
@@ -7404,6 +7446,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Available only in Custom Aggro Mode; Set the Aggro Value of the specified Target Entity on the specified Aggro Owner
    *
+   * Set the Aggro Value of the Specified Entity
+   *
    * 设置指定实体的仇恨值: 仅自定义仇恨模式可用; 设置指定目标实体在指定仇恨拥有者上的仇恨值
    *
    * @param targetEntity
@@ -7507,22 +7551,22 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Directly set the cooldown of the specified Skill Instance on the Target Character to the specified value
+   * Directly sets the cooldown of the specified skill instance on the target character to the specified value
    *
    * 设置指定技能实例冷却: 直接设置目标角色指定技能实例的冷却时间为指定值
    *
-   * @param targetEntity Active Character Entity
+   * @param targetEntity The character entity this applies to
    *
    * 目标实体: 生效的角色实体
-   * @param skillInstanceId Identifier for the Skill Instance
+   * @param skillInstanceId The skill instance identifier
    *
    * 技能实例ID: 技能实例的标识
-   * @param cooldown Edited Cooldown will be set to this input value
+   * @param cooldown The cooldown is set to this input value
    *
    * CD
    *
    * 冷却时间: 修改后的冷却时间为该输入值
-   * @param limitMaximumCooldown If set to True, the edited Cooldown does not exceed the maximum Cooldown configured for the skill
+   * @param limitMaximumCooldown If true, the adjusted cooldown cannot exceed the maximum cooldown configured for the skill
    *
    * Limit Maximum CD Time
    *
@@ -7548,22 +7592,22 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Increase the cooldown of the specified Skill Instance on the Target Character; a negative input reduces the cooldown
+   * Increases the cooldown of the specified skill instance on the target character. A negative input reduces the cooldown
    *
    * 增加指定技能实例冷却: 增加目标角色指定技能实例的冷却时间；输入负数时会减少冷却时间
    *
-   * @param targetEntity Active Character Entity
+   * @param targetEntity The character entity this applies to
    *
    * 目标实体: 生效的角色实体
-   * @param skillInstanceId Identifier for the Skill Instance
+   * @param skillInstanceId The skill instance identifier
    *
    * 技能实例ID: 技能实例的标识
-   * @param cooldownIncrease The edited value is the original value plus this increase
+   * @param cooldownIncrease New value = Original value + Input value
    *
    * CD Increase Value
    *
    * 冷却时间增加值: 修改后的值为：原值+增加值
-   * @param limitMaximumCooldown If set to True, the edited Cooldown does not exceed the maximum Cooldown configured for the skill
+   * @param limitMaximumCooldown If true, the adjusted cooldown cannot exceed the maximum cooldown configured for the skill
    *
    * Limit Maximum CD Time
    *
@@ -7589,14 +7633,14 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Edit the Creation Disruptor Device active on the Target Entity by ID; if the ID does not exist, the Creation Disruptor Device will no longer function after this node runs
+   * Changes which Creation Disruptor Device is active on the target entity based on the specified index. If the index does not exist, no Creation Disruptor Device will be active after this node runs
    *
    * 设置造物扰动装置: 通过序号修改目标实体上生效的造物扰动装置，若序号不存在，则该节点运行后造物扰动装置将不再生效
    *
-   * @param targetEntity Entity carrying the Creation Disruptor Device
+   * @param targetEntity The entity to which the Creation Disruptor Device is attached
    *
    * 目标实体: 挂载造物扰动装置的实体
-   * @param deviceId Identifier for the Creation Disruptor Device
+   * @param deviceId The Creation Disruptor Device identifier
    *
    * 装置序号: 造物扰动装置的标识
    */
@@ -7610,19 +7654,19 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Activate or deactivate the Native Push Collision with the given ID on the Creation Entity
+   * Enables or disables the native push collision with the specified index on the creation entity
    *
    * 激活/关闭原生推挤碰撞: 激活或关闭造物实体上对应序号的原生推挤碰撞
    *
-   * @param creationEntity Active Creation Entity
+   * @param creationEntity The creation entity this applies to
    *
    * 造物实体: 生效的造物实体
-   * @param collisionId Identifier of the Native Push Collision. Some Creations have no Native Push Collision, and some have several
+   * @param collisionId The Native Push Collision identifier. Some creations may have none, while others may have multiple Native Push Collisions
    *
    * Native Push Collision ID
    *
    * 原生推挤碰撞序号: 原生推挤碰撞的标识。某些造物可能没有原生推挤碰撞，某些造物可能有多个原生推挤碰撞
-   * @param activate True to activate
+   * @param activate If true, activates the Native Push Collision
    *
    * 是否激活: 是则为激活
    */
@@ -7644,19 +7688,19 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Activate or deactivate the Extra Push Collision with the given ID on the Creation Entity
+   * Enables or disables the extra push collision with the specified index on the creation entity
    *
    * 激活/关闭额外推挤碰撞: 激活或关闭造物实体上对应序号的额外推挤碰撞
    *
-   * @param creationEntity Active Creation Entity
+   * @param creationEntity The creation entity this applies to
    *
    * 造物实体: 生效的造物实体
-   * @param collisionId Identifier of the Extra Push Collision
+   * @param collisionId The Extra Push Collision identifier
    *
    * Extra Push Collision ID
    *
    * 额外推挤碰撞序号: 额外推挤碰撞的标识
-   * @param activate True to activate
+   * @param activate If true, activates the Extra Push Collision
    *
    * 是否激活: 是则为激活
    */
@@ -7678,7 +7722,7 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Switch the specified Player's Combat Text Filter Template; the Player's combat text prompts are then filtered by the new template
+   * Switches the specified player's Combat Text Filter template, then filters their combat text prompts according to the new template
    *
    * 切换战斗文字提示过滤模板: 切换指定玩家的战斗文字提示过滤模板，切换后按新模板过滤该玩家的战斗文字提示信息
    *
@@ -7865,9 +7909,9 @@ export class ServerExecutionFlowFunctions {
    * Deck Selector Index
    *
    * 卡牌选择器索引: 引用的界面控件组索引
-   * @param selectDuration If empty, uses the Deck Selector's default configuration; otherwise, this time value is used as the effective duration. Unit in seconds, up to 2000000
+   * @param selectDuration If empty, uses the Deck Selector's default configuration; otherwise, this time value is used as the effective durationUnit in seconds. If the duration exceeds 2,000,000 seconds, it can no longer be invoked
    *
-   * 选择时长: 若为空，则读取卡牌选择器默认配置；若不为空，以此处时间参数为实际生效时长，单位为秒，最大支持 2000000
+   * 选择时长: 若为空，则读取卡牌选择器默认配置；若不为空，以此处时间参数为实际生效时长单位为秒。超过2000000秒会无法唤起
    * @param selectResultCorrespondingList One-to-one with display items: the Deck Selector returns the result value corresponding to each display itemRecommended configuration: 1 to X
    *
    * 选择结果对应列表: 和显示项一一对应，卡牌选择器返回的实际结果是显示项对应的结果值推荐配置1至X
@@ -7880,9 +7924,9 @@ export class ServerExecutionFlowFunctions {
    * @param selectMaximumQuantity The maximum number of cards that can be selected for a valid interaction
    *
    * 选择数量上限: 选择卡牌数量上限，满足数量才可进行合法的选择交互
-   * @param refreshMode Refresh behavior: Cannot Refresh, Partial Refresh, or Refresh All
+   * @param refreshMode Cannot Refresh: Both input parameters (Refresh Maximum Quantity and Refresh Maximum Quantity) are ignored, and the selection screen has no refresh buttonPartial Refresh: Both input parameters (Refresh Maximum Quantity and Refresh Maximum Quantity) take effect, and the selection screen includes a refresh buttonRefresh All: Both input parameters (Refresh Maximum Quantity and Refresh Maximum Quantity) are ignored. All results are returned by default, and the selection screen includes a refresh button
    *
-   * 刷新方式: 刷新行为，可选“不能刷新”、“部分刷新”、“全部刷新”
+   * 刷新方式: 不可刷新：刷新数量下限和刷新数量上限，两入参无效，且选择界面无刷新按键部分刷新：刷新数量下限和刷新数量上限，两入参有效，且选择界面有刷新按键全量刷新：刷新数量下限和刷新数量上限，两入参无效，默认返回全量结果，且选择界面有刷新按键
    * @param refreshMinimumQuantity The minimum number of cards that must be selected for a valid refresh interaction.
    *
    * 刷新数量下限: 选择卡牌数量下限，满足数量才可进行合法的刷新交互
@@ -7946,7 +7990,7 @@ export class ServerExecutionFlowFunctions {
    *
    * Select List
    *
-   * 列表
+   * 选择列表
    * @param sortBy Sorting Rules_Random
    *
    * Sort By
@@ -8156,6 +8200,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Add a Key-Value Pair to the specified Dictionary
    *
+   * Set or Add Key Value Pair to Dictionary
+   *
    * 对字典设置或新增键值对: 为指定字典新增一个键值对
    *
    * @param dictionary
@@ -8276,6 +8322,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Remove items from the purchase list
+   *
+   * Remove Item From the Purchase List
    *
    * 从物品收购表中移除物品: 从物品收购表中移除物品
    *
@@ -8444,6 +8492,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Add New Items to the Item Purchase List
    *
+   * Add Item to the Purchase List
+   *
    * 向物品收购表中新增物品: 向物品收购表中新增物品
    *
    * @param shopOwnerEntity
@@ -8571,7 +8621,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set up information on items for sale in the inventory shop.
    *
-   * 修改背包商店商品出售信息: 设置背包商店商品出售信息
+   * Set Inventory Shop Item Sales Info
+   *
+   * 设置背包商店商品出售信息: 设置背包商店商品出售信息
    *
    * @param shopOwnerEntity
    *
@@ -8630,7 +8682,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set up item acquisition table
    *
-   * 修改物品收购表中道具收购信息: 设置物品收购表中道具收购信息
+   * Set Item Purchase Info in the Purchase List
+   *
+   * 设置物品收购表中道具收购信息: 设置物品收购表中道具收购信息
    *
    * @param shopOwnerEntity
    *
@@ -8677,7 +8731,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set custom store product sales information
    *
-   * 修改自定义商店商品出售信息: 设置自定义商店商品出售信息
+   * Set Custom Shop Item Sales Info
+   *
+   * 设置自定义商店商品出售信息: 设置自定义商店商品出售信息
    *
    * @param shopOwnerEntity
    *
@@ -8754,14 +8810,16 @@ export class ServerExecutionFlowFunctions {
   /**
    * Sets the value on the corresponding entry for a specified equipment instance.
    *
-   * 修改装备词条值: 设置指定装备实例对应词条上的值
+   * Set Equipment Affix Value
+   *
+   * 设置装备词条值: 设置指定装备实例对应词条上的值
    *
    * @param equipmentIndex Integer ID generated during Equipment Initialization to identify the equipment instance
    *
    * 装备索引: 【装备初始化】时生成的整数型索引来标识该装备实例
    * @param affixId Each ID corresponds to one single Affix
    *
-   * 词条序号: 每个序号唯一对应一个词条
+   * 词条序号: 一个序号对应一个词条
    * @param affixValue
    *
    * 词条数值
@@ -8889,24 +8947,22 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Replaces the specified equipment in the corresponding equipment slot of the target entity. If the equipment is
-   * already equipped in the equipment slot, the replacement will not take effect. If the target slot already
-   * contains an equipped item, that item will be replaced.
+   * Replaces the specified equipment in the corresponding equipment slot of the target entity. If the equipment is already equipped in the equipment slot, the replacement will not take effect. If the target slot already contains an equipped item, that item will be replaced.
    *
-   * 替换装备到指定栏位: 将指定装备替换到目标实体的指定装备栏位。若该装备已在该栏位，则不生效；若该栏位已有装备，则会被替换
+   * 替换装备到指定栏位: 将指定装备替换到目标实体的装备栏对应栏位; 如果这个装备已经装备在装备栏中，则此次替换无法生效; 如果所要替换的目标栏位已经有装备，则该装备会被替换
    *
    * @param targetEntity
    *
    * 目标实体
    * @param equipmentRow
    *
-   * 装备栏位行
+   * 装备栏对应行
    * @param equipmentColumn
    *
-   * 装备栏位列
+   * 装备栏对应列
    * @param equipmentIndex The equipment instance is identified by an integer index generated during equipment initialization
    *
-   * 装备索引: 通过装备初始化时生成的整数索引标识装备实例
+   * 装备索引: 【装备初始化】时生成的整数型索引来标识该装备实例
    */
   replaceEquipmentToTheSpecifiedSlot(
     targetEntity: EntityValue,
@@ -8960,6 +9016,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Configure the Inventory Item drop data in Dictionary format, and specify the Drop Type
    *
+   * Set Inventory Item Drop Content
+   *
    * 设置背包道具掉落内容: 以字典形式设置背包道具掉落内容，并可以设置掉落类型
    *
    * @param inventoryOwnerEntity
@@ -8990,6 +9048,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Set the type and quantity of Items or Currency for the Inventory drop
+   *
+   * Set Inventory Loot Item/Currency Quantity
    *
    * 设置背包掉落道具/货币数量: 设置背包掉落道具/货币的类型和数量
    *
@@ -9076,7 +9136,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Modifying the quantity of a specified item in your inventory will add an increase to the current value; the increase can be a negative number.
    *
-   * 修改背包道具数量: 修改背包内指定道具的数量，会在当前值上加上增加值，增加值可以为负数
+   * Increase Inventory Item Quantity
+   *
+   * 增加背包道具数量: 修改背包内指定道具的数量，会在当前值上加上增加值，增加值可以为负数
    *
    * @param inventoryOwnerEntity
    *
@@ -9084,11 +9146,11 @@ export class ServerExecutionFlowFunctions {
    * @param itemConfigId
    *
    * 道具配置ID
-   * @param changeValue New Value = Original Value + Change Value
+   * @param changeValue The changed value = original value + increase value
    *
    * Increase Value
    *
-   * 变更值: 变更后的值=变更前的值+变更值
+   * 增加值: 变更后的值=变更前的值+增加值
    */
   modifyInventoryItemQuantity(
     inventoryOwnerEntity: EntityValue,
@@ -9109,7 +9171,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Modify the amount of a specified currency in the player's inventory. This will add the specified increase value to the current amount, and the increase value can be negative.
    *
-   * 修改背包货币数量: 修改玩家背包内指定货币的数量，会在当前数量上加上指定增加值，增加值可以为负数
+   * Increase Inventory Currency Quantity
+   *
+   * 增加背包货币数量: 修改背包内指定货币的数量，会在当前值上加上增加值，增加值可以为负数
    *
    * @param inventoryOwnerEntity
    *
@@ -9117,11 +9181,11 @@ export class ServerExecutionFlowFunctions {
    * @param currencyConfigId
    *
    * 货币配置ID
-   * @param changeValue New Value = Original Value + Change Value
+   * @param changeValue The changed value = original value + increase value
    *
    * Increase Value
    *
-   * 变更值: 变更后的值=变更前的值+变更值
+   * 增加值: 变更后的值=变更前的值+增加值
    */
   modifyInventoryCurrencyQuantity(
     inventoryOwnerEntity: EntityValue,
@@ -9142,7 +9206,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Modify the quantity of a specified item in the drop component of a loot prefab. This will add the specified increase value to the current quantity, and the increase value can be negative.
    *
-   * 修改掉落物组件道具数量: 修改掉落物预制体的掉落组件内指定道具的数量，会在当前数量上加上指定增加值，增加值可以为负数
+   * Increase Loot Component Item Quantity
+   *
+   * 增加掉落物组件道具数量: 修改掉落物元件上掉落物组件内指定道具的数量，会在当前值上加上增加值，增加值可以为负数
    *
    * @param lootEntity
    *
@@ -9150,11 +9216,11 @@ export class ServerExecutionFlowFunctions {
    * @param itemConfigId
    *
    * 道具配置ID
-   * @param changeValue New Value = Original Value + Change Value
+   * @param changeValue The changed value = original value + increase value
    *
    * Increase Value
    *
-   * 变更值: 变更后的值=变更前的值+变更值
+   * 增加值: 变更后的值=变更前的值+增加值
    */
   modifyLootItemComponentQuantity(
     lootEntity: EntityValue,
@@ -9175,7 +9241,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Modify the amount of a specified currency in the drop component of a loot prefab. This will add the specified increase value to the current amount, and the increase value can be negative.
    *
-   * 修改掉落物组件货币数量: 修改掉落物预制体的掉落组件内指定货币的数量，会在当前数量上加上指定增加值，增加值可以为负数
+   * Increase Loot Component Currency Quantity
+   *
+   * 增加掉落物组件货币数量: 修改掉落物元件上掉落物组件内指定货币的数量，会在当前值上加上增加值，增加值可以为负数
    *
    * @param lootEntity
    *
@@ -9183,11 +9251,11 @@ export class ServerExecutionFlowFunctions {
    * @param currencyConfigId
    *
    * 货币配置ID
-   * @param changeValue New Value = Original Value + Change Value
+   * @param changeValue The changed value = original value + increase value
    *
    * Increase Value
    *
-   * 变更值: 变更后的值=变更前的值+变更值
+   * 增加值: 变更后的值=变更前的值+增加值
    */
   modifyLootComponentCurrencyAmount(
     lootEntity: EntityValue,
@@ -9234,7 +9302,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * The mini-map marker at the specified ID in the Target Entity's Mini-map Marker Component is visible to all Players in the Player List
    *
-   * 修改可见小地图标识的玩家列表: 目标实体的小地图标识组件上对应序号的小地图标识对玩家列表中的玩家可见
+   * Set Player List for Visible Mini-Map Markers
+   *
+   * 设置可见小地图标识的玩家列表: 目标实体的小地图标识组件上对应序号的小地图标识对玩家列表中的玩家可见
    *
    * @param targetEntity Entity that owns the Mini-map Marker component to be edited
    *
@@ -9265,7 +9335,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * When the Player Marker option is selected and a corresponding Player Entity is linked in the Node Graph, the Target Entity's display on the mini-map changes to that Player's avatar
    *
-   * 修改小地图标识的玩家标记: 若小地图标识选择了玩家标记，在节点图输入对应玩家实体后，目标实体在小地图上的显示会变成输入玩家实体的头像
+   * Set Player Markers on the Mini-Map
+   *
+   * 设置小地图标识的玩家标记: 若小地图标识选择了玩家标记，在节点图输入对应玩家实体后，目标实体在小地图上的显示会变成输入玩家实体的头像
    *
    * @param targetEntity Entity that owns the Mini-map Marker component to be edited
    *
@@ -9296,7 +9368,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Edit the active state of mini-map markers on the Target Entity in batches using the input list of Mini-map Marker IDs
    *
-   * 修改小地图标识生效状态: 通过节点输入的小地图标识序号列表，批量修改目标实体的小地图标识生效状态
+   * Set Mini-Map Marker Activation Status
+   *
+   * 设置小地图标识生效状态: 通过节点输入的小地图标识序号列表，批量修改目标实体的小地图标识生效状态
    *
    * @param targetEntity Entity that owns the Mini-map Marker component to be edited
    *
@@ -9327,7 +9401,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set the map scale of the mini-map interface control for the target player.
    *
-   * 修改小地图缩放: 设置目标玩家小地图界面控件的地图比例
+   * Set Mini-Map Zoom
+   *
+   * 设置小地图缩放: 设置目标玩家的小地图界面控件的地图比例
    *
    * @param targetPlayer
    *
@@ -9350,7 +9426,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set the mini-map marker of the target entity with the corresponding index to a tracking appearance for the specified player.
    *
-   * 修改追踪小地图标识的玩家列表: 将目标实体对应序号的小地图标识对指定玩家设置为追踪表现
+   * Set Player List for Tracking Mini-Map Markers
+   *
+   * 设置追踪小地图标识的玩家列表: 将目标实体的对应序号的小地图标识对入参玩家设置为追踪表现
    *
    * @param targetEntity
    *
@@ -9389,9 +9467,9 @@ export class ServerExecutionFlowFunctions {
    * @param mapConfigId
    *
    * 地图配置ID
-   * @param displayMap
+   * @param displayMap Toggle Yes to display map
    *
-   * 是否显示地图
+   * 是否显示地图: 是则会显示地图
    */
   switchCustomMaps(
     targetPlayer: EntityOf<'player'>,
@@ -9438,6 +9516,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set Player Leaderboard Score (Float)
    *
+   * Set Player Leaderboard Score as Float
+   *
    * 以浮点数设置玩家排行榜分数: 以浮点数设置玩家排行榜分数
    *
    * @param playerIdList
@@ -9468,6 +9548,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Set Player Leaderboard Score (Integer)
+   *
+   * Set Player Leaderboard Score as Integer
    *
    * 以整数设置玩家排行榜分数: 以整数设置玩家排行榜分数
    *
@@ -9500,7 +9582,9 @@ export class ServerExecutionFlowFunctions {
   /**
    * Change the progress counter for the specified Achievement ID on the Target Entity
    *
-   * 变更成就进度计数: 变更指定实体上对应成就序号的成就进度计数
+   * Increase Achievement Progress Tally
+   *
+   * 增加成就进度计数: 变更指定实体上对应成就序号的成就进度计数
    *
    * @param changeEntity
    *
@@ -9512,7 +9596,7 @@ export class ServerExecutionFlowFunctions {
    *
    * Progress Tally Increase Value
    *
-   * 进度计数变更值: 变更后值=变更前值+变更值
+   * 进度计数增加值: 变更后值=变更前值+增加值
    */
   changeAchievementProgressTally(
     changeEntity: EntityValue,
@@ -9716,7 +9800,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Configure the voice and text toggles for the chat channel
    *
-   * 设置聊天频道开关: 配置聊天频道的语音和文字开关
+   * 设置聊天频道开关: 设置聊天频道的语音和文字开关
    *
    * @param channelIndex
    *
@@ -9770,7 +9854,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set player channel permissions
    *
-   * 修改玩家频道权限: 设置玩家聊天语音频道权限
+   * 设置玩家频道权限: 设置玩家频道权限
    *
    * @param playerGuid
    *
@@ -9778,9 +9862,9 @@ export class ServerExecutionFlowFunctions {
    * @param channelIndex
    *
    * 频道索引
-   * @param join If set to True, the specified Player can join and use this channel
+   * @param join When enabled, the channel is only available to the specified player(s)
    *
-   * 是否加入: “是”则该频道对指定玩家开放并可使用
+   * 是否加入: “是”则该频道指定玩家可用
    */
   modifyPlayerChannelPermission(
     playerGuid: GuidValue,
@@ -9813,9 +9897,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 消耗数量
    *
-   * @returns
+   * @returns Output Paramter reads Yes when Gift Box is successfully consumed
    *
-   * 是否成功消耗礼盒
+   * 是否消耗: 礼盒被成功消耗以后该出参为是
    */
   consumeGiftBox(
     playerEntity: EntityOf<'player'>,
@@ -9839,7 +9923,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Available only for Beyond Mode; Allows the setting of player's current corresponding task count to a specified value
    *
-   * 设置任务计数: 仅超限模式可用; 可将玩家当前对应任务计数设置为指定值
+   * 设置任务计数: 仅超限模式可用; 可以将玩家对应任务的当前计数设置为指定的值
    *
    * @param playerEntity
    *
@@ -9870,7 +9954,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Available only for Beyond Mode; Use this to increase the current count of the corresponding player tasks (value entered may be negative)
    *
-   * 增加任务计数: 仅超限模式可用; 可增加对应玩家任务的当前计数（输入值可为负数）
+   * 增加任务计数: 仅超限模式可用; 可以增加玩家对应任务的当前计数值，增加值可以为负数
    *
    * @param playerEntity
    *
@@ -9878,9 +9962,9 @@ export class ServerExecutionFlowFunctions {
    * @param questIndex
    *
    * 任务索引
-   * @param taskCountIncreasedBy
+   * @param taskCountIncreasedBy New Value = Previous Value + Increase Value
    *
-   * 任务计数增加值
+   * 任务计数增加值: 修改后的值=修改前的值+增加值
    */
   increaseTaskCount(
     playerEntity: EntityOf<'player'>,
@@ -9998,9 +10082,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Performs division, supporting Floating Point division and Integer division. Integer division returns the quotient result; The divisor should not be 0, otherwise it may return an illegal value
+   * Performs division, supporting Floating Point division and Integer division. Integer division returns the quotient result; The divisor should not be 0, otherwise it may return an illegal value; When the divisor is 0, the result is 0. -2147483648 divided by -1 results in 0.
    *
-   * 除法运算: 除法运算，支持浮点数除法和整数除法。整数除法返回整除结果; 除数不应为0，否则可能返回非法值
+   * 除法运算: 除法运算，支持浮点数除法和整数除法。整数除法返回整除结果; 除数为0时，结果为0; -2147483648除以-1的结果为0
    *
    * @param input1
    * @param input2
@@ -10259,7 +10343,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Converts the Forward Vector and Upward Vector to Euler Angles. Example: For a Character, suppose it has an initial orientation in 3D space. To rotate the character to a desired orientation: The Forward Vector indicates the direction we want the Character's nose to face. The Upward Vector indicates the direction we want the Character's head to point. Output: A 3D Euler rotation vector representing the rotation the Character must undergo to move from its initial orientation to the specified target orientation. Note: Ensure the Forward and Upward Vectors are normalized. Using non-normalized vectors can produce unintended scaling and inaccurate rotation results.
    *
-   * 方向向量转旋转: 将向前向量和向上向量转换为欧拉角。例如角色在三维空间中有初始朝向，要旋转到目标朝向时，向前向量表示希望角色面朝的方向，向上向量表示希望角色头顶指向的方向。输出为角色从初始朝向旋转到目标朝向所需的三维欧拉角。注意：请确保向前向量和向上向量已归一化，未归一化向量可能导致非预期缩放和不准确的旋转结果
+   * 方向向量转旋转: 给定向前向量和向上向量，转化为欧拉角; 举例：以人物为例，人物现在在三维空间中有一个初始朝向。我们想将此人物在三维空间中转到我们期望的朝向，那么向前向量表示我们期望其鼻子正对的方向，向上向量表示期望其头顶正对的方向。最终的三维向量出参则是该人物从初始朝向转向我们给定的期望朝向所需要经过的欧拉角旋转; 说明：给定的向前向量和向上向量必须要单位化，否则可能会出现非预期的缩放效应，导致计算出错
    *
    * @param forwardVector Represents the desired Orientation of the Unit
    *
@@ -10268,9 +10352,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 向上向量: 定义单位的上方向（用于确定旋转的旋转角度），默认值为世界坐标系Y轴正方向
    *
-   * @returns
+   * @returns Returns Euler Angles, where each component represents:X – Pitch: Rotation around the local X-axis (right). Controls looking up and down.Y – Yaw: Rotation around the local Y-axis (up). Controls turning left and right.Z – Roll: Rotation around the local Z-axis (forward). Controls tilting the object side to side.
    *
-   * 旋转
+   * 旋转: 输出的是欧拉角，其三个分量分别代表：X：俯仰角 (Pitch) - 围绕物体局部X轴（右侧轴）的旋转。上下抬头/低头Y：偏航角 (Yaw) - 围绕物体局部Y轴（上方向轴）的旋转。左右转头Z：翻滚角 (Roll) - 围绕物体局部Z轴（前方向轴）的旋转。左右倾斜
    */
   directionVectorToRotation(forwardVector: Vec3Value, upwardVector: Vec3Value): vec3 {
     const forwardVectorObj = parseValue(forwardVector, 'vec3')
@@ -11351,11 +11435,11 @@ export class ServerExecutionFlowFunctions {
   /**
    * Rotates the input 3D Vector by the Euler Angles specified by the rotation and returns the result. Note: The Rotated 3D Vector is the one you want to rotate. The Rotated Euler Angles define how the vector should be rotated. The resulting output vector shows the position of the original 3D Vector after applying the rotation.
    *
-   * 三维向量旋转: 将输入三维向量按旋转所表示的欧拉角进行旋转后返回结果。注意：被旋转三维向量是你希望旋转的向量；旋转欧拉角定义该向量应如何旋转；输出向量表示原三维向量应用该旋转后的结果位置
+   * 三维向量旋转: 将被旋转的三维向量，按照旋转所表示的欧拉角进行旋转后返回结果; 说明：被旋转的三维向量是我们期望旋转的向量，旋转的欧拉角表示我们期望对该向量进行何种具体的旋转。而出参结果的三维向量则表示被旋转的原始三维向量在经过旋转后的情况
    *
-   * @param rotate This 3D input vector represents a specific rotation in Euler angles
+   * @param rotate This 3D input vector represents a specific rotation in Euler angles, where each component represents:X – Pitch: Rotation around the local X-axis (right). Controls looking up and down.Y – Yaw: Rotation around the local Y-axis (up). Controls turning left and right.Z – Roll: Rotation around the local Z-axis (forward). Controls tilting the object side to side.
    *
-   * 旋转: 该输入的三维向量指代一个特定的旋转欧拉角
+   * 旋转: 该三维向量指代一个特定的旋转欧拉角，其三个分量分别代表：X：俯仰角 (Pitch) - 围绕物体局部X轴（右侧轴）的旋转。上下抬头/低头Y：偏航角 (Yaw) - 围绕物体局部Y轴（上方向轴）的旋转。左右转头Z：翻滚角 (Roll) - 围绕物体局部Z轴（前方向轴）的旋转。左右倾斜
    * @param rotated3dVector
    *
    * 被旋转的三维向量
@@ -11787,7 +11871,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Performs a bitwise complement operation on the input and returns the result
    *
-   * 按位取补运算: 将输入值作为二进制进行按位取补运算后返回结果
+   * 按位取补: 将输入值作为二进制进行按位取补运算后返回结果
    *
    * @param value
    *
@@ -11929,7 +12013,7 @@ export class ServerExecutionFlowFunctions {
      */
     playerCount: bigint
     /**
-     * Trial, Room, or Matchmaking
+     * Includes Playtest, Room Play, and Matchmaking Play
      *
      * Gameplay Mode
      *
@@ -12638,11 +12722,11 @@ export class ServerExecutionFlowFunctions {
   /**
    * Returns the preset status value of the specified complex creation
    *
-   * 获取复杂造物的预设状态值: 查询指定复杂造物的预设状态值
+   * 获取复杂造物的预设状态值: 获取复杂造物指定预设状态索引的预设状态值
    *
-   * @param targetEntity
+   * @param targetEntity 复杂造物实体
    *
-   * 目标实体
+   * 目标实体: 复杂造物实体
    * @param presetStatusIndex
    *
    * 预设状态索引
@@ -12764,6 +12848,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Returns all Entities of the specified type currently in the scene. The number of Entities in this list may be large
    *
+   * Get Specified Type of Entity on the Field
+   *
    * 获取场上指定类型实体: 获取当前场上指定类型的所有实体，该实体列表的数量可能会较大
    *
    * @param entityType Includes Stage, Object, Player, Character, Creation
@@ -12789,6 +12875,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Returns all Entities currently in the scene that were created by the specified Prefab ID
+   *
+   * Get Entity With Specified Prefab ID on the Field
    *
    * 获取场上指定元件ID的实体: 获取当前场上通过指定元件ID创建的所有实体
    *
@@ -13394,7 +13482,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Check entity's elemental effect status
    *
-   * 查询实体的元素附着状态
+   * 查询实体的元素附着状态: 查询实体当前的元素附着状态
    *
    * @param targetEntity
    *
@@ -13403,62 +13491,63 @@ export class ServerExecutionFlowFunctions {
   checkEntitySElementalEffectStatus(targetEntity: EntityValue): {
     /**
      *
-     * 是否附着水元素
+     * 水附着
      */
     affectedByHydro: boolean
     /**
      *
-     * 是否附着冰元素
+     * 冰附着
      */
     affectedByCryo: boolean
     /**
      *
-     * 是否附着雷元素
+     * 雷附着
      */
     affectedByElectro: boolean
     /**
      *
-     * 是否附着火元素
+     * 火附着
      */
     affectedByPyro: boolean
     /**
      *
-     * 是否附着草元素
+     * 草附着
      */
     affectedByDendro: boolean
     /**
      *
-     * 是否附着风元素
+     * 风附着
      */
     affectedByAnemo: boolean
     /**
      *
-     * 是否附着岩元素
+     * 岩附着
      */
     affectedByGeo: boolean
     /**
      *
-     * 是否处于冻结
+     * 冻结状态
      */
     affectedByFrozen: boolean
     /**
+     * Lunar-Charged is not considered as Electro-Charged
      *
-     * 是否处于感电（不包含月感电）
+     * 感电状态: 月感电不属于感电状态
      */
     affectedByElectroCharged: boolean
     /**
      *
-     * 是否处于燃烧
+     * 燃烧状态
      */
     affectedByBurning: boolean
     /**
      *
-     * 是否处于石化
+     * 石化状态
      */
     affectedByPetrification: boolean
     /**
      *
-     * 是否处于激化
+     * 激化状态
      */
     affectedByCatalyze: boolean
   } {
@@ -14236,7 +14325,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Available only in Classic Mode. You can search for the character ID of the target character to see the appendix for the specific character in Classic Mode Character ID List
    *
-   * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号；具体角色可见经典模式角色编号列表附录
+   * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览
    *
    * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
    *
@@ -14390,7 +14479,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * The Target Entity varies with the Creation's current behavior; For example, when a Creation is attacking, its Target is the specified enemy Entity; For example, when a Creation is healing allies, its Target is the specified allied Entity
    *
-   * 获取造物当前目标: 根据造物当前行为的不同，目标实体也不尽相同。; 例如当造物在攻击敌方时，造物的目标为敌方指定实体。; 例如当造物在对友方进行治疗时，造物的目标为友方指定实体。
+   * 获取造物当前目标: 根据造物当前行为的不同，目标实体也不尽相同。例如当造物在攻击敌方时，造物的目标为敌方指定实体。例如当造物在对友方进行治疗时，造物的目标为友方指定实体。
    *
    * @param creationEntity Runtime Creation Entity
    *
@@ -14416,7 +14505,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Returns the Aggro List in Default Mode. This Node only outputs a valid list when the Aggro Configuration is set to [Default Type]
    *
-   * 获取造物的经典模式仇恨列表: 获取造物的默认模式仇恨列表，仅当仇恨配置为【默认类型】时，该节点才会输出有效列表
+   * 获取默认模式的造物仇恨列表: 获取造物的默认仇恨模式的仇恨列表，即仅仇恨配置为【默认类型】时，该节点才会有正确的输出列表
    *
    * @param creationEntity Runtime Creation Entity
    *
@@ -14812,6 +14901,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Searches the list of all Slot IDs for the Unit Status with the specified Config ID on the Target Entity
+   *
+   * Query Unit Status Slot ID List
    *
    * 查询单位状态的槽位序号列表: 查询指定目标实体上特定配置ID的单位状态的所有槽位序号列表
    *
@@ -15221,7 +15312,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Get the number of Waypoints in the Global Path
    *
-   * 获得全局路径的路点个数
+   * 获得全局路径的路点个数: 获得指定全局路径的路点个数
    *
    * @param pathIndex
    *
@@ -15229,7 +15320,7 @@ export class ServerExecutionFlowFunctions {
    *
    * @returns
    *
-   * 路点数量
+   * 路点个数
    */
   getTheNumberOfWaypointsInTheGlobalPath(pathIndex: IntValue): bigint {
     const pathIndexObj = parseValue(pathIndex, 'int')
@@ -15503,6 +15594,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Searches the number of Key-Value Pairs in the Dictionary
    *
+   * Query Dictionary Length
+   *
    * 查询字典长度: 查询字典中键值对的数量
    *
    * @param dictionary
@@ -15559,7 +15652,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Searches sale information for a specified Item in the Inventory Shop
    *
-   * 查询背包商店商品出售信息: 查询背包商店种特定商品的出售信息
+   * 查询背包商店商品出售信息: 查询背包商店中特定商品的出售信息
    *
    * @param shopOwnerEntity
    *
@@ -15871,17 +15964,17 @@ export class ServerExecutionFlowFunctions {
   /**
    * Get the equipment index of the specified equipment slot
    *
-   * 获取指定装备栏位的装备索引
+   * 获取指定装备栏位的装备索引: 获取目标实体装备栏上指定行列对应装备的索引
    *
    * @param targetEntity
    *
    * 目标实体
    * @param row
    *
-   * 装备栏位行
+   * 行
    * @param column
    *
-   * 装备栏位列
+   * 列
    *
    * @returns
    *
@@ -15934,6 +16027,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Searches the Equipment Config ID by Equipment ID. The Equipment Instance ID can be obtained in the [Equipment Initialization] event
+   *
+   * Query Equipment Config ID by Equipment Index
    *
    * 根据装备索引查询装备配置ID: 根据装备索引查询装备配置ID，装备实例的索引可以在【装备初始化】事件中获取到
    *
@@ -16028,7 +16123,7 @@ export class ServerExecutionFlowFunctions {
    *
    * @returns
    *
-   * 装备数值
+   * 词条数值
    */
   getEquipmentAffixValue(equipmentIndex: IntValue, affixId: IntValue): number {
     const equipmentIndexObj = parseValue(equipmentIndex, 'int')
@@ -16136,6 +16231,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Returns all Currencies in the Inventory, including types and corresponding amounts
    *
+   * Get All Inventory Currency
+   *
    * 获取背包所有货币: 获取背包所有货币，包括货币类型和对应的数量
    *
    * @param inventoryOwnerEntity
@@ -16162,6 +16259,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Returns all Basic Items in the Inventory, including Item types and their quantities
    *
+   * Get All Inventory Basic Items
+   *
    * 获取背包所有基础道具: 获取背包所有基础道具，包括道具类型和对应的数量
    *
    * @param inventoryOwnerEntity
@@ -16187,6 +16286,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Returns all Equipment in the Inventory; the output parameter is a list of all Equipment IDs
+   *
+   * Get All Inventory Equipment
    *
    * 获取背包所有装备: 获取背包所有装备，出参为所有装备索引组成的列表
    *
@@ -16590,6 +16691,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Returns the Configuration ID of the currently active Scan Tags on the Target Entity
    *
+   * Get Current Active Scan Tag Config ID
+   *
    * 获取当前生效的扫描标签配置ID: 获取目标实体上当前生效的扫描标签的配置ID
    *
    * @param targetEntity
@@ -16622,9 +16725,8 @@ export class ServerExecutionFlowFunctions {
    *
    * 玩家实体
    * @param settlementStatus
-   * Includes: TBC, Victory, Failed, Escape
    *
-   * 结算状态: 分为未定、胜利、失败、逃跑
+   * 结算状态
    *
    * @returns
    *
@@ -16649,6 +16751,8 @@ export class ServerExecutionFlowFunctions {
 
   /**
    * Returns the Player's Rank-related information
+   *
+   * Get Player Rank Info
    *
    * 获取玩家段位信息: 获取玩家段位相关信息
    *
@@ -16738,6 +16842,8 @@ export class ServerExecutionFlowFunctions {
   /**
    * Searches the list of Entity Layout Groups currently active in the Stage
    *
+   * Get Currently Active Entity Deployment Group List
+   *
    * 查询当前激活的实体布设组列表: 查询当前关卡激活的实体布设组组成的列表
    *
    * @returns
@@ -16790,7 +16896,9 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Searches the consumed quantity of the specified Gift Box on the Player Entity
+   * Queries the number of Gorgeous Performance Boxes consumed by the player entity (cannot be used for other gift box types)
+   *
+   * Query Corresponding Gorgeous Performance Box Consumption Quantity
    *
    * 查询对应华丽演绎礼盒消耗数量: 查询玩家实体上华丽演绎礼盒的消耗数量(无法对其他类型的礼盒使用)
    *
@@ -16882,11 +16990,11 @@ export class ServerExecutionFlowFunctions {
     return ret as unknown as boolean
   }
   /**
-   * Edit the target entity's model color and material configuration.
+   * Enables or disables the entity model's material and color blend settings, and modifies the assigned material, color blend mode, and override color.
    *
    * Edit Model Color & Material
    *
-   * 修改模型颜色和材质: 设置实体模型的颜色与材质配置
+   * 修改模型颜色和材质: 设置实体模型的【材质】功能、【叠加颜色】功能的开启与关闭，对具体【材质】【颜色叠加方式】【叠加颜色】进行修改
    *
    * @param targetEntity Target Entity
    *
@@ -16961,9 +17069,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Get the target entity's current model color and material configuration.
+   * Retrieves the enabled states of the entity model's material and color override settings, along with the assigned material, color blend mode, and override color.
    *
-   * 获取模型颜色和材质: 获取实体模型当前的颜色与材质配置
+   * Get Model Color & Material
+   *
+   * 获取模型颜色和材质: 获取实体模型的【材质】功能是否开启、【叠加颜色】功能是否开启、以及具体【材质】【颜色叠加方式】【叠加颜色】
    *
    * @param targetEntity Target Entity
    *
@@ -17053,12 +17163,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Make a player follow a control motor. This cannot take effect while the player is controlled
-   * or teleporting.
+   * Set the Player to follow the Control Motion Device. The Player cannot follow it while under control effects or teleporting
    *
    * Set Player to Follow Control Motion Device
    *
-   * 设置玩家跟随操控运动器: 受控、传送过程中无法跟随
+   * 设置玩家跟随操控运动器: 设置玩家跟随操控运动器。受控、传送过程中，将无法跟随。
    *
    * @param playerEntity Player Entity
    *
@@ -17084,11 +17193,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Make a player leave the control motor currently being followed.
+   * Set the Player to leave the Control Motion Device
    *
    * Set Player to Leave Control Motion Device
    *
-   * 设置玩家离开操控运动器: 设置玩家离开当前跟随的操控运动器
+   * 设置玩家离开操控运动器: 设置玩家离开操控运动器
    *
    * @param playerEntity Player Entity
    *
@@ -17105,11 +17214,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Set a player's active control motors. An empty list clears all active control motors.
+   * Set the Player's active Control Motion Devices. If the Entity List is empty, all active Control Motion Devices for the Player are cleared
    *
    * Set Player to Activate Control Motion Device
    *
-   * 设置玩家激活操控运动器: 实体列表为空时清空玩家所有激活的运动器
+   * 设置玩家激活操控运动器: 设置玩家激活操控运动器。若实体列表为空，则清空玩家所有激活的运动器。
    *
    * @param playerEntity Player Entity
    *
@@ -17135,11 +17244,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Query a player's current active control motor list.
+   * Query the player's currently activated Control Motion Device List.
    *
    * Query Player's Currently Activated Control Motion Device List
    *
-   * 查询玩家当前激活操控运动器列表: 查询玩家当前激活的操控运动器实体列表
+   * 查询玩家当前激活操控运动器列表: 查询玩家当前激活操控运动器列表
    *
    * @param playerEntity Player Entity
    *
@@ -17165,11 +17274,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Query the control motor a player is currently following.
+   * Query the player's Followed Control Motion Device.
    *
    * Query Player's Followed Control Motion Device
    *
-   * 查询玩家当前跟随操控运动器: 查询玩家当前跟随的操控运动器实体
+   * 查询玩家当前跟随操控运动器: 查询玩家当前跟随操控运动器
    *
    * @param playerEntity Player Entity
    *
@@ -17195,12 +17304,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Query a control motor's current movement parameters. Temporary parameters added by control
-   * skill nodes are not included.
+   * Retrieves the current movement parameters of the Motion Controller. Temporary movement parameters added by Motion Controller Skill nodes are excluded.
    *
    * Query Control Motion Device's Current Movement Parameters
    *
-   * 查询操控运动器当前运动参数: 不包含操控技能节点添加的临时运动参数
+   * 查询操控运动器当前运动参数: 查询操控运动器当前运动参数。不包含操控技能节点添加的临时运动参数。
    *
    * @param controlMotor
    *
@@ -17280,20 +17388,20 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Set whether a player's cursor remains visible.
+   * Sets whether the specified Player's cursor remains visible
    *
    * Set Player's Cursor to Always Visible
    *
    * 设置玩家光标是否常驻: 设置指定玩家的光标是否常驻显示
    *
-   * @param playerEntity Player Entity
+   * @param playerEntity Active Player Entity
    *
-   * 玩家实体
-   * @param cursorPersistent
+   * 玩家实体: 生效的玩家
+   * @param cursorPersistent If set to "Yes," the cursor remains visible
    *
    * Always Show Cursor?
    *
-   * 是否光标常驻
+   * 是否光标常驻: “是”则光标常驻显示
    */
   setWhetherPlayerSCursorIsPersistent(
     playerEntity: EntityOf<'player'>,
@@ -17310,18 +17418,18 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Set the target layers and maximum target count selectable by a player's cursor click.
+   * Sets the layer filter and maximum number of targets that can be selected when the specified Player clicks with the cursor
    *
    * Enable Player's Cursor to Click Selectable Targets
    *
-   * 设置玩家光标点击可选取目标: 设置光标点击时可选取的目标层级与最多选取数量
+   * 设置玩家光标点击可选取目标: 设置指定玩家光标点击时可选取的目标层级与最多选取数量
    *
-   * @param playerEntity Player Entity
+   * @param playerEntity Active Player Entity
    *
-   * 玩家实体
+   * 玩家实体: 生效的玩家
    *
-   * @param cursorClickableLayerFilterId Cursor Clickable Layer Filter ID. Literal only; wired
-   * connections are not allowed.
+   * @param cursorClickableLayerFilterId Layer Filter ID for targets that can be clicked by the cursor
+   * Literal only; wired connections are not allowed.
    *
    * GSTS Note: This value is a four-bit mask, not a single layer ID. Add the selected layer
    * values and pass the result as an integer literal: Scene = 1 (bit 0), Hurtbox = 2 (bit 1),
@@ -17329,17 +17437,18 @@ export class ServerExecutionFlowFunctions {
    * 0-15; 0 selects none and 15 selects all. For example, 10 selects Hurtbox and Cursor
    * Collision, while 11 additionally selects Scene. Do not use bits above bit 3.
    *
-   * 光标可点击层级筛选id: 仅支持字面量，不能连接其他节点的输出
+   * 光标可点击层级筛选id: 光标可点击的层级筛选 id
+   * 仅支持字面量，不能连接其他节点的输出。
    *
    * GSTS 注: 该值是四位位掩码，并非单个层级ID。请将所需层级的数值相加，并把结果作为整数字面量传入:
    * 场景 = 1（第0位）、受击盒 = 2（第1位）、物件碰撞 = 4（第2位）、光标碰撞 = 8（第3位）。
    * 有效组合为0-15；0表示全部不选，15表示全部选中。例如10表示“受击盒 + 光标碰撞”，
    * 11则在此基础上增加“场景”。不要使用第3位以上的未知位。
-   * @param maximumSelectableTargets
+   * @param maximumSelectableTargets Maximum number of targets that can be selected by the cursor at the same time
    *
    * Max Selectable Targets
    *
-   * 光标最多可选取目标
+   * 光标最多可选取目标: 光标最多可同时选取的目标数量
    */
   setPlayerSCursorClickSelectableTargets(
     playerEntity: EntityOf<'player'>,
@@ -17374,20 +17483,20 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Set whether a player's cursor click penetrates UI controls.
+   * Sets whether clicks from the specified Player's cursor can pass through UI Controls and affect objects behind them
    *
    * Set Player's Cursor to Click Through UI Controls
    *
-   * 设置玩家光标是否穿透UI控件: 设置光标点击是否穿透UI控件
+   * 设置玩家光标是否穿透UI控件: 设置指定玩家光标点击是否能够穿透UI控件，对UI下方的对象生效
    *
-   * @param playerEntity Player Entity
+   * @param playerEntity Active Player Entity
    *
-   * 玩家实体
-   * @param penetrateUiControls
+   * 玩家实体: 生效的玩家
+   * @param penetrateUiControls If set to "Yes," cursor clicks pass through UI Controls and affect objects behind them
    *
    * Click Through UI Controls?
    *
-   * 是否穿透UI控件
+   * 是否穿透UI控件: “是”则光标点击穿透UI控件，作用于其下方的对象
    */
   setWhetherPlayerSCursorClickPenetratesUiControls(
     playerEntity: EntityOf<'player'>,
@@ -17404,21 +17513,21 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Query whether a player's cursor is currently active.
+   * Checks whether the specified player's cursor is currently active (always visible).
    *
    * Check Whether Player Cursor Is Active
    *
-   * 查询玩家光标是否激活: 查询指定玩家的光标是否处于激活状态
+   * 查询玩家光标是否激活: 查询指定玩家当前的光标是否处于激活（常驻显示）状态
    *
-   * @param playerEntity Player Entity
+   * @param playerEntity The player to query.
    *
-   * 玩家实体
+   * 玩家实体: 要查询的玩家
    *
-   * @returns
+   * @returns Returns "true" if the cursor is always visible.
    *
    * Activate
    *
-   * 是否激活
+   * 是否激活: 光标常驻显示则为“是”
    */
   queryWhetherPlayerSCursorIsActive(playerEntity: EntityOf<'player'>): boolean {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -17467,15 +17576,15 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Query whether a player is subscribed to the current creator.
+   * Checks whether the specified player has subscribed to the Craftsperson. A Craftsperson cannot subscribe to themselves. However, when this node is triggered by the Craftsperson themself, the output result will be true.
    *
    * Check Whether Player Has Subscribed
    *
-   * 查询玩家是否订阅: 奇匠自身触发时结果为是
+   * 查询玩家是否订阅: 可以查询对应玩家是否订阅该奇匠; 奇匠无法订阅自己，但该节点由奇匠自身触发时，出参结果为true
    *
-   * @param playerEntity Player Entity
+   * @param playerEntity The player entity to check for subscription status.
    *
-   * 玩家实体
+   * 玩家实体: 所查询的玩家实体
    *
    * @returns Subscribed
    *

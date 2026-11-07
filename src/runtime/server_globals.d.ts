@@ -535,15 +535,13 @@ declare global {
   function exposed<T>(value: T): ExposedVariable<T>
 
   /**
-   * Combines up to 50 Key-Value Pairs into one Dictionary.
-   * Use `dict(k, v, 0)` for typed empty placeholders (pin stays unconnected), or `dict(0)` / `dict(null)` when type can be inferred.
+   * Combines up to 50 Key-Value Pairs into one Dictionary
    *
-   * 拼装字典: 将至多 50 个键值对拼合为一个字典。
-   * 需要类型占位请用 `dict(k, v, 0)`（保持节点参数引脚为空不连接），可推断时可用 `dict(0)` / `dict(null)`。
+   * 拼装字典: 将至多50个键值对拼合为一个字典
    *
-   * GSTS Note: The dictionary declared by this method cannot be modified, and a node graph variable dictionary must be declared if modification is required.
+   * GSTS Note: Use `dict(k, v, 0)` for a typed empty placeholder (the pin stays unconnected), or `dict(0)` / `dict(null)` when the type can be inferred. The dictionary declared by this method cannot be modified, and a node graph variable dictionary must be declared if modification is required.
    *
-   * GSTS 注: 该方法声明的字典无法进行修改, 需要修改时必须声明节点图变量字典
+   * GSTS 注: 需要类型占位请用 `dict(k, v, 0)`（保持节点参数引脚为空不连接），可推断时可用 `dict(0)` / `dict(null)`。该方法声明的字典无法进行修改, 需要修改时必须声明节点图变量字典
    */
   function dict(value: null | 0): ReadonlyDict<never, never>
   function dict<K extends DictKeyType, V extends DictValueType>(

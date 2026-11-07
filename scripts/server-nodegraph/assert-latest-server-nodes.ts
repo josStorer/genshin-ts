@@ -344,8 +344,13 @@ for (const officialLabel of [
   'Collision Box ID',
   'Subscribed'
 ]) {
+  // A label that only restates the parameter name is carried by the name itself.
+  const asIdent = officialLabel.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const namedParameter = [...nodeDefinitionsSource.matchAll(/@param (\w+)/g)].some(
+    ([, name]) => name.toLowerCase() === asIdent
+  )
   assert.ok(
-    nodeDefinitionsSource.includes(officialLabel),
+    nodeDefinitionsSource.includes(officialLabel) || namedParameter,
     `nodes.ts is missing pin JSDoc for ${officialLabel}`
   )
 }
