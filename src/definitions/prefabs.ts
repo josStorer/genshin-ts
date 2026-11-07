@@ -1517,7 +1517,7 @@ export const CreationPrefabZh = {
 }
 
 export const CharacterPrefabZh = {
-  '神里绫华': 10000002,
+  神里绫华: 10000002,
   琴: 10000003,
   '旅行者(男)': 10000005,
   丽莎: 10000006,
@@ -1635,7 +1635,14 @@ export const CharacterPrefabZh = {
   洛恩: 10000129,
   莉奈娅: 10000130,
   尼可: 10000131,
-  布伦妮: 10000132
+  布伦妮: 10000132,
+  桑多涅: 10000133,
+  米提亚: 10000136,
+  瓦列里: 10000137,
+  沃雅妮莎: 10000140,
+  薇斯纳: 10000143,
+  阿罗夏: 10000148,
+  奥黛塔: 10000150
 }
 
 export const DynamicPrefab = {
@@ -3275,5 +3282,12 @@ export const CharacterPrefab = {
   Lohen: 10000129,
   Linnea: 10000130,
   Nicole: 10000131,
-  Prune: 10000132
+  Prune: 10000132,
+  Sandrone: 10000133,
+  Mitya: 10000136,
+  Valeriy: 10000137,
+  Vodyanitsa: 10000140,
+  Vesna: 10000143,
+  Alyosha: 10000148,
+  Odette: 10000150
 }
