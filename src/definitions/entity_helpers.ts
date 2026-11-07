@@ -1621,6 +1621,10 @@ interface EntityHelperFromFirstParam {
    * Available only in Classic Mode. You can search for the character ID of the target character to see the appendix for the specific character in Classic Mode Character ID List
    *
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号；具体角色可见经典模式角色编号列表附录
+   *
+   * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
+   *
+   * GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`
    */
   checkClassicModeCharacterId: () => bigint
 
@@ -5479,6 +5483,10 @@ interface EntityHelperAliases {
    * Available only in Classic Mode. Returns the Character ID for the target character
    *
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号；具体角色可见经典模式角色编号列表附录
+   *
+   * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
+   *
+   * GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`
    *
    * @returns
    *

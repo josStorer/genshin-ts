@@ -14217,6 +14217,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号；具体角色可见经典模式角色编号列表附录
    *
+   * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
+   *
+   * GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`
+   *
    * @param targetCharacter
    *
    * 目标角色

@@ -20420,7 +20420,11 @@ export class ClientCreationSkillExecutionFlowFunctions<
   /**
    * Available in Classic Mode only. Returns the Character ID of the Target Character, and can be used to look up the corresponding character in the Appendix Classic Mode Character IDs
    *
+   * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
+   *
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览
+   *
+   * GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`
    *
    * @param targetCharacter
    *
@@ -38548,7 +38552,11 @@ export class ClientBoolFilterExecutionFlowFunctions<
   /**
    * Available in Classic Mode only. Returns the Character ID of the Target Character, and can be used to look up the corresponding character in the Appendix Classic Mode Character IDs
    *
+   * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
+   *
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览
+   *
+   * GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`
    *
    * @param targetCharacter
    *
@@ -43431,7 +43439,11 @@ export class ClientIntFilterExecutionFlowFunctions<
   /**
    * Available in Classic Mode only. Returns the Character ID of the Target Character, and can be used to look up the corresponding character in the Appendix Classic Mode Character IDs
    *
+   * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
+   *
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览
+   *
+   * GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`
    *
    * @param targetCharacter
    *
@@ -47617,7 +47629,11 @@ export interface ClientEntityHelperMethods<
   /**
    * Available in Classic Mode only. Returns the Character ID of the Target Character, and can be used to look up the corresponding character in the Appendix Classic Mode Character IDs
    *
+   * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
+   *
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览
+   *
+   * GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`
    *
    * @returns
    *
@@ -47647,7 +47663,11 @@ export interface ClientEntityHelperMethods<
   /**
    * Available in Classic Mode only. Returns the Character ID of the Target Character, and can be used to look up the corresponding character in the Appendix Classic Mode Character IDs
    *
+   * GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`
+   *
    * 查询经典模式角色编号: 仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览
+   *
+   * GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`
    *
    * @returns
    *

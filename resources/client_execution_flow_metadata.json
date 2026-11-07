@@ -1822,8 +1822,8 @@
       }
     ],
     "docs": {
-      "en": "Available in Classic Mode only. Returns the Character ID of the Target Character, and can be used to look up the corresponding character in the Appendix Classic Mode Character IDs",
-      "zh": "仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览"
+      "en": "Available in Classic Mode only. Returns the Character ID of the Target Character, and can be used to look up the corresponding character in the Appendix Classic Mode Character IDs\n\nGSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`",
+      "zh": "仅经典模式可用，查询目标角色的角色编号，可以查看附录对应具体是哪位角色经典模式角色编号一览\n\nGSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`"
     },
     "modes": [
       "classic"

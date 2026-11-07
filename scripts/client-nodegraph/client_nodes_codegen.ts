@@ -128,6 +128,11 @@ const RUNTIME_INTERNAL_NODE_TYPES = new Set([
 const STATUS_GRAPH_SUB_TYPES = new Set(['creation_status', 'creation_status_decision'])
 const TERMINAL_EXEC_NODE_TYPES = new Set(['continue_executing_previous_frame_behavior'])
 
+const CLASSIC_CHARACTER_ID_NOTE = {
+  en: 'GSTS Note: The ID is an integer (bigint); wrap numbers from `CharacterPrefab` in `int()` before comparing, e.g. `=== int(CharacterPrefab.Furina)`',
+  zh: 'GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`'
+}
+
 /** nodes emitted from hand templates, not the auto pipeline (control flow +
  * the three round-2-proven special encodings, task 四.3) */
 const HAND_NODE_TYPES = new Set([
@@ -1077,6 +1082,11 @@ function buildMethodSpec(
         ['仅用于切换造物属性面板中配置的自主逻辑，', '例如入战感知、脱战、领地设置。'].join('\n')
       )
     }
+  }
+
+  if (record.nodeType === 'check_classic_mode_character_id') {
+    docsEn = appendDocParagraph(docsEn, CLASSIC_CHARACTER_ID_NOTE.en)
+    docsZh = appendDocParagraph(docsZh, CLASSIC_CHARACTER_ID_NOTE.zh)
   }
 
   if (TERMINAL_EXEC_NODE_TYPES.has(record.nodeType)) {
