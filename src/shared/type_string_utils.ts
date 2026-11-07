@@ -21,7 +21,7 @@ export function looksLikeEntityTypeString(s: string): boolean {
   ) {
     return true
   }
-  if (/^Entity(?:Value|Of)ByMode\s*<.+>$/.test(t)) return true
+  if (/^Entity(?:Value|Of)ByMode\s*<.+>$/.test(t) || /^EntityOf\s*<.+>$/.test(t)) return true
   if (/^EntityHelper(?:All|For)(?:ByMode)?\s*<.+>$/.test(t)) return true
   if (/^EntityKindMarker\s*<.+>$/.test(t)) return true
   if (t.includes('EntityBase') || t.includes('EntityHelperAllByMode')) return true

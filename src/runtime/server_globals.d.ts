@@ -1,5 +1,5 @@
 import type { clientEntity as ClientEntityValue } from '../definitions/client_entity_helpers.js'
-import type { PlayerEntity, StageEntity } from '../definitions/entity_helpers.js'
+import type { EntityOf, PlayerEntity, StageEntity } from '../definitions/entity_helpers.js'
 import type { ServerEventPayloads } from '../definitions/events-payload.js'
 import type { ServerExecutionFlowFunctions } from '../definitions/nodes.js'
 import type { SignalDefinition, SignalParamValues } from './core.js'
@@ -241,11 +241,11 @@ declare global {
    * 信号参数，需与编辑器信号管理器中注册的参数一一对应
    */
   function sendLua<S extends LuaSignalDefinition>(
-    target: PlayerEntity,
+    target: EntityOf<'player'>,
     signal: S,
     ...params: SignalParamValues<S>
   ): void
-  function sendLua(target: PlayerEntity, signal: StrValue, ...params: unknown[]): void
+  function sendLua(target: EntityOf<'player'>, signal: StrValue, ...params: unknown[]): void
 
   /**
    * Send a client script signal to every player on the field

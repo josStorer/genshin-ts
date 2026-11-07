@@ -36,6 +36,32 @@ type _ClassicEntityCanBeUsedAsGenericEntityInput = Assert<
 type _ModeSpecificCharacterCanBeUsedAsCharacterInput = Assert<
   IsAssignable<EntityOfByMode<'character', 'beyond'>, EntityOf<'character'>>
 >
+type CharacterInput = Parameters<ServerExecutionFlowFunctions['getCharacterAttribute']>[0]
+type PlayerInput = Parameters<ServerExecutionFlowFunctions['reviveActiveCharacter']>[0]
+type _BeyondEventCharacterCanBeUsedAsCharacterInput = Assert<
+  IsAssignable<
+    ServerEventPayloadsByMode<'beyond'>['whenCharacterRevives']['characterEntity'],
+    CharacterInput
+  >
+>
+type _ClassicEventCharacterCanBeUsedAsCharacterInput = Assert<
+  IsAssignable<
+    ServerEventPayloadsByMode<'classic'>['whenCharacterRevives']['characterEntity'],
+    CharacterInput
+  >
+>
+type _ClassicEventEntityCanBeUsedAsPlayerInput = Assert<
+  IsAssignable<
+    ServerEventPayloadsByMode<'classic'>['whenEntityIsCreated']['eventSourceEntity'],
+    PlayerInput
+  >
+>
+type _ModeSpecificPlayerCanBeUsedAsPlayerInput = Assert<
+  IsAssignable<EntityOfByMode<'player', 'classic'>, PlayerInput>
+>
+type _PlayerCannotBeUsedAsCharacterInput = Assert<
+  IsAssignable<PlayerEntity, CharacterInput> extends false ? true : false
+>
 type _CharacterCanBeUsedAsSpatialEntityInput = Assert<IsAssignable<CharacterEntity, LocationInput>>
 type _PlayerCannotBeUsedAsSpatialEntityInput = Assert<
   IsAssignable<PlayerEntity, LocationInput> extends false ? true : false

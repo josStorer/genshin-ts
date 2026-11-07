@@ -605,8 +605,8 @@ assert.deepEqual(
 )
 
 for (const [methodName, expectedParameters] of [
-  ['setPlayerRankScoreChange', ['PlayerEntity', 'RankSettlementStatus', 'IntValue']],
-  ['getPlayerRankScoreChange', ['PlayerEntity', 'RankSettlementStatus']]
+  ['setPlayerRankScoreChange', ["EntityOf<'player'>", 'RankSettlementStatus', 'IntValue']],
+  ['getPlayerRankScoreChange', ["EntityOf<'player'>", 'RankSettlementStatus']]
 ] as const) {
   const overloads: ts.MethodDeclaration[] = serverFunctionsClass.members.filter(
     (member): member is ts.MethodDeclaration =>

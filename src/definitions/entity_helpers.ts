@@ -3223,7 +3223,7 @@ interface EntityHelperFromFirstParam {
    */
   modifyPlayerListForTrackingMiniMapMarkers: (
     miniMapMarkerId: IntValue,
-    playerList: PlayerEntity[]
+    playerList: EntityOf<'player'>[]
   ) => void
 
   /**
@@ -3240,7 +3240,7 @@ interface EntityHelperFromFirstParam {
    */
   modifyPlayerListForVisibleMiniMapMarkers: (
     miniMapMarkerId: IntValue,
-    playerList: PlayerEntity[]
+    playerList: EntityOf<'player'>[]
   ) => void
 
   /**
@@ -3257,7 +3257,7 @@ interface EntityHelperFromFirstParam {
    */
   modifyPlayerMarkersOnTheMiniMap: (
     miniMapMarkerId: IntValue,
-    correspondingPlayerEntity: PlayerEntity
+    correspondingPlayerEntity: EntityOf<'player'>
   ) => void
 
   /**

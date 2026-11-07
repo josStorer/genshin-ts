@@ -1,6 +1,7 @@
 import type { clientEntity as ClientEntityValue } from '../definitions/client_entity_helpers.js'
 import {
   installEntityHelpers,
+  type EntityOf,
   type PlayerEntity,
   type StageEntity
 } from '../definitions/entity_helpers.js'
@@ -615,7 +616,7 @@ function makeFactories(): ServerGlobalFactories {
       gsts.f.sendSignal(signalName as any, ...params)
     },
     sendLua: (
-      target: PlayerEntity,
+      target: EntityOf<'player'>,
       signal: StrValue | LuaSignalDefinition,
       ...params: unknown[]
     ) => {

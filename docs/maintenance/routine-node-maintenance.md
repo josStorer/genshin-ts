@@ -121,7 +121,7 @@
 
 - 原本存在的节点方法被删除或改名
 - 事件中文注释错配到相邻事件
-- `CharacterEntity` / `PlayerEntity` 等精细类型被退化成 `EntityValue`
+- 参数的 `EntityOf<'character'>` / `EntityOf<'player'>`、返回值的 `CharacterEntity` / `PlayerEntity` 等精细类型被退化成 `EntityValue`（参数只标种类，这样事件里按模式裁剪过的实体也能直接传入）
 - `zh_aliases.ts` 中稳定的中英文映射被清空或洗牌
 - diff 被大规模重排淹没，无法审查真实维护点
 

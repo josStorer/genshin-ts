@@ -67,14 +67,7 @@ import {
   Vec3Value
 } from '../runtime/value.js'
 import type { HitLevel } from './client_enums.js'
-import type {
-  CharacterEntity,
-  CreationEntity,
-  EntityOf,
-  ObjectEntity,
-  PlayerEntity,
-  StageEntity
-} from './entity_helpers.js'
+import type { CharacterEntity, EntityOf, PlayerEntity, StageEntity } from './entity_helpers.js'
 import {
   AttackShape,
   AttackType,
@@ -3709,7 +3702,7 @@ export class ServerExecutionFlowFunctions {
    * 预设状态值
    */
   setThePresetStatusValueOfTheComplexCreation(
-    targetEntity: CreationEntity,
+    targetEntity: EntityOf<'creation'>,
     presetStatusIndex: IntValue,
     presetStatusValue: IntValue
   ): void {
@@ -4035,7 +4028,7 @@ export class ServerExecutionFlowFunctions {
    * 目标旋转: 绝对旋转
    */
   teleportPlayer(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     targetLocation: Vec3Value,
     targetRotation: Vec3Value
   ): void {
@@ -4059,7 +4052,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 角色实体: 会被复苏的角色实体
    */
-  reviveCharacter(characterEntity: CharacterEntity): void {
+  reviveCharacter(characterEntity: EntityOf<'character'>): void {
     const characterEntityObj = parseValue(characterEntity, 'entity')
     this.registry.registerNode({
       id: 0,
@@ -4081,7 +4074,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 是否扣除复苏次数: 为否时，不会扣除复苏次数
    */
-  reviveAllPlayerSCharacters(playerEntity: PlayerEntity, deductRevives: BoolValue): void {
+  reviveAllPlayerSCharacters(playerEntity: EntityOf<'player'>, deductRevives: BoolValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const deductRevivesObj = parseValue(deductRevives, 'bool')
     this.registry.registerNode({
@@ -4105,7 +4098,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 玩家实体: 当前场上角色归属的玩家实体
    */
-  reviveActiveCharacter(playerEntity: PlayerEntity): void {
+  reviveActiveCharacter(playerEntity: EntityOf<'player'>): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     this.registry.registerNode({
       id: 0,
@@ -4124,7 +4117,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 玩家实体: 角色归属的玩家实体
    */
-  defeatAllPlayerSCharacters(playerEntity: PlayerEntity): void {
+  defeatAllPlayerSCharacters(playerEntity: EntityOf<'player'>): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     this.registry.registerNode({
       id: 0,
@@ -4146,7 +4139,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 复苏点序号: 该复苏点的标识
    */
-  activateRevivePoint(playerEntity: PlayerEntity, revivePointId: IntValue): void {
+  activateRevivePoint(playerEntity: EntityOf<'player'>, revivePointId: IntValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const revivePointIdObj = parseValue(revivePointId, 'int')
     this.registry.registerNode({
@@ -4169,7 +4162,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 时长: 单位为秒
    */
-  setPlayerReviveTime(playerEntity: PlayerEntity, duration: IntValue): void {
+  setPlayerReviveTime(playerEntity: EntityOf<'player'>, duration: IntValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const durationObj = parseValue(duration, 'int')
     this.registry.registerNode({
@@ -4192,7 +4185,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 剩余次数: 设置为0时，该玩家无法复苏
    */
-  setPlayerRemainingRevives(playerEntity: PlayerEntity, remainingTimes: IntValue): void {
+  setPlayerRemainingRevives(playerEntity: EntityOf<'player'>, remainingTimes: IntValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const remainingTimesObj = parseValue(remainingTimes, 'int')
     this.registry.registerNode({
@@ -4223,7 +4216,7 @@ export class ServerExecutionFlowFunctions {
    */
   modifyEnvironmentSettings(
     environmentConfigIndex: IntValue,
-    targetPlayerList: PlayerEntity[],
+    targetPlayerList: EntityOf<'player'>[],
     enableWeatherConfig: BoolValue,
     weatherConfigIndex: IntValue
   ): void {
@@ -4256,7 +4249,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 是否允许: “是”则允许复苏
    */
-  allowForbidPlayerToRevive(playerEntity: PlayerEntity, allow: BoolValue): void {
+  allowForbidPlayerToRevive(playerEntity: EntityOf<'player'>, allow: BoolValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const allowObj = parseValue(allow, 'bool')
     this.registry.registerNode({
@@ -4279,7 +4272,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 复苏点序号: 该复苏点的标识
    */
-  deactivateRevivePoint(playerEntity: PlayerEntity, revivePointId: IntValue): void {
+  deactivateRevivePoint(playerEntity: EntityOf<'player'>, revivePointId: IntValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const revivePointIdObj = parseValue(revivePointId, 'int')
     this.registry.registerNode({
@@ -5664,7 +5657,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 镜头模板名称: 镜头模板的标识
    */
-  switchMainCameraTemplate(targetPlayerList: PlayerEntity[], cameraTemplateName: StrValue): void {
+  switchMainCameraTemplate(
+    targetPlayerList: EntityOf<'player'>[],
+    cameraTemplateName: StrValue
+  ): void {
     const targetPlayerListObj = parseValue(targetPlayerList, 'entity_list')
     const cameraTemplateNameObj = parseValue(cameraTemplateName, 'str')
     this.registry.registerNode({
@@ -5872,7 +5868,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 等级: 修改后的等级
    */
-  changePlayerSCurrentClassLevel(targetPlayer: PlayerEntity, level: IntValue): void {
+  changePlayerSCurrentClassLevel(targetPlayer: EntityOf<'player'>, level: IntValue): void {
     const targetPlayerObj = parseValue(targetPlayer, 'entity')
     const levelObj = parseValue(level, 'int')
     this.registry.registerNode({
@@ -5899,7 +5895,7 @@ export class ServerExecutionFlowFunctions {
    * 已有技能处理方式: 全部清理：将已有技能全部清理。保留无关技能：保留更换前后两个职业默认配置内均没有的技能
    */
   changePlayerClass(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     classConfigId: ConfigIdValue,
     existingSkillHandling: ClassSwitchSkillHandling
   ): void {
@@ -5926,7 +5922,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 经验值: 所要提升的经验值
    */
-  increasePlayerSCurrentClassExp(targetPlayer: PlayerEntity, exp: IntValue): void {
+  increasePlayerSCurrentClassExp(targetPlayer: EntityOf<'player'>, exp: IntValue): void {
     const targetPlayerObj = parseValue(targetPlayer, 'entity')
     const expObj = parseValue(exp, 'int')
     this.registry.registerNode({
@@ -5950,7 +5946,7 @@ export class ServerExecutionFlowFunctions {
    * 界面控件组索引: 界面控件组的标识
    */
   activateUiControlGroupInControlGroupLibrary(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     uiControlGroupIndex: IntValue
   ): void {
     const targetPlayerObj = parseValue(targetPlayer, 'entity')
@@ -5975,7 +5971,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 布局索引: 界面布局的标识
    */
-  switchCurrentInterfaceLayout(targetPlayer: PlayerEntity, layoutIndex: IntValue): void {
+  switchCurrentInterfaceLayout(targetPlayer: EntityOf<'player'>, layoutIndex: IntValue): void {
     const targetPlayerObj = parseValue(targetPlayer, 'entity')
     const layoutIndexObj = parseValue(layoutIndex, 'int')
     this.registry.registerNode({
@@ -6004,7 +6000,7 @@ export class ServerExecutionFlowFunctions {
    * 显示状态: 关闭：不可见且逻辑不运行开启：可见+逻辑正常运行隐藏：不可见+逻辑正常运行
    */
   modifyUiControlStatusWithinTheInterfaceLayout(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     uiControlIndex: IntValue,
     displayStatus: UIControlGroupStatus
   ): void {
@@ -6033,7 +6029,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 动效控件索引: 界面动效控件/全屏界面动效控件的标识
    */
-  playUiAnimationOnControl(playerEntity: PlayerEntity, specialEffectControlIndex: IntValue): void {
+  playUiAnimationOnControl(
+    playerEntity: EntityOf<'player'>,
+    specialEffectControlIndex: IntValue
+  ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const specialEffectControlIndexObj = parseValue(specialEffectControlIndex, 'int')
     this.registry.registerNode({
@@ -6060,7 +6059,7 @@ export class ServerExecutionFlowFunctions {
    * 消息项ID
    */
   refreshNotificationQueue(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     notificationQueueIndex: IntValue,
     notificationItemId: IntValue
   ): void {
@@ -6091,7 +6090,7 @@ export class ServerExecutionFlowFunctions {
    * 镜头模板名称: 镜头模板的标识
    */
   setPlayerCameraToFollowEntity(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     followEntity: EntityValue,
     cameraTemplateName: StrValue
   ): void {
@@ -6115,7 +6114,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 玩家实体: 生效的玩家实体
    */
-  resetPlayerCameraToFollowEntity(playerEntity: PlayerEntity): void {
+  resetPlayerCameraToFollowEntity(playerEntity: EntityOf<'player'>): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     this.registry.registerNode({
       id: 0,
@@ -6138,7 +6137,7 @@ export class ServerExecutionFlowFunctions {
    * 悬浮交互页索引: 悬浮交互页的唯一标识
    */
   closeFloatingInteractionPage(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     floatingInteractionPageIndex: IntValue
   ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -6170,7 +6169,7 @@ export class ServerExecutionFlowFunctions {
    * 是否默认选中首项: 若配置为是，则默认选中第一个项；若配置为否，则保持上一次的选中项（若存在）
    */
   updateFloatingInteractionPageListData(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     listIndex: IntValue,
     visibleListItem: IntValue[],
     selectFirstItemByDefault: BoolValue
@@ -6203,7 +6202,7 @@ export class ServerExecutionFlowFunctions {
    * 初始化列表数据: 键：整数，对应页签/单选项视窗的索引。值：整数列表，对应页签的页签项列表/单选项视窗的列表项列表
    */
   showFloatingInteractionPage(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     floatingInteractionPageIndex: IntValue,
     initializeListData: dict<'int', 'int_list'>
   ): void {
@@ -6234,7 +6233,7 @@ export class ServerExecutionFlowFunctions {
    * 是否限制权限: 为是则限制该玩家在对应频道列表的功能
    */
   setTextChatPermissions(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     channelList: IntValue[],
     limitPermissions: BoolValue
   ): void {
@@ -6268,7 +6267,7 @@ export class ServerExecutionFlowFunctions {
    * 是否限制范围: 为是时生效范围才有效，为否时无视生效范围内的配置
    */
   setVoiceChatScope(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     channelList: IntValue[],
     effectiveRange: IntValue,
     limitScope: BoolValue
@@ -6304,7 +6303,7 @@ export class ServerExecutionFlowFunctions {
    * 是否限制接收语音: 为是则目标玩家无法听到其他玩家语音
    */
   setVoiceChatPermissions(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     channelList: IntValue[],
     restrictVoiceChatSpeak: BoolValue,
     restrictVoiceChatListen: BoolValue
@@ -6334,7 +6333,7 @@ export class ServerExecutionFlowFunctions {
    * 界面控件组索引: 界面控件组的标识
    */
   removeInterfaceControlGroupFromControlGroupLibrary(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     uiControlGroupIndex: IntValue
   ): void {
     const targetPlayerObj = parseValue(targetPlayer, 'entity')
@@ -6368,7 +6367,7 @@ export class ServerExecutionFlowFunctions {
    * 是否限制最大冷却时间: 为“是”可以限制修改后的冷却时间不小于所限制的值
    */
   modifySkillCdPercentageBasedOnMaxCd(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     characterSkillSlot: CharacterSkillSlot,
     cooldownRatioModifier: FloatValue,
     limitMaximumCdTime: BoolValue
@@ -6403,7 +6402,7 @@ export class ServerExecutionFlowFunctions {
    * 角色技能槽位: 要初始化的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
    */
   initializeCharacterSkill(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     characterSkillSlot: CharacterSkillSlot
   ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
@@ -6432,7 +6431,7 @@ export class ServerExecutionFlowFunctions {
    * 目标值: 修改后的值为该输入值
    */
   setSkillResourceAmount(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     skillResourceConfigId: ConfigIdValue,
     targetValue: FloatValue
   ): void {
@@ -6468,7 +6467,7 @@ export class ServerExecutionFlowFunctions {
    * 是否限制最大冷却时间: 为“是”可以限制修改后的冷却时间不小于所限制的值
    */
   setCharacterSkillCd(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     characterSkillSlot: CharacterSkillSlot,
     remainingCdTime: FloatValue,
     limitMaximumCdTime: BoolValue
@@ -6508,7 +6507,7 @@ export class ServerExecutionFlowFunctions {
    * 被切换技能实例ID: 被切换出去的技能实例ID
    */
   addCharacterSkill(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     skillConfigId: ConfigIdValue,
     skillSlot: CharacterSkillSlot,
     originalSlotSkillHandling: TopOfStackSkillDestructionType
@@ -6546,7 +6545,7 @@ export class ServerExecutionFlowFunctions {
    * 变更值: 修改后的值为：原值+变更值
    */
   modifySkillResourceAmount(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     skillResourceConfigId: ConfigIdValue,
     changeValue: FloatValue
   ): void {
@@ -6575,7 +6574,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 元素能量
    */
-  setCharacterSElementalEnergy(targetEntity: CharacterEntity, elementalEnergy: FloatValue): void {
+  setCharacterSElementalEnergy(
+    targetEntity: EntityOf<'character'>,
+    elementalEnergy: FloatValue
+  ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const elementalEnergyObj = parseValue(elementalEnergy, 'float')
     this.registry.registerNode({
@@ -6603,7 +6605,7 @@ export class ServerExecutionFlowFunctions {
    * 增加值
    */
   increasesCharacterSElementalEnergy(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     increaseValue: FloatValue
   ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
@@ -6637,7 +6639,7 @@ export class ServerExecutionFlowFunctions {
    * 是否限制最大冷却时间: 为“是”可以限制修改后的冷却时间不小于所限制的值
    */
   modifyCharacterSkillCd(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     characterSkillSlot: CharacterSkillSlot,
     cdModifier: FloatValue,
     limitMaximumCdTime: BoolValue
@@ -6667,7 +6669,7 @@ export class ServerExecutionFlowFunctions {
    * 角色技能槽位: 要删除的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
    */
   deleteCharacterSkillBySlot(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     characterSkillSlot: CharacterSkillSlot
   ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
@@ -6692,7 +6694,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 技能配置ID: 技能的标识
    */
-  deleteCharacterSkillById(targetEntity: CharacterEntity, skillConfigId: ConfigIdValue): void {
+  deleteCharacterSkillById(
+    targetEntity: EntityOf<'character'>,
+    skillConfigId: ConfigIdValue
+  ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const skillConfigIdObj = parseValue(skillConfigId, 'config_id')
     this.registry.registerNode({
@@ -6726,7 +6731,7 @@ export class ServerExecutionFlowFunctions {
    * 原槽位技能实例ID
    */
   bindCustomSkillInstanceToSpecifiedSlot(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     skillInstanceId: IntValue,
     skillSlot: CharacterSkillSlot,
     originalSlotSkillHandling: TopOfStackSkillDestructionType
@@ -6758,7 +6763,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 技能实例ID: 技能实例的标识
    */
-  unbindSkillInstance(characterEntity: CharacterEntity, skillInstanceId: IntValue): void {
+  unbindSkillInstance(characterEntity: EntityOf<'character'>, skillInstanceId: IntValue): void {
     const characterEntityObj = parseValue(characterEntity, 'entity')
     const skillInstanceIdObj = parseValue(skillInstanceId, 'int')
     this.registry.registerNode({
@@ -6786,7 +6791,7 @@ export class ServerExecutionFlowFunctions {
    * 解绑的技能实例ID列表: 该槽位上所有被解绑的技能实例ID组成的列表
    */
   unbindAllSkillInstancesOnTheSlot(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     specifiedSlot: CharacterSkillSlot
   ): bigint[] {
     const characterEntityObj = parseValue(characterEntity, 'entity')
@@ -6819,7 +6824,7 @@ export class ServerExecutionFlowFunctions {
    * 技能实例ID: 技能实例的标识
    */
   createCustomSkillInstance(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     skillConfigId: ConfigIdValue
   ): bigint {
     const characterEntityObj = parseValue(characterEntity, 'entity')
@@ -6847,7 +6852,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 技能实例ID: 技能实例的标识
    */
-  destroyCustomSkillInstance(characterEntity: CharacterEntity, skillInstanceId: IntValue): void {
+  destroyCustomSkillInstance(
+    characterEntity: EntityOf<'character'>,
+    skillInstanceId: IntValue
+  ): void {
     const characterEntityObj = parseValue(characterEntity, 'entity')
     const skillInstanceIdObj = parseValue(skillInstanceId, 'int')
     this.registry.registerNode({
@@ -6878,7 +6886,7 @@ export class ServerExecutionFlowFunctions {
    * 是否校验按键可用: 是：当前按键可用时该技能才会被施放。否：无论当前按键是否可用该技能都会被施放
    */
   castSkillFromSpecifiedPanelSlot(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     skillSlot: CharacterSkillSlot,
     checkKeyAvailability: BoolValue
   ): void {
@@ -6913,7 +6921,7 @@ export class ServerExecutionFlowFunctions {
    * 是否校验按键可用: 是：当前按键可用时该技能才会被施放。否：无论当前按键是否可用该技能都会被施放
    */
   castSpecifiedSkillInstance(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     skillInstanceId: IntValue,
     checkKeyAvailability: BoolValue
   ): void {
@@ -6940,7 +6948,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 音量
    */
-  adjustPlayerBackgroundMusicVolume(targetEntity: PlayerEntity, volume: IntValue): void {
+  adjustPlayerBackgroundMusicVolume(targetEntity: EntityOf<'player'>, volume: IntValue): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const volumeObj = parseValue(volume, 'int')
     this.registry.registerNode({
@@ -7022,7 +7030,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 是否恢复
    */
-  startPausePlayerBackgroundMusic(targetEntity: PlayerEntity, recover: BoolValue): void {
+  startPausePlayerBackgroundMusic(targetEntity: EntityOf<'player'>, recover: BoolValue): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const recoverObj = parseValue(recover, 'bool')
     this.registry.registerNode({
@@ -7173,7 +7181,7 @@ export class ServerExecutionFlowFunctions {
    * 播放速度
    */
   playerPlaysOneShot2dSoundEffect(
-    targetEntity: PlayerEntity,
+    targetEntity: EntityOf<'player'>,
     soundEffectAssetIndex: IntValue,
     volume: IntValue,
     playbackSpeed: FloatValue
@@ -7226,7 +7234,7 @@ export class ServerExecutionFlowFunctions {
    * 是否允许渐入渐出
    */
   modifyPlayerBackgroundMusic(
-    targetEntity: PlayerEntity,
+    targetEntity: EntityOf<'player'>,
     backgroundMusicIndex: IntValue,
     startTime: FloatValue,
     endTime: FloatValue,
@@ -7489,7 +7497,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 礼盒索引
    */
-  openGiftBoxInterface(playerEntity: PlayerEntity, giftBoxIndex: IntValue): void {
+  openGiftBoxInterface(playerEntity: EntityOf<'player'>, giftBoxIndex: IntValue): void {
     this.registry.registerNode({
       id: 0,
       type: 'exec',
@@ -7521,7 +7529,7 @@ export class ServerExecutionFlowFunctions {
    * 是否限制最大冷却时间: 为“是”时，修改后的冷却时间不会超过技能配置的最大冷却时间
    */
   setCdForSpecifiedSkillInstance(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     skillInstanceId: IntValue,
     cooldown: FloatValue,
     limitMaximumCooldown: BoolValue
@@ -7562,7 +7570,7 @@ export class ServerExecutionFlowFunctions {
    * 是否限制最大冷却时间: 为“是”时，修改后的冷却时间不会超过技能配置的最大冷却时间
    */
   increaseCdForSpecifiedSkillInstance(
-    targetEntity: CharacterEntity,
+    targetEntity: EntityOf<'character'>,
     skillInstanceId: IntValue,
     cooldownIncrease: FloatValue,
     limitMaximumCooldown: BoolValue
@@ -7592,7 +7600,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 装置序号: 造物扰动装置的标识
    */
-  setCreationDisruptorDevice(targetEntity: CreationEntity, deviceId: IntValue): void {
+  setCreationDisruptorDevice(targetEntity: EntityOf<'creation'>, deviceId: IntValue): void {
     this.registry.registerNode({
       id: 0,
       type: 'exec',
@@ -7619,7 +7627,7 @@ export class ServerExecutionFlowFunctions {
    * 是否激活: 是则为激活
    */
   activateDisableNativePushCollision(
-    creationEntity: CreationEntity,
+    creationEntity: EntityOf<'creation'>,
     collisionId: IntValue,
     activate: BoolValue
   ): void {
@@ -7653,7 +7661,7 @@ export class ServerExecutionFlowFunctions {
    * 是否激活: 是则为激活
    */
   activateDisableExtraPushCollision(
-    creationEntity: CreationEntity,
+    creationEntity: EntityOf<'creation'>,
     collisionId: IntValue,
     activate: BoolValue
   ): void {
@@ -7683,7 +7691,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 战斗文字提示模板序号
    */
-  switchCombatTextFilterTemplate(playerEntity: PlayerEntity, templateId: IntValue): void {
+  switchCombatTextFilterTemplate(playerEntity: EntityOf<'player'>, templateId: IntValue): void {
     this.registry.registerNode({
       id: 0,
       type: 'exec',
@@ -7712,13 +7720,17 @@ export class ServerExecutionFlowFunctions {
    * 信号参数，需与编辑器信号管理器中注册的参数一一对应
    */
   sendClientScriptedServerSignal<S extends LuaSignalDefinition>(
-    target: PlayerEntity,
+    target: EntityOf<'player'>,
     signal: S,
     ...params: SignalParamValues<S>
   ): void
-  sendClientScriptedServerSignal(target: PlayerEntity, signal: StrValue, ...params: unknown[]): void
   sendClientScriptedServerSignal(
-    target: PlayerEntity,
+    target: EntityOf<'player'>,
+    signal: StrValue,
+    ...params: unknown[]
+  ): void
+  sendClientScriptedServerSignal(
+    target: EntityOf<'player'>,
     signal: StrValue | SignalDefinition,
     ...params: unknown[]
   ): void {
@@ -7829,7 +7841,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 卡牌选择器索引
    */
-  closeDeckSelector(targetPlayer: PlayerEntity, deckSelectorIndex: IntValue): void {
+  closeDeckSelector(targetPlayer: EntityOf<'player'>, deckSelectorIndex: IntValue): void {
     const targetPlayerObj = parseValue(targetPlayer, 'entity')
     const deckSelectorIndexObj = parseValue(deckSelectorIndex, 'int')
     this.registry.registerNode({
@@ -7882,7 +7894,7 @@ export class ServerExecutionFlowFunctions {
    * 默认返回选择: 如果卡牌选择器超时/未交互/卡牌选择器异常关闭等情况，支持强制赋予配置的该结果该结果的列表长度，需要和合法选择卡牌数量一致
    */
   invokeDeckSelector(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     deckSelectorId: IntValue,
     selectDuration: FloatValue,
     selectResultCorrespondingList: IntValue[],
@@ -7970,7 +7982,7 @@ export class ServerExecutionFlowFunctions {
    * 结算状态: 分为未定、胜利、失败三种
    */
   setPlayerSettlementSuccessStatus(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     settlementStatus: SettlementStatus
   ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -8002,25 +8014,25 @@ export class ServerExecutionFlowFunctions {
    * 数据值: 该数据的值，支持整数、浮点数、字符串
    */
   setPlayerSettlementScoreboardDataDisplay(
-    setEntity: PlayerEntity,
+    setEntity: EntityOf<'player'>,
     dataOrder: IntValue,
     dataName: StrValue,
     dataValue: FloatValue
   ): void
   setPlayerSettlementScoreboardDataDisplay(
-    setEntity: PlayerEntity,
+    setEntity: EntityOf<'player'>,
     dataOrder: IntValue,
     dataName: StrValue,
     dataValue: IntValue
   ): void
   setPlayerSettlementScoreboardDataDisplay(
-    setEntity: PlayerEntity,
+    setEntity: EntityOf<'player'>,
     dataOrder: IntValue,
     dataName: StrValue,
     dataValue: StrValue
   ): void
   setPlayerSettlementScoreboardDataDisplay<T extends 'float' | 'int' | 'str'>(
-    setEntity: PlayerEntity,
+    setEntity: EntityOf<'player'>,
     dataOrder: IntValue,
     dataName: StrValue,
     dataValue: RuntimeParameterValueTypeMap[T]
@@ -8050,7 +8062,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 排名数值
    */
-  setPlayerSettlementRankingValue(playerEntity: PlayerEntity, rankingValue: IntValue): void {
+  setPlayerSettlementRankingValue(playerEntity: EntityOf<'player'>, rankingValue: IntValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const rankingValueObj = parseValue(rankingValue, 'int')
     this.registry.registerNode({
@@ -8339,7 +8351,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 商店序号
    */
-  openShop(playerEntity: PlayerEntity, shopOwnerEntity: EntityValue, shopId: IntValue): void {
+  openShop(playerEntity: EntityOf<'player'>, shopOwnerEntity: EntityValue, shopId: IntValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const shopOwnerEntityObj = parseValue(shopOwnerEntity, 'entity')
     const shopIdObj = parseValue(shopId, 'int')
@@ -8360,7 +8372,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 玩家实体
    */
-  closeShop(playerEntity: PlayerEntity): void {
+  closeShop(playerEntity: EntityOf<'player'>): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     this.registry.registerNode({
       id: 0,
@@ -9237,7 +9249,7 @@ export class ServerExecutionFlowFunctions {
   modifyPlayerListForVisibleMiniMapMarkers(
     targetEntity: EntityValue,
     miniMapMarkerId: IntValue,
-    playerList: PlayerEntity[]
+    playerList: EntityOf<'player'>[]
   ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const miniMapMarkerIdObj = parseValue(miniMapMarkerId, 'int')
@@ -9268,7 +9280,7 @@ export class ServerExecutionFlowFunctions {
   modifyPlayerMarkersOnTheMiniMap(
     targetEntity: EntityValue,
     miniMapMarkerId: IntValue,
-    correspondingPlayerEntity: PlayerEntity
+    correspondingPlayerEntity: EntityOf<'player'>
   ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const miniMapMarkerIdObj = parseValue(miniMapMarkerId, 'int')
@@ -9324,7 +9336,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 缩放尺寸
    */
-  modifyMiniMapZoom(targetPlayer: PlayerEntity, zoomDimensions: FloatValue): void {
+  modifyMiniMapZoom(targetPlayer: EntityOf<'player'>, zoomDimensions: FloatValue): void {
     const targetPlayerObj = parseValue(targetPlayer, 'entity')
     const zoomDimensionsObj = parseValue(zoomDimensions, 'float')
     this.registry.registerNode({
@@ -9353,7 +9365,7 @@ export class ServerExecutionFlowFunctions {
   modifyPlayerListForTrackingMiniMapMarkers(
     targetEntity: EntityValue,
     miniMapMarkerId: IntValue,
-    playerList: PlayerEntity[]
+    playerList: EntityOf<'player'>[]
   ): void {
     const targetEntityObj = parseValue(targetEntity, 'entity')
     const miniMapMarkerIdObj = parseValue(miniMapMarkerId, 'int')
@@ -9382,7 +9394,7 @@ export class ServerExecutionFlowFunctions {
    * 是否显示地图
    */
   switchCustomMaps(
-    targetPlayer: PlayerEntity,
+    targetPlayer: EntityOf<'player'>,
     mapConfigId: ConfigIdValue,
     displayMap: BoolValue
   ): void {
@@ -9409,7 +9421,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 巡逻模板序号
    */
-  switchCreationPatrolTemplate(creationEntity: CreationEntity, patrolTemplateId: IntValue): void {
+  switchCreationPatrolTemplate(
+    creationEntity: EntityOf<'creation'>,
+    patrolTemplateId: IntValue
+  ): void {
     const creationEntityObj = parseValue(creationEntity, 'entity')
     const patrolTemplateIdObj = parseValue(patrolTemplateId, 'int')
     this.registry.registerNode({
@@ -9605,7 +9620,7 @@ export class ServerExecutionFlowFunctions {
    * 计分组序号: 外围系统管理中指定计分组对应的序号
    */
   switchTheScoringGroupThatAffectsPlayerSCompetitiveRank(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     scoreGroupId: IntValue
   ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -9634,7 +9649,7 @@ export class ServerExecutionFlowFunctions {
    * 变化分数
    */
   setPlayerRankScoreChange(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     settlementStatus: RankSettlementStatus,
     scoreChange: IntValue
   ): void {
@@ -9661,7 +9676,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 是否合法
    */
-  setPlayerEscapeValidity(playerEntity: PlayerEntity, valid: BoolValue): void {
+  setPlayerEscapeValidity(playerEntity: EntityOf<'player'>, valid: BoolValue): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const validObj = parseValue(valid, 'bool')
     this.registry.registerNode({
@@ -9803,7 +9818,7 @@ export class ServerExecutionFlowFunctions {
    * 是否成功消耗礼盒
    */
   consumeGiftBox(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     giftBoxIndex: IntValue,
     consumptionQuantity: IntValue
   ): boolean {
@@ -9836,7 +9851,11 @@ export class ServerExecutionFlowFunctions {
    *
    * 任务计数
    */
-  noOfTasksConfigured(playerEntity: PlayerEntity, questIndex: IntValue, taskCount: IntValue): void {
+  noOfTasksConfigured(
+    playerEntity: EntityOf<'player'>,
+    questIndex: IntValue,
+    taskCount: IntValue
+  ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const questIndexObj = parseValue(questIndex, 'int')
     const taskCountObj = parseValue(taskCount, 'int')
@@ -9864,7 +9883,7 @@ export class ServerExecutionFlowFunctions {
    * 任务计数增加值
    */
   increaseTaskCount(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     questIndex: IntValue,
     taskCountIncreasedBy: IntValue
   ): void {
@@ -12631,7 +12650,7 @@ export class ServerExecutionFlowFunctions {
    * 预设状态值
    */
   getThePresetStatusValueOfTheComplexCreation(
-    targetEntity: CreationEntity,
+    targetEntity: EntityOf<'creation'>,
     presetStatusIndex: IntValue
   ): bigint {
     const targetEntityObj = parseValue(targetEntity, 'entity')
@@ -12660,7 +12679,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 角色实体
    */
-  queryCharacterSCurrentMovementSpd(characterEntity: CharacterEntity): {
+  queryCharacterSCurrentMovementSpd(characterEntity: EntityOf<'character'>): {
     /**
      *
      * 当前速度
@@ -12801,7 +12820,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 目标实体
    */
-  getCharacterAttribute(targetEntity: CharacterEntity): {
+  getCharacterAttribute(targetEntity: EntityOf<'character'>): {
     /**
      *
      * 等级
@@ -13521,7 +13540,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 物件实体
    */
-  getObjectAttribute(objectEntity: ObjectEntity): {
+  getObjectAttribute(objectEntity: EntityOf<'object'>): {
     /**
      *
      * 等级
@@ -13966,7 +13985,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 结果
    */
-  queryIfAllPlayerCharactersAreDown(playerEntity: PlayerEntity): boolean {
+  queryIfAllPlayerCharactersAreDown(playerEntity: EntityOf<'player'>): boolean {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14048,7 +14067,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 输入设备类型: 分为键盘鼠标、手柄、触屏
    */
-  getPlayerClientInputDeviceType(playerEntity: PlayerEntity): InputDeviceType {
+  getPlayerClientInputDeviceType(playerEntity: EntityOf<'player'>): InputDeviceType {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14074,7 +14093,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 所属玩家实体
    */
-  getPlayerEntityToWhichTheCharacterBelongs(characterEntity: CharacterEntity): PlayerEntity {
+  getPlayerEntityToWhichTheCharacterBelongs(characterEntity: EntityOf<'character'>): PlayerEntity {
     const characterEntityObj = parseValue(characterEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14100,7 +14119,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 时长
    */
-  getPlayerReviveTime(playerEntity: PlayerEntity): bigint {
+  getPlayerReviveTime(playerEntity: EntityOf<'player'>): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14126,7 +14145,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 玩家昵称
    */
-  getPlayerNickname(playerEntity: PlayerEntity): string {
+  getPlayerNickname(playerEntity: EntityOf<'player'>): string {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14152,7 +14171,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 剩余次数
    */
-  getPlayerRemainingRevives(playerEntity: PlayerEntity): bigint {
+  getPlayerRemainingRevives(playerEntity: EntityOf<'player'>): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14199,7 +14218,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 角色实体列表
    */
-  getAllCharacterEntitiesOfSpecifiedPlayer(playerEntity: PlayerEntity): CharacterEntity[] {
+  getAllCharacterEntitiesOfSpecifiedPlayer(playerEntity: EntityOf<'player'>): CharacterEntity[] {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14229,7 +14248,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 角色编号
    */
-  checkClassicModeCharacterId(targetCharacter: CharacterEntity): bigint {
+  checkClassicModeCharacterId(targetCharacter: EntityOf<'character'>): bigint {
     const targetCharacterObj = parseValue(targetCharacter, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14255,7 +14274,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 前台角色实体
    */
-  getActiveCharacterOfSpecifiedPlayer(playerEntity: PlayerEntity): CharacterEntity {
+  getActiveCharacterOfSpecifiedPlayer(playerEntity: EntityOf<'player'>): CharacterEntity {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14353,7 +14372,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 布局索引
    */
-  getPlayerSCurrentUiLayout(playerEntity: PlayerEntity): bigint {
+  getPlayerSCurrentUiLayout(playerEntity: EntityOf<'player'>): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14379,7 +14398,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 目标实体: 造物当前的智能选取目标实体
    */
-  getCreationSCurrentTarget(creationEntity: CreationEntity): entity {
+  getCreationSCurrentTarget(creationEntity: EntityOf<'creation'>): entity {
     const creationEntityObj = parseValue(creationEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14405,7 +14424,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 仇恨列表: 造物当前对哪些实体有仇恨，该列表是无序的
    */
-  getAggroListOfCreationInDefaultMode(creationEntity: CreationEntity): entity[] {
+  getAggroListOfCreationInDefaultMode(creationEntity: EntityOf<'creation'>): entity[] {
     const creationEntityObj = parseValue(creationEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14427,7 +14446,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 造物实体
    */
-  getCreationAttribute(creationEntity: CreationEntity): {
+  getCreationAttribute(creationEntity: EntityOf<'creation'>): {
     /**
      *
      * 等级
@@ -14546,7 +14565,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 等级
    */
-  queryPlayerClassLevel(playerEntity: PlayerEntity, classConfigId: ConfigIdValue): bigint {
+  queryPlayerClassLevel(playerEntity: EntityOf<'player'>, classConfigId: ConfigIdValue): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const classConfigIdObj = parseValue(classConfigId, 'config_id')
     const ref = this.registry.registerNode({
@@ -14573,7 +14592,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 职业配置ID
    */
-  queryPlayerClass(playerEntity: PlayerEntity): configId {
+  queryPlayerClass(playerEntity: EntityOf<'player'>): configId {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -14603,7 +14622,7 @@ export class ServerExecutionFlowFunctions {
    * 技能配置ID
    */
   queryCharacterSkill(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     characterSkillSlot: CharacterSkillSlot
   ): configId {
     const characterEntityObj = parseValue(characterEntity, 'entity')
@@ -14636,7 +14655,7 @@ export class ServerExecutionFlowFunctions {
    * 技能配置ID
    */
   querySkillConfigIdBySkillInstanceId(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     skillInstanceId: IntValue
   ): configId {
     const characterEntityObj = parseValue(characterEntity, 'entity')
@@ -14669,7 +14688,7 @@ export class ServerExecutionFlowFunctions {
    * 技能实例ID列表
    */
   queryAllSkillInstanceIdsBySkillConfigId(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     skillConfigId: ConfigIdValue
   ): bigint[] {
     const characterEntityObj = parseValue(characterEntity, 'entity')
@@ -14702,7 +14721,7 @@ export class ServerExecutionFlowFunctions {
    * 技能实例ID列表
    */
   queryAllSkillInstanceIdsBySkillSlot(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     skillSlot: CharacterSkillSlot
   ): bigint[] {
     const characterEntityObj = parseValue(characterEntity, 'entity')
@@ -14738,7 +14757,7 @@ export class ServerExecutionFlowFunctions {
    * 技能实例ID
    */
   querySkillInstanceIdBySkillSlotAndSkillConfigId(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     skillSlot: CharacterSkillSlot,
     skillConfigId: ConfigIdValue
   ): bigint {
@@ -14773,7 +14792,7 @@ export class ServerExecutionFlowFunctions {
    * 技能组值
    */
   querySkillAttributeGroupValue(
-    characterEntity: CharacterEntity,
+    characterEntity: EntityOf<'character'>,
     skillGroupConfigId: ConfigIdValue
   ): number {
     const characterEntityObj = parseValue(characterEntity, 'entity')
@@ -15355,7 +15374,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 结算状态: 分为未定、胜利、失败
    */
-  getPlayerSettlementSuccessStatus(playerEntity: PlayerEntity): SettlementStatus {
+  getPlayerSettlementSuccessStatus(playerEntity: EntityOf<'player'>): SettlementStatus {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -15381,7 +15400,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 排名数值
    */
-  getPlayerSettlementRankingValue(playerEntity: PlayerEntity): bigint {
+  getPlayerSettlementRankingValue(playerEntity: EntityOf<'player'>): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -16490,7 +16509,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 造物实体: 运行时的造物实体
    */
-  getCurrentCreationSPatrolTemplate(creationEntity: CreationEntity): {
+  getCurrentCreationSPatrolTemplate(creationEntity: EntityOf<'creation'>): {
     /**
      * The Patrol Template ID currently active on this Creation
      *
@@ -16610,7 +16629,7 @@ export class ServerExecutionFlowFunctions {
    * 分数
    */
   getPlayerRankScoreChange(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     settlementStatus: RankSettlementStatus
   ): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -16635,7 +16654,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 玩家实体
    */
-  getPlayerRankingInfo(playerEntity: PlayerEntity): {
+  getPlayerRankingInfo(playerEntity: EntityOf<'player'>): {
     /**
      *
      * 玩家段位总分
@@ -16701,7 +16720,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 是否合法
    */
-  getPlayerEscapeValidity(playerEntity: PlayerEntity): boolean {
+  getPlayerEscapeValidity(playerEntity: EntityOf<'player'>): boolean {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -16751,7 +16770,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 数量
    */
-  queryCorrespondingGiftBoxQuantity(playerEntity: PlayerEntity, giftBoxIndex: IntValue): bigint {
+  queryCorrespondingGiftBoxQuantity(
+    playerEntity: EntityOf<'player'>,
+    giftBoxIndex: IntValue
+  ): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const giftBoxIndexObj = parseValue(giftBoxIndex, 'int')
     const ref = this.registry.registerNode({
@@ -16781,7 +16803,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 数量
    */
-  queryCorrespondingGiftBoxConsumption(playerEntity: PlayerEntity, giftBoxIndex: IntValue): bigint {
+  queryCorrespondingGiftBoxConsumption(
+    playerEntity: EntityOf<'player'>,
+    giftBoxIndex: IntValue
+  ): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const giftBoxIndexObj = parseValue(giftBoxIndex, 'int')
     const ref = this.registry.registerNode({
@@ -16811,7 +16836,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 任务计数
    */
-  querySpecifiedTaskCount(playerEntity: PlayerEntity, questIndex: IntValue): bigint {
+  querySpecifiedTaskCount(playerEntity: EntityOf<'player'>, questIndex: IntValue): bigint {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const questIndexObj = parseValue(questIndex, 'int')
     const ref = this.registry.registerNode({
@@ -16841,7 +16866,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 是否完成
    */
-  queryIfSpecifiedTaskIsCompleted(playerEntity: PlayerEntity, questIndex: IntValue): boolean {
+  queryIfSpecifiedTaskIsCompleted(playerEntity: EntityOf<'player'>, questIndex: IntValue): boolean {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const questIndexObj = parseValue(questIndex, 'int')
     const ref = this.registry.registerNode({
@@ -17042,7 +17067,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 操控运动器实体
    */
-  setPlayerToFollowControlMotor(playerEntity: PlayerEntity, controlMotorEntity: EntityValue): void {
+  setPlayerToFollowControlMotor(
+    playerEntity: EntityOf<'player'>,
+    controlMotorEntity: EntityValue
+  ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const controlMotorEntityObj = parseValue(controlMotorEntity, 'entity')
     this.registry.registerNode({
@@ -17064,7 +17092,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 玩家实体
    */
-  setPlayerToLeaveControlMotor(playerEntity: PlayerEntity): void {
+  setPlayerToLeaveControlMotor(playerEntity: EntityOf<'player'>): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     this.registry.registerNode({
       id: 0,
@@ -17091,7 +17119,7 @@ export class ServerExecutionFlowFunctions {
    * 操控运动器实体列表
    */
   setPlayerActiveControlMotors(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     controlMotorEntities: EntityValue[]
   ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -17121,7 +17149,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 操控运动器实体列表
    */
-  queryPlayerSCurrentActiveControlMotorList(playerEntity: PlayerEntity): entity[] {
+  queryPlayerSCurrentActiveControlMotorList(playerEntity: EntityOf<'player'>): entity[] {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -17151,7 +17179,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 操控运动器实体
    */
-  queryPlayerSCurrentFollowingControlMotor(playerEntity: PlayerEntity): entity {
+  queryPlayerSCurrentFollowingControlMotor(playerEntity: EntityOf<'player'>): entity {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -17266,7 +17294,7 @@ export class ServerExecutionFlowFunctions {
    * 是否光标常驻
    */
   setWhetherPlayerSCursorIsPersistent(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     cursorPersistent: BoolValue
   ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -17312,7 +17340,7 @@ export class ServerExecutionFlowFunctions {
    * 光标最多可选取目标
    */
   setPlayerSCursorClickSelectableTargets(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     cursorClickableLayerFilterId: IntValue,
     maximumSelectableTargets: IntValue
   ): void {
@@ -17360,7 +17388,7 @@ export class ServerExecutionFlowFunctions {
    * 是否穿透UI控件
    */
   setWhetherPlayerSCursorClickPenetratesUiControls(
-    playerEntity: PlayerEntity,
+    playerEntity: EntityOf<'player'>,
     penetrateUiControls: BoolValue
   ): void {
     const playerEntityObj = parseValue(playerEntity, 'entity')
@@ -17390,7 +17418,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 是否激活
    */
-  queryWhetherPlayerSCursorIsActive(playerEntity: PlayerEntity): boolean {
+  queryWhetherPlayerSCursorIsActive(playerEntity: EntityOf<'player'>): boolean {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,
@@ -17421,7 +17449,7 @@ export class ServerExecutionFlowFunctions {
    * 是否激活
    */
   activateDisableCursorCollisionBox(
-    targetEntity: ObjectEntity,
+    targetEntity: EntityOf<'object'>,
     collisionBoxIndex: IntValue,
     activate: BoolValue
   ): void {
@@ -17451,7 +17479,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 是否订阅
    */
-  queryWhetherPlayerIsSubscribed(playerEntity: PlayerEntity): boolean {
+  queryWhetherPlayerIsSubscribed(playerEntity: EntityOf<'player'>): boolean {
     const playerEntityObj = parseValue(playerEntity, 'entity')
     const ref = this.registry.registerNode({
       id: 0,

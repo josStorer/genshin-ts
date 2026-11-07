@@ -837,7 +837,7 @@ function buildNodes() {
     if (n.name === 'setPlayerRankScoreChange') {
       lines.push(
         `setPlayerRankScoreChange(`,
-        `  playerEntity: PlayerEntity,`,
+        `  playerEntity: EntityOf<'player'>,`,
         `  settlementStatus: RankSettlementStatus,`,
         `  scoreChange: IntValue`,
         `): void {`,
@@ -858,7 +858,7 @@ function buildNodes() {
     if (n.name === 'getPlayerRankScoreChange') {
       lines.push(
         `getPlayerRankScoreChange(`,
-        `  playerEntity: PlayerEntity,`,
+        `  playerEntity: EntityOf<'player'>,`,
         `  settlementStatus: RankSettlementStatus`,
         `): bigint {`,
         `  const playerEntityObj = parseValue(playerEntity, 'entity')`,
