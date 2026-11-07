@@ -405,6 +405,7 @@ const ENTITY_HELPER_METHOD_ALIAS_SOURCES = {
   removeSkillBySlot: 'deleteCharacterSkillBySlot',
   resetSkill: 'initializeCharacterSkill',
   openDeck: 'invokeDeckSelector',
+  openGiftBoxUi: 'openGiftBoxInterface',
   closeDeck: 'closeDeckSelector',
   addClassExp: 'increasePlayerSCurrentClassExp',
   setClass: 'changePlayerClass',
@@ -417,6 +418,8 @@ const ENTITY_HELPER_METHOD_ALIAS_SOURCES = {
   setUiControlStatus: 'modifyUiControlStatusWithinTheInterfaceLayout',
   addSkillCd: 'modifyCharacterSkillCd',
   setSkillCd: 'setCharacterSkillCd',
+  setSkillInstanceCd: 'setCdForSpecifiedSkillInstance',
+  addSkillInstanceCd: 'increaseCdForSpecifiedSkillInstance',
   scaleSkillCd: 'modifySkillCdPercentageBasedOnMaxCd',
   addSkillResource: 'modifySkillResourceAmount',
   setSkillResource: 'setSkillResourceAmount',
@@ -434,7 +437,8 @@ const ENTITY_HELPER_METHOD_ALIAS_SOURCES = {
   setSettlementStatus: 'setPlayerSettlementSuccessStatus',
   switchPatrolTemplate: 'switchCreationPatrolTemplate',
   switchUiLayout: 'switchCurrentInterfaceLayout',
-  switchRankGroup: 'switchTheScoringGroupThatAffectsPlayerSCompetitiveRank'
+  switchRankGroup: 'switchTheScoringGroupThatAffectsPlayerSCompetitiveRank',
+  switchCombatTextTemplate: 'switchCombatTextFilterTemplate'
 } as const
 
 const ENTITY_HELPER_KIND_BY_KEY = {
@@ -824,6 +828,7 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   getGiftBoxQuantity: ['player'],
   getSkill: ['character'],
   openDeck: ['player'],
+  openGiftBoxUi: ['player'],
   pauseBgm: ['player'],
   playSfx2d: ['player'],
   removeSkillById: ['character'],
@@ -843,10 +848,13 @@ const ENTITY_HELPER_KIND_BY_KEY = {
   setSettlementScoreboard: ['player'],
   setSettlementStatus: ['player'],
   setSkillCd: ['character'],
+  setSkillInstanceCd: ['character'],
+  addSkillInstanceCd: ['character'],
   setSkillResource: ['character'],
   setUiControlStatus: ['player'],
   switchPatrolTemplate: ['creation'],
   switchRankGroup: ['player'],
+  switchCombatTextTemplate: ['player'],
   switchUiLayout: ['player']
 } as const
 
@@ -6104,6 +6112,17 @@ interface EntityHelperMethodAliases {
   ) => void
 
   /**
+   * Open the gift box interface for the specified player.
+   *
+   * 打开礼盒界面: 为指定玩家打开对应礼盒索引的界面。
+   *
+   * @param giftBoxIndex Gift Box Index
+   *
+   * 礼盒索引
+   */
+  openGiftBoxUi: (giftBoxIndex: IntValue) => void
+
+  /**
    * Close the currently active Deck Selector for the specified Player
    *
    * 关闭卡牌选择器: 关闭指定玩家当前生效的卡牌选择器
@@ -6289,6 +6308,56 @@ interface EntityHelperMethodAliases {
     characterSkillSlot: CharacterSkillSlot,
     remainingCdTime: FloatValue,
     limitMaximumCdTime: BoolValue
+  ) => void
+
+  /**
+   * Set the cooldown of the specified skill instance.
+   *
+   * 设置指定技能实例冷却: 设置技能实例的冷却时间，并选择是否限制最大冷却时间。
+   *
+   * @param skillInstanceId Skill Instance ID
+   *
+   * 技能实例ID
+   * @param cooldown Cooldown
+   *
+   * CD
+   *
+   * 冷却时间
+   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   *
+   * Limit Maximum CD Time
+   *
+   * 是否限制最大冷却时间
+   */
+  setSkillInstanceCd: (
+    skillInstanceId: IntValue,
+    cooldown: FloatValue,
+    limitMaximumCooldown: BoolValue
+  ) => void
+
+  /**
+   * Increase the cooldown of the specified skill instance.
+   *
+   * 增加指定技能实例冷却: 增加技能实例的冷却时间，并选择是否限制最大冷却时间。
+   *
+   * @param skillInstanceId Skill Instance ID
+   *
+   * 技能实例ID
+   * @param cooldownIncrease Cooldown Increase
+   *
+   * CD Increase Value
+   *
+   * 冷却时间增加值
+   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   *
+   * Limit Maximum CD Time
+   *
+   * 是否限制最大冷却时间
+   */
+  addSkillInstanceCd: (
+    skillInstanceId: IntValue,
+    cooldownIncrease: FloatValue,
+    limitMaximumCooldown: BoolValue
   ) => void
 
   /**
@@ -6517,6 +6586,19 @@ interface EntityHelperMethodAliases {
    * 计分组序号: 外围系统管理中指定计分组对应的序号
    */
   switchRankGroup: (scoreGroupId: IntValue) => void
+
+  /**
+   * Switch the combat text filter template for a player.
+   *
+   * 切换战斗文字提示过滤模板: 为玩家切换指定序号的战斗文字提示模板。
+   *
+   * @param templateId Combat Text Template Index
+   *
+   * Combat Text Prompt Template ID
+   *
+   * 战斗文字提示模板序号
+   */
+  switchCombatTextTemplate: (templateId: IntValue) => void
 
   /**
    * Activate or deactivate a cursor collision box on this object.

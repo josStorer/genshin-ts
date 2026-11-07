@@ -23,15 +23,15 @@ const Signal = defineSignal('GSTS_NOV_EQ', [
 const names = new listLiteral('str', ['a']) as unknown as string[]
 const emptyNames = new listLiteral('str', []) as unknown as string[]
 
-// Exercise runtime dispatch as well as encoding: each pair must produce identical bytes.
-for (const helpers of [false, true]) {
+// Exercise runtime dispatch as well as encoding: each variant must produce identical bytes.
+for (const variant of ['f', 'helpers', 'aliases'] as const) {
   g.server({ id: 1073741909, name: 'NovemberEquivalence', mode: 'beyond', lang: 'en' }).on(
     'whenEntityIsCreated',
     (_evt, f) => {
       const player = f.getCorrespondingValueFromList(f.getListOfPlayerEntitiesOnTheField(), 0n)
       const character = f.getSelfEntity() as CharacterEntity
       const creation = f.getSelfEntity() as CreationEntity
-      if (helpers) {
+      if (variant === 'helpers') {
         player.openGiftBoxInterface(1n)
         character.setCdForSpecifiedSkillInstance(2n, 3, true)
         character.increaseCdForSpecifiedSkillInstance(2n, -1, false)
@@ -41,6 +41,18 @@ for (const helpers of [false, true]) {
         player.switchCombatTextFilterTemplate(6n)
         player.sendLua(Signal, 7n, names)
         player.sendClientScriptedServerSignal(Signal, 8n, emptyNames)
+        sendLua(player, Signal, 9n, names)
+        sendLuaAll(Signal, 10n, names)
+      } else if (variant === 'aliases') {
+        player.openGiftBoxUi(1n)
+        character.setSkillInstanceCd(2n, 3, true)
+        character.addSkillInstanceCd(2n, -1, false)
+        creation.setCreationDisruptorDevice(3n)
+        creation.activateDisableNativePushCollision(4n, true)
+        creation.activateDisableExtraPushCollision(5n, false)
+        player.switchCombatTextTemplate(6n)
+        player.sendLua(Signal, 7n, names)
+        player.sendLua(Signal, 8n, emptyNames)
         sendLua(player, Signal, 9n, names)
         sendLuaAll(Signal, 10n, names)
       } else {
@@ -67,7 +79,9 @@ const originalRandom = Math.random
 try {
   Date.now = () => 1790000000000
   Math.random = () => 0.3141592653589793
-  assert.deepEqual(irToGia(docs[0], { protoPath }), irToGia(docs[1], { protoPath }))
+  const direct = irToGia(docs[0], { protoPath })
+  assert.deepEqual(direct, irToGia(docs[1], { protoPath }))
+  assert.deepEqual(direct, irToGia(docs[2], { protoPath }))
 } finally {
   Date.now = originalNow
   Math.random = originalRandom
