@@ -69,8 +69,14 @@ function isIrDocumentLike(doc: unknown): doc is IRDocument {
   return true
 }
 
-function isInternalGstsVarName(name: string): boolean {
+/** gstsServer return slots: each merged file keeps its own copy. */
+function isPerFileGstsVarName(name: string): boolean {
   return /^_gsts/i.test(name)
+}
+
+/** Graph-level variables gsts generates (stage entity, timer pools and captures): files share identical ones. */
+function isSharedGstsVarName(name: string): boolean {
+  return name.startsWith('__gsts_')
 }
 
 function buildSourceTag(outDirAbs: string, sourceJsonPath: string, sourceIndex: number): string {
@@ -105,17 +111,34 @@ function rewriteVariablesInPlace(doc: AnyIRDocument, rename: Map<string, string>
   }
 }
 
-function collectInternalVarNames(doc: AnyIRDocument): Set<string> {
+function collectRenamedVarNames(doc: AnyIRDocument, conflicting: Set<string>): Set<string> {
+  const renamed = (name: string) => isPerFileGstsVarName(name) || conflicting.has(name)
   const out = new Set<string>()
   for (const v of doc.variables ?? []) {
-    if (isInternalGstsVarName(v.name)) out.add(v.name)
+    if (renamed(v.name)) out.add(v.name)
   }
   for (const n of getNodes(doc)) {
     const type = n.type
     if (type !== 'get_node_graph_variable' && type !== 'set_node_graph_variable') continue
     const a0 = n.args?.[0]
     if (!a0 || a0.type !== 'str') continue
-    if (isInternalGstsVarName(a0.value)) out.add(a0.value)
+    if (renamed(a0.value)) out.add(a0.value)
+  }
+  return out
+}
+
+/** Shared gsts variables whose definitions differ between the merged files; those are renamed per file instead. */
+function collectConflictingSharedVarNames(docs: AnyIRDocument[]): Set<string> {
+  const definitions = new Map<string, string>()
+  const out = new Set<string>()
+  for (const doc of docs) {
+    for (const v of doc.variables ?? []) {
+      if (!isSharedGstsVarName(v.name)) continue
+      const definition = JSON.stringify(v)
+      const previous = definitions.get(v.name)
+      if (previous === undefined) definitions.set(v.name, definition)
+      else if (previous !== definition) out.add(v.name)
+    }
   }
   return out
 }
@@ -135,17 +158,19 @@ function pickTopmostDir(outDirAbs: string, paths: string[]): string {
 function mergeVariablesOrThrowByName(
   items: { source: string; vars: Variable[] | undefined }[]
 ): Variable[] | undefined {
-  const all = items.flatMap((x) => x.vars ?? [])
-  if (!all.length) return undefined
-
+  const all: Variable[] = []
   const byName = new Map<string, Set<string>>()
   for (const it of items) {
     for (const v of it.vars ?? []) {
+      // Shared gsts variables left with one name are identical (conflicts were renamed): keep one.
+      if (isSharedGstsVarName(v.name) && byName.has(v.name)) continue
+      all.push(v)
       const s = byName.get(v.name) ?? new Set<string>()
       s.add(it.source)
       byName.set(v.name, s)
     }
   }
+  if (!all.length) return undefined
 
   const duplicates: { name: string; sources: string[] }[] = []
   for (const [name, sources] of byName) {
@@ -406,12 +431,16 @@ function mergeIrSources(outDirAbs: string, items: IrSource[]): MergeGroupResult[
     const mergedNodes: AnyIRNode[] = []
     let nextId = 1
     const varsAfterRename: { source: string; vars: Variable[] | undefined }[] = []
+    const conflicting = collectConflictingSharedVarNames(
+      ordered.map((it) => it.doc as AnyIRDocument)
+    )
     for (const it of ordered) {
       const sourceDoc = it.doc as AnyIRDocument
 
-      // 变量重命名：把所有 _gsts* 变量按源文件打 tag，避免合并后同名互相覆盖
+      // 变量重命名：_gsts* 返回值变量，以及定义不一致的 __gsts_* 变量按源文件打 tag，避免合并后同名互相覆盖；
+      // 定义一致的 __gsts_* 变量（stage、定时器池等）合并后共用一份
       const tag = buildSourceTag(outDirAbs, it.sourceJsonPath, it.sourceIndex)
-      const internalNames = collectInternalVarNames(sourceDoc)
+      const internalNames = collectRenamedVarNames(sourceDoc, conflicting)
       const rename = new Map<string, string>()
       for (const name of internalNames) {
         rename.set(name, `${name}__${tag}`)
