@@ -5690,6 +5690,10 @@ export class ServerExecutionFlowFunctions {
    *
    * 添加单位状态: 向指定目标实体添加一定层数的单位状态
    *
+   * GSTS Note: Some Unit Statuses define override tags. When the parameter dictionary has a key equal to an override tag, that configuration value takes the value of the key. The dynamic value and the original configuration value cannot both take effect
+   *
+   * GSTS 注: 部分单位状态可以预先定义覆写标签；参数字典中的键与覆写标签相同时，该配置值按这个键对应的值生效。动态值与原配置值只能二选一，不能同时生效
+   *
    * @param applierEntity Determines the Applier Entity for this action. Defaults to the Entity associated with this Node Graph
    *
    * 施加者实体: 决定了该次行为的施加者实体，默认为该节点图所关联的实体
@@ -5702,9 +5706,9 @@ export class ServerExecutionFlowFunctions {
    * @param appliedStacks The Stack Count for this Unit Status
    *
    * 施加层数: 该单位状态的层数
-   * @param unitStatusParameterDictionary Can carry a set of parameters to overwrite parameters defined in the Unit Status. Currently, only parameters within shield templates can be overwritten.
+   * @param unitStatusParameterDictionary Can carry a set of parameters to override configuration values in the Unit Status
    *
-   * 单位状态参数字典: 可以携带一组参数，用于覆写单位状态中的参数，目前仅支持对护盾中护盾模板的参数覆写
+   * 单位状态参数字典: 可以携带一组参数，用于覆写单位状态中的配置值
    */
   addUnitStatus(
     applierEntity: EntityValue,
