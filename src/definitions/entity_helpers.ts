@@ -885,33 +885,33 @@ type HelperFromIndex<K extends keyof ServerExecutionFlowFunctions, Index extends
 
 interface EntityHelperFromFirstParam {
   /**
-   * Open the gift box interface for the specified player.
+   * When this node is executed, it automatically opens the specified Player's Wonderland Gift Box interface and selects the Gift Box corresponding to the specified index If the specified index does not exist, the first Gift Box is selected by default
    *
-   * 打开礼盒界面: 为指定玩家打开对应礼盒索引的界面。
+   * 打开礼盒界面: 执行该节点时，会自动打开该玩家的奇域礼盒界面并选中索引对应的礼盒 如索引不存在则默认选中第一个礼盒
    *
-   * @param giftBoxIndex Gift Box Index
+   * @param giftBoxIndex
    *
    * 礼盒索引
    */
   openGiftBoxInterface: (giftBoxIndex: IntValue) => void
   /**
-   * Set the cooldown of the specified skill instance.
+   * Directly set the cooldown of the specified Skill Instance on the Target Character to the specified value
    *
-   * 设置指定技能实例冷却: 设置技能实例的冷却时间，并选择是否限制最大冷却时间。
+   * 设置指定技能实例冷却: 直接设置目标角色指定技能实例的冷却时间为指定值
    *
-   * @param skillInstanceId Skill Instance ID
+   * @param skillInstanceId Identifier for the Skill Instance
    *
-   * 技能实例ID
-   * @param cooldown Cooldown
+   * 技能实例ID: 技能实例的标识
+   * @param cooldown Edited Cooldown will be set to this input value
    *
    * CD
    *
-   * 冷却时间
-   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   * 冷却时间: 修改后的冷却时间为该输入值
+   * @param limitMaximumCooldown If set to True, the edited Cooldown does not exceed the maximum Cooldown configured for the skill
    *
    * Limit Maximum CD Time
    *
-   * 是否限制最大冷却时间
+   * 是否限制最大冷却时间: 为“是”时，修改后的冷却时间不会超过技能配置的最大冷却时间
    */
   setCdForSpecifiedSkillInstance: (
     skillInstanceId: IntValue,
@@ -919,23 +919,23 @@ interface EntityHelperFromFirstParam {
     limitMaximumCooldown: BoolValue
   ) => void
   /**
-   * Increase the cooldown of the specified skill instance.
+   * Increase the cooldown of the specified Skill Instance on the Target Character; a negative input reduces the cooldown
    *
-   * 增加指定技能实例冷却: 增加技能实例的冷却时间，并选择是否限制最大冷却时间。
+   * 增加指定技能实例冷却: 增加目标角色指定技能实例的冷却时间；输入负数时会减少冷却时间
    *
-   * @param skillInstanceId Skill Instance ID
+   * @param skillInstanceId Identifier for the Skill Instance
    *
-   * 技能实例ID
-   * @param cooldownIncrease Cooldown Increase
+   * 技能实例ID: 技能实例的标识
+   * @param cooldownIncrease The edited value is the original value plus this increase
    *
    * CD Increase Value
    *
-   * 冷却时间增加值
-   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   * 冷却时间增加值: 修改后的值为：原值+增加值
+   * @param limitMaximumCooldown If set to True, the edited Cooldown does not exceed the maximum Cooldown configured for the skill
    *
    * Limit Maximum CD Time
    *
-   * 是否限制最大冷却时间
+   * 是否限制最大冷却时间: 为“是”时，修改后的冷却时间不会超过技能配置的最大冷却时间
    */
   increaseCdForSpecifiedSkillInstance: (
     skillInstanceId: IntValue,
@@ -943,51 +943,51 @@ interface EntityHelperFromFirstParam {
     limitMaximumCooldown: BoolValue
   ) => void
   /**
-   * Set the creation's disruptor device by index.
+   * Edit the Creation Disruptor Device active on the Target Entity by ID; if the ID does not exist, the Creation Disruptor Device will no longer function after this node runs
    *
-   * 设置造物扰动装置: 设置目标造物使用的扰动装置序号。
+   * 设置造物扰动装置: 通过序号修改目标实体上生效的造物扰动装置，若序号不存在，则该节点运行后造物扰动装置将不再生效
    *
-   * @param deviceId Device Index
+   * @param deviceId Identifier for the Creation Disruptor Device
    *
-   * 装置序号
+   * 装置序号: 造物扰动装置的标识
    */
   setCreationDisruptorDevice: (deviceId: IntValue) => void
   /**
-   * Activate or disable a creation's native push collision.
+   * Activate or deactivate the Native Push Collision with the given ID on the Creation Entity
    *
-   * 激活/关闭原生推挤碰撞: 按序号激活或关闭造物的原生推挤碰撞。
+   * 激活/关闭原生推挤碰撞: 激活或关闭造物实体上对应序号的原生推挤碰撞
    *
-   * @param collisionId Native Push Collision Index
+   * @param collisionId Identifier of the Native Push Collision. Some Creations have no Native Push Collision, and some have several
    *
    * Native Push Collision ID
    *
-   * 原生推挤碰撞序号
-   * @param activate Whether to activate
+   * 原生推挤碰撞序号: 原生推挤碰撞的标识。某些造物可能没有原生推挤碰撞，某些造物可能有多个原生推挤碰撞
+   * @param activate True to activate
    *
-   * 是否激活
+   * 是否激活: 是则为激活
    */
   activateDisableNativePushCollision: (collisionId: IntValue, activate: BoolValue) => void
   /**
-   * Activate or disable a creation's extra push collision.
+   * Activate or deactivate the Extra Push Collision with the given ID on the Creation Entity
    *
-   * 激活/关闭额外推挤碰撞: 按序号激活或关闭造物的额外推挤碰撞。
+   * 激活/关闭额外推挤碰撞: 激活或关闭造物实体上对应序号的额外推挤碰撞
    *
-   * @param collisionId Extra Push Collision Index
+   * @param collisionId Identifier of the Extra Push Collision
    *
    * Extra Push Collision ID
    *
-   * 额外推挤碰撞序号
-   * @param activate Whether to activate
+   * 额外推挤碰撞序号: 额外推挤碰撞的标识
+   * @param activate True to activate
    *
-   * 是否激活
+   * 是否激活: 是则为激活
    */
   activateDisableExtraPushCollision: (collisionId: IntValue, activate: BoolValue) => void
   /**
-   * Switch the combat text filter template for a player.
+   * Switch the specified Player's Combat Text Filter Template; the Player's combat text prompts are then filtered by the new template
    *
-   * 切换战斗文字提示过滤模板: 为玩家切换指定序号的战斗文字提示模板。
+   * 切换战斗文字提示过滤模板: 切换指定玩家的战斗文字提示过滤模板，切换后按新模板过滤该玩家的战斗文字提示信息
    *
-   * @param templateId Combat Text Template Index
+   * @param templateId
    *
    * Combat Text Prompt Template ID
    *
@@ -2005,9 +2005,8 @@ interface EntityHelperFromFirstParam {
    */
   getCreationAttribute: () => {
     /**
-     * Creation weight.
      *
-     * 造物重量: 当前造物的重量。
+     * 造物重量
      */
     creationWeight: number
     /**
@@ -2781,9 +2780,9 @@ interface EntityHelperFromFirstParam {
    * @param damagePopUpType No Pop-UpNormal Pop-UpCRIT Hit Pop-Up
    *
    * 伤害跳字类型: 无跳字普通跳字暴击跳字
-   * @param initiatorEntity Entity initiating the HP loss; omit to use the editor default.
+   * @param initiatorEntity The initiator of this HP loss, used for damage attribution. Leave it empty for no source
    *
-   * 发起者实体: 省略时使用编辑器默认值。
+   * 发起者实体: 该次损失生命的发起者，用于伤害归因。留空表示无来源
    */
   hpLoss: (
     hpLoss: FloatValue,
@@ -2853,9 +2852,9 @@ interface EntityHelperFromFirstParam {
    * @param initiatorEntity Determines the Initiator Entity for this attack. Defaults to the Entity associated with this Node Graph. Affects which attacker is identified in events such as On Hit and When Attacked
    *
    * 发起者实体: 决定了该次攻击的发起者实体，默认为该节点图所关联的实体。影响【攻击命中时】、【受到攻击时】等事件中判定的攻击者
-   * @param abilityUnitOwnerEntity Entity owning the ability unit; omit to use the editor default.
+   * @param abilityUnitOwnerEntity Determines the owner of the Ability Unit. When not connected, the Ability Unit on the Initiator Entity is used
    *
-   * 能力单元归属实体: 省略时使用编辑器默认值。
+   * 能力单元所属实体: 决定能力单元的所属实体。未连接时，默认使用发起者实体上的能力单元
    */
   initiateAttack: (
     damageCoefficient: FloatValue,
@@ -6116,11 +6115,11 @@ interface EntityHelperMethodAliases {
   ) => void
 
   /**
-   * Open the gift box interface for the specified player.
+   * When this node is executed, it automatically opens the specified Player's Wonderland Gift Box interface and selects the Gift Box corresponding to the specified index If the specified index does not exist, the first Gift Box is selected by default
    *
-   * 打开礼盒界面: 为指定玩家打开对应礼盒索引的界面。
+   * 打开礼盒界面: 执行该节点时，会自动打开该玩家的奇域礼盒界面并选中索引对应的礼盒 如索引不存在则默认选中第一个礼盒
    *
-   * @param giftBoxIndex Gift Box Index
+   * @param giftBoxIndex
    *
    * 礼盒索引
    */
@@ -6315,23 +6314,23 @@ interface EntityHelperMethodAliases {
   ) => void
 
   /**
-   * Set the cooldown of the specified skill instance.
+   * Directly set the cooldown of the specified Skill Instance on the Target Character to the specified value
    *
-   * 设置指定技能实例冷却: 设置技能实例的冷却时间，并选择是否限制最大冷却时间。
+   * 设置指定技能实例冷却: 直接设置目标角色指定技能实例的冷却时间为指定值
    *
-   * @param skillInstanceId Skill Instance ID
+   * @param skillInstanceId Identifier for the Skill Instance
    *
-   * 技能实例ID
-   * @param cooldown Cooldown
+   * 技能实例ID: 技能实例的标识
+   * @param cooldown Edited Cooldown will be set to this input value
    *
    * CD
    *
-   * 冷却时间
-   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   * 冷却时间: 修改后的冷却时间为该输入值
+   * @param limitMaximumCooldown If set to True, the edited Cooldown does not exceed the maximum Cooldown configured for the skill
    *
    * Limit Maximum CD Time
    *
-   * 是否限制最大冷却时间
+   * 是否限制最大冷却时间: 为“是”时，修改后的冷却时间不会超过技能配置的最大冷却时间
    */
   setSkillInstanceCd: (
     skillInstanceId: IntValue,
@@ -6340,23 +6339,23 @@ interface EntityHelperMethodAliases {
   ) => void
 
   /**
-   * Increase the cooldown of the specified skill instance.
+   * Increase the cooldown of the specified Skill Instance on the Target Character; a negative input reduces the cooldown
    *
-   * 增加指定技能实例冷却: 增加技能实例的冷却时间，并选择是否限制最大冷却时间。
+   * 增加指定技能实例冷却: 增加目标角色指定技能实例的冷却时间；输入负数时会减少冷却时间
    *
-   * @param skillInstanceId Skill Instance ID
+   * @param skillInstanceId Identifier for the Skill Instance
    *
-   * 技能实例ID
-   * @param cooldownIncrease Cooldown Increase
+   * 技能实例ID: 技能实例的标识
+   * @param cooldownIncrease The edited value is the original value plus this increase
    *
    * CD Increase Value
    *
-   * 冷却时间增加值
-   * @param limitMaximumCooldown Whether to limit the maximum cooldown
+   * 冷却时间增加值: 修改后的值为：原值+增加值
+   * @param limitMaximumCooldown If set to True, the edited Cooldown does not exceed the maximum Cooldown configured for the skill
    *
    * Limit Maximum CD Time
    *
-   * 是否限制最大冷却时间
+   * 是否限制最大冷却时间: 为“是”时，修改后的冷却时间不会超过技能配置的最大冷却时间
    */
   addSkillInstanceCd: (
     skillInstanceId: IntValue,
@@ -6592,11 +6591,11 @@ interface EntityHelperMethodAliases {
   switchRankGroup: (scoreGroupId: IntValue) => void
 
   /**
-   * Switch the combat text filter template for a player.
+   * Switch the specified Player's Combat Text Filter Template; the Player's combat text prompts are then filtered by the new template
    *
-   * 切换战斗文字提示过滤模板: 为玩家切换指定序号的战斗文字提示模板。
+   * 切换战斗文字提示过滤模板: 切换指定玩家的战斗文字提示过滤模板，切换后按新模板过滤该玩家的战斗文字提示信息
    *
-   * @param templateId Combat Text Template Index
+   * @param templateId
    *
    * Combat Text Prompt Template ID
    *
