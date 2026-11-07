@@ -261,9 +261,10 @@ type ServerGraphOptionsBase<Vars extends VariablesDefinition = VariablesDefiniti
    */
   prefix?: boolean
   /**
-   * [ZH] 节点图变量声明
+   * [ZH] 节点图变量声明。用 `exposed(初始值)` 包住的变量会暴露到关卡，挂载该图的每个实体可以填自己的值
    *
-   * [EN] Node graph variable definitions
+   * [EN] Node graph variable definitions. Variables wrapped in `exposed(initialValue)` are exposed to the level,
+   * so each entity hosting the graph can fill in its own value
    */
   variables?: Vars
   /**

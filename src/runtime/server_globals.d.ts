@@ -491,18 +491,46 @@ declare global {
   }
 
   /**
-   * Expose a node graph variable so entities hosting the graph can override its initial value.
+   * Expose a node graph variable to the level: every entity that hosts this graph can then fill in its own value
+   * in the editor. Only wrap the initial value in `variables`; `f.get` / `f.set` stay the same.
    *
-   * 暴露节点图变量: 挂载该节点图的实体可以覆写此变量的初始值。
+   * Use it when one graph is reused on several entities that need different settings:
+   * - Two explosive barrels share one graph but deal different damage (the official example)
+   * - Each door, trap or spawner points at its own scene entity: expose an entity variable
+   * - Since 7.2 the multilingual text tool collects the node graph variables filled in on entities, so exposed text
+   *   can be translated
    *
-   * GSTS Note: Injection replaces the editor's exposure settings with those declared in code.
-   * Renaming a variable or changing its type invalidates existing entity overrides.
+   * 暴露节点图变量: 把节点图变量暴露到关卡，挂载这个节点图的每个实体都可以在编辑器里填自己的值。只需在 `variables` 里包住初始值，`f.get` / `f.set` 的用法不变。
    *
-   * GSTS 注: 注入时以代码声明覆盖编辑器中的暴露设置。改名或改类型会使实体上已有的覆写失效。
+   * 适用于一张节点图挂在多个实体上、但每个实体需要不同配置的情况:
+   * - 两个炸药桶共用一张图，但爆炸伤害不同（官方示例）
+   * - 每扇门、每个机关或刷怪点要指向各自的场景实体: 暴露一个实体类型的变量
+   * - 7.2 起多语言文本管理工具会收集实体上填写的节点图变量，暴露的文本可以参与翻译
    *
-   * @param value Initial value or type declaration, used inside g.server({ variables }).
+   * 官方说明：[节点图变量](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhtshailzs7w)、[多语言文本](https://act.mihoyo.com/ys/ugc/tutorial/detail/mhk59aiqtwyk)
    *
-   * 初始值或类型声明: 在 g.server({ variables }) 中使用，保留原有 get/set 类型推断。
+   * GSTS Note: The value in code is what entities without their own value use. Every injection writes the exposure
+   * settings from code, so ticking "expose" by hand in the editor does not last; declare it here instead. After
+   * renaming an exposed variable or changing its type, the values filled in on entities no longer match it.
+   *
+   * GSTS 注: 代码里的值是没有单独填写的实体所使用的值。每次注入都按代码写入暴露设置，在编辑器里手动勾选的暴露不会保留，请在这里声明。暴露的变量改名或改类型后，实体上已经填写的值就对不上了。
+   *
+   * @param value Initial value, written the same way as without `exposed`: a literal, `entity(0)`, `list(...)`,
+   * `dict(...)` and so on
+   *
+   * 初始值: 写法和不加 `exposed` 时一样，可以是字面量、`entity(0)`、`list(...)`、`dict(...)` 等
+   *
+   * @example
+   * g.server({
+   *   id: 1073741825,
+   *   variables: {
+   *     damage: exposed(100n), // 每个实体可以填不同的伤害 / per-entity damage
+   *     target: exposed(entity(0)), // 每个实体指向自己的场景实体 / per-entity target
+   *     hits: 0n // 内部状态，不暴露 / internal state, not exposed
+   *   }
+   * }).on('whenEntityIsCreated', (_evt, f) => {
+   *   print(str(f.get('damage')))
+   * })
    */
   function exposed<T>(value: T): ExposedVariable<T>
 
