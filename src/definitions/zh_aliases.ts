@@ -381,6 +381,8 @@ export const SERVER_F_ZH_TO_EN = {
   修改结构体: 'modifyStructure',
   修改界面布局内界面控件状态: 'modifyUiControlStatusWithinTheInterfaceLayout',
   对列表修改值: 'modifyValueInList',
+  余运算: 'moduloOperation',
+  // 旧版中文名，与 余运算 等价（见 generate-zh-aliases.mjs 的 ZH_COMPAT_ALIASES）
   模运算: 'moduloOperation',
   挂载循环特效: 'mountLoopingSpecialEffect',
   多分支: 'multipleBranches',
@@ -817,7 +819,7 @@ export const SERVER_F_EN_TO_ZH = {
   modifyStructure: '修改结构体',
   modifyUiControlStatusWithinTheInterfaceLayout: '修改界面布局内界面控件状态',
   modifyValueInList: '对列表修改值',
-  moduloOperation: '模运算',
+  moduloOperation: '余运算',
   mountLoopingSpecialEffect: '挂载循环特效',
   multipleBranches: '多分支',
   multiplication: '乘法运算',

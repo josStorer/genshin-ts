@@ -222,17 +222,17 @@ declare global {
   function send(signalName: StrValue, ...params: any[]): void
 
   /**
-   * Send a signal to every client Lua script attached to the target player
+   * Send a signal from the Server Node Graph to the Client Node Graph
    *
-   * 发送客户端脚本信号: 向目标玩家身上挂载的所有客户端 Lua 脚本发送信号
+   * 发送客户端脚本信号: 可以从服务器节点图向客户端节点图发送信号
    *
-   * GSTS Note: You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` only reaches node graphs, never Lua. Use `sendLuaAll` to reach every player on the field. Parameters must use types that Lua can receive; faction is not supported
+   * GSTS Note: The signal reaches every client Lua script attached to the target player. You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` only reaches node graphs, never Lua. Use `sendLuaAll` to reach every player on the field. Parameters must use types that Lua can receive; faction is not supported
    *
-   * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` 只发给节点图, Lua 收不到。要发给所有在场玩家请用 `sendLuaAll`。参数只能使用 Lua 能接收的类型, 不支持阵营
+   * GSTS 注: 信号会发给目标玩家身上挂载的所有客户端 Lua 脚本。你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` 只发给节点图, Lua 收不到。要发给所有在场玩家请用 `sendLuaAll`。参数只能使用 Lua 能接收的类型, 不支持阵营
    *
-   * @param target Target player; every client script on this player receives the signal
+   * @param target
    *
-   * 目标玩家: 必须是玩家实体, 该玩家身上的所有客户端脚本都会收到
+   * 目标玩家
    * @param signal Only literal string or extracted Signal.xxx definition is supported
    *
    * 信号名（仅支持字面量字符串或提取出的 Signal.xxx 定义）

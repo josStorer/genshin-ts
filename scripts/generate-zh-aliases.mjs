@@ -52,7 +52,8 @@ const SKIP_TITLE_PREFIX = [
 // 旧版中文名兼容别名（旧名 -> en 方法名）。官方文档改名后仍保留旧名调用；
 // 仅写入 SERVER_F_ZH_TO_EN，SERVER_F_EN_TO_ZH 维持最新中文名。
 const ZH_COMPAT_ALIASES = {
-  查询对应礼盒消耗数量: 'queryCorrespondingGiftBoxConsumption'
+  查询对应礼盒消耗数量: 'queryCorrespondingGiftBoxConsumption',
+  模运算: 'moduloOperation'
 }
 
 function extractZhTitle(lines) {

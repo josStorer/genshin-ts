@@ -5013,9 +5013,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 激活/关闭跟随运动器: 使目标实体上的跟随运动器组件逻辑激活/关闭
    *
-   * @param targetEntity Active Entity
+   * @param targetEntity Entity that a Follow Motion Device is attached to
    *
-   * 目标实体: 生效的实体
+   * 目标实体: 跟随运动器组件所在的实体
    * @param activate Set to True to activate
    *
    * 是否激活: “是”为激活
@@ -5036,9 +5036,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 以GUID切换跟随运动器的目标: 以GUID切换跟随运动器的跟随目标
    *
-   * @param targetEntity Active Entity
+   * @param targetEntity Entity that a Follow Motion Device is attached to
    *
-   * 目标实体: 生效的实体
+   * 目标实体: 跟随运动器组件所在的实体
    * @param followTargetGuid Identifier for the Follow Target
    *
    * 跟随目标GUID: 跟随目标的标识
@@ -5095,9 +5095,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 以实体切换跟随运动器的目标: 以实体切换跟随运动器的跟随目标
    *
-   * @param targetEntity Active Entity
+   * @param targetEntity Entity that a Follow Motion Device is attached to
    *
-   * 目标实体: 生效的实体
+   * 目标实体: 跟随运动器组件所在的实体
    * @param followTargetEntity The Entity that follows the Target
    *
    * 跟随目标实体: 跟随目标的实体
@@ -5350,7 +5350,7 @@ export class ServerExecutionFlowFunctions {
    *
    * @param playBuiltInSoundEffect If set to True, plays the built-in Sound Effect as well
    *
-   * 是否播放自带的音效: “是”则会同时播放自带的音效
+   * 是否播放自带的音效: 是则会播放自带的音效
    * @returns The Instance ID automatically generated when mounting this Effect
    *
    * 特效实例ID: 挂载该特效时自动生成的实例ID
@@ -7488,7 +7488,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * When this node is executed, it automatically opens the specified Player's Wonderland Gift Box interface and selects the Gift Box corresponding to the specified index If the specified index does not exist, the first Gift Box is selected by default
    *
-   * 打开礼盒界面: 执行该节点时，会自动打开该玩家的奇域礼盒界面并选中索引对应的礼盒 如索引不存在则默认选中第一个礼盒
+   * 打开礼盒界面: 执行该节点时，会自动打开该玩家的奇域礼盒界面并选中索引对应的礼盒; 如索引不存在则默认选中第一个礼盒
    *
    * @param playerEntity
    *
@@ -7701,17 +7701,17 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Send a signal to every client Lua script attached to the target player.
+   * Send a signal from the Server Node Graph to the Client Node Graph
    *
-   * 发送客户端脚本信号: 向目标玩家身上挂载的所有客户端 Lua 脚本发送信号。
+   * 发送客户端脚本信号: 可以从服务器节点图向客户端节点图发送信号
    *
-   * GSTS Note: You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` / `f.sendSignal` only reach node graphs, never Lua, so use this node (or `sendLua` / `sendLuaAll`) for client scripts. Parameters must use types that Lua can receive; faction is not supported
+   * GSTS Note: The signal reaches every client Lua script attached to the target player. You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` / `f.sendSignal` only reach node graphs, never Lua, so use this node (or `sendLua` / `sendLuaAll`) for client scripts. Parameters must use types that Lua can receive; faction is not supported
    *
-   * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` / `f.sendSignal` 只发给节点图, Lua 收不到, 发给客户端脚本请用此节点（或 `sendLua` / `sendLuaAll`）。参数只能使用 Lua 能接收的类型, 不支持阵营
+   * GSTS 注: 信号会发给目标玩家身上挂载的所有客户端 Lua 脚本。你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` / `f.sendSignal` 只发给节点图, Lua 收不到, 发给客户端脚本请用此节点（或 `sendLua` / `sendLuaAll`）。参数只能使用 Lua 能接收的类型, 不支持阵营
    *
-   * @param target Target player; every client script on this player receives the signal
+   * @param target
    *
-   * 目标玩家: 必须是玩家实体, 该玩家身上的所有客户端脚本都会收到
+   * 目标玩家
    * @param signal Only literal string or extracted Signal.xxx definition is supported
    *
    * 信号名（仅支持字面量字符串或提取出的 Signal.xxx 定义）
@@ -7998,7 +7998,7 @@ export class ServerExecutionFlowFunctions {
   /**
    * Set the Player's Scoreboard display data, which is shown on the Scoreboard after Stage Settlement. Since this node involves the display of external functions, [Data Value] and [Data Name] currently support multilingual translation only when manually entering text. If entered via connection input, multilingual translation is not supported.
    *
-   * 设置玩家结算计分板展示数据: 设置玩家结算计分板展示数据，显示在关卡结算后弹出的计分板内。由于该节点涉及了局外功能的显示，故【数据值】和【数据名称】目前仅在手动输入文本的时候支持多语言翻译，若为连线输入，则不支持多语言翻译
+   * 设置玩家结算计分板展示数据: 设置玩家结算计分板展示数据，显示在关卡结算后弹出的计分板内。由于该节点涉及了局外功能的显示，故【数据值】和【数据名称】目前仅在手动输入文本的时候支持多语言翻译，若为连线输入，则不支持多语言翻译; 计分板上的数据最多显示三条，多余三条的数据即使成功运行了节点逻辑也会不显示在计分板内
    *
    * @param setEntity Active Player Entity
    *
@@ -10924,9 +10924,11 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Returns the result of input 1 modulo input 2, with input 1 as the dividend
+   * Returns the remainder of Input 1 divided by Input 2, with Input 1 as the dividend
    *
-   * 模运算: 返回输入1对输入2取模的结果，其中输入1为被除数
+   * Modulo
+   *
+   * 余运算: 返回输入1对输入2的取余运算，输入1为被除数
    *
    * @param input1
    * @param input2
@@ -17432,13 +17434,13 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * Activate or deactivate a cursor collision box on an object's click-collision component.
+   * Set whether the Cursor Collision Box at the specified index in the Target Entity's Clickable Collision Component is active
    *
-   * 激活/关闭光标碰撞盒: 仅对物件生效
+   * 激活/关闭光标碰撞盒: 可以修改目标实体的点击碰撞组件中对应序号的点击碰撞盒是否激活
    *
-   * @param targetEntity Target Entity
+   * @param targetEntity Only applies to objects
    *
-   * 目标实体
+   * 目标实体: 仅对物件生效
    * @param collisionBoxIndex
    *
    * Collision Box ID

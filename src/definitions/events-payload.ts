@@ -586,9 +586,9 @@ export type ServerEventPayloads = {
     recoverTagList: string[]
   }
   /**
-   * This event is triggered when an Entity's attack hits other Entities (In Classic Mode, due to the Craftsperson's settings, the actual damage may differ from other scenarios.)
+   * This event is triggered when an Entity's attack hits other Entities; (In Classic Mode, due to the Craftsperson's settings, the actual damage may differ from other scenarios.)
    *
-   * 攻击命中时: 实体的攻击命中其他实体时，触发该事件 (在经典模式下，由于奇匠的设置，造成的实际伤害与其他各种情景都可能存在差异)
+   * 攻击命中时: 实体的攻击命中其他实体时，触发该事件; (在经典模式下，由于奇匠的设置，造成的实际伤害与其他各种情景都可能存在差异)
    */
   whenAttackHits: {
     /**
@@ -639,9 +639,9 @@ export type ServerEventPayloads = {
     isCriticalHit: boolean
   }
   /**
-   * This event is triggered when the Entity is attacked (In Classic Mode, due to the Craftsperson's settings, the actual damage may differ from other scenarios.)
+   * This event is triggered when the Entity is attacked; (In Classic Mode, due to the Craftsperson's settings, the actual damage may differ from other scenarios.)
    *
-   * 受到攻击时: 实体受到攻击时触发该事件 (在经典模式下，由于奇匠的设置，造成的实际伤害与其他各种情景都可能存在差异)
+   * 受到攻击时: 实体受到攻击时触发该事件; (在经典模式下，由于奇匠的设置，造成的实际伤害与其他各种情景都可能存在差异)
    */
   whenAttacked: {
     /**

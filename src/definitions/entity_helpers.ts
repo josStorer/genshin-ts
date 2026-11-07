@@ -887,7 +887,7 @@ interface EntityHelperFromFirstParam {
   /**
    * When this node is executed, it automatically opens the specified Player's Wonderland Gift Box interface and selects the Gift Box corresponding to the specified index If the specified index does not exist, the first Gift Box is selected by default
    *
-   * 打开礼盒界面: 执行该节点时，会自动打开该玩家的奇域礼盒界面并选中索引对应的礼盒 如索引不存在则默认选中第一个礼盒
+   * 打开礼盒界面: 执行该节点时，会自动打开该玩家的奇域礼盒界面并选中索引对应的礼盒; 如索引不存在则默认选中第一个礼盒
    *
    * @param giftBoxIndex
    *
@@ -995,13 +995,13 @@ interface EntityHelperFromFirstParam {
    */
   switchCombatTextFilterTemplate: (templateId: IntValue) => void
   /**
-   * Send a signal to every client Lua script attached to this player.
+   * Send a signal from the Server Node Graph to the Client Node Graph
    *
-   * 发送客户端脚本信号: 向此玩家身上挂载的所有客户端 Lua 脚本发送信号。
+   * 发送客户端脚本信号: 可以从服务器节点图向客户端节点图发送信号
    *
-   * GSTS Note: You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` / `f.sendSignal` only reach node graphs, never Lua. Parameters must use types that Lua can receive; faction is not supported
+   * GSTS Note: The signal reaches every client Lua script attached to this player. You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` / `f.sendSignal` only reach node graphs, never Lua. Parameters must use types that Lua can receive; faction is not supported
    *
-   * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` / `f.sendSignal` 只发给节点图, Lua 收不到。参数只能使用 Lua 能接收的类型, 不支持阵营
+   * GSTS 注: 信号会发给此玩家身上挂载的所有客户端 Lua 脚本。你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` / `f.sendSignal` 只发给节点图, Lua 收不到。参数只能使用 Lua 能接收的类型, 不支持阵营
    *
    * @param signal Only literal string or extracted Signal.xxx definition is supported
    *
@@ -5553,13 +5553,13 @@ interface EntityHelperAliases {
 
 interface EntityHelperMethodAliases {
   /**
-   * Send a signal to every client Lua script attached to this player.
+   * Send a signal from the Server Node Graph to the Client Node Graph
    *
-   * 发送客户端脚本信号: 向此玩家身上挂载的所有客户端 Lua 脚本发送信号。
+   * 发送客户端脚本信号: 可以从服务器节点图向客户端节点图发送信号
    *
-   * GSTS Note: You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` / `f.sendSignal` only reach node graphs, never Lua. Parameters must use types that Lua can receive; faction is not supported
+   * GSTS Note: The signal reaches every client Lua script attached to this player. You still need to register the signal in the signal manager in the editor; Lua scripts receive it with `lua.onSignal`. `send` / `f.sendSignal` only reach node graphs, never Lua. Parameters must use types that Lua can receive; faction is not supported
    *
-   * GSTS 注: 你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` / `f.sendSignal` 只发给节点图, Lua 收不到。参数只能使用 Lua 能接收的类型, 不支持阵营
+   * GSTS 注: 信号会发给此玩家身上挂载的所有客户端 Lua 脚本。你仍然需要在编辑器内的信号管理器注册信号; Lua 脚本用 `lua.onSignal` 接收。`send` / `f.sendSignal` 只发给节点图, Lua 收不到。参数只能使用 Lua 能接收的类型, 不支持阵营
    *
    * @param signal Only literal string or extracted Signal.xxx definition is supported
    *
@@ -6125,7 +6125,7 @@ interface EntityHelperMethodAliases {
   /**
    * When this node is executed, it automatically opens the specified Player's Wonderland Gift Box interface and selects the Gift Box corresponding to the specified index If the specified index does not exist, the first Gift Box is selected by default
    *
-   * 打开礼盒界面: 执行该节点时，会自动打开该玩家的奇域礼盒界面并选中索引对应的礼盒 如索引不存在则默认选中第一个礼盒
+   * 打开礼盒界面: 执行该节点时，会自动打开该玩家的奇域礼盒界面并选中索引对应的礼盒; 如索引不存在则默认选中第一个礼盒
    *
    * @param giftBoxIndex
    *
