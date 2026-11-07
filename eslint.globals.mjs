@@ -24,6 +24,7 @@ export const gstsDslGlobals = {
 
   dict: 'readonly',
   list: 'readonly',
+  exposed: 'readonly',
 
   print: 'readonly',
   send: 'readonly',

@@ -66,12 +66,14 @@ export interface ClientGraphInfo {
 export type Variable =
   | {
       name: string
+      exposed?: boolean
       type: Exclude<keyof LiteralValueTypeMap, 'dict'>
       value?: LiteralValueTypeMap[Exclude<keyof LiteralValueTypeMap, 'dict'>]
       length?: number
     }
   | {
       name: string
+      exposed?: boolean
       type: 'dict'
       dict: { k: DictKeyType; v: DictValueType }
       value?: any

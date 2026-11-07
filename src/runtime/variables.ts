@@ -43,6 +43,11 @@ import {
 
 export type VariablesDefinition = Record<string, unknown>
 
+export class ExposedVariable<T> {
+  declare private readonly __exposedVariable: true
+  constructor(readonly value: T) {}
+}
+
 export type NodeGraphVariableMeta = {
   type: LiteralValueType
   dict?: { k: DictKeyType; v: DictValueType }
@@ -423,6 +428,17 @@ function parseDictVar(name: string, dictParsed: ParsedDict): ParsedVar {
   }
 }
 
+function parseVariable(name: string, raw: unknown) {
+  if (raw === undefined) {
+    throw new Error(`[error] ${name}: variable value is required`)
+  }
+  const dictParsed = parseDictVariable(name, raw)
+  if (dictParsed) return parseDictVar(name, dictParsed)
+  const listParsed = parseListValue(name, raw)
+  if (listParsed) return parseListVariable(name, listParsed)
+  return parseScalarVariable(name, raw)
+}
+
 export function parseVariableDefinitions(vars?: VariablesDefinition): {
   variables: Variable[]
   metaByName: Map<string, NodeGraphVariableMeta>
@@ -435,25 +451,10 @@ export function parseVariableDefinitions(vars?: VariablesDefinition): {
   const variables: Variable[] = []
   const metaByName = new Map<string, NodeGraphVariableMeta>()
 
-  for (const [name, raw] of Object.entries(vars)) {
-    if (raw === undefined) {
-      throw new Error(`[error] ${name}: variable value is required`)
-    }
-    const dictParsed = parseDictVariable(name, raw)
-    if (dictParsed) {
-      const parsed = parseDictVar(name, dictParsed)
-      variables.push(parsed.variable)
-      metaByName.set(name, parsed.meta)
-      continue
-    }
-    const listParsed = parseListValue(name, raw)
-    if (listParsed) {
-      const parsed = parseListVariable(name, listParsed)
-      variables.push(parsed.variable)
-      metaByName.set(name, parsed.meta)
-      continue
-    }
-    const parsed = parseScalarVariable(name, raw)
+  for (const [name, definition] of Object.entries(vars)) {
+    const exposed = definition instanceof ExposedVariable
+    const parsed = parseVariable(name, exposed ? definition.value : definition)
+    if (exposed) parsed.variable.exposed = true
     variables.push(parsed.variable)
     metaByName.set(name, parsed.meta)
   }
@@ -522,6 +523,9 @@ type VarSpecFromValue<V> =
             : { type: ScalarVarTypeFromValue<V> }
         : { type: ListVarTypeFromValue<V> }
 
+/** Variable spec of a definition; exposed(...) only marks the variable, so unwrap it first. */
+type VarSpecOf<V> = VarSpecFromValue<V extends ExposedVariable<infer T> ? T : V>
+
 type VarReturnType<S extends VarSpec> = S extends { type: 'dict'; dict: infer D }
   ? D extends { k: infer K; v: infer V }
     ? dict<K & DictKeyType, V & DictValueType>
@@ -564,7 +568,7 @@ export type NodeGraphVarApi<Vars extends VariablesDefinition> = {
    *
    * 变量值
    */
-  get<K extends keyof Vars>(name: K): VarReturnType<VarSpecFromValue<Vars[K]>>
+  get<K extends keyof Vars>(name: K): VarReturnType<VarSpecOf<Vars[K]>>
   /**
    * Alias for getNodeGraphVariable with variable type inference.
    *
@@ -604,7 +608,7 @@ export type NodeGraphVarApi<Vars extends VariablesDefinition> = {
    */
   set<K extends keyof Vars>(
     name: K,
-    value: VarParamType<VarSpecFromValue<Vars[K]>>,
+    value: VarParamType<VarSpecOf<Vars[K]>>,
     triggerEvent?: BoolValue
   ): void
   /**

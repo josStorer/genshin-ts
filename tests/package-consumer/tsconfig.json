@@ -8,5 +8,5 @@
     "skipLibCheck": false,
     "noEmit": true
   },
-  "files": ["index.ts", "lua-signals.ts"]
+  "files": ["index.ts", "lua-signals.ts", "exposed-variables.ts"]
 }

@@ -28,6 +28,7 @@ import type {
   vec3,
   Vec3Value
 } from './value.js'
+import type { ExposedVariable } from './variables.js'
 
 declare global {
   /** An entity value exposing only client node-graph entity shortcuts. */
@@ -488,6 +489,22 @@ declare global {
      */
     FindByPrefabId(prefab: PrefabIdValue): entity[]
   }
+
+  /**
+   * Expose a node graph variable so entities hosting the graph can override its initial value.
+   *
+   * 暴露节点图变量: 挂载该节点图的实体可以覆写此变量的初始值。
+   *
+   * GSTS Note: Injection replaces the editor's exposure settings with those declared in code.
+   * Renaming a variable or changing its type invalidates existing entity overrides.
+   *
+   * GSTS 注: 注入时以代码声明覆盖编辑器中的暴露设置。改名或改类型会使实体上已有的覆写失效。
+   *
+   * @param value Initial value or type declaration, used inside g.server({ variables }).
+   *
+   * 初始值或类型声明: 在 g.server({ variables }) 中使用，保留原有 get/set 类型推断。
+   */
+  function exposed<T>(value: T): ExposedVariable<T>
 
   /**
    * Combines up to 50 Key-Value Pairs into one Dictionary.

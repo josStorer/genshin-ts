@@ -42,6 +42,7 @@ import {
   vec3,
   Vec3Value
 } from './value.js'
+import { ExposedVariable } from './variables.js'
 
 type ConvertibleFrom = 'bool' | 'entity' | 'faction' | 'float' | 'guid' | 'int' | 'vec3'
 type ConvertibleTo = 'bool' | 'int' | 'str' | 'float'
@@ -362,6 +363,7 @@ function scheduleTimer(
 }
 
 export type ServerGlobalFactories = {
+  exposed: <T>(value: T) => ExposedVariable<T>
   raw: <T>(v: T) => T
   bool: (v: BoolValue | IntValue) => boolean
   int: (v: IntValue | BoolValue | FloatValue) => bigint
@@ -455,6 +457,7 @@ function makeFactories(): ServerGlobalFactories {
 
   return {
     raw: (v) => v,
+    exposed: (value) => new ExposedVariable(value),
     bool: makeConvertibleFactory('bool'),
     int: makeConvertibleFactory('int'),
     idx: (v: IntValue) => v as unknown as number,
@@ -682,6 +685,7 @@ function makeFactories(): ServerGlobalFactories {
 }
 
 const BASE_NAMES: (keyof ServerGlobalFactories)[] = [
+  'exposed',
   'raw',
   'bool',
   'int',

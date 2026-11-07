@@ -193,7 +193,7 @@ function applyGraphVariables(graph: GiaGraph, graphId: number, variables: Variab
       nodeType = valueTypeToNodeType(v.type)
       value = v.value
     }
-    const graphVar = graph.add_graph_var(v.name, nodeType, false, value as never)
+    const graphVar = graph.add_graph_var(v.name, nodeType, v.exposed ?? false, value as never)
     if (graphVar && value === undefined) {
       graphVar.val = undefined as never
     }
