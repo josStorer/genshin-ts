@@ -449,7 +449,6 @@ export const SPECIAL_NODE_MAPPINGS: Record<string, string> = {
   increase_loot_component_item_quantity: 'modify_loot_item_component_quantity',
   increase_skill_resource_amount: 'modify_skill_resource_amount',
   revive_the_active_character: 'revive_active_character',
-  set_character_skill_cd: 'modify_character_skill_cd',
   set_character_disruptor_device: 'modifying_character_disruptor_device',
   set_custom_shop_item_sales_info: 'modify_custom_shop_item_sales_info',
   set_entity_faction: 'modify_entity_faction',

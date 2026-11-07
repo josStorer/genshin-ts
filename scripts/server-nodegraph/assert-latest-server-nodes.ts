@@ -3,6 +3,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { irToGia } from '../../src/compiler/ir_to_gia_transform/index.js'
+import {
+  getNodeIdLowerMap,
+  SPECIAL_NODE_MAPPINGS
+} from '../../src/compiler/ir_to_gia_transform/mappings.js'
 import type { PlayerEntity } from '../../src/definitions/entity_helpers.js'
 import { ServerEventMetadata } from '../../src/definitions/events.js'
 import { NODE_TYPE_BY_METHOD } from '../../src/definitions/node_modes.js'
@@ -596,6 +600,15 @@ assert.throws(
   () => irToGia(invalidLiteralDocument, { protoPath }),
   /set_player_s_cursor_click_selectable_targets input #1 only accepts a literal value/
 )
+
+// A renamed-node alias must never redirect a node type that exists under its own name.
+const nodeIdLower = getNodeIdLowerMap()
+for (const alias of Object.keys(SPECIAL_NODE_MAPPINGS)) {
+  assert.ok(
+    !nodeIdLower.has(alias) && !nodeIdLower.has(`${alias}__generic`),
+    `${alias} is a node of its own and must not be redirected`
+  )
+}
 
 console.log(
   `[ok] verified ${expectedPins.size} latest server node/event ids, pin layouts, modes, ` +
