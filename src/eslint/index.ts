@@ -29,6 +29,7 @@ import noInnerDeclarations from './rules/no-inner-declarations.js'
 import noJson from './rules/no-json.js'
 import noNullishCoalesce from './rules/no-nullish-coalesce.js'
 import noObjectStatic from './rules/no-object-static.js'
+import noOuterGraphAssignment from './rules/no-outer-graph-assignment.js'
 import noPlainObject from './rules/no-plain-object.js'
 import noPromise from './rules/no-promise.js'
 import noSpreadArrayWithoutType from './rules/no-spread-array-without-type.js'
@@ -80,6 +81,7 @@ export const rules = {
   'no-json': noJson,
   'no-nullish-coalesce': noNullishCoalesce,
   'no-object-static': noObjectStatic,
+  'no-outer-graph-assignment': noOuterGraphAssignment,
   'no-plain-object': noPlainObject,
   'no-promise': noPromise,
   'no-spread-array-without-type': noSpreadArrayWithoutType,
@@ -136,6 +138,7 @@ export const configs = {
       'gsts/no-undefined-array-return': 'warn',
       'gsts/lua-shared-module': 'error',
       'gsts/no-object-static': 'warn',
+      'gsts/no-outer-graph-assignment': 'warn',
       'gsts/no-plain-object': 'warn',
       'gsts/require-boolean-condition': 'warn',
       'gsts/no-timer-in-loop': 'warn',

@@ -20,6 +20,7 @@ import {
   SERVER_F_ZH_TO_EN,
   type ServerEventNameZh
 } from '../definitions/zh_aliases.js'
+import { t } from '../i18n/index.js'
 import { CLIENT_ERROR_CODES, clientNodegraphError } from '../shared/client_capability_errors.js'
 import {
   applyClientFlowFunctionZhAliases,
@@ -88,6 +89,27 @@ import {
 } from './variables.js'
 
 export type { MetaCallRecord, MetaCallRecordRef, MetaCallRecordType } from './meta_call_types.js'
+
+type EventOwner = { name: string }
+// Record identity also distinguishes outputs from different graph registries.
+const nodeEventOwners = new WeakMap<MetaCallRecordRef, EventOwner>()
+
+/** A data pin may only come from a node of the same event handler; otherwise the editor wires two event flows together. */
+function assertSameEventOwner(record: MetaCallRecord, owner: EventOwner) {
+  for (const [index, arg] of record.args.entries()) {
+    const meta = arg.getMetadata()
+    if (meta?.kind !== 'pin') continue
+    const source = nodeEventOwners.get(meta.record)
+    if (!source || source === owner) continue
+    throw new Error(
+      t('err_crossEventDataConnection', {
+        source: source.name,
+        target: owner.name,
+        expression: `${meta.record.nodeType}.${meta.pinName} -> ${record.nodeType}[${index}]`
+      })
+    )
+  }
+}
 
 export { defineSignal } from './signal_definition.js'
 export type {
@@ -688,6 +710,7 @@ function processDictParam(param: ServerEventMetadataType[ServerEventName][number
 }
 
 export interface ExecutionFlowRegistry {
+  getGraphId(): number | undefined
   registerNode(record: MetaCallRecord): MetaCallRecordRef
   withExecBranch(
     fromNodeId: number,
@@ -737,6 +760,8 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
   private readonly variableMetaByName: Map<string, NodeGraphVariableMeta>
   private readonly serverEventPreludes = new Map<string, ServerEventPrelude>()
   private readonly appliedServerEventPreludes = new WeakMap<ExecutionFlow, Set<string>>()
+  private readonly flowEventOwners = new WeakMap<ExecutionFlow, EventOwner>()
+  private activeEventOwner?: EventOwner
   /**
    * return调用计数, 通过回调前后比对确认是否调用过return
    */
@@ -841,6 +866,8 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
     const prevReturnCounter = this.returnCallCounter
     const flowIndex = this.flows.length - 1
     const eventNode = this.flows[flowIndex].eventNode
+    const previousOwner = this.activeEventOwner
+    this.activeEventOwner = this.flowEventOwners.get(this.flows[flowIndex])
     const restoreScopedGlobals = installScopedServerGlobals()
     this.flowStack = [...prevFlowStack, flowIndex]
     this.loopNodeStack = []
@@ -854,6 +881,7 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
       this.flowStack = prevFlowStack
       this.loopNodeStack = prevLoopStack
       this.returnCallCounter = prevReturnCounter
+      this.activeEventOwner = previousOwner
     }
   }
 
@@ -891,6 +919,11 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
     const prevLoopStack = this.loopNodeStack
     const prevReturnCounter = this.returnCallCounter
     const flow = this.flows[flowIndex]
+    const previousOwner = this.activeEventOwner
+    this.activeEventOwner = {
+      name: `${this.graphType}.${entry ? `start${sourceIndex + 1}` : startNodeType} (graph ${this.graphId ?? 'default'})`
+    }
+    nodeEventOwners.set(flow.eventNode, this.activeEventOwner)
     const prevExecContextStack = flow.execContextStack
     flow.execContextStack = [{ tailEndpoints: [{ nodeId: flow.eventNode.id, sourceIndex }] }]
     const clientSubType = this.graphType as ClientGraphSubType
@@ -926,6 +959,7 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
         clientBindings[clientSubType] = prevClientF
       }
       this.flowStack = prevFlowStack
+      this.activeEventOwner = previousOwner
       this.loopNodeStack = prevLoopStack
       this.returnCallCounter = prevReturnCounter
       flow.execContextStack = prevExecContextStack
@@ -1015,10 +1049,12 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
     const originalContextStack = flow.execContextStack
     const preludeContext: ExecContext = { tailEndpoints: [{ nodeId: eventNodeId }] }
     const previousFlowStack = this.flowStack
+    const previousOwner = this.activeEventOwner
 
     delete flow.edges[eventNodeId]
     flow.execContextStack = [preludeContext]
     this.flowStack = [...previousFlowStack, flowIndex]
+    this.activeEventOwner = this.flowEventOwners.get(flow)
     try {
       prelude.build(new ServerExecutionFlowFunctions(this))
     } catch (error) {
@@ -1028,6 +1064,7 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
     } finally {
       flow.execContextStack = originalContextStack
       this.flowStack = previousFlowStack
+      this.activeEventOwner = previousOwner
     }
 
     if (!preludeContext.headNodeId) {
@@ -1130,6 +1167,11 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
       ]
     })
 
+    const owner = {
+      name: `${eventName} (graph ${this.graphId ?? 'default'}, handler ${eventNode.id})`
+    }
+    this.flowEventOwners.set(this.flows[this.flows.length - 1], owner)
+    nodeEventOwners.set(eventNode, owner)
     return eventObj
   }
 
@@ -1191,6 +1233,11 @@ export class MetaCallRegistry implements ExecutionFlowRegistry {
 
   registerNode(record: MetaCallRecord): MetaCallRecordRef {
     const current = this.currentFlow
+    const owner = this.activeEventOwner
+    if (owner) {
+      assertSameEventOwner(record, owner)
+      nodeEventOwners.set(record, owner)
+    }
     if (!record.id) {
       record.id = this.currentRecordId
     }

@@ -1,5 +1,4 @@
 {
-  "runtime_luaSignalParamType": "[error] Lua 信号的第 {{index}} 个参数使用了不支持的类型“{{type}}”",
   "lua_command": "Lua 工具",
   "lua_locateCommand": "将 Lua 报错行号定位到源码",
   "lua_locateArgument": "报错文本、日志文件路径或 文件.lua:行号；不填时读取剪贴板",
@@ -81,6 +80,8 @@
   "err_mergeServerModeMismatch": "[error] 无法合并不同 server mode（id={{id}}）：{{a}} vs {{b}}",
   "err_mergeClientSubTypeMismatch": "[error] 无法合并不同 client sub_type（id={{id}}）：{{a}} vs {{b}}",
   "err_graphVariableLimit": "[error] 节点图 {{id}} 有 {{count}} 个节点图变量，超过编辑器上限 {{max}} 个（其中 {{generated}} 个是 gsts 为定时器等自动生成的 __gsts 变量）",
+  "err_crossEventDataConnection": "[error] 数据连线跨越了事件处理函数：{{source}} -> {{target}}，连线：{{expression}}。请改用节点图变量（f.set / f.get 或 stage.set），或在当前事件里重新计算",
+  "runtime_luaSignalParamType": "[error] Lua 信号的第 {{index}} 个参数使用了不支持的类型“{{type}}”",
   "err_mergeClientModeMismatch": "[error] 无法合并不同 client mode（id={{id}}）：{{a}} vs {{b}}",
   "err_mergeDuplicateClientGraphId": "[error] 客户端节点图 id 只能声明一次（id={{id}}）；客户端节点图只有单一入口，不能像服务器节点图一样合并多个声明",
   "err_mergeDuplicateVarsByName": "[error] 合并后变量名重复（{{count}} 个）。\\n{{lines}}\\n{{truncated}}{{hint}}",

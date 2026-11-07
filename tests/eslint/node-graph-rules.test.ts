@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 
 import parser from '@typescript-eslint/parser'
-import { RuleTester } from 'eslint'
+import { Linter, RuleTester } from 'eslint'
 
 import { configs, rules } from '../../src/eslint/index.js'
 import builtinMathSupport from '../../src/eslint/rules/builtin-math-support.js'
@@ -22,6 +22,7 @@ import gstsFunctionPrefix from '../../src/eslint/rules/gsts-function-prefix.js'
 import listMethodTypeConstraints from '../../src/eslint/rules/list-method-type-constraints.js'
 import noGraphFunctionRecursion from '../../src/eslint/rules/no-graph-function-recursion.js'
 import noJson from '../../src/eslint/rules/no-json.js'
+import noOuterGraphAssignment from '../../src/eslint/rules/no-outer-graph-assignment.js'
 import serverLiteralArguments from '../../src/eslint/rules/server-literal-arguments.js'
 import switchRestrictions from '../../src/eslint/rules/switch-restrictions.js'
 
@@ -39,6 +40,88 @@ const ruleTester = new RuleTester({
 })
 
 const importG = `import { g } from 'genshin-ts/runtime/core'`
+
+assert.equal(configs.recommended.rules['gsts/no-outer-graph-assignment'], 'warn')
+ruleTester.run('no-outer-graph-assignment', noOuterGraphAssignment, {
+  valid: [
+    {
+      filename,
+      code: `${importG}; let outside = 0n; outside = 1n;
+      g.server().on('whenEntityIsCreated', (_evt, f) => { let local = 0n; local = f.queryGameTimeElapsed(); f.set('shared', local) })`
+    },
+    {
+      filename,
+      code: `${importG}; let outside = 0n;
+      g.server().on('whenEntityIsCreated', () => { print(str(outside)); let captured = 1n; setTimeout(() => { captured = 2n }, 1000) })`
+    },
+    {
+      filename,
+      code: `${importG}; function setup() { let outside = 0n;
+      g.server().on('whenEntityIsCreated', () => { setTimeout(() => { outside = 2n }, 1000) }) }
+      // timer-outer-capture owns this cross-level local write.`
+    },
+    { filename, code: `function unrelated() { let local = 0; local++ }` }
+  ],
+  invalid: [
+    {
+      filename,
+      code: `${importG}; let shared = 0n;
+      g.server().on('whenEntityIsCreated', (_evt, f) => { shared = f.queryGameTimeElapsed() })`,
+      errors: [{ message: /Assigning to an outer variable/ }]
+    },
+    {
+      filename,
+      code: `${importG}; function setup() { let shared = 0n;
+      g.server().on('whenEntityIsCreated', () => { shared++ }) }`,
+      errors: 1
+    },
+    { filename, code: `let shared = 0n; function gstsServerUpdate() { shared += 1n }`, errors: 1 },
+    {
+      filename,
+      code: `${importG}; let a = 0n; let b = 1n;
+      g.server().on('whenEntityIsCreated', () => { [a, b] = [b, a] })`,
+      errors: 2
+    },
+    {
+      filename,
+      code: `${importG}; let shared = 0n;
+      g.server().on('whenEntityIsCreated', () => { setTimeout(() => { shared = 2n }, 1000) })`,
+      errors: 1
+    },
+    {
+      filename,
+      options: [{ lang: 'zh' }],
+      code: `let shared = 0n; const gstsServerUpdate = () => { shared = 2n }`,
+      errors: [{ message: /^给外层变量赋值/ }]
+    }
+  ]
+})
+
+const assignmentWarnings = new Linter().verify(
+  `${importG}; let moduleValue = 0n;
+function setup() {
+  let outerValue = 0n;
+  g.server().on('whenEntityIsCreated', () => {
+    setTimeout(() => { outerValue = 1n; moduleValue = 2n }, 1000)
+  })
+}`,
+  [
+    {
+      files: ['**/*.ts'],
+      languageOptions: {
+        parser,
+        parserOptions: { project: './tsconfig.json', tsconfigRootDir: process.cwd() }
+      },
+      plugins: { gsts: { rules } },
+      rules: { 'gsts/no-outer-graph-assignment': 'warn', 'gsts/timer-outer-capture': 'warn' }
+    }
+  ],
+  { filename }
+)
+assert.deepEqual(assignmentWarnings.map((message) => message.ruleId).sort(), [
+  'gsts/no-outer-graph-assignment',
+  'gsts/timer-outer-capture'
+])
 
 assert.equal(configs.recommended.rules['gsts/client-local-variable-support'], 'error')
 assert.equal(configs.recommended.rules['gsts/client-literal-arguments'], 'error')
