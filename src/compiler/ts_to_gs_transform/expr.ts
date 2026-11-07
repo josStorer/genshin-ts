@@ -1173,6 +1173,14 @@ function readNumericLiteral(expr: ts.Expression): number | null {
   return null
 }
 
+function timerNameExpression(receiver: ts.Expression, name: string): ts.CallExpression {
+  return ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(receiver, '__gstsTimerName'),
+    undefined,
+    [ts.factory.createStringLiteral(name)]
+  )
+}
+
 function buildTimerHandler(
   env: Env,
   fn: ts.ArrowFunction | ts.FunctionExpression,
@@ -1342,7 +1350,7 @@ function buildTimerHandler(
       undefined,
       [
         ts.factory.createPropertyAccessExpression(evtId, 'timerName'),
-        ts.factory.createStringLiteral(poolNames[0] ?? '')
+        timerNameExpression(fId, poolNames[0] ?? '')
       ]
     )
     const ifStmt = ts.factory.createIfStatement(
@@ -1363,13 +1371,16 @@ function buildTimerHandler(
 
     const primary = poolNames[0] ?? ''
     const props: ts.ObjectLiteralElementLike[] = [
-      ts.factory.createPropertyAssignment(ts.factory.createStringLiteral(primary), bodyFn)
+      ts.factory.createPropertyAssignment(
+        ts.factory.createComputedPropertyName(timerNameExpression(fId, primary)),
+        bodyFn
+      )
     ]
     for (const name of poolNames.slice(1)) {
       props.push(
         ts.factory.createPropertyAssignment(
-          ts.factory.createStringLiteral(name),
-          ts.factory.createStringLiteral(primary)
+          ts.factory.createComputedPropertyName(timerNameExpression(fId, name)),
+          timerNameExpression(fId, primary)
         )
       )
     }
@@ -1547,7 +1558,9 @@ function transformTimerCall(
     ts.factory.createPropertyAssignment(
       'poolNames',
       ts.factory.createArrayLiteralExpression(
-        poolNames.map((n) => ts.factory.createStringLiteral(n)),
+        poolNames.map((name) =>
+          makeFCall(env, '__gstsTimerName', [ts.factory.createStringLiteral(name)])
+        ),
         false
       )
     ),

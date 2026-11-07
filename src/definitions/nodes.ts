@@ -6,6 +6,7 @@ import {
   type SignalDefinition,
   type SignalParamValues
 } from '../runtime/core.js'
+import { resolveGraphIdForGraph } from '../runtime/graph_defaults.js'
 import {
   CommonLiteralValueListTypeMap,
   CommonLiteralValueTypeMap,
@@ -1885,6 +1886,18 @@ export class ServerExecutionFlowFunctions {
    */
   __gstsRegisterTimerCaptureDict(name: string, valueType: DictValueType) {
     this.registry.registerTimerCaptureDict(name, valueType)
+  }
+
+  /**
+   * Resolve a compiler-generated timer name in the calling graph.
+   *
+   * 生成定时器名称: 根据调用所在节点图的 ID 添加后五位后缀。
+   *
+   * @gsts internal
+   */
+  __gstsTimerName(base: string): string {
+    const id = resolveGraphIdForGraph({ type: 'server', id: this.registry.getGraphId() })
+    return `${base}_${String(id).slice(-5)}`
   }
 
   /**
