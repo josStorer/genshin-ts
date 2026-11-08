@@ -112536,12 +112536,12 @@
                 "io": "Input Parameter",
                 "name": "Character Skill Slot",
                 "data_type": "Enumeration",
-                "description": "The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill",
+                "description": "The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill",
                 "raw": {
                   "Parameter Type": "Input Parameter",
                   "Parameter Name": "Character Skill Slot",
                   "Type": "Enumeration",
-                  "Description": "The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill"
+                  "Description": "The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill"
                 }
               },
               {
@@ -112683,12 +112683,12 @@
                 "io": "Input Parameter",
                 "name": "Character Skill Slot",
                 "data_type": "Enumeration",
-                "description": "The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill",
+                "description": "The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill",
                 "raw": {
                   "Parameter Type": "Input Parameter",
                   "Parameter Name": "Character Skill Slot",
                   "Type": "Enumeration",
-                  "Description": "The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill"
+                  "Description": "The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill"
                 }
               },
               {
@@ -117872,12 +117872,12 @@
                 "io": "Output Parameter",
                 "name": "Consumer?",
                 "data_type": "Boolean",
-                "description": "Output Paramter reads Yes when Gift Box is successfully consumed",
+                "description": "Output Parameter reads Yes when Gift Box is successfully consumed",
                 "raw": {
                   "Parameter Type": "Output Parameter",
                   "Parameter Name": "Consumer?",
                   "Type": "Boolean",
-                  "Description": "Output Paramter reads Yes when Gift Box is successfully consumed"
+                  "Description": "Output Parameter reads Yes when Gift Box is successfully consumed"
                 }
               }
             ]
@@ -117933,7 +117933,7 @@
               "https://act-webstatic.mihoyo.com/ugc-tutorial/knowledge/cn/en-us/mhrgq1iit178/04cde943-faec-499a-a4c5-15d92ba1dbbe.png"
             ],
             "functions": [
-              "You can modify whether the pathfinding obstacke component of the target entity, corresponding to the specified index, is active."
+              "You can modify whether the pathfinding obstacle component of the target entity, corresponding to the specified index, is active."
             ],
             "parameters": [
               {

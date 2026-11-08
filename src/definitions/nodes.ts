@@ -4439,7 +4439,7 @@ export class ServerExecutionFlowFunctions {
   }
 
   /**
-   * You can modify whether the pathfinding obstacke component of the target entity, corresponding to the specified index, is active.
+   * You can modify whether the pathfinding obstacle component of the target entity, corresponding to the specified index, is active.
    *
    * Enable/Disable Pathfinding Obstacle
    *
@@ -6388,7 +6388,7 @@ export class ServerExecutionFlowFunctions {
    * @param targetEntity Active Character Entity
    *
    * 目标实体: 生效的角色实体
-   * @param characterSkillSlot The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
+   * @param characterSkillSlot The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
    *
    * 角色技能槽位: 要修改的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
    * @param cooldownRatioModifier The revised actual cooldown time is: original cooldown time * ratio value
@@ -6488,7 +6488,7 @@ export class ServerExecutionFlowFunctions {
    * @param targetEntity Active Character Entity
    *
    * 目标实体: 生效的角色实体
-   * @param characterSkillSlot The Skill Slot to edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
+   * @param characterSkillSlot The Skill Slot to be edited: Normal Attack, Skill 1-E, Skill 2-Q, Skill 3-R, Skill 4-T, or Custom Skill
    *
    * 角色技能槽位: 要修改的技能所在的槽位，分为普通攻击、技能1-E、技能2-Q、技能3-R、技能4-T和自定义技能
    * @param remainingCdTime Edited Cooldown will be set to this input value
@@ -9897,7 +9897,7 @@ export class ServerExecutionFlowFunctions {
    *
    * 消耗数量
    *
-   * @returns Output Paramter reads Yes when Gift Box is successfully consumed
+   * @returns Output Parameter reads Yes when Gift Box is successfully consumed
    *
    * 是否消耗: 礼盒被成功消耗以后该出参为是
    */
