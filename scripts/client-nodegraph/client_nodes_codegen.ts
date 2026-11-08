@@ -134,8 +134,8 @@ const CLASSIC_CHARACTER_ID_NOTE = {
 }
 
 const CUSTOM_VARIABLE_SYNC_NOTE = {
-  en: "GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here",
-  zh: 'GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到'
+  en: "GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)",
+  zh: 'GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）'
 }
 
 /** nodes emitted from hand templates, not the auto pipeline (control flow +
