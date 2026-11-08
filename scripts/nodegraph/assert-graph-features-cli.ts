@@ -276,8 +276,48 @@ g.server({ id: 1073741933 }).on('whenCharacterRevives', () => {
       ?.type,
     'get_local_variable'
   )
+  // A timer callback used to take the outer event's name for its own event parameter, so reading
+  // the outer evt there silently gave the timer trigger's payload; it is rejected instead.
+  const outerEvtEntry = `${dir}/outer-evt.ts`
+  fs.writeFileSync(
+    outerEvtEntry,
+    `import { g } from 'genshin-ts/runtime/core'
+g.server({ id: 1073741934 }).on('whenAttacked', (evt) => {
+  setTimeout(() => print(str(evt.attackerEntity)), 500)
+})
+`
+  )
+  const outerEvtResult = compile([outerEvtEntry], `${dir}/outer-evt`)
+  assert.notEqual(outerEvtResult.code, 0, outerEvtResult.output)
+  assert.match(outerEvtResult.output, /cannot read the outer event parameter evt/)
+  assert.match(outerEvtResult.output, /outer-evt\.ts:3:\d+/)
+  // In a handler without parameters, a forEach item took that name instead and was shadowed in the
+  // same way; it is now captured like any other local.
+  const forEachEntry = `${dir}/for-each-timer.ts`
+  fs.writeFileSync(
+    forEachEntry,
+    `import { g } from 'genshin-ts/runtime/core'
+g.server({ id: 1073741935 }).on('whenEntityIsCreated', () => {
+  ;[1n, 2n, 3n].forEach((x) => {
+    setTimeout(() => print(str(x)), 100)
+  })
+})
+`
+  )
+  const forEachResult = compile([forEachEntry], `${dir}/for-each-timer`)
+  assert.equal(forEachResult.code, 0, forEachResult.output)
+  const [forEachIr] = JSON.parse(
+    fs.readFileSync(`${dir}/for-each-timer/${dir}/for-each-timer.json`, 'utf8')
+  ) as Array<{ nodes: { type: string; args?: { type: string; value: unknown }[] }[] }>
+  assert.ok(
+    forEachIr.nodes.some(
+      (node) =>
+        node.type === 'get_node_graph_variable' && String(node.args?.[0].value).endsWith('_cap_x')
+    ),
+    'the forEach item is captured for the timer callback'
+  )
   console.log(
-    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID, the minimum literal timer delay and pooled timer handles'
+    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID, the minimum literal timer delay, pooled timer handles and outer evt in timer callbacks'
   )
 } finally {
   fs.rmSync(config, { force: true })

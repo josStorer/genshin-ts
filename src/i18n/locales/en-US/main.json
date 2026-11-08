@@ -49,6 +49,7 @@
   "resourcesBasedOn": "Based on {{name}}",
   "resourcesBasedOnId": "Based on prefabId {{id}}",
   "warn_timerIntervalHighFrequency": "setInterval interval {{ms}}ms is very short. High-frequency timers may cause performance issues and could be removed from the game; use motion controllers for movement and collision boxes for detection.",
+  "timerCallbackOuterEvent": "A timer callback cannot read the outer event parameter {{name}}: that event is over by the time the callback runs. Store the value you need in a constant before setTimeout/setInterval (for example const source = {{name}}.eventSourceEntity) and use that constant in the callback; to read the timer event itself, declare the callback parameter, for example (timer) => timer.timerName",
   "startCompile": "Starting compilation...",
   "startGia": "Starting GIA generation...",
   "startInject": "Preparing to inject data into the configured map...",

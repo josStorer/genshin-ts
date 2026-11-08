@@ -14,7 +14,7 @@ import {
   makeEmptyListExpr,
   type ListType
 } from './lists.js'
-import { getFMethodCall, isFMethodCall } from './matcher.js'
+import { getFMethodCall, isFMethodCall, isServerOnCall } from './matcher.js'
 import {
   getBinaryOpInfo,
   getCompoundAssignmentMethod,
@@ -612,6 +612,41 @@ function getParamName(param: ts.ParameterDeclaration | undefined): string | null
   return ts.isIdentifier(param.name) ? param.name.text : null
 }
 
+/**
+ * Inside a timer callback the handler's event parameter would be a wire into another event flow, and
+ * before the callback got its own parameter name it silently became the timer trigger's payload.
+ */
+function assertNoOuterEventRead(env: Env, fn: ts.ArrowFunction | ts.FunctionExpression) {
+  const visit = (node: ts.Node): void => {
+    if (ts.isIdentifier(node) && !isPropertyNameIdentifier(node)) {
+      const decl = env.checker.getSymbolAtLocation(node)?.declarations?.[0]
+      const handler = decl?.parent
+      if (
+        decl &&
+        handler &&
+        ts.isParameter(decl) &&
+        (ts.isArrowFunction(handler) || ts.isFunctionExpression(handler)) &&
+        handler.parameters[0] === decl &&
+        handler !== fn &&
+        ts.isCallExpression(handler.parent) &&
+        isServerOnCall(handler.parent, env.checker)
+      ) {
+        fail(env, node, t('timerCallbackOuterEvent', { name: node.text }))
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(fn.body)
+}
+
+function isPropertyNameIdentifier(node: ts.Identifier): boolean {
+  const parent = node.parent
+  return (
+    (ts.isPropertyAccessExpression(parent) && parent.name === node) ||
+    (ts.isPropertyAssignment(parent) && parent.name === node)
+  )
+}
+
 function resolveTimerParamNames(
   env: Env,
   fn: ts.ArrowFunction | ts.FunctionExpression
@@ -635,7 +670,9 @@ function resolveTimerParamNames(
     fail(env, p1, 'setTimeout/setInterval callback parameter must be an identifier')
   }
 
-  const defaultEvt = env.evtIdent ?? 'evt'
+  // A fresh name, so a callback without parameters never shadows an outer identifier such as the
+  // handler's evt or a forEach item
+  const defaultEvt = '__gstsTimerEvt'
   const defaultF = env.fIdent ?? 'f'
 
   let evtName = getParamName(p0) ?? defaultEvt
@@ -1433,6 +1470,7 @@ function transformTimerCall(
   }
 
   const { evtName, fName } = resolveTimerParamNames(env, handlerArg)
+  assertNoOuterEventRead(env, handlerArg)
   const poolSize = resolveTimerPoolSize(env, expr, kind)
   const timerId = env.timerCounterRef.value++
   const poolNames = Array.from({ length: poolSize }, (_, i) => `__gsts_${kind}_${timerId}_${i}`)
