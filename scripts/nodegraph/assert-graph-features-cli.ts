@@ -316,8 +316,15 @@ g.server({ id: 1073741935 }).on('whenEntityIsCreated', () => {
     ),
     'the forEach item is captured for the timer callback'
   )
+  // whenEntityIsCreated gives a timer outside loops a single name, but a forEach callback is a loop
+  // body, so each iteration needs its own name from the pool instead of restarting one timer.
+  assert.equal(
+    forEachIr.nodes.find((node) => node.type === 'start_timer')?.args?.[1].type,
+    'conn',
+    'the timer name comes from the pool, not a fixed literal'
+  )
   console.log(
-    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID, the minimum literal timer delay, pooled timer handles and outer evt in timer callbacks'
+    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID, the minimum literal timer delay, pooled timer handles, outer evt in timer callbacks and timers in list callbacks'
   )
 } finally {
   fs.rmSync(config, { force: true })

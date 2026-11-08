@@ -7,6 +7,7 @@ import { isEntityLikeType } from '../../shared/ts_type_utils.js'
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
 import { fail, warn } from './errors.js'
 import { tryTransformListMethodCall } from './list_methods.js'
+import { isArrayLikeExpression } from './list_utils.js'
 import {
   inferArrayListType,
   inferConcreteTypeFromString,
@@ -721,7 +722,7 @@ function readTimerPoolOverride(env: Env, node: ts.Node): number | null {
   return null
 }
 
-function isInLoop(node: ts.Node): boolean {
+function isInLoop(env: Env, node: ts.Node): boolean {
   let cur: ts.Node | undefined = node.parent
   while (cur) {
     if (
@@ -733,10 +734,19 @@ function isInLoop(node: ts.Node): boolean {
     ) {
       return true
     }
-    if (ts.isFunctionLike(cur)) return false
+    if (ts.isFunctionLike(cur)) return isLoopCallback(env, cur)
     cur = cur.parent
   }
   return false
+}
+
+/** Callbacks of list methods such as forEach / map and of f.finiteLoop / f.listIterationLoop are loop bodies */
+function isLoopCallback(env: Env, fn: ts.Node): boolean {
+  const call = fn.parent
+  if (!call || !ts.isCallExpression(call) || !call.arguments.some((arg) => arg === fn)) return false
+  const callee = call.expression
+  if (isFMethodCall(env, call, ['finiteLoop', 'listIterationLoop'])) return true
+  return ts.isPropertyAccessExpression(callee) && isArrayLikeExpression(env, callee.expression)
 }
 
 function resolveTimerPoolSize(env: Env, node: ts.Node, kind: TimerKind): number {
@@ -752,7 +762,7 @@ function resolveTimerPoolSize(env: Env, node: ts.Node, kind: TimerKind): number 
 
   if (
     (env.eventName === 'whenEntityIsCreated' || env.eventName === '实体创建时') &&
-    !isInLoop(node) &&
+    !isInLoop(env, node) &&
     configured === undefined
   ) {
     size = 1
