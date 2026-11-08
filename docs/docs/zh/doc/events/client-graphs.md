@@ -90,7 +90,7 @@ g.characterSkill({ id: CHARACTER_SKILL_ID }).on('start', (_evt, f) => {
 
 ## 运行时注意事项
 
-- 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用“设置自定义变量”在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）。
+- 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端。服务器用“设置自定义变量”在运行时新建的变量，客户端节点图和 Lua 都读不到。
 - 负载优化（视野检测）会在本地卸载离角色较远的实体；实体不在本地时，部分纯本地的逻辑（如播放特效）可能不会执行。造物超出角色一定范围后，会在该角色的客户端降频运行（造物的“超出范围降频运行”，默认开启）。
 
 完整功能示例可参考仓库中的 [`tests/manual/features/beyond.ts`](https://github.com/josStorer/genshin-ts/blob/master/tests/manual/features/beyond.ts) 和 [`tests/manual/features/classic.ts`](https://github.com/josStorer/genshin-ts/blob/master/tests/manual/features/classic.ts)。

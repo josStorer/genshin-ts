@@ -82,7 +82,7 @@ g.server({
 - Use it when one graph is mounted on several entities that need different settings, for example two explosive barrels that share a graph but deal different damage.
 - The value in code is what entities without their own value use.
 - Code decides what is exposed: every injection writes the exposure settings from code, so ticking or unticking "expose" by hand in the editor is reset on the next injection.
-- Re-injecting keeps the values already filled in on entities (checked in game). Renaming an exposed variable or changing its type breaks the link to those values.
+- Re-injecting keeps the values already filled in on entities. Renaming an exposed variable or changing its type breaks the link to those values.
 - The editor cannot fill in exposed entities, entity lists or dictionaries with entities, so the build warns about them. To point each entity at its own scene entity, expose a GUID variable and get the entity with `entity(guid)`.
 - Since 7.2 the multilingual text tool also collects the text filled in on entities. Initial values in the graph were always collected, so exposure is not needed just for translation.
 

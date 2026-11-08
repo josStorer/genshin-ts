@@ -90,7 +90,7 @@ The handler's `f` parameter is the preferred API. Reusable top-level client func
 
 ## Runtime notes
 
-- The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them).
+- Only variables configured in the entity's Custom Variable component are synced to the client. A variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua.
 - Load optimization (view detection) unloads entities far from the character on the local client; while an entity is not loaded locally, some purely local logic, such as playing effects, may not run. A creation beyond a certain range from the character runs at a reduced rate on that character's client (the creation's "reduced frequency out of range" option, on by default).
 
 For complete feature examples, see [`tests/manual/features/beyond.ts`](https://github.com/josStorer/genshin-ts/blob/master/tests/manual/features/beyond.ts) and [`tests/manual/features/classic.ts`](https://github.com/josStorer/genshin-ts/blob/master/tests/manual/features/classic.ts).

@@ -137,15 +137,15 @@ export interface ClientGlobals extends LuaStandardGlobals {
    * enabled and is released on destroy. Returns a cancel function that is safe to call more than once. It
    * does not fire at start; read the current value with lua.helper.readVariable when you need it.
    * Only variables configured in the Custom Variable component are synced to the client; a variable the server
-   * creates at run time with Set Custom Variable cannot be read or watched here (checked in game). Changes the
-   * server makes to configured variables arrive without any signal.
+   * creates at run time with Set Custom Variable cannot be read or watched here. Changes the server
+   * makes to configured variables arrive without any signal.
    *
    * 监听一个自定义变量，每次被设置时把新值传给回调；设成相同的值也会触发，与服务器设置时的“是否触发事件”无关。
    * 只关心真正变化时，请自己和上次的值比较。
    * valueType（'number'、'string' 或 'boolean'）每次都会检查，不符时记一条错误并跳过。
    * 写在回调根部即可：脚本停用时暂停、重新启用后恢复、销毁时释放。返回取消函数，重复调用无害。
    * 开始时不会触发；需要当前值，请用 lua.helper.readVariable 读取。
-   * 只有在自定义变量组件里预先配置的变量才会同步到客户端；服务器用“设置自定义变量”在运行时新建的变量，这里读不到也监听不到（已在游戏内确认）；服务器对已配置变量的修改，不需要信号也会同步过来。
+   * 只有在自定义变量组件里预先配置的变量才会同步到客户端；服务器用“设置自定义变量”在运行时新建的变量，这里读不到也监听不到；服务器对已配置变量的修改，不需要信号也会同步过来。
    *
    * @example
    * lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stage) => render(stage))
@@ -358,13 +358,13 @@ export declare function readParams<const S extends Record<string, LuaParam>>(
  * variables; to change one, send a signal and let the server set it. For lists, dictionaries and structs use
  * lua.game.GetGlobalCustomVariableValue.
  * Only variables configured in the Custom Variable component are synced to the client; a variable the server
- * creates at run time with Set Custom Variable cannot be read or watched here (checked in game). Changes the
- * server makes to configured variables arrive without any signal.
+ * creates at run time with Set Custom Variable cannot be read or watched here. Changes the server
+ * makes to configured variables arrive without any signal.
  *
  * 立即读取一个全局自定义变量并检查类型，是 lua.onVariable 的读取版：开始时读当前值，之后用 onVariable 跟进变化。
  * valueType 为 'number'、'string' 或 'boolean'。变量没有值时返回 undefined，类型不符时直接报错。
  * 客户端只能读取变量；要修改，请发信号让服务器改。列表、字典、结构体请用 lua.game.GetGlobalCustomVariableValue。
- * 只有在自定义变量组件里预先配置的变量才会同步到客户端；服务器用“设置自定义变量”在运行时新建的变量，这里读不到也监听不到（已在游戏内确认）；服务器对已配置变量的修改，不需要信号也会同步过来。
+ * 只有在自定义变量组件里预先配置的变量才会同步到客户端；服务器用“设置自定义变量”在运行时新建的变量，这里读不到也监听不到；服务器对已配置变量的修改，不需要信号也会同步过来。
  *
  * @example
  * const stage = lua.helper.readVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number') ?? 0

@@ -78,11 +78,11 @@ g.server({ id: 1073741825 }).onSignal(Signal.PlayerAction, (evt, f) => {
 - `sendLua(player, signal, ...params)` sends to one player, and every client Lua script mounted on that player receives it. You can also write `player.sendLua(signal, ...params)` or `f.sendClientScriptedServerSignal(...)`.
 - `sendLuaAll(signal, ...params)` loops over Get List of Player Entities on the Field and sends to each player.
 - Register the signal in the signal manager first, as usual. Parameters must use types that Lua can receive; faction is not supported.
-- The target must be a player entity, such as `player(index)` or an element of the on-field player list. The Signal Source Entity of a signal sent from Lua cannot be used as the target (nothing arrives, checked in game); to reply to the sender, have the client include something that identifies it in the parameters.
+- The target must be a player entity, such as `player(index)` or an element of the on-field player list. The Signal Source Entity of a signal sent from Lua cannot be used as the target (nothing arrives); to reply to the sender, have the client include something that identifies it in the parameters.
 - Lua receives it with `lua.onSignal`; see [Client Lua: signals and subscriptions](../lua.md#signals).
 
 ## Notes
 
-- A stage can have at most 99 signals (official editing limits).
+- A stage can have at most 99 signals.
 - `Signal.xxx` comes from the extracted map data; after editing signals in the editor, save the map first, then rerun compilation to extract the updated signal information.
 - String-based usage does not provide parameter names or parameter type hints.

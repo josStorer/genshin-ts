@@ -306,7 +306,7 @@ lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stag
 
 lua.onCursor 只接受预设按钮和光标检测区域。四个监听都返回取消函数，也可以先解构再用：`const { onKey, onSignal } = lua`。
 
-lua.onVariable 在变量每次被设置时触发：设成相同的值也会触发，也不受服务器“设置自定义变量”节点“是否触发事件”的影响（该选项只管服务器的“自定义变量变化时”事件）。只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.helper.readVariable` 读取（参数和 onVariable 相同，没有值时返回 undefined，类型不符直接报错）；只有在自定义变量组件里预先配置的变量才会同步到客户端：服务器用“设置自定义变量”在运行时新建的变量，Lua 读不到也监听不到；配置好的变量被服务器修改后，不需要信号也会同步过来，readVariable 能读到新值，onVariable 也会触发（均已在游戏内确认）；客户端只能读变量，要修改请发信号让服务器改；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
+lua.onVariable 在变量每次被设置时触发：设成相同的值也会触发，也不受服务器“设置自定义变量”节点“是否触发事件”的影响（该选项只管服务器的“自定义变量变化时”事件）。只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.helper.readVariable` 读取（参数和 onVariable 相同，没有值时返回 undefined，类型不符直接报错）；只有在自定义变量组件里预先配置的变量才会同步到客户端：服务器用“设置自定义变量”在运行时新建的变量，Lua 读不到也监听不到；配置好的变量被服务器修改后，不需要信号也会同步过来，readVariable 能读到新值，onVariable 也会触发；客户端只能读变量，要修改请发信号让服务器改；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
 
 ### 信号边界检查
 

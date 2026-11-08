@@ -4553,9 +4553,9 @@ interface EntityHelperFromFirstParam {
    *
    * 设置自定义变量: 为目标实体上的指定自定义变量设置值
    *
-   * GSTS Note: When `triggerEvent` is omitted, gsts passes False, so the change does not trigger the change event. The editor defaults to True. Only variables configured in the entity's Custom Variable component are synced to the client (official docs). A variable this node creates at run time is not synced and Lua cannot read it, while a configured variable changed by this node reaches Lua without any signal (both checked in game). Float custom variables keep a precision of 0.0001
+   * GSTS Note: When `triggerEvent` is omitted, gsts passes False, so the change does not trigger the change event. The editor defaults to True. Only variables configured in the entity's Custom Variable component are synced to the client: a variable this node creates at run time cannot be read by client node graphs or Lua, while a configured variable changed by this node reaches the client without any signal. Float custom variables keep a precision of 0.0001
    *
-   * GSTS 注: 省略【是否触发事件】时 gsts 传入“否”，这次修改不会触发变化事件；编辑器中的默认值为“是”。只有在实体的自定义变量组件里预先配置的变量才会同步到客户端（官方说明）。本节点在运行时新建的变量不会同步，Lua 读不到；组件里配置好的变量被本节点修改后，不需要信号也会同步到 Lua（均已在游戏内确认）。浮点数自定义变量的精度为 0.0001
+   * GSTS 注: 省略【是否触发事件】时 gsts 传入“否”，这次修改不会触发变化事件；编辑器中的默认值为“是”。只有在实体的自定义变量组件里预先配置的变量才会同步到客户端：本节点在运行时新建的变量，客户端节点图和 Lua 都读不到；组件里配置好的变量被本节点修改后，不需要信号也会同步到客户端。浮点数自定义变量的精度为 0.0001
    *
    * @param variableName Custom variable name. Must be unique
    *
@@ -5696,9 +5696,9 @@ interface EntityHelperMethodAliases {
    *
    * 设置自定义变量: 为目标实体上的指定自定义变量设置值
    *
-   * GSTS Note: When `triggerEvent` is omitted, gsts passes False, so the change does not trigger the change event. The editor defaults to True. Only variables configured in the entity's Custom Variable component are synced to the client (official docs). A variable this node creates at run time is not synced and Lua cannot read it, while a configured variable changed by this node reaches Lua without any signal (both checked in game). Float custom variables keep a precision of 0.0001
+   * GSTS Note: When `triggerEvent` is omitted, gsts passes False, so the change does not trigger the change event. The editor defaults to True. Only variables configured in the entity's Custom Variable component are synced to the client: a variable this node creates at run time cannot be read by client node graphs or Lua, while a configured variable changed by this node reaches the client without any signal. Float custom variables keep a precision of 0.0001
    *
-   * GSTS 注: 省略【是否触发事件】时 gsts 传入“否”，这次修改不会触发变化事件；编辑器中的默认值为“是”。只有在实体的自定义变量组件里预先配置的变量才会同步到客户端（官方说明）。本节点在运行时新建的变量不会同步，Lua 读不到；组件里配置好的变量被本节点修改后，不需要信号也会同步到 Lua（均已在游戏内确认）。浮点数自定义变量的精度为 0.0001
+   * GSTS 注: 省略【是否触发事件】时 gsts 传入“否”，这次修改不会触发变化事件；编辑器中的默认值为“是”。只有在实体的自定义变量组件里预先配置的变量才会同步到客户端：本节点在运行时新建的变量，客户端节点图和 Lua 都读不到；组件里配置好的变量被本节点修改后，不需要信号也会同步到客户端。浮点数自定义变量的精度为 0.0001
    *
    * @param variableName Custom variable name. Must be unique
    *

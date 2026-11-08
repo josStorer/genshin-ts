@@ -3086,9 +3086,9 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param targetEntity
    *
@@ -12834,9 +12834,9 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param targetEntity
    *
@@ -21856,9 +21856,9 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param targetEntity
    *
@@ -29770,9 +29770,9 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param targetEntity
    * Literal only; wired connections are not allowed.
@@ -35665,9 +35665,9 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param targetEntity
    * Literal only; wired connections are not allowed.
@@ -40008,9 +40008,9 @@ export class ClientBoolFilterExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param targetEntity
    *
@@ -44895,9 +44895,9 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param targetEntity
    *
@@ -47786,9 +47786,9 @@ export interface ClientEntityHelperMethods<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param variableName
    *
@@ -47967,9 +47967,9 @@ export interface ClientEntityHelperMethods<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
-   * GSTS Note: The official docs say only variables configured in the entity's Custom Variable component are synced to the client; variables the server creates at run time with Set Custom Variable are not among them (Lua was checked in game and cannot read them)
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read by client node graphs or Lua
    *
-   * GSTS 注: 官方说明只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，服务器用【设置自定义变量】在运行时新建的变量不在此列（Lua 已在游戏内确认读不到）
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，客户端节点图和 Lua 都读不到
    *
    * @param variableName
    *
