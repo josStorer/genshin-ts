@@ -252,8 +252,32 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
       .map((node) => (node.args?.[0].type === 'conn' ? 'computed' : node.args?.[0].value)),
     [10, 10, 10, 30, 'computed']
   )
+  // A pooled timer name is read from the pool list after the index has moved on, so a kept
+  // handle must come from a local variable set before that; otherwise clearTimeout stops the next slot.
+  const handleEntry = `${dir}/pooled-handle.ts`
+  fs.writeFileSync(
+    handleEntry,
+    `import { g } from 'genshin-ts/runtime/core'
+g.server({ id: 1073741933 }).on('whenCharacterRevives', () => {
+  const h = setTimeout(() => print('cancelled'), 1000)
+  clearTimeout(h)
+})
+`
+  )
+  const handleResult = compile([handleEntry], `${dir}/pooled-handle`)
+  assert.equal(handleResult.code, 0, handleResult.output)
+  const [handleIr] = JSON.parse(
+    fs.readFileSync(`${dir}/pooled-handle/${dir}/pooled-handle.json`, 'utf8')
+  ) as Array<{ nodes: { id: number; type: string; args?: { type: string; value: unknown }[] }[] }>
+  const stopName = handleIr.nodes.find((node) => node.type === 'stop_timer')?.args?.[1]
+  assert.equal(stopName?.type, 'conn')
+  assert.equal(
+    handleIr.nodes.find((node) => node.id === (stopName?.value as { node_id: number }).node_id)
+      ?.type,
+    'get_local_variable'
+  )
   console.log(
-    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID and the minimum literal timer delay'
+    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID, the minimum literal timer delay and pooled timer handles'
   )
 } finally {
   fs.rmSync(config, { force: true })

@@ -68,6 +68,7 @@ type TimerOptions = {
   kind: TimerKind
   poolNames: string[]
   indexVar?: string
+  keepHandle?: boolean
   captures: TimerCaptureSpec[]
   __gstsTimerDedupKey: string
 }
@@ -362,12 +363,18 @@ function scheduleTimer(
   const seconds = f.division(delayObj, 1000)
   const sequence = f.assemblyList([seconds])
   f.startTimer(f.getSelfEntity(), timerName, kind === 'interval', sequence)
+  // A pooled name is a live list read: once the index below moves on, reading it again gives the
+  // next slot, so a handle the caller keeps is stored in a local variable first.
+  const handle =
+    nextIdx && opts.keepHandle
+      ? attachTimerCaptureMeta(f.initLocalVariable('str', timerName).value, dicts)
+      : timerName
   if (nextIdx) {
     f.setNodeGraphVariable(opts.indexVar as string, nextIdx, false)
   }
 
   registerTimerHandlerOnce(f, opts, handler)
-  return timerName
+  return handle
 }
 
 export type ServerGlobalFactories = {

@@ -1579,6 +1579,10 @@ function transformTimerCall(
     optionProps.push(
       ts.factory.createPropertyAssignment('indexVar', ts.factory.createStringLiteral(indexVarName))
     )
+    // The returned handle is used later (cleared, stored or captured), so the runtime snapshots it
+    if (!ts.isExpressionStatement(expr.parent)) {
+      optionProps.push(ts.factory.createPropertyAssignment('keepHandle', ts.factory.createTrue()))
+    }
   }
   const optionsExpr = ts.factory.createObjectLiteralExpression(optionProps, true)
 
