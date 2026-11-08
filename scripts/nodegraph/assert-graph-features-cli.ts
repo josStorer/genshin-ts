@@ -258,7 +258,7 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
   fs.writeFileSync(
     handleEntry,
     `import { g } from 'genshin-ts/runtime/core'
-g.server({ id: 1073741933 }).on('whenCharacterRevives', () => {
+g.server({ id: 1073741944 }).on('whenCharacterRevives', () => {
   const h = setTimeout(() => print('cancelled'), 1000)
   clearTimeout(h)
 })
@@ -282,7 +282,7 @@ g.server({ id: 1073741933 }).on('whenCharacterRevives', () => {
   fs.writeFileSync(
     outerEvtEntry,
     `import { g } from 'genshin-ts/runtime/core'
-g.server({ id: 1073741934 }).on('whenAttacked', (evt) => {
+g.server({ id: 1073741945 }).on('whenAttacked', (evt) => {
   setTimeout(() => print(str(evt.attackerEntity)), 500)
 })
 `
@@ -297,7 +297,7 @@ g.server({ id: 1073741934 }).on('whenAttacked', (evt) => {
   fs.writeFileSync(
     forEachEntry,
     `import { g } from 'genshin-ts/runtime/core'
-g.server({ id: 1073741935 }).on('whenEntityIsCreated', () => {
+g.server({ id: 1073741946 }).on('whenEntityIsCreated', () => {
   ;[1n, 2n, 3n].forEach((x) => {
     setTimeout(() => print(str(x)), 100)
   })
@@ -323,8 +323,73 @@ g.server({ id: 1073741935 }).on('whenEntityIsCreated', () => {
     'conn',
     'the timer name comes from the pool, not a fixed literal'
   )
+  // Parameters and loop variables have no local variable: assigning them in a branch or loop body
+  // would apply to every path, so it is rejected, while straight-line reassignment still compiles.
+  const branchAssign = [
+    [
+      'param',
+      `function gstsServerClamp(v: bigint) {
+  if (v > 10n) v = 10n
+  print(str(v))
+}
+g.server({ id: 1073741947 }).on('whenEntityIsCreated', () => {
+  gstsServerClamp(1n)
+})`
+    ],
+    [
+      'loop',
+      `g.server({ id: 1073741948 }).on('whenEntityIsCreated', () => {
+  for (let x of [1n, 5n]) {
+    if (x > 2n) x = 0n
+    print(str(x))
+  }
+})`
+    ]
+  ].map(([name, code]) => {
+    const file = `${dir}/assign-${name}.ts`
+    fs.writeFileSync(file, `import { g } from 'genshin-ts/runtime/core'\n${code}\n`)
+    return file
+  })
+  for (const file of branchAssign) {
+    const result = compile([file], `${dir}/${path.basename(file, '.ts')}`)
+    assert.notEqual(result.code, 0, result.output)
+    assert.match(result.output, /has no node graph local variable/)
+  }
+  // A dict cannot be a local variable at all, so the error does not suggest copying it into a let
+  const dictAssign = `${dir}/assign-dict.ts`
+  fs.writeFileSync(
+    dictAssign,
+    `import { g } from 'genshin-ts/runtime/core'
+g.server({
+  id: 1073741950,
+  variables: { D1: dict([{ k: 'a', v: 1n }]), D2: dict([{ k: 'a', v: 2n }]), Flag: true }
+}).on('whenEntityIsCreated', (_evt, f) => {
+  let d = f.get('D1')
+  if (f.get('Flag')) d = f.get('D2')
+  print(str(d.get('a')))
+})
+`
+  )
+  const dictResult = compile([dictAssign], `${dir}/assign-dict`)
+  assert.notEqual(dictResult.code, 0, dictResult.output)
+  assert.match(dictResult.output, /a type that node graph local variables cannot hold/)
+  const straightAssign = `${dir}/assign-straight.ts`
+  fs.writeFileSync(
+    straightAssign,
+    `import { g } from 'genshin-ts/runtime/core'
+function gstsServerBump(v: bigint) {
+  v = v + 1n
+  print(str(v))
+}
+g.server({ id: 1073741949 }).on('whenEntityIsCreated', () => {
+  gstsServerBump(1n)
+})
+`
+  )
+  const straightResult = compile([straightAssign], `${dir}/assign-straight`)
+  assert.equal(straightResult.code, 0, straightResult.output)
   console.log(
-    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID, the minimum literal timer delay, pooled timer handles, outer evt in timer callbacks and timers in list callbacks'
+    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID, the minimum literal timer delay, pooled timer handles, outer evt in timer callbacks, timers in list callbacks and assignments in branches'
   )
 } finally {
   fs.rmSync(config, { force: true })

@@ -124,6 +124,11 @@ function inferBasicType(env: Env, t: ts.Type): ListType | null {
   return inferConcreteTypeFromType(env.checker, env.checker.getBaseTypeOfLiteralType(t), env.file)
 }
 
+/** Whether a `let` of this type can get a node graph local variable (a dict, for example, cannot) */
+export function canHaveLocalVariable(env: Env, t: ts.Type): boolean {
+  return isCollectionType(env, t) || inferBasicType(env, t) !== null
+}
+
 function makeLocalVarTypeString(
   env: Env,
   decl: ts.VariableDeclaration,

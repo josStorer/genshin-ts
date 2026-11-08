@@ -23,7 +23,7 @@ import {
   isSupportedSimpleAssignmentOperator,
   isUnsupportedBinaryOperator
 } from './ops.js'
-import { transformHandler } from './stmt.js'
+import { canHaveLocalVariable, transformHandler } from './stmt.js'
 import type { Env, TimerCaptureInfo, TimerHandleMeta, VarPlanEntry } from './types.js'
 import {
   assertClientFMethodAvailable,
@@ -589,6 +589,46 @@ function hasNestedAssignment(node: ts.Node): boolean {
     if (hasNestedAssignment(c)) found = true
   })
   return found
+}
+
+/**
+ * Without a local variable, an assignment only rebinds the JS name at compile time. That matches the
+ * graph in straight-line code, but inside a branch, a loop body or a callback every path would see the
+ * new value. Module-level variables are left to the cross-event check.
+ */
+function assertStraightLineAssignment(env: Env, expr: ts.BinaryExpression, symbol?: ts.Symbol) {
+  const decl = symbol?.valueDeclaration ?? symbol?.declarations?.[0]
+  if (!decl || decl.getSourceFile() !== env.file) return
+  const declAncestors = new Set<ts.Node>()
+  let inFunction = false
+  for (let node: ts.Node | undefined = decl; node; node = node.parent) {
+    declAncestors.add(node)
+    if (ts.isFunctionLike(node)) inFunction = true
+  }
+  if (!inFunction) return
+
+  let branched = false
+  let cur: ts.Node = expr.parent
+  while (!declAncestors.has(cur)) {
+    if (
+      ts.isIfStatement(cur) ||
+      ts.isSwitchStatement(cur) ||
+      ts.isIterationStatement(cur, false) ||
+      ts.isConditionalExpression(cur) ||
+      ts.isFunctionLike(cur)
+    ) {
+      branched = true
+    }
+    cur = cur.parent
+  }
+  // A loop variable assigned in its own loop body: the common ancestor is the loop itself
+  if (ts.isIterationStatement(cur, false) && cur.statement.pos <= expr.pos) branched = true
+  if (branched) {
+    const key = canHaveLocalVariable(env, env.checker.getTypeAtLocation(expr.left))
+      ? 'assignmentNeedsLocalVariable'
+      : 'assignmentTypeHasNoLocalVariable'
+    fail(env, expr, t(key, { name: expr.left.getText(env.file) }))
+  }
 }
 
 function getTimerKind(expr: ts.CallExpression): TimerKind | null {
@@ -2234,6 +2274,7 @@ export function transformExpression(
         )
       }
 
+      assertStraightLineAssignment(env, expr, sym)
       if (!isSupportedSimpleAssignmentOperator(op)) {
         fail(env, expr, `Unsupported assignment operator: ${expr.operatorToken.getText(env.file)}`)
       }
