@@ -818,9 +818,9 @@ declare global {
    *
    * 节点图定时器版本的 setTimeout（JS 风格）, 在节点图作用域外则仍用JS原生setTimeout
    *
-   * GSTS Note: The internal tick of node graph system is unstable, the delay cannot be guaranteed precisely, please test the effect yourself, the delay has been passed to the node graph timer as it is.
+   * GSTS Note: The internal tick of node graph system is unstable, the delay cannot be guaranteed precisely, please test the effect yourself. The delay is passed to the node graph timer as it is, except that a 0-second timer never fires in game: a literal delay below 10ms, or no delay, becomes 10ms. A delay computed at run time is left as is: if it can be 0, the callback may never run.
    *
-   * GSTS注: 节点图系统内部tick不稳定, 延时无法保证精确, 务必自行测试效果, 此处延时已如实传递给节点图定时器
+   * GSTS注: 节点图系统内部tick不稳定, 延时无法保证精确, 务必自行测试效果。延时会如实传递给节点图定时器，但 0 秒的定时器在游戏里不会触发，所以直接写的延时小于 10ms（包括不写延时）时按 10ms 处理。运行时计算出来的延时不做处理，可能为 0 时回调可能永远不执行。
    */
   function setTimeout(
     handler: (
@@ -834,9 +834,9 @@ declare global {
    *
    * 节点图定时器版本的 setInterval（JS 风格）, 在节点图作用域外则仍用JS原生setInterval
    *
-   * GSTS Note: The internal tick of node graph system is unstable, the delay cannot be guaranteed precisely, please test the effect yourself, the delay has been passed to the node graph timer as it is.
+   * GSTS Note: The internal tick of node graph system is unstable, the delay cannot be guaranteed precisely, please test the effect yourself. The delay is passed to the node graph timer as it is, except that a 0-second timer never fires in game: a literal interval below 10ms, or no interval, becomes 10ms. An interval computed at run time is left as is: if it can be 0, the callback may never run. Literal intervals of 100ms or less also get a high-frequency warning.
    *
-   * GSTS注: 节点图系统内部tick不稳定, 延时无法保证精确, 务必自行测试效果, 此处延时已如实传递给节点图定时器
+   * GSTS注: 节点图系统内部tick不稳定, 延时无法保证精确, 务必自行测试效果。延时会如实传递给节点图定时器，但 0 秒的定时器在游戏里不会触发，所以直接写的间隔小于 10ms（包括不写间隔）时按 10ms 处理。运行时计算出来的间隔不做处理，可能为 0 时回调可能永远不执行。直接写的间隔不超过 100ms 时还会有高频警告。
    */
   function setInterval(
     handler: (

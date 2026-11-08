@@ -300,6 +300,8 @@ function ensureTimerOptions(kind: TimerKind, fnName: string, arg: unknown): Time
   return opts
 }
 
+const MIN_LITERAL_DELAY_MS = 10
+
 function scheduleTimer(
   kind: TimerKind,
   fnName: string,
@@ -341,7 +343,12 @@ function scheduleTimer(
     f.setOrAddKeyValuePairsToDictionary(dictObj, timerName, cap.value as never)
   }
 
-  const delayValue = delayMs ?? 0
+  // A 0-second node graph timer never fires in game, so a missing or literal delay gets at least
+  // MIN_LITERAL_DELAY_MS. Delays computed at run time are passed through unchanged.
+  const delayValue =
+    delayMs === undefined || (typeof delayMs === 'number' && delayMs < MIN_LITERAL_DELAY_MS)
+      ? MIN_LITERAL_DELAY_MS
+      : delayMs
   let delayObj: FloatValue
   try {
     delayObj = parseValue(delayValue, 'float') as FloatValue

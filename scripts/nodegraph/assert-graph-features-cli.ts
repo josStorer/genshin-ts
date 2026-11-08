@@ -221,8 +221,34 @@ g.server().on('whenEntityIsCreated', () => { setTimeout(() => print('default'), 
     JSON.stringify(decode_gia_file(path.join(dir, 'default', String(defaultFiles[0])), proto)),
     /__gsts_timeout_0_0_41825/
   )
+  // A 0-second timer never fires in game: a missing or literal delay below 10ms becomes 10ms,
+  // while a delay computed at run time stays as it is.
+  const delayEntry = `${dir}/delay.ts`
+  fs.writeFileSync(
+    delayEntry,
+    `import { g } from 'genshin-ts/runtime/core'
+g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
+  setTimeout(() => print('none'))
+  setTimeout(() => print('zero'), 0)
+  setInterval(() => print('tick'), 5)
+  setTimeout(() => print('thirty'), 30)
+  setTimeout(() => print('computed'), f.addition(1.5, 2.5))
+})
+`
+  )
+  const delayResult = compile([delayEntry], `${dir}/delay`)
+  assert.equal(delayResult.code, 0, delayResult.output)
+  const [delayIr] = JSON.parse(fs.readFileSync(`${dir}/delay/${dir}/delay.json`, 'utf8')) as Array<{
+    nodes: { type: string; args?: { type: string; value: unknown }[] }[]
+  }>
+  assert.deepEqual(
+    delayIr.nodes
+      .filter((node) => node.type === 'division')
+      .map((node) => (node.args?.[0].type === 'conn' ? 'computed' : node.args?.[0].value)),
+    [10, 10, 10, 30, 'computed']
+  )
   console.log(
-    '[ok] Graph features CLI: exposed types, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g and default graph ID'
+    '[ok] Graph features CLI: exposed types, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID and the minimum literal timer delay'
   )
 } finally {
   fs.rmSync(config, { force: true })
