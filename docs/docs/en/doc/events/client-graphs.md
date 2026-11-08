@@ -88,4 +88,9 @@ g.characterSkill({ id: CHARACTER_SKILL_ID }).on('start', (_evt, f) => {
 
 The handler's `f` parameter is the preferred API. Reusable top-level client functions can also use the dedicated namespaces `gsts.fCharacterSkill`, `gsts.fCharacterControlSkill`, `gsts.fCreationSkill`, `gsts.fCreationStatus`, `gsts.fCreationStatusDecision`, `gsts.fBoolFilter`, and `gsts.fIntFilter`. `gsts.f` / `gsts.fServer` remain server-only.
 
+## Runtime notes
+
+- Only variables configured in the entity's Custom Variable component are synced to the client. A variable the server creates at run time with Set Custom Variable cannot be read by `getCustomVariable` in client graphs.
+- Load optimization (view detection) unloads entities far from the character on the local client; while an entity is not loaded locally, some purely local logic, such as playing effects, may not run. A creation beyond a certain range from the character runs at a reduced rate on that character's client (the creation's "reduced frequency out of range" option, on by default).
+
 For complete feature examples, see [`tests/manual/features/beyond.ts`](https://github.com/josStorer/genshin-ts/blob/master/tests/manual/features/beyond.ts) and [`tests/manual/features/classic.ts`](https://github.com/josStorer/genshin-ts/blob/master/tests/manual/features/classic.ts).

@@ -227,7 +227,7 @@ export default 可以省略；保留它是为了 `import type Board` / `typeof B
 
 methods 支持内联函数、回调内函数引用及简写；不接受 class/对象方法、非函数值或回调外函数。多返回值用 `lua.helper.multi(a, b)`；普通 TS 数组仍返回一个 table。
 
-## 信号与监听
+## 信号与监听 {#signals}
 
 信号使用现有提取结果或同一份 defineSignal 契约，发送顺序、接收字段和类型一起推导。
 
@@ -250,6 +250,8 @@ const off = lua.onSignal(Signal.Input, (evt) => {
 send(Signal.Input, 20, true)
 // off() 可提前取消；重复调用没有额外效果
 ```
+
+服务器节点图要用【发送客户端脚本信号】（`sendLua` / `sendLuaAll`）发给 Lua；普通的 `send` / `f.sendSignal` 只发给节点图，Lua 收不到。信号会送到目标玩家身上挂载的所有 Lua 脚本，每个挂载实例各收到一次。服务器侧的写法见[信号：发给客户端 Lua 脚本](./events/signals.md#to-lua)。
 
 `evt.params` 按参数名读取，`evt.values` 按定义顺序读取同一组参数，两者都有类型、都经过检查：
 
@@ -304,7 +306,7 @@ lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stag
 
 lua.onCursor 只接受预设按钮和光标检测区域。四个监听都返回取消函数，也可以先解构再用：`const { onKey, onSignal } = lua`。
 
-lua.onVariable 在变量每次被设置时触发：设成相同的值也会触发，也不受服务器“设置自定义变量”节点“是否触发事件”的影响（该选项只管服务器的“自定义变量变化时”事件）。只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.helper.readVariable` 读取（参数和 onVariable 相同，没有值时返回 undefined，类型不符直接报错）；客户端只能读变量，要修改请发信号让服务器改；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
+lua.onVariable 在变量每次被设置时触发：设成相同的值也会触发，也不受服务器“设置自定义变量”节点“是否触发事件”的影响（该选项只管服务器的“自定义变量变化时”事件）。只关心真正变化时请自己和上次的值比较；开始时不会触发，需要当前值请用 `lua.helper.readVariable` 读取（参数和 onVariable 相同，没有值时返回 undefined，类型不符直接报错）；只有在自定义变量组件里预先配置的变量才会同步到客户端，服务器用“设置自定义变量”在运行时新建的变量，Lua 读不到也监听不到；客户端只能读变量，要修改请发信号让服务器改；同一个变量不要再混用官方的 RegisterCustomVariableChangedHandler（会报 `gsts/lua-listener-ownership`）。每个实例每个信号只有一个底层监听，多个订阅按声明顺序各执行一次；分发时新增的下次生效，取消的跳过，单个回调抛错不阻断其他回调。不要混用同一信号的官方 Register/Unregister 与框架订阅。官方原始监听、Tween 和控件所有权仍由用户管理，框架不会销毁借用控件。
 
 ### 信号边界检查
 
@@ -610,3 +612,5 @@ entries 排除只影响入口发现，被导入的依赖仍编译和监听。dev
 自动测试在模拟环境（fengari）中运行生成的 Lua，覆盖类型、ESLint、模块状态和输出保护；SDK 检查覆盖 640 个官方 API 和枚举成员。本文写明"已在游戏内确认"的宿主行为都经过实机测试。
 
 暂不支持：从地图文件自动提取控件树、脚本变量和挂载位置。
+
+负载优化（视野检测）会在本地卸载离角色较远的实体；实体不在本地时，部分纯本地的逻辑（如播放特效）可能不会执行。

@@ -35,6 +35,8 @@ xs[idx(0n)] = 1n
 这与直接写 `f.get('items')[0] = 1n` 等价；即使用 `let` 声明，只要变量本身没有被重新赋值，
 列表元素修改也仍然写回原始运行时变量。这和 JS 行为更相符，也更容易生成简洁、高性能的节点图。
 
+对自定义变量来说，这样的原地修改不会触发“自定义变量变化时”事件，只有 `setCustomVariable` 会触发，见[常见编写模式](./patterns.md#custom-variables)。
+
 如果需要一个列表的数据拷贝，并且不希望修改影响原始数据，需要显式调用 `f.copyList()` 或
 `f.assemblyList()` 包裹 `f.get()`、`entity.get()`、`entity.getCustomVariable()` 等实时引用。
 这样取到的列表数据会通过局部变量节点完成复制：

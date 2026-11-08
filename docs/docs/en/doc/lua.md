@@ -227,7 +227,7 @@ export default is optional. Keep it for import type Board / typeof Board method-
 
 Methods accept inline functions, references to callback-local functions and shorthand properties. Class/object methods, non-functions and outside functions are rejected. Use lua.helper.multi(a,b) for multiple returns; ordinary TS arrays return one table.
 
-## Signals and subscriptions
+## Signals and subscriptions {#signals}
 
 Use extracted signal definitions or a shared defineSignal contract; argument order, receiver fields and types come from that contract.
 
@@ -250,6 +250,8 @@ const off = lua.onSignal(Signal.Input, (evt) => {
 send(Signal.Input, 20, true)
 // off() cancels early; repeated calls are harmless
 ```
+
+Server node graphs reach Lua with Send Client Scripted Server Signal (`sendLua` / `sendLuaAll`); a plain `send` / `f.sendSignal` only reaches node graphs. The signal goes to every Lua script mounted on the target player, and each mounted instance receives it once. For the server side, see [Signals: sending to client Lua scripts](./events/signals.md#to-lua).
 
 `evt.params` reads parameters by name and `evt.values` reads the same parameters in definition order; both are typed and checked:
 
@@ -304,7 +306,7 @@ lua.onVariable(lua.Enum.CustomVariableEntityType.Level, 'Stage', 'number', (stag
 
 lua.onCursor accepts preset buttons and cursor event areas. All four listeners return a cancel function and can also be destructured first: `const { onKey, onSignal } = lua`.
 
-lua.onVariable fires each time the variable is set: even when the value is unchanged, and regardless of the Trigger Event option on the server Set Custom Variable node (that option only controls the server On Custom Variable Change event). Compare with the previous value yourself if only real changes matter. It does not fire at start; read the current value with `lua.helper.readVariable` (same arguments as onVariable; undefined when the variable has no value, an error when it holds another type). The client can only read variables; send a signal to have the server change one. Do not also use the official RegisterCustomVariableChangedHandler for the same variable (reported as `gsts/lua-listener-ownership`). Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
+lua.onVariable fires each time the variable is set: even when the value is unchanged, and regardless of the Trigger Event option on the server Set Custom Variable node (that option only controls the server On Custom Variable Change event). Compare with the previous value yourself if only real changes matter. It does not fire at start; read the current value with `lua.helper.readVariable` (same arguments as onVariable; undefined when the variable has no value, an error when it holds another type). Only variables configured in the Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read or watched from Lua. The client can only read variables; send a signal to have the server change one. Do not also use the official RegisterCustomVariableChangedHandler for the same variable (reported as `gsts/lua-listener-ownership`). Each instance has one host handler per signal; subscribers run in registration order. Additions during dispatch start on the next message, cancelled subscriptions are skipped, and one throwing callback does not stop the others. Do not mix raw Register/Unregister with framework subscriptions for the same signal. Raw host listeners, Tween and control ownership remain the caller's responsibility; borrowed controls are not destroyed by the framework.
 
 ### Signal boundary checks
 
@@ -610,3 +612,5 @@ For timing use GSTS_INJECT_PROFILE=1 or --inject-profile and the unified [pipeli
 Automated tests run the generated Lua in a simulated runtime (fengari), covering types, ESLint, module state and output protection; the SDK check covers 640 official API and enum members. Host behavior this page describes as confirmed in game was tested in the game.
 
 Not supported yet: extracting control trees, script variables and mount locations from map files.
+
+Load optimization (view detection) unloads entities far from the character on the local client; while an entity is not loaded locally, some purely local logic, such as playing effects, may not run.

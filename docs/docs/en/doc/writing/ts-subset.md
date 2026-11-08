@@ -39,6 +39,9 @@ live list unless the binding itself is reassigned; element mutation still writes
 This matches JavaScript reference behavior more closely and produces simpler, faster node
 graphs.
 
+For custom variables, such in-place edits do not trigger On Custom Variable Change; only
+`setCustomVariable` does. See [Common Patterns](./patterns.md#custom-variables).
+
 Use `f.copyList()` or `f.assemblyList()` around `f.get()`, `entity.get()`,
 `entity.getCustomVariable()`, or another live reference when you need an explicit list snapshot
 that does not mutate the original data:
