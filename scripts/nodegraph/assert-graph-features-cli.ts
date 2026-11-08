@@ -47,6 +47,11 @@ try {
       aggregate
     )
     assert.equal(result.code, 0, result.output)
+    // The editor cannot fill in exposed variables that hold entities, so the build warns about them.
+    assert.match(
+      result.output,
+      /node graph 1073741920 exposes target, targets, entities, prefabKeys, entityLists, which hold entities/
+    )
     const checks = run([
       '--import',
       'tsx',
@@ -248,7 +253,7 @@ g.server({ id: 1073741932 }).on('whenEntityIsCreated', (_evt, f) => {
     [10, 10, 10, 30, 'computed']
   )
   console.log(
-    '[ok] Graph features CLI: exposed types, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID and the minimum literal timer delay'
+    '[ok] Graph features CLI: exposed types and the entity warning, both timer dispatch modes, cross-event rejection, merged files, shared stage variable, shared timer rejection, import forms of g, default graph ID and the minimum literal timer delay'
   )
 } finally {
   fs.rmSync(config, { force: true })

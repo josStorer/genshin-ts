@@ -166,6 +166,14 @@ function buildDictValue(variable: Variable): unknown[] {
 /** Editor limit (编辑项范围限制): at most 100 node graph variables per graph. */
 const MAX_GRAPH_VARIABLES = 100
 
+/** The editor offers no way to fill in an exposed variable that holds entities (checked in game). */
+function holdsEntity(v: Variable): boolean {
+  if (v.type === 'dict') {
+    return v.dict?.k === 'entity' || v.dict?.v === 'entity' || v.dict?.v === 'entity_list'
+  }
+  return v.type === 'entity' || v.type === 'entity_list'
+}
+
 function applyGraphVariables(graph: GiaGraph, graphId: number, variables: Variable[]) {
   if (variables.length > MAX_GRAPH_VARIABLES) {
     throw new Error(
@@ -174,6 +182,15 @@ function applyGraphVariables(graph: GiaGraph, graphId: number, variables: Variab
         count: variables.length,
         max: MAX_GRAPH_VARIABLES,
         generated: variables.filter((v) => v.name.startsWith('__gsts')).length
+      })
+    )
+  }
+  const exposedEntities = variables.filter((v) => v.exposed && holdsEntity(v))
+  if (exposedEntities.length) {
+    console.warn(
+      t('warn_exposedEntityVariable', {
+        id: graphId,
+        names: exposedEntities.map((v) => v.name).join(', ')
       })
     )
   }

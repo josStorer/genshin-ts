@@ -80,6 +80,7 @@
   "err_mergeServerModeMismatch": "[error] cannot merge different server mode (id={{id}}): {{a}} vs {{b}}",
   "err_mergeClientSubTypeMismatch": "[error] cannot merge different client sub_type (id={{id}}): {{a}} vs {{b}}",
   "err_graphVariableLimit": "[error] node graph {{id}} has {{count}} node graph variables, over the editor limit of {{max}} ({{generated}} of them are __gsts variables generated for timers and similar)",
+  "warn_exposedEntityVariable": "[warn] node graph {{id}} exposes {{names}}, which hold entities. The editor cannot fill in exposed entities, entity lists or dictionaries with entities; to give each entity its own scene entity, expose a GUID variable instead and get the entity with entity(guid)",
   "err_crossEventDataConnection": "[error] data connection crosses event handlers: {{source}} -> {{target}}, wire: {{expression}}. Use node graph variables (f.set / f.get or stage.set), or recompute it in the current event",
   "runtime_luaSignalParamType": "[error] Lua signal parameter #{{index}} has unsupported type \"{{type}}\"",
   "err_mergeClientModeMismatch": "[error] cannot merge different client mode (id={{id}}): {{a}} vs {{b}}",
