@@ -14,7 +14,8 @@ const field = (id: number, value: number | Uint8Array) =>
     : Buffer.concat([encodeVarint((id << 3) | 2), encodeVarint(value.length), value])
 
 // Recreate the relevant fields observed in the copied editor save, without
-// committing any save content. One name has both a graph and a Lua signal node.
+// committing any save content. One name has both a graph and a Lua signal node;
+// the Lua node keeps its name under field 108 instead of 101.
 const definition = (kind: number, nodeId: number) =>
   field(
     1,
@@ -26,7 +27,13 @@ const definition = (kind: number, nodeId: number) =>
           Buffer.concat([field(1, 10001), field(2, 20000), field(3, 22001), field(5, nodeId)])
         )
       ),
-      field(107, Buffer.concat([field(1, kind), field(101, field(1, Buffer.from('LuaProbe')))]))
+      field(
+        107,
+        Buffer.concat([
+          field(1, kind),
+          field(kind === 1006 ? 108 : 101, field(1, Buffer.from('LuaProbe')))
+        ])
+      )
     ])
   )
 const payload = Buffer.concat([definition(1001, 1610612700), definition(1006, 1610612701)])

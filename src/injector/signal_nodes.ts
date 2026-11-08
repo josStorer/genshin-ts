@@ -97,7 +97,8 @@ function parseCompositeDefId(buf: Uint8Array): NodeGraphIdInfo | undefined {
 }
 
 function parseSignalName(buf: Uint8Array): string | undefined {
-  const defBytes = readFieldBytes(buf, 101) ?? readFieldBytes(buf, 102)
+  // The name sits under 101 for send nodes, 102 for monitor nodes and 108 for Lua downlink nodes.
+  const defBytes = readFieldBytes(buf, 101) ?? readFieldBytes(buf, 102) ?? readFieldBytes(buf, 108)
   if (!defBytes) return undefined
   const nameBytes = readFieldBytes(defBytes, 1)
   if (!nameBytes) return undefined
