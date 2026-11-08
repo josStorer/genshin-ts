@@ -292,7 +292,8 @@ g.server({ id: 1073741945 }).on('whenAttacked', (evt) => {
   assert.match(outerEvtResult.output, /cannot read the outer event parameter evt/)
   assert.match(outerEvtResult.output, /outer-evt\.ts:3:\d+/)
   // In a handler without parameters, a forEach item took that name instead and was shadowed in the
-  // same way; it is now captured like any other local.
+  // same way; it is now captured like any other local. The second graph puts the timer in a branch
+  // callback inside the forEach, and the third only names evt in a type, which reads nothing.
   const forEachEntry = `${dir}/for-each-timer.ts`
   fs.writeFileSync(
     forEachEntry,
@@ -302,11 +303,26 @@ g.server({ id: 1073741946 }).on('whenEntityIsCreated', () => {
     setTimeout(() => print(str(x)), 100)
   })
 })
+g.server({ id: 1073741951 }).on('whenEntityIsCreated', (_evt, f) => {
+  ;[1n, 2n, 3n].forEach((x) => {
+    f.multipleBranches(x, {
+      default: () => {
+        setTimeout(() => print(str(x)), 100)
+      }
+    })
+  })
+})
+g.server({ id: 1073741952 }).on('whenAttacked', (evt) => {
+  setTimeout(() => {
+    type Event = typeof evt
+    print('ok')
+  }, 100)
+})
 `
   )
   const forEachResult = compile([forEachEntry], `${dir}/for-each-timer`)
   assert.equal(forEachResult.code, 0, forEachResult.output)
-  const [forEachIr] = JSON.parse(
+  const [forEachIr, branchInForEachIr] = JSON.parse(
     fs.readFileSync(`${dir}/for-each-timer/${dir}/for-each-timer.json`, 'utf8')
   ) as Array<{ nodes: { type: string; args?: { type: string; value: unknown }[] }[] }>
   assert.ok(
@@ -318,11 +334,13 @@ g.server({ id: 1073741946 }).on('whenEntityIsCreated', () => {
   )
   // whenEntityIsCreated gives a timer outside loops a single name, but a forEach callback is a loop
   // body, so each iteration needs its own name from the pool instead of restarting one timer.
-  assert.equal(
-    forEachIr.nodes.find((node) => node.type === 'start_timer')?.args?.[1].type,
-    'conn',
-    'the timer name comes from the pool, not a fixed literal'
-  )
+  for (const ir of [forEachIr, branchInForEachIr]) {
+    assert.equal(
+      ir.nodes.find((node) => node.type === 'start_timer')?.args?.[1].type,
+      'conn',
+      'the timer name comes from the pool, not a fixed literal'
+    )
+  }
   // Parameters and loop variables have no local variable: assigning them in a branch or loop body
   // would apply to every path, so it is rejected, while straight-line reassignment still compiles.
   const branchAssign = [
@@ -343,6 +361,16 @@ g.server({ id: 1073741947 }).on('whenEntityIsCreated', () => {
     if (x > 2n) x = 0n
     print(str(x))
   }
+})`
+    ],
+    [
+      'increment',
+      `function gstsServerBump(v: bigint) {
+  if (v > 2n) v++
+  print(str(v))
+}
+g.server({ id: 1073741953 }).on('whenEntityIsCreated', () => {
+  gstsServerBump(1n)
 })`
     ]
   ].map(([name, code]) => {

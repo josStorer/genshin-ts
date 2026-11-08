@@ -596,7 +596,12 @@ function hasNestedAssignment(node: ts.Node): boolean {
  * graph in straight-line code, but inside a branch, a loop body or a callback every path would see the
  * new value. Module-level variables are left to the cross-event check.
  */
-function assertStraightLineAssignment(env: Env, expr: ts.BinaryExpression, symbol?: ts.Symbol) {
+function assertStraightLineAssignment(
+  env: Env,
+  expr: ts.Expression,
+  target: ts.Identifier,
+  symbol?: ts.Symbol
+) {
   const decl = symbol?.valueDeclaration ?? symbol?.declarations?.[0]
   if (!decl || decl.getSourceFile() !== env.file) return
   const declAncestors = new Set<ts.Node>()
@@ -624,10 +629,10 @@ function assertStraightLineAssignment(env: Env, expr: ts.BinaryExpression, symbo
   // A loop variable assigned in its own loop body: the common ancestor is the loop itself
   if (ts.isIterationStatement(cur, false) && cur.statement.pos <= expr.pos) branched = true
   if (branched) {
-    const key = canHaveLocalVariable(env, env.checker.getTypeAtLocation(expr.left))
+    const key = canHaveLocalVariable(env, env.checker.getTypeAtLocation(target))
       ? 'assignmentNeedsLocalVariable'
       : 'assignmentTypeHasNoLocalVariable'
-    fail(env, expr, t(key, { name: expr.left.getText(env.file) }))
+    fail(env, expr, t(key, { name: target.text }))
   }
 }
 
@@ -659,6 +664,8 @@ function getParamName(param: ts.ParameterDeclaration | undefined): string | null
  */
 function assertNoOuterEventRead(env: Env, fn: ts.ArrowFunction | ts.FunctionExpression) {
   const visit = (node: ts.Node): void => {
+    // A type position such as `typeof evt` does not read the event at runtime
+    if (ts.isTypeNode(node)) return
     if (ts.isIdentifier(node) && !isPropertyNameIdentifier(node)) {
       const decl = env.checker.getSymbolAtLocation(node)?.declarations?.[0]
       const handler = decl?.parent
@@ -774,7 +781,10 @@ function isInLoop(env: Env, node: ts.Node): boolean {
     ) {
       return true
     }
-    if (ts.isFunctionLike(cur)) return isLoopCallback(env, cur)
+    if (ts.isFunctionLike(cur)) {
+      if (isLoopCallback(env, cur)) return true
+      if (!isInlineCallback(env, cur)) return false
+    }
     cur = cur.parent
   }
   return false
@@ -787,6 +797,19 @@ function isLoopCallback(env: Env, fn: ts.Node): boolean {
   const callee = call.expression
   if (isFMethodCall(env, call, ['finiteLoop', 'listIterationLoop'])) return true
   return ts.isPropertyAccessExpression(callee) && isArrayLikeExpression(env, callee.expression)
+}
+
+/**
+ * A callback such as a branch of f.multipleBranches runs in the same flow, so an enclosing loop still
+ * applies; a timer callback, an event handler or a function declaration starts its own flow.
+ */
+function isInlineCallback(env: Env, fn: ts.Node): boolean {
+  if (!ts.isArrowFunction(fn) && !ts.isFunctionExpression(fn)) return false
+  const call = fn.parent
+  return !(
+    ts.isCallExpression(call) &&
+    (getTimerKind(call) !== null || isServerOnCall(call, env.checker))
+  )
 }
 
 function resolveTimerPoolSize(env: Env, node: ts.Node, kind: TimerKind): number {
@@ -2274,7 +2297,7 @@ export function transformExpression(
         )
       }
 
-      assertStraightLineAssignment(env, expr, sym)
+      assertStraightLineAssignment(env, expr, leftId, sym)
       if (!isSupportedSimpleAssignmentOperator(op)) {
         fail(env, expr, `Unsupported assignment operator: ${expr.operatorToken.getText(env.file)}`)
       }
@@ -2426,6 +2449,9 @@ export function transformExpression(
         ])
         const localAssign = buildTimerCaptureLocalAssignExpr(env, operand, computed, captureInfo)
         return withSameRange(localAssign, expr)
+      }
+      if (!(sym && env.varPlan?.get(sym)?.needsLocalVar)) {
+        assertStraightLineAssignment(env, expr, operand, sym)
       }
     }
   }
