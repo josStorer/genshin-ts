@@ -133,6 +133,11 @@ const CLASSIC_CHARACTER_ID_NOTE = {
   zh: 'GSTS 注: 编号是整数（bigint），与 `CharacterPrefab` 中的数字比较前先用 `int()` 包一下，例如 `=== int(CharacterPrefab.Furina)`'
 }
 
+const CUSTOM_VARIABLE_SYNC_NOTE = {
+  en: "GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here",
+  zh: 'GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到'
+}
+
 /** nodes emitted from hand templates, not the auto pipeline (control flow +
  * the three round-2-proven special encodings, task 四.3) */
 const HAND_NODE_TYPES = new Set([
@@ -1590,7 +1595,8 @@ function controlFlowJsdoc(
     editorNameEn?: string
     literalOnly?: boolean
   }>,
-  returns?: { en: string; label?: string; zh: string }
+  returns?: { en: string; label?: string; zh: string },
+  note?: { en: string; zh: string }
 ): string {
   const lines: string[] = []
   const enDocs = sanitizeDocText(joinOfficialText(doc?.en.functions))
@@ -1600,6 +1606,7 @@ function controlFlowJsdoc(
   }
   const zhDocs = sanitizeDocText(joinOfficialText(doc?.zh.functions))
   lines.push(zhDocs ? `${zhName}: ${zhDocs}` : zhName)
+  if (note) lines.push('', note.en, '', note.zh)
   if (extraParams.length) {
     lines.push('')
     for (const p of extraParams) {
@@ -2138,7 +2145,8 @@ function emitGetCustomVariable(subType: string, doc: AlignedDocNode | undefined)
       },
       { ident: 'variableName', en: p1.en, zh: p1.zh }
     ],
-    { en: 'Variable value', zh: '变量值' }
+    { en: 'Variable value', zh: '变量值' },
+    CUSTOM_VARIABLE_SYNC_NOTE
   )}
   getCustomVariable(
     targetEntity: ${usesTargetEntityEnum ? 'TargetEntity' : 'EntityValue'},

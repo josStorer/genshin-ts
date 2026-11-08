@@ -1535,9 +1535,9 @@ export class ServerExecutionFlowFunctions {
    *
    * 设置自定义变量: 为目标实体上的指定自定义变量设置值
    *
-   * GSTS Note: When `triggerEvent` is omitted, gsts passes False, so the change does not trigger the change event. The editor defaults to True
+   * GSTS Note: When `triggerEvent` is omitted, gsts passes False, so the change does not trigger the change event. The editor defaults to True. Only variables configured in the entity's Custom Variable component are synced to the client: a variable this node creates at run time cannot be read by client node graphs or Lua. Float custom variables keep a precision of 0.0001
    *
-   * GSTS 注: 省略【是否触发事件】时 gsts 传入“否”，这次修改不会触发变化事件；编辑器中的默认值为“是”
+   * GSTS 注: 省略【是否触发事件】时 gsts 传入“否”，这次修改不会触发变化事件；编辑器中的默认值为“是”。只有在实体的自定义变量组件里预先配置的变量才会同步到客户端，本节点在运行时新建的变量，客户端节点图和 Lua 都读不到。浮点数自定义变量的精度为 0.0001
    *
    * @param targetEntity The variable is mounted on this entity
    *
@@ -1622,6 +1622,10 @@ export class ServerExecutionFlowFunctions {
    * Returns the value of the specified Custom Variable from the Target Entity; If the variable does not exist, returns the type's default value
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
+   *
+   * GSTS Note: A list or dictionary read here is a live reference: editing it in place changes the stored variable but does not trigger On Custom Variable Change; only Set Custom Variable triggers it
+   *
+   * GSTS 注: 取到的列表或字典是实时引用：原地修改会直接改动变量本身，但不会触发【自定义变量变化时】事件，只有【设置自定义变量】会触发
    *
    * @param targetEntity
    *

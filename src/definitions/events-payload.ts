@@ -72,6 +72,8 @@ export type ServerEventPayloads = {
    *
    * Replace `'int'` with the Custom Variable's actual type.
    *
+   * Only Set Custom Variable triggers this event. Editing a list or dictionary in place (for example `push` on a list read with `getCustomVariable`) changes the variable without triggering it.
+   *
    * GSTS 注: `preChangeValue` 或 `postChangeValue` 确定的具体类型同时决定本事件能检测哪一类自定义变量变化；只有该类型的变量变化才会触发。若处理函数只需要事件本身而未消费这两个值，编译生成的事件节点将不具备具体类型信息，无法正常监听变化。请对其中一个值显式调用 `asType()`，并通过【打印字符串】节点消费:
    *
    * ```ts
@@ -79,6 +81,8 @@ export type ServerEventPayloads = {
    * ```
    *
    * 请将 `'int'` 替换为自定义变量的实际类型。
+   *
+   * 只有【设置自定义变量】会触发本事件。原地修改列表或字典（例如对 `getCustomVariable` 取到的列表执行 `push`）会改动变量，但不会触发本事件。
    */
   whenCustomVariableChanges: {
     /**

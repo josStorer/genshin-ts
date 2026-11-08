@@ -3086,6 +3086,10 @@ export class ClientCharacterSkillExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
+   *
    * @param targetEntity
    *
    * 目标实体
@@ -12830,6 +12834,10 @@ export class ClientCharacterControlSkillExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
+   *
    * @param targetEntity
    *
    * 目标实体
@@ -21848,6 +21856,10 @@ export class ClientCreationSkillExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
+   *
    * @param targetEntity
    *
    * 目标实体
@@ -29758,6 +29770,10 @@ export class ClientCreationStatusExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
+   *
    * @param targetEntity
    * Literal only; wired connections are not allowed.
    *
@@ -35649,6 +35665,10 @@ export class ClientCreationStatusDecisionExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
+   *
    * @param targetEntity
    * Literal only; wired connections are not allowed.
    *
@@ -39987,6 +40007,10 @@ export class ClientBoolFilterExecutionFlowFunctions<
    * Returns the value of the specified Custom Variable from the Target Entity; If the variable does not exist, returns the type's default value
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
+   *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
    *
    * @param targetEntity
    *
@@ -44871,6 +44895,10 @@ export class ClientIntFilterExecutionFlowFunctions<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
+   *
    * @param targetEntity
    *
    * 目标实体
@@ -47758,6 +47786,10 @@ export interface ClientEntityHelperMethods<
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
    *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
+   *
    * @param variableName
    *
    * 变量名
@@ -47934,6 +47966,10 @@ export interface ClientEntityHelperMethods<
    * Returns the value of the specified Custom Variable from the Target Entity; If the variable does not exist, returns the type's default value
    *
    * 获取自定义变量: 获取目标实体的指定自定义变量的值; 如果变量不存在，则返回类型的默认值
+   *
+   * GSTS Note: Only variables configured in the entity's Custom Variable component are synced to the client; a variable the server creates at run time with Set Custom Variable cannot be read here
+   *
+   * GSTS 注: 只有在实体的自定义变量组件里预先配置的变量才会同步到客户端；服务器用【设置自定义变量】在运行时新建的变量，这里读不到
    *
    * @param variableName
    *
