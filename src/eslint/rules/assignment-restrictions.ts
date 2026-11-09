@@ -80,6 +80,18 @@ const rule: Rule.RuleModule = {
     const allowedOps = new Set(options.allowedOperators)
 
     return {
+      VariableDeclarator(node) {
+        if (node.id.type !== 'ObjectPattern' && node.id.type !== 'ArrayPattern') return
+        if (!scopeIndex.isInServerScope(node, options)) return
+        context.report({
+          node: node.id,
+          message: formatMessage(
+            options.lang,
+            '节点图中不支持解构声明。请先用普通变量保存结果，再通过属性或索引读取需要的值',
+            'Destructuring declarations are not supported in node graphs. Store the result in a variable, then access its properties or indices'
+          )
+        })
+      },
       AssignmentExpression(node) {
         if (!scopeIndex.isInServerScope(node, options)) return
         if (!allowedOps.has(node.operator)) {

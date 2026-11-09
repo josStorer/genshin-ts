@@ -1,17 +1,31 @@
 # Supported TS Subset
 
 ## Not supported or limited
+
 - Promise / async / await
 - recursion
 - JSON / Object native operations
 - string properties/concatenation (precompute at top-level)
+- object/array destructuring declarations and assignments inside node graphs
+
+To read multiple return values, store the result first, then access its properties. Use indices
+for list elements. Avoid `const { location, rotate } = ...` and `const [first] = ...`;
+`gsts/assignment-restrictions` in the recommended ESLint config reports these forms.
+This restriction does not apply to ordinary JS/TS preprocessing code or client Lua scripts.
+
+```ts
+const point = f.queryPresetPointPositionRotation(presetPointIndex[index])
+f.teleportPlayer(playerList[index], point.location, point.rotate)
+```
 
 ## Hard rules
+
 - Conditions must be boolean (use `bool(...)`).
 - `while(true)` is capped; use timers instead.
 - `console.log` supports a single argument only.
 
 ## Variable semantics
+
 - `let` forces a local variable node.
 - `const` may be optimized into direct wiring.
 

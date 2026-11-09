@@ -1,17 +1,30 @@
 # 可编译 TS 子集
 
 ## 不支持/受限
+
 - Promise / async / await
 - 递归
 - JSON / Object 原生操作
 - 字符串属性/拼接（建议顶层预处理）
+- 节点图内的对象/数组解构声明和解构赋值
+
+读取多个返回值时，先保存结果，再通过属性访问；列表元素通过索引访问。不要写
+`const { location, rotate } = ...` 或 `const [first] = ...`，推荐 ESLint 配置中的
+`gsts/assignment-restrictions` 会提示这类写法。普通 JS/TS 预处理代码和客户端 Lua 脚本不受这项限制。
+
+```ts
+const point = f.queryPresetPointPositionRotation(presetPointIndex[index])
+f.teleportPlayer(playerList[index], point.location, point.rotate)
+```
 
 ## 强约束
+
 - 条件必须是 boolean（必要时用 `bool(...)`）。
 - `while(true)` 受循环上限影响，建议用定时器。
 - `console.log` 仅支持单一参数。
 
 ## 变量语义
+
 - `let` 可强制生成节点图局部变量。
 - `const` 可能被优化为直接连线。
 

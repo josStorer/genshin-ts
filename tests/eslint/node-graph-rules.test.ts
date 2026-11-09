@@ -5,6 +5,7 @@ import parser from '@typescript-eslint/parser'
 import { Linter, RuleTester } from 'eslint'
 
 import { configs, rules } from '../../src/eslint/index.js'
+import assignmentRestrictions from '../../src/eslint/rules/assignment-restrictions.js'
 import builtinMathSupport from '../../src/eslint/rules/builtin-math-support.js'
 import builtinWrapperArity from '../../src/eslint/rules/builtin-wrapper-arity.js'
 import clientFilterReturn from '../../src/eslint/rules/client-filter-return.js'
@@ -40,6 +41,161 @@ const ruleTester = new RuleTester({
 })
 
 const importG = `import { g } from 'genshin-ts/runtime/core'`
+
+const issue19Destructuring = `${importG}
+g.server({ id: 1073741827 }).onSignal('传送', (_evt, f) => {
+  for (let index = 1; index <= 8; index++) {
+    let playerList = f.getListOfPlayerEntitiesOnTheField()
+    let presetPointIndex = f.getCustomVariable(level, '传送索引').asType('int_list')
+    const { location, rotate } = f.queryPresetPointPositionRotation(presetPointIndex[index])
+    f.teleportPlayer(playerList[index], location, rotate)
+  }
+  send('游戏开始')
+})`
+const issue19MemberAccess = issue19Destructuring
+  .replace('const { location, rotate } =', 'const point =')
+  .replace('playerList[index], location, rotate', 'playerList[index], point.location, point.rotate')
+
+ruleTester.run('assignment-restrictions destructuring declarations', assignmentRestrictions, {
+  valid: [
+    { filename, code: issue19MemberAccess },
+    {
+      filename,
+      code: `const { value } = { value: 1 }; function setup() { const [first] = [1] }`
+    },
+    {
+      filename,
+      code: `const g = { server: () => ({ onSignal: (_name: string, fn: () => void) => fn }) };
+g.server().onSignal('test', () => { const { value } = { value: 1 } })`
+    },
+    {
+      filename,
+      options: [{ includeNestedFunctions: false }],
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => { setTimeout(() => { const [value] = [1n] }, 1000) })`
+    },
+    {
+      filename,
+      options: [{ scope: 'server' }],
+      code: `${importG}
+g.creationSkill().on('start', () => { const [value] = [1n] })`
+    },
+    {
+      filename,
+      options: [{ scope: 'client' }],
+      code: issue19Destructuring
+    },
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  let value = 1n
+  value += 2n
+  const values = [value]
+  values[0] = 3n
+})`
+    }
+  ],
+  invalid: [
+    {
+      filename,
+      code: issue19Destructuring,
+      errors: [{ line: 6, column: 11, message: /Destructuring declarations.*not supported/ }]
+    },
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  const [first, , ...rest] = [1n, 2n, 3n]
+  let { value: renamed = 1n, nested: { item }, ...other } = source
+  var [fallback = 1n] = values
+  const plain = 1n, { value } = source
+})`,
+      errors: [
+        { message: /Destructuring declarations.*not supported/ },
+        { message: /Destructuring declarations.*not supported/ },
+        { message: /Destructuring declarations.*not supported/ },
+        { message: /Destructuring declarations.*not supported/ }
+      ]
+    },
+    {
+      filename,
+      options: [{ lang: 'zh' }],
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => { setTimeout(() => { const [value] = [1n] }, 1000) })`,
+      errors: [{ message: /节点图中不支持解构声明.*先用普通变量保存.*属性或索引/ }]
+    },
+    {
+      filename,
+      options: [{ lang: 'en' }],
+      code: `${importG}
+g.creationSkill().on('start', () => { const [value] = [1n] })
+function gstsServerHelper() { const { value } = source }
+const gstsCreationSkillHelper = () => { const [value] = [1n] }`,
+      errors: Array.from({ length: 3 }, () => ({
+        message: /^Destructuring declarations.*Store the result.*properties or indices/
+      }))
+    },
+    {
+      filename,
+      options: [{ scope: 'all' }],
+      code: `const { value } = { value: 1 }`,
+      errors: [{ message: /Destructuring declarations.*not supported/ }]
+    },
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  for (const [value] of values) {}
+  for (let { value } = source; value < 2n; value++) {}
+})`,
+      errors: [
+        { message: /Destructuring declarations.*not supported/ },
+        { message: /Destructuring declarations.*not supported/ }
+      ]
+    },
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  let value = 0n
+  ;({ value } = source)
+  ;[value] = values
+  target.value = value
+})`,
+      errors: Array.from({ length: 3 }, () => ({
+        message: /Only assignment to identifiers or list elements is supported/
+      }))
+    }
+  ]
+})
+
+const destructuringMessages = new Linter().verify(
+  issue19Destructuring,
+  [
+    {
+      files: ['**/*.ts'],
+      languageOptions: {
+        parser,
+        parserOptions: { project: './tsconfig.json', tsconfigRootDir: process.cwd() }
+      },
+      plugins: { gsts: { rules } },
+      rules: configs.recommended.rules as unknown as Linter.RulesRecord
+    }
+  ],
+  { filename }
+)
+assert.ok(!destructuringMessages.some((message) => message.fatal))
+assert.deepEqual(
+  destructuringMessages
+    .filter((message) => message.ruleId === 'gsts/assignment-restrictions')
+    .map(({ severity, line, column }) => ({ severity, line, column })),
+  [{ severity: 2, line: 6, column: 11 }]
+)
+assert.equal(
+  Object.entries(configs.lua.rules).find(([name]) => name === 'gsts/assignment-restrictions')?.[1],
+  'off'
+)
 
 assert.equal(configs.recommended.rules['gsts/no-outer-graph-assignment'], 'warn')
 ruleTester.run('no-outer-graph-assignment', noOuterGraphAssignment, {
