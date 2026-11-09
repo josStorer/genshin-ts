@@ -13,6 +13,8 @@ nodes and data used only by those nodes are then removed. Runtime-dependent cond
 are kept. Both callbacks still run at graph-construction time; this optimization changes
 the emitted graph, not JavaScript construction side effects. Disable either option to
 preserve the original branch structure for debugging. Client graphs are unchanged.
+If all nodes are removed, the server graph still produces a GIA file with its graph ID,
+name and variables preserved.
 
 Use `gsts analyze dist/example.json` to inspect the resulting IR. The report lists node
 types, connections, and node IDs for branches, loops, local variables, timers, list assembly,

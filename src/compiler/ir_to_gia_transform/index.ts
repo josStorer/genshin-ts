@@ -295,9 +295,7 @@ export function irToGia(ir: IRDocument, opts: IrToGiaOptions): Uint8Array {
   const name = opts.name ?? ir.graph?.name ?? '_GSTS_Generated_Graph'
   const uid = opts.uid ?? 100000001
 
-  if (!ir.nodes || ir.nodes.length === 0) {
-    throw new Error('IR document must have at least one node')
-  }
+  if (!ir.nodes) ir = { ...ir, nodes: [] }
 
   const preprocessStart = profiling ? performance.now() : 0
   const expanded = expandListLiterals(ir)

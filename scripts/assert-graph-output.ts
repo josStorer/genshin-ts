@@ -101,6 +101,13 @@ define('dead-data', ['live'], (_evt, f) => {
     () => f.printString('live')
   )
 })
+define('empty-graph', [], (_evt, f) => {
+  f.doubleBranch(
+    false,
+    () => f.printString('dead'),
+    () => {}
+  )
+})
 
 const options = (precompileExpression: boolean, removeUnusedNodes = true) =>
   setRuntimeOptions({ optimize: { precompileExpression, removeUnusedNodes } })
@@ -178,6 +185,8 @@ assert.deepEqual(after[5], before[5], 'runtime-dependent conditions must not be 
 assert.equal(before[0].nodes?.length, 4)
 assert.equal(after[0].nodes?.length, 2)
 assert.ok(!after[6].nodes?.some((node) => node.type === 'get_custom_variable'))
+assert.equal(before[7].nodes?.length, 3)
+assert.deepEqual(after[7].nodes, [])
 
 // Custom input/output indices survive bypassing; constant-only cycles are preserved.
 const branch = (id: number) => ({
@@ -305,6 +314,27 @@ try {
     const decoded = decode_gia_file(file, undefined, true)
     assert.equal(decoded.graph.graph?.inner.graph.nodes?.length, after[i].nodes?.length)
   }
+  for (const nodes of [[], undefined]) {
+    const ir: IRDocument = {
+      ir_version: 1,
+      ir_type: 'node_graph',
+      graph: { type: 'server', mode: 'classic', id: base + 100, name: 'empty' },
+      nodes
+    }
+    const original = globalThis.structuredClone(ir)
+    for (const lowMemoryEncoding of [false, true]) {
+      const file = path.join(tempDir, 'empty.gia')
+      fs.writeFileSync(file, irToGia(ir, { protoPath: DEFAULT_GIA_PROTO, lowMemoryEncoding }))
+      const decoded = decode_gia_file(file, undefined, true)
+      const graph = decoded.graph.graph!.inner.graph
+      assert.deepEqual(graph.nodes, [])
+      assert.deepEqual(graph.graphValues, [])
+      assert.equal(graph.id.id, ir.graph.id)
+      assert.equal(graph.name, ir.graph.name)
+      assert.equal(decoded.modeFlag, 1)
+      assert.deepEqual(ir, original)
+    }
+  }
   const irPath = path.join(tempDir, 'input.json')
   fs.writeFileSync(irPath, JSON.stringify(after))
   const cli = spawnSync(process.execPath, ['bin/gsts.mjs', '--lang', 'en-US', 'analyze', irPath], {
@@ -313,7 +343,10 @@ try {
   })
   assert.equal(cli.status, 0, cli.stderr + cli.stdout)
   assert.deepEqual(JSON.parse(cli.stdout), report)
-  assert.equal(fs.readdirSync(tempDir).filter((file) => file.endsWith('.gia')).length, after.length)
+  assert.equal(
+    fs.readdirSync(tempDir).filter((file) => file.endsWith('.gia')).length,
+    after.length + 1
+  )
 } finally {
   fs.rmSync(tempDir, { recursive: true, force: true })
 }
