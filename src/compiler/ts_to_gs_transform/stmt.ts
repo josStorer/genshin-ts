@@ -18,7 +18,12 @@ import {
   shouldCaptureIdentifier,
   transformExpression
 } from './expr.js'
-import { isArrayLikeExpression, SUPPORTED_LIST_METHODS } from './list_utils.js'
+import {
+  isArrayLikeExpression,
+  ITERATING_LIST_METHODS,
+  SUPPORTED_LIST_METHODS,
+  unwrapListSource
+} from './list_utils.js'
 import { inferListTypeFromTypeNode, inferListTypeFromTypeString, type ListType } from './lists.js'
 import {
   transformDoStatement,
@@ -43,31 +48,8 @@ function inferListConcreteType(env: Env, t: ts.Type, declTypeNode?: ts.TypeNode)
   )
 }
 
-function unwrapCollectionSourceExpression(expr: ts.Expression): ts.Expression {
-  let cur = expr
-  while (true) {
-    if (ts.isParenthesizedExpression(cur)) {
-      cur = cur.expression
-      continue
-    }
-    if (ts.isAsExpression(cur)) {
-      cur = cur.expression
-      continue
-    }
-    if (ts.isTypeAssertionExpression(cur)) {
-      cur = cur.expression
-      continue
-    }
-    if (ts.isSatisfiesExpression(cur)) {
-      cur = cur.expression
-      continue
-    }
-    return cur
-  }
-}
-
 function isListWrapperCallExpression(expr: ts.Expression): expr is ts.CallExpression {
-  const unwrapped = unwrapCollectionSourceExpression(expr)
+  const unwrapped = unwrapListSource(expr)
   return (
     ts.isCallExpression(unwrapped) &&
     ts.isIdentifier(unwrapped.expression) &&
@@ -76,7 +58,7 @@ function isListWrapperCallExpression(expr: ts.Expression): expr is ts.CallExpres
 }
 
 function needsCollectionRebindSnapshot(env: Env, expr: ts.Expression): boolean {
-  const unwrapped = unwrapCollectionSourceExpression(expr)
+  const unwrapped = unwrapListSource(expr)
   if (isListWrapperCallExpression(unwrapped)) return true
   if (isFMethodCall(env, unwrapped, ['copyList', 'assemblyList'])) return true
   if (ts.isArrayLiteralExpression(unwrapped)) return true
@@ -144,6 +126,13 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
 
   const decls = new Map<ts.Symbol, Decl>()
   const usage = new Map<ts.Symbol, Usage>()
+  const iterationSources = new Set<ts.Symbol>()
+  const markIterationSource = (expr: ts.Expression) => {
+    const source = unwrapListSource(expr)
+    if (!ts.isIdentifier(source)) return
+    const symbol = env.checker.getSymbolAtLocation(source)
+    if (symbol && decls.has(symbol)) iterationSources.add(symbol)
+  }
 
   const ensureUsage = (symbol: ts.Symbol): Usage => {
     let u = usage.get(symbol)
@@ -243,7 +232,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     if (expr.expression.name.text !== 'get' && expr.expression.name.text !== 'getCustomVariable') {
       return false
     }
-    const receiver = unwrapCollectionSourceExpression(expr.expression.expression)
+    const receiver = unwrapListSource(expr.expression.expression)
     return isEntityReceiverType(env.checker.getTypeAtLocation(receiver), receiver)
   }
 
@@ -257,7 +246,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
 
   const classifyCollectionSource = (expr: ts.Expression | undefined): CollectionSourceKind => {
     if (!expr) return 'unknown'
-    const unwrapped = unwrapCollectionSourceExpression(expr)
+    const unwrapped = unwrapListSource(expr)
 
     if (ts.isIdentifier(unwrapped)) {
       const sourceSym = env.checker.getSymbolAtLocation(unwrapped)
@@ -272,7 +261,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     if (ts.isCallExpression(unwrapped) && ts.isPropertyAccessExpression(unwrapped.expression)) {
       const method = unwrapped.expression.name.text
       if (method === 'asType' || method === 'asDict') {
-        const base = unwrapCollectionSourceExpression(unwrapped.expression.expression)
+        const base = unwrapListSource(unwrapped.expression.expression)
         // `getNodeGraphVariable` / `getCustomVariable` 返回 generic, 需要通过 asType/asDict
         // 确认集合类型。这里保留 `get` 仅用于兼容 `f.get(...).asType(...)` 这种冗余写法。
         if (isFMethodCall(env, base, ['getNodeGraphVariable', 'get', 'getCustomVariable'])) {
@@ -476,6 +465,13 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     }
 
     if (ts.isCallExpression(n)) {
+      if (
+        ts.isPropertyAccessExpression(n.expression) &&
+        ITERATING_LIST_METHODS.has(n.expression.name.text) &&
+        isArrayLikeExpression(env, n.expression.expression)
+      ) {
+        markIterationSource(n.expression.expression)
+      }
       // arr.push(...) 这种：把 arr 视为修改
       if (ts.isPropertyAccessExpression(n.expression) && ts.isIdentifier(n.expression.expression)) {
         const base = n.expression.expression
@@ -542,6 +538,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
       return
     }
     if (ts.isForOfStatement(n)) {
+      markIterationSource(n.expression)
       visit(n.initializer, inExec, inLoop)
       visit(n.expression, inExec, inLoop)
       visit(n.statement, true, true)
@@ -563,9 +560,39 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
 
   visit(body, false, false)
 
+  // Only stable bindings can share storage. Rebinding inside a loop is diagnosed by ESLint.
+  const aliasSources = new Map<ts.Symbol, ts.Symbol>()
+  for (const [symbol, decl] of decls) {
+    const init = decl.decl.initializer && unwrapListSource(decl.decl.initializer)
+    if (!init || !ts.isIdentifier(init)) continue
+    const source = env.checker.getSymbolAtLocation(init)
+    const sourceUsage = source && usage.get(source)
+    const aliasUsage = ensureUsage(symbol)
+    if (
+      source &&
+      sourceUsage?.isCollection &&
+      aliasUsage.isCollection &&
+      !sourceUsage.hasBindingWrite &&
+      !aliasUsage.hasBindingWrite
+    ) {
+      aliasSources.set(symbol, source)
+    }
+  }
+  const collectionRoot = (symbol: ts.Symbol) => {
+    const seen = new Set<ts.Symbol>()
+    while (aliasSources.has(symbol) && !seen.has(symbol)) {
+      seen.add(symbol)
+      symbol = aliasSources.get(symbol)!
+    }
+    return symbol
+  }
+  const iteratedRoots = new Set([...iterationSources].map(collectionRoot))
+
   const out = new Map<ts.Symbol, VarPlanEntry>()
   for (const [symbol, decl] of decls) {
     const u = ensureUsage(symbol)
+    const root = collectionRoot(symbol)
+    const iterated = iteratedRoots.has(root) && isClientFMethodAvailable(env, 'initLocalVariable')
     let needsLocalVar = false
     if (u.isCollection) {
       if (u.collectionSourceKind === 'copy') {
@@ -581,8 +608,9 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
         // 根据实际分支结果决定指向哪个集合, 只能用 LocalVariable 作为统一状态承载。
         needsLocalVar = u.modified && u.hasBindingWrite && u.wroteInExec
       } else {
-        needsLocalVar = u.modified
+        needsLocalVar = u.modified || iterated
       }
+      if (iterated && root !== symbol) needsLocalVar = false
     } else if (u.isBasic) {
       if (decl.isLet || u.wroteInExec) {
         needsLocalVar = true

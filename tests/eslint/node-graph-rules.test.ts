@@ -23,6 +23,7 @@ import gstsFunctionPrefix from '../../src/eslint/rules/gsts-function-prefix.js'
 import listMethodTypeConstraints from '../../src/eslint/rules/list-method-type-constraints.js'
 import noConditionalVariableAssignment from '../../src/eslint/rules/no-conditional-variable-assignment.js'
 import noGraphFunctionRecursion from '../../src/eslint/rules/no-graph-function-recursion.js'
+import noIterationSourceReassignment from '../../src/eslint/rules/no-iteration-source-reassignment.js'
 import noJson from '../../src/eslint/rules/no-json.js'
 import noOuterGraphAssignment from '../../src/eslint/rules/no-outer-graph-assignment.js'
 import serverLiteralArguments from '../../src/eslint/rules/server-literal-arguments.js'
@@ -43,6 +44,74 @@ const ruleTester = new RuleTester({
 })
 
 const importG = `import { g } from 'genshin-ts/runtime/core'`
+
+ruleTester.run('no-iteration-source-reassignment', noIterationSourceReassignment, {
+  valid: [
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  let values = [1n, 2n]
+  for (const value of values) { values[0] = value; values.push(3n); values.pop() }
+  values = [9n]
+})`
+    },
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  let values = [1n, 2n]
+  for (const value of values) { let values = [value]; values = [9n] }
+})`
+    },
+    {
+      filename,
+      code: 'let values = [1, 2]; for (const value of values) { values = [value] }'
+    },
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  let values = [1n, 2n]
+  for (const value of values) { setTimeout(() => { values = [value] }, 1000) }
+})`
+    }
+  ],
+  invalid: [
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  let values = [1n, 2n]
+  for (const value of (values as bigint[])) {
+    if (value === 1n) values = [9n]
+  }
+})`,
+      errors: [{ message: /Do not reassign.*values.*while iterating/ }]
+    },
+    {
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', () => {
+  let values = [1n, 2n]
+  values.forEach(() => { values = [9n] })
+})`,
+      errors: [{ message: /Do not reassign.*values.*while iterating/ }]
+    },
+    {
+      filename,
+      options: [{ lang: 'zh' }],
+      code: `${importG}
+g.creationSkill().on('start', () => {
+  let values = [1n, 2n]
+  for (const value of values) { values = [value] }
+})`,
+      errors: [{ message: /遍历“values”时不要给它重新赋值/ }]
+    }
+  ]
+})
+
+assert.equal(configs.recommended.rules['gsts/no-iteration-source-reassignment'], 'warn')
 
 const issue19Destructuring = `${importG}
 g.server({ id: 1073741827 }).onSignal('传送', (_evt, f) => {

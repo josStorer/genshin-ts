@@ -11,12 +11,14 @@ import {
   inferListTypeFromExpression,
   inferReduceAccumulatorType,
   isArrayLikeExpression,
+  ITERATING_LIST_METHODS,
   makeConst,
   makeDefaultValueExpr,
   makeIife,
   makeLocalVarInit,
   readInlineCallbackBlock,
   readInlineCallbackExpression,
+  stabilizeListIterationSource,
   SUPPORTED_LIST_METHODS
 } from './list_utils.js'
 import type { Env } from './types.js'
@@ -89,6 +91,9 @@ export function tryTransformListMethodCall(
     }
   } else {
     listExpr = transformExpression(env, context, target)
+  }
+  if (ITERATING_LIST_METHODS.has(method)) {
+    listExpr = stabilizeListIterationSource(env, target, listExpr)
   }
   const tempId = env.tempCounter++
 

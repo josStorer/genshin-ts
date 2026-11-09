@@ -73,3 +73,28 @@ ys[0] = 1n
 > 产生不一致的结果，并且同样是集合类型，字典修改总是视作引用，而列表却可能被视作值拷贝，
 > 这不符合开发直觉。因此后续版本统一修正为列表实时引用；如需复制，请显式使用
 > `f.copyList()` 或 `f.assemblyList()`。
+
+### 列表遍历与求值时机
+
+`for...of` 和 `forEach()` 等列表遍历方法会在遍历前保存内联列表表达式的结果。例如，
+先查询带标签的实体再逐个销毁时，销毁不会让查询重新执行而漏掉其他实体：
+
+```ts
+for (const target of f.getEntityListByUnitTag(1073741825n)) {
+  f.destroyEntity(target)
+}
+```
+
+如果先声明 `const targets = f.getEntityListByUnitTag(...)` 再遍历，查询结果会在声明处保存。
+数组字面量也在声明处保存，后续改变数组初始化时读取的变量，不会重新生成这个数组。
+参与遍历的列表与没有重新赋值的简单别名（如 `const alias = targets`）共享同一份列表；
+已有局部变量不会因为遍历再复制一份，遍历中修改元素仍作用于这份列表。
+
+命名的实时引用（如 `const items = f.get('items')`）仍直接读取和修改原变量。
+直接写 `for (const item of f.get('items'))` 则会保存遍历开始时的列表快照；
+需要遍历原列表并观察其元素修改时，先声明实时引用变量再遍历。
+
+不要在遍历过程中给遍历来源变量重新赋值为另一份列表；请在遍历结束后赋值。
+推荐的 ESLint 配置会通过 `gsts/no-iteration-source-reassignment` 对可直接识别的换绑发出警告，
+元素赋值及 `push()` / `pop()` 不受此限制。原生 `f.listIterationLoop()` 保留节点本身的行为；
+需要固定它的输入时，显式使用 `f.initLocalVariable('entity_list', expression).value`。

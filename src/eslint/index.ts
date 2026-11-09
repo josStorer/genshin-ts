@@ -29,6 +29,7 @@ import noConditionalVariableAssignment from './rules/no-conditional-variable-ass
 import noGraphFunctionRecursion from './rules/no-graph-function-recursion.js'
 import noGstsFOutsideServer from './rules/no-gsts-f-outside-server.js'
 import noInnerDeclarations from './rules/no-inner-declarations.js'
+import noIterationSourceReassignment from './rules/no-iteration-source-reassignment.js'
 import noJson from './rules/no-json.js'
 import noNullishCoalesce from './rules/no-nullish-coalesce.js'
 import noObjectStatic from './rules/no-object-static.js'
@@ -82,6 +83,7 @@ export const rules = {
   'no-conditional-variable-assignment': noConditionalVariableAssignment,
   'no-graph-function-recursion': noGraphFunctionRecursion,
   'no-inner-declarations': noInnerDeclarations,
+  'no-iteration-source-reassignment': noIterationSourceReassignment,
   'no-json': noJson,
   'no-nullish-coalesce': noNullishCoalesce,
   'no-object-static': noObjectStatic,
@@ -144,6 +146,7 @@ export const configs = {
       'gsts/no-object-static': 'warn',
       'gsts/no-outer-graph-assignment': 'warn',
       'gsts/no-conditional-variable-assignment': 'warn',
+      'gsts/no-iteration-source-reassignment': 'warn',
       'gsts/no-plain-object': 'warn',
       'gsts/require-boolean-condition': 'warn',
       'gsts/no-timer-in-loop': 'warn',

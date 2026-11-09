@@ -10,7 +10,7 @@ import {
 import { fail } from './errors.js'
 import { type ListType } from './lists.js'
 import type { Env } from './types.js'
-import { makeFCall } from './utils.js'
+import { isClientFMethodAvailable, makeFCall } from './utils.js'
 
 export type InlineCallbackExpr = {
   fn: ts.ArrowFunction | ts.FunctionExpression
@@ -43,6 +43,55 @@ export const SUPPORTED_LIST_METHODS = new Set<string>([
   'slice',
   'splice'
 ])
+
+export const ITERATING_LIST_METHODS = new Set([
+  'forEach',
+  'indexOf',
+  'map',
+  'filter',
+  'reduce',
+  'some',
+  'every',
+  'find',
+  'findIndex',
+  'slice'
+])
+
+export function unwrapListSource(expr: ts.Expression): ts.Expression {
+  while (
+    ts.isParenthesizedExpression(expr) ||
+    ts.isAsExpression(expr) ||
+    ts.isTypeAssertionExpression(expr) ||
+    ts.isSatisfiesExpression(expr) ||
+    ts.isNonNullExpression(expr)
+  ) {
+    expr = expr.expression
+  }
+  return expr
+}
+
+export function stabilizeListIterationSource(
+  env: Env,
+  source: ts.Expression,
+  transformed: ts.Expression
+): ts.Expression {
+  const unwrapped = unwrapListSource(source)
+  if (ts.isIdentifier(unwrapped)) {
+    const symbol = env.checker.getSymbolAtLocation(unwrapped)
+    // Named collections are saved at their declarations or deliberately retain a live reference.
+    if (symbol && env.varPlan?.get(symbol)?.isCollection) return transformed
+  }
+  if (!isClientFMethodAvailable(env, 'initLocalVariable')) return transformed
+  const type = inferListTypeFromExpression(env, source)
+  if (!type) fail(env, source, 'cannot infer iteration list type, please add type annotation')
+  return ts.factory.createPropertyAccessExpression(
+    makeFCall(env, 'initLocalVariable', [
+      ts.factory.createStringLiteral(`${type}_list`),
+      transformed
+    ]),
+    'value'
+  )
+}
 
 export function inferListElementTypeFromType(env: Env, t: ts.Type): ListType | null {
   return inferListElementTypeFromTypeShared(env.checker, t, env.file)

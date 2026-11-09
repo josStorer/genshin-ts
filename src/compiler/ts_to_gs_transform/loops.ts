@@ -2,6 +2,7 @@ import ts from 'typescript'
 
 import { fail } from './errors.js'
 import { transformExpression } from './expr.js'
+import { stabilizeListIterationSource } from './list_utils.js'
 import type { Env } from './types.js'
 import { asBlock, isTrueLike, makeFCall, withSameRange } from './utils.js'
 
@@ -313,7 +314,11 @@ export function transformForOfStatement(
     asBlock(s.statement)
   )
   const call = makeFCall(env, 'listIterationLoop', [
-    transformExpression(env, context, s.expression),
+    stabilizeListIterationSource(
+      env,
+      s.expression,
+      transformExpression(env, context, s.expression)
+    ),
     ts.factory.createArrowFunction(
       undefined,
       undefined,
