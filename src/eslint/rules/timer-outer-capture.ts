@@ -1,8 +1,10 @@
 import type { Rule } from 'eslint'
+import ts from 'typescript'
 
 import { isIdentifier } from '../utils/ast.js'
 import { formatMessage } from '../utils/messages.js'
 import { readBaseOptions } from '../utils/options.js'
+import { getTsNode } from '../utils/parser.js'
 import { buildServerScopeIndex } from '../utils/scope.js'
 
 type Options = {
@@ -201,6 +203,14 @@ const rule: Rule.RuleModule = {
       'Timer callbacks should not use outer timer event parameters directly; store them in a local variable or declare timer callback parameters.'
     )
 
+    const isTypeReference = (identifier: unknown): boolean => {
+      for (let node = getTsNode(context, identifier); node; node = node.parent) {
+        if (ts.isTypeNode(node)) return true
+        if (ts.isStatement(node) || ts.isExpression(node.parent)) return false
+      }
+      return false
+    }
+
     const timerCallbackEvents = new Map<any, { name: string; variable: any }>()
 
     const registerTimerCallback = (callNode: any) => {
@@ -269,6 +279,7 @@ const rule: Rule.RuleModule = {
           if (isScopeWithin(targetScope, fnScope)) continue
           if (parentScope && isScopeWithin(targetScope, parentScope)) continue
           const id = ref.identifier
+          if (isTypeReference(id)) continue
           const key = `${id.range?.[0] ?? id.start}-${id.range?.[1] ?? id.end}`
           if (reported.has(key)) continue
           reported.add(key)
@@ -288,6 +299,7 @@ const rule: Rule.RuleModule = {
       for (const scope of collectScopes(fnScope)) {
         for (const ref of scope.through ?? []) {
           const id = ref.identifier
+          if (isTypeReference(id)) continue
           if (!id || id.name !== info.name) continue
           if (ref.resolved !== info.variable) continue
           const key = `${id.range?.[0] ?? id.start}-${id.range?.[1] ?? id.end}`
@@ -315,6 +327,7 @@ const rule: Rule.RuleModule = {
       for (const scope of collectScopes(fnScope)) {
         for (const ref of scope.through ?? []) {
           const id = ref.identifier
+          if (isTypeReference(id)) continue
           if (!id) continue
           for (const info of outerInfos) {
             if (ref.resolved !== info.variable) continue

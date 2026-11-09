@@ -21,11 +21,13 @@ import graphFunctionReturn from '../../src/eslint/rules/graph-function-return.js
 import graphFunctionTopLevel from '../../src/eslint/rules/graph-function-top-level.js'
 import gstsFunctionPrefix from '../../src/eslint/rules/gsts-function-prefix.js'
 import listMethodTypeConstraints from '../../src/eslint/rules/list-method-type-constraints.js'
+import noConditionalVariableAssignment from '../../src/eslint/rules/no-conditional-variable-assignment.js'
 import noGraphFunctionRecursion from '../../src/eslint/rules/no-graph-function-recursion.js'
 import noJson from '../../src/eslint/rules/no-json.js'
 import noOuterGraphAssignment from '../../src/eslint/rules/no-outer-graph-assignment.js'
 import serverLiteralArguments from '../../src/eslint/rules/server-literal-arguments.js'
 import switchRestrictions from '../../src/eslint/rules/switch-restrictions.js'
+import timerOuterCapture from '../../src/eslint/rules/timer-outer-capture.js'
 
 const filename = path.join(process.cwd(), 'tests/eslint/node-graph-rules.test.ts')
 const ruleTester = new RuleTester({
@@ -296,6 +298,134 @@ assert.deepEqual(assignmentWarnings.map((message) => message.ruleId).sort(), [
   'gsts/no-outer-graph-assignment',
   'gsts/timer-outer-capture'
 ])
+
+assert.equal(configs.recommended.rules['gsts/no-conditional-variable-assignment'], 'warn')
+ruleTester.run('no-conditional-variable-assignment', noConditionalVariableAssignment, {
+  valid: [
+    `function gstsServerUpdate(v: bigint) { v += 1n; v++; --v }`,
+    `function unrelated(v: bigint) { if (v > 2n) v++ }`,
+    `${importG}; let outside = 0n; g.server().on('whenEntityIsCreated', () => { if (outside > 2n) outside = 0n })`,
+    `${importG}; g.server().on('whenEntityIsCreated', () => {
+      for (let i = 0; i < 3; i++) { let value = i; if (value > 1) value = 0 }
+      for (let j = 0; j < 3; j += 1) { print(str(j)) }
+      for (const x of [1n, 5n]) { let value = x; if (value > 2n) value = 0n }
+    })`,
+    `${importG}; g.server().on('whenEntityIsCreated', () => {
+      let value = 1n; let items = [1n]; if (value > 0n) { value += 1n; items = [2n] }
+      let d = dict([{ k: 'a', v: 1n }]); if (value > 0n) d.set('a', 2n)
+      if (value > 0n) { let inner = dict([{ k: 'a', v: 1n }]); inner = dict([{ k: 'b', v: 2n }]) }
+    })`,
+    `function gstsServerUpdate(v: bigint) { setTimeout(() => { if (v > 2n) v += 1n }, 100) }`,
+    `${importG}; g.server().on('whenEntityIsCreated', () => {
+      for (let x of [1n, 5n]) { globalThis.setInterval(() => { if (x > 2n) x += 1n }, 1000) }
+    })`,
+    `function gstsServerUpdate(v: bigint) { if (v > 2n) { let v = 0n; v += 1n } }`,
+    `${importG}; g.server().on('whenEntityIsCreated', () => {
+      [1n, 5n].forEach((x) => { x += 1n; print(str(x)) })
+    })`
+  ].map((code) => ({ filename, code })),
+  invalid: [
+    ...['v = 0n', 'v += 1n', 'v++', '++v', 'v--', '--v'].map((assignment) => ({
+      filename,
+      code: `function gstsServerUpdate(v: bigint) { if (v > 2n) ${assignment} }`,
+      errors: [{ message: /has no node graph local variable/ }]
+    })),
+    ...[
+      `for (let x of [1n, 5n]) { if (x > 2n) x = 0n }`,
+      `for (let i = 0; i < 3; i++) { i += 1 }`,
+      `[1n, 5n].forEach((x) => { if (x > 2n) x++ })`
+    ].map((body) => ({
+      filename,
+      code: `${importG}; g.server().on('whenEntityIsCreated', () => { ${body} })`,
+      errors: 1
+    })),
+    ...[
+      `while (v > 2n) { v -= 1n }`,
+      `do { v -= 1n } while (v > 2n)`,
+      `switch (v) { case 1n: v = 2n; break }`,
+      `[1n].forEach(() => { v += 1n })`
+    ].map((body) => ({
+      filename,
+      code: `function gstsServerUpdate(v: bigint) { ${body} }`,
+      errors: 1
+    })),
+    {
+      filename,
+      code: `${importG}; g.server().on('whenEntityIsCreated', (_evt, f) => {
+        let d = dict([{ k: 'a', v: 1n }]); if (f.queryGameTimeElapsed() > 0) d = dict([{ k: 'b', v: 2n }])
+      })`,
+      errors: [{ message: /modify their contents/ }]
+    },
+    {
+      filename,
+      options: [{ lang: 'zh' }],
+      code: `function gstsServerUpdate(v: bigint) { if (v > 2n) v = 0n }`,
+      errors: [{ message: /请先复制到新的 let 变量再修改/ }]
+    }
+  ]
+})
+
+ruleTester.run('timer-outer-capture type references', timerOuterCapture, {
+  valid: [
+    `${importG}; g.server().on('whenTimerIsTriggered', (evt) => {
+      setTimeout(() => { type Event = typeof evt; type Name = typeof evt.timerName; print('ok') }, 100)
+    })`,
+    `${importG}; g.server().on('whenTimerIsTriggered', (evt) => {
+      const name = evt.timerName; setTimeout((timer) => { print(name); print(timer.timerName) }, 100)
+    })`,
+    `${importG}; g.server().on('whenTimerIsTriggered', (evt) => {
+      setTimeout((timer) => { setTimeout(() => { type Event = typeof evt; type Timer = typeof timer; print('ok') }, 100) }, 100)
+    })`,
+    `${importG}; g.server().on('whenTimerIsTriggered', () => {
+      const value = 1n; setTimeout(() => { setTimeout(() => { type Value = typeof value; print('ok') }, 100) }, 100)
+    })`
+  ].map((code) => ({ filename, code })),
+  invalid: [
+    ...['evt.timerName', 'typeof evt', '(evt as typeof evt).timerName'].map((expression) => ({
+      filename,
+      code: `${importG}; g.server().on('whenTimerIsTriggered', (evt) => {
+        setTimeout(() => { type Event = typeof evt; print(${expression}) }, 100)
+      })`,
+      errors: [{ message: /outer event parameter directly/ }]
+    })),
+    {
+      filename,
+      code: `${importG}; g.server().on('whenTimerIsTriggered', () => {
+        setTimeout((timer) => { setTimeout(() => { type Timer = typeof timer; print(timer.timerName) }, 100) }, 100)
+      })`,
+      errors: [{ message: /outer timer event parameters directly/ }]
+    }
+  ]
+})
+
+const recommendedAssignmentWarnings = new Linter().verify(
+  `${importG};
+function gstsServerBump(v: bigint) { if (v > 2n) v++ }
+g.server().on('whenTimerIsTriggered', (evt) => {
+  for (let x of [1n, 5n]) { if (x > 2n) x = 0n }
+  setTimeout(() => { type Event = typeof evt; print(evt.timerName) }, 100)
+})`,
+  [
+    {
+      files: ['**/*.ts'],
+      languageOptions: {
+        parser,
+        parserOptions: { project: './tsconfig.json', tsconfigRootDir: process.cwd() }
+      },
+      plugins: { gsts: { rules } },
+      rules: configs.recommended.rules
+    }
+  ],
+  { filename }
+)
+assert.deepEqual(
+  recommendedAssignmentWarnings.map(({ ruleId, severity }) => [ruleId, severity]),
+  [
+    ['gsts/no-conditional-variable-assignment', 1],
+    ['gsts/no-conditional-variable-assignment', 1],
+    ['gsts/timer-outer-capture', 1]
+  ]
+)
 
 assert.equal(configs.recommended.rules['gsts/client-local-variable-support'], 'error')
 assert.equal(configs.recommended.rules['gsts/client-literal-arguments'], 'error')

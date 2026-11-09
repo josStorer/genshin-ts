@@ -4,6 +4,7 @@ import { t } from '../../i18n/index.js'
 import type { DictValueType } from '../../runtime/value.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { isEntityLikeType } from '../../shared/ts_type_utils.js'
+import { canHaveLocalVariable, isBranchedAssignment } from '../../shared/ts_variable_utils.js'
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
 import { fail, warn } from './errors.js'
 import { tryTransformListMethodCall } from './list_methods.js'
@@ -23,7 +24,7 @@ import {
   isSupportedSimpleAssignmentOperator,
   isUnsupportedBinaryOperator
 } from './ops.js'
-import { canHaveLocalVariable, transformHandler } from './stmt.js'
+import { transformHandler } from './stmt.js'
 import type { Env, TimerCaptureInfo, TimerHandleMeta, VarPlanEntry } from './types.js'
 import {
   assertClientFMethodAvailable,
@@ -604,31 +605,7 @@ function assertStraightLineAssignment(
 ) {
   const decl = symbol?.valueDeclaration ?? symbol?.declarations?.[0]
   if (!decl || decl.getSourceFile() !== env.file) return
-  const declAncestors = new Set<ts.Node>()
-  let inFunction = false
-  for (let node: ts.Node | undefined = decl; node; node = node.parent) {
-    declAncestors.add(node)
-    if (ts.isFunctionLike(node)) inFunction = true
-  }
-  if (!inFunction) return
-
-  let branched = false
-  let cur: ts.Node = expr.parent
-  while (!declAncestors.has(cur)) {
-    if (
-      ts.isIfStatement(cur) ||
-      ts.isSwitchStatement(cur) ||
-      ts.isIterationStatement(cur, false) ||
-      ts.isConditionalExpression(cur) ||
-      ts.isFunctionLike(cur)
-    ) {
-      branched = true
-    }
-    cur = cur.parent
-  }
-  // A loop variable assigned in its own loop body: the common ancestor is the loop itself
-  if (ts.isIterationStatement(cur, false) && cur.statement.pos <= expr.pos) branched = true
-  if (branched) {
+  if (isBranchedAssignment(expr, decl)) {
     const key = canHaveLocalVariable(env, env.checker.getTypeAtLocation(target))
       ? 'assignmentNeedsLocalVariable'
       : 'assignmentTypeHasNoLocalVariable'

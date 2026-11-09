@@ -28,7 +28,7 @@ f.teleportPlayer(playerList[index], point.location, point.rotate)
 
 - `let` forces a local variable node.
 - `const` may be optimized into direct wiring.
-- Function parameters and loop variables have no local variable, so they can only be reassigned in straight-line code; assigning them inside a branch, a loop body or a callback is a compile error, so copy the value into a new `let` first. Dictionaries cannot be stored in a local variable, so even a `let` dictionary cannot be reassigned inside a branch, a loop body or a callback.
+- Function parameters and loop variables have no local variable, so they can only be reassigned in straight-line code; assigning them inside a branch, a loop body or a callback is a compile error, so copy the value into a new `let` first. Dictionaries cannot be stored in a local variable, so even a `let` dictionary cannot be reassigned inside a branch, a loop body or a callback. The `gsts/no-conditional-variable-assignment` ESLint rule warns about these assignments by default, including `++` and `--`.
 
 The compiler tries to preserve normal JS/TS intuition and development flow. For variable
 declarations, assignments, and reads, it automatically uses Miliastra local-variable nodes

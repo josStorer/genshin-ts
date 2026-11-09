@@ -3,6 +3,7 @@ import ts from 'typescript'
 import { CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE } from '../../definitions/client_method_modes.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { isEntityLikeType as isSharedEntityLikeType } from '../../shared/ts_type_utils.js'
+import { inferBasicType, isCollectionType } from '../../shared/ts_variable_utils.js'
 import {
   isConstEvaluableExpression,
   isPureLiteralExpression,
@@ -30,6 +31,8 @@ import { isAssignmentLikeOperator } from './ops.js'
 import type { CollectionSourceKind, Env, VarPlan, VarPlanEntry } from './types.js'
 import { asBlock, isClientFMethodAvailable, makeFCall, withSameRange } from './utils.js'
 
+export { canHaveLocalVariable } from '../../shared/ts_variable_utils.js'
+
 function inferListConcreteType(env: Env, t: ts.Type, declTypeNode?: ts.TypeNode): ListType | null {
   const byNode = inferListTypeFromTypeNode(declTypeNode)
   if (byNode) return byNode
@@ -38,24 +41,6 @@ function inferListConcreteType(env: Env, t: ts.Type, declTypeNode?: ts.TypeNode)
     inferListTypeFromType(env.checker, t, env.file) ??
     inferListTypeFromTypeString(env.checker.typeToString(t))
   )
-}
-
-function isCollectionType(env: Env, t: ts.Type): boolean {
-  // union/intersection：只要任一分支是 collection，就按 collection 处理（保守，避免漏判）
-  if (t.flags & ts.TypeFlags.Union) {
-    const u = t as ts.UnionType
-    return u.types.some((tt) => isCollectionType(env, tt))
-  }
-  if (t.flags & ts.TypeFlags.Intersection) {
-    const it = t as ts.IntersectionType
-    return it.types.some((tt) => isCollectionType(env, tt))
-  }
-
-  if (env.checker.isArrayType(t) || env.checker.isTupleType(t)) return true
-  const s = env.checker.typeToString(t)
-  if (/\bRecord<.+>$/.test(s)) return true
-  if (/\bMap<.+>$/.test(s)) return true
-  return false
 }
 
 function unwrapCollectionSourceExpression(expr: ts.Expression): ts.Expression {
@@ -96,37 +81,6 @@ function needsCollectionRebindSnapshot(env: Env, expr: ts.Expression): boolean {
   if (isFMethodCall(env, unwrapped, ['copyList', 'assemblyList'])) return true
   if (ts.isArrayLiteralExpression(unwrapped)) return true
   return false
-}
-
-function inferBasicType(env: Env, t: ts.Type): ListType | null {
-  if (t.flags & ts.TypeFlags.Union) {
-    const u = t as ts.UnionType
-    let base: ListType | null = null
-    for (const tt of u.types) {
-      const next = inferBasicType(env, tt)
-      if (!next) return null
-      if (!base) base = next
-      else if (base !== next) return null
-    }
-    return base
-  }
-  if (t.flags & ts.TypeFlags.Intersection) {
-    const it = t as ts.IntersectionType
-    let base: ListType | null = null
-    for (const tt of it.types) {
-      const next = inferBasicType(env, tt)
-      if (!next) return null
-      if (!base) base = next
-      else if (base !== next) return null
-    }
-    return base
-  }
-  return inferConcreteTypeFromType(env.checker, env.checker.getBaseTypeOfLiteralType(t), env.file)
-}
-
-/** Whether a `let` of this type can get a node graph local variable (a dict, for example, cannot) */
-export function canHaveLocalVariable(env: Env, t: ts.Type): boolean {
-  return isCollectionType(env, t) || inferBasicType(env, t) !== null
 }
 
 function makeLocalVarTypeString(

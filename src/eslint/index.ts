@@ -1,3 +1,5 @@
+import type { Linter } from 'eslint'
+
 import { luaLintRules, luaWarningRules } from '../compiler/lua/analysis/diagnostics.js'
 import assignmentRestrictions from './rules/assignment-restrictions.js'
 import builtinConsoleLogArity from './rules/builtin-console-log-arity.js'
@@ -23,6 +25,7 @@ import listMethodTypeConstraints from './rules/list-method-type-constraints.js'
 import listMethodUsage from './rules/list-method-usage.js'
 import listTypeAnnotation from './rules/list-type-annotation.js'
 import luaModulo from './rules/lua-modulo.js'
+import noConditionalVariableAssignment from './rules/no-conditional-variable-assignment.js'
 import noGraphFunctionRecursion from './rules/no-graph-function-recursion.js'
 import noGstsFOutsideServer from './rules/no-gsts-f-outside-server.js'
 import noInnerDeclarations from './rules/no-inner-declarations.js'
@@ -76,6 +79,7 @@ export const rules = {
   'list-method-usage': listMethodUsage,
   'list-type-annotation': listTypeAnnotation,
   'no-gsts-f-outside-server': noGstsFOutsideServer,
+  'no-conditional-variable-assignment': noConditionalVariableAssignment,
   'no-graph-function-recursion': noGraphFunctionRecursion,
   'no-inner-declarations': noInnerDeclarations,
   'no-json': noJson,
@@ -139,6 +143,7 @@ export const configs = {
       'gsts/lua-shared-module': 'error',
       'gsts/no-object-static': 'warn',
       'gsts/no-outer-graph-assignment': 'warn',
+      'gsts/no-conditional-variable-assignment': 'warn',
       'gsts/no-plain-object': 'warn',
       'gsts/require-boolean-condition': 'warn',
       'gsts/no-timer-in-loop': 'warn',
@@ -184,7 +189,7 @@ export const configs = {
       'gsts/client-repeated-evaluation': 'warn',
       'gsts/client-scoped-globals': 'error',
       'gsts/client-syntax-capabilities': 'error'
-    }
+    } satisfies Linter.RulesRecord
   }
 }
 
