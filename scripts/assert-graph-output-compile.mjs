@@ -9,6 +9,8 @@ import {
 import { writeGiaFromIrJsonFile } from '../dist/src/compiler/ir_to_gia_pipeline.js'
 import { compileTsToGs } from '../dist/src/compiler/ts_to_gs_pipeline.js'
 import { initCliI18n } from '../dist/src/i18n/index.js'
+import { get_graph_vars } from '../dist/src/thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/gia_gen/extract.js'
+import { decode_gia_file } from '../dist/src/thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/protobuf/decode.js'
 
 initCliI18n('en-US')
 const tempDir = fs.mkdtempSync(path.join(import.meta.dirname, '..', '.gsts-graph-output-'))
@@ -25,6 +27,14 @@ g.server({ id: 1073742799, variables: { dynamic: true } }).on('whenEntityIsCreat
   if (f.get('dynamic')) { f.printString('dynamic-yes') } else { f.printString('dynamic-no') }
   f.printString('tail')
 })
+g.server({ id: 1073742800, name: 'empty', variables: { enabled: true } })
+  .on('whenEntityIsCreated', (_evt, f) => {
+    if (false) { f.printString('dead') }
+  })
+g.server({ id: 1073742801, name: 'emptyBare' })
+  .on('whenEntityIsCreated', (_evt, f) => {
+    if (true) {} else { f.printString('dead') }
+  })
 `
   )
   const result = await compileTsToGs({
@@ -40,10 +50,16 @@ g.server({ id: 1073742799, variables: { dynamic: true } }).on('whenEntityIsCreat
       moduleRoot: result.outDir,
       runtimeOptions: { precompileExpression: enabled, removeUnusedNodes: true }
     })
-    return JSON.parse(fs.readFileSync(irPath, 'utf8'))[0]
+    return JSON.parse(fs.readFileSync(irPath, 'utf8'))
   }
-  const baseline = await compile(false)
-  const optimized = await compile(true)
+  const [baseline, emptyBaseline, bareBaseline] = await compile(false)
+  const [optimized, empty, bare] = await compile(true)
+  assert.equal(emptyBaseline.nodes.length, 3)
+  assert.equal(bareBaseline.nodes.length, 3)
+  assert.deepEqual(empty.nodes, [])
+  assert.deepEqual(bare.nodes, [])
+  assert.deepEqual(empty.graph, emptyBaseline.graph)
+  assert.deepEqual(empty.variables, emptyBaseline.variables)
   assert.equal(baseline.nodes.filter((node) => node.type === 'double_branch').length, 3)
   assert.equal(optimized.nodes.filter((node) => node.type === 'double_branch').length, 1)
   const text = optimized.nodes
@@ -60,10 +76,24 @@ g.server({ id: 1073742799, variables: { dynamic: true } }).on('whenEntityIsCreat
       if (arg?.type === 'conn') assert.ok(ids.has(arg.value.node_id))
   }
   const outputs = writeGiaFromIrJsonFile(irPath)
-  assert.equal(outputs.length, 1)
+  assert.equal(outputs.length, 3)
   assert.ok(fs.statSync(outputs[0].giaPath).size > 0)
+  for (const [index, doc] of [empty, bare].entries()) {
+    const output = outputs[index + 1]
+    assert.equal(output.graphId, doc.graph.id)
+    const decoded = decode_gia_file(output.giaPath, undefined, true)
+    const graph = decoded.graph.graph.inner.graph
+    assert.deepEqual(graph.nodes, [])
+    assert.equal(graph.id.id, doc.graph.id)
+    assert.equal(graph.name, doc.graph.name)
+    assert.deepEqual(
+      get_graph_vars(graph).map(({ name, val, type }) => ({ name, val, type })),
+      index === 0 ? [{ name: 'enabled', val: 1, type: { t: 'b', b: 'Bol' } }] : []
+    )
+  }
   console.log(
-    `[ok] TS -> IR -> GIA: ${baseline.nodes.length} -> ${optimized.nodes.length} nodes; runtime branch and loop exits retained`
+    `[ok] TS -> IR -> GIA: ${baseline.nodes.length} -> ${optimized.nodes.length} nodes; ` +
+      'runtime branch and loop exits retained; empty graphs preserve IDs, names and variables'
   )
 } finally {
   fs.rmSync(tempDir, { recursive: true, force: true })
