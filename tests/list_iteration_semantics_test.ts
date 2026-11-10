@@ -246,3 +246,21 @@ g.server({ id: 1073742419 }).on('whenEntityIsCreated', (_evt, f) => {
   f.destroyEntity(alias[0])
   f.printString(str(targets.length))
 })
+
+g.server({ id: 1073742431 }).on('whenEntityIsCreated', (_evt, f) => {
+  const values = list('int', [1n, 2n, 3n])
+  f.printString(str(values[0]))
+  f.printString(str(values[1]))
+})
+
+g.server({ id: 1073742432 }).on('whenEntityIsCreated', (_evt, f) => {
+  for (const value of list('int', [1n, 2n, 3n])) f.printString(str(value))
+})
+
+g.server({ id: 1073742433 }).on('whenEntityIsCreated', (_evt, f) => {
+  let n = 1n
+  const values = list('int', [n, n + 1n])
+  n = 10n
+  f.printString(str(values[0]))
+  f.printString(str(values[1]))
+})

@@ -51,6 +51,12 @@ export const SUPPORTED_LIST_METHODS = new Set<string>([
   'splice'
 ])
 
+export function isListWrapperCall(expr: ts.Expression): expr is ts.CallExpression {
+  return (
+    ts.isCallExpression(expr) && ts.isIdentifier(expr.expression) && expr.expression.text === 'list'
+  )
+}
+
 export function classifyCollectionSource(
   env: Env,
   expr: ts.Expression | undefined,
@@ -74,14 +80,6 @@ export function classifyCollectionSource(
     }
     const receiver = unwrapListSource(expr.expression.expression)
     return isEntityReceiverType(env.checker.getTypeAtLocation(receiver), receiver)
-  }
-
-  const isListWrapperCall = (expr: ts.Expression): expr is ts.CallExpression => {
-    return (
-      ts.isCallExpression(expr) &&
-      ts.isIdentifier(expr.expression) &&
-      expr.expression.text === 'list'
-    )
   }
 
   const classify = (expr: ts.Expression | undefined): CollectionSourceKind => {
@@ -148,7 +146,12 @@ export function classifyCollectionSource(
 }
 
 export function isPureCollectionExpression(env: Env, expr: ts.Expression): boolean {
-  const source = unwrapListSource(expr)
+  let source = unwrapListSource(expr)
+  if (isListWrapperCall(source)) {
+    const items = source.arguments[1]
+    if (!items) return source.arguments.length === 1
+    source = unwrapListSource(items)
+  }
   if (!ts.isArrayLiteralExpression(source)) return false
   return source.elements.every(
     (element) =>

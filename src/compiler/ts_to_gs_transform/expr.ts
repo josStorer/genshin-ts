@@ -9,7 +9,7 @@ import { canHaveLocalVariable, isBranchedAssignment } from '../../shared/ts_vari
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
 import { fail, warn } from './errors.js'
 import { tryTransformListMethodCall } from './list_methods.js'
-import { isArrayLikeExpression } from './list_utils.js'
+import { isArrayLikeExpression, isListWrapperCall } from './list_utils.js'
 import {
   inferArrayListType,
   inferConcreteTypeFromString,
@@ -354,11 +354,6 @@ function shouldWrapLoopIndexByContext(env: Env, id: ts.Identifier): boolean {
 function isRawWrapperCall(expr: ts.CallExpression): boolean {
   const callee = expr.expression
   return ts.isIdentifier(callee) && callee.text === 'raw'
-}
-
-function isListWrapperCall(expr: ts.CallExpression): boolean {
-  const callee = expr.expression
-  return ts.isIdentifier(callee) && callee.text === 'list'
 }
 
 function tryMapArrayLiteralThroughWrappers(

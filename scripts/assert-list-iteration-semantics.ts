@@ -224,6 +224,9 @@ const printCases: [number, string[]][] = [
     ['1', '9', '3']
   ]),
   [1073742418, ['1', '2']],
+  [1073742431, ['1', '2']],
+  [1073742432, ['1', '2', '3']],
+  [1073742433, ['1', '2']],
   [1073742413, ['9']],
   [1073742414, ['9', '9', '2', '3']],
   [1073742415, ['9', '8']],
@@ -243,7 +246,8 @@ for (const [id, expected] of printCases) {
   assert.deepEqual(execute(graph(id)).printed, expected, `${id}: unexpected iteration values`)
 }
 for (const id of [
-  1073741914, 1073742424, 1073742404, 1073742405, 1073742413, 1073742414, 1073742415
+  1073741914, 1073742424, 1073742404, 1073742405, 1073742413, 1073742414, 1073742415, 1073742431,
+  1073742432
 ]) {
   assert.equal(
     graph(id).nodes?.filter((node) => node.type === 'set_local_variable').length,

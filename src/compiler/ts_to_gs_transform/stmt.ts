@@ -23,6 +23,7 @@ import {
   classifyCollectionSource,
   inferSnapshotListType,
   isArrayLikeExpression,
+  isListWrapperCall,
   isPureCollectionExpression,
   ITERATING_LIST_METHODS,
   SUPPORTED_LIST_METHODS,
@@ -52,18 +53,9 @@ function inferListConcreteType(env: Env, t: ts.Type, declTypeNode?: ts.TypeNode)
   )
 }
 
-function isListWrapperCallExpression(expr: ts.Expression): expr is ts.CallExpression {
-  const unwrapped = unwrapListSource(expr)
-  return (
-    ts.isCallExpression(unwrapped) &&
-    ts.isIdentifier(unwrapped.expression) &&
-    unwrapped.expression.text === 'list'
-  )
-}
-
 function needsCollectionRebindSnapshot(env: Env, expr: ts.Expression): boolean {
   const unwrapped = unwrapListSource(expr)
-  if (isListWrapperCallExpression(unwrapped)) return true
+  if (isListWrapperCall(unwrapped)) return true
   if (isFMethodCall(env, unwrapped, ['copyList', 'assemblyList'])) return true
   if (ts.isArrayLiteralExpression(unwrapped)) return true
   return false
