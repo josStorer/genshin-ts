@@ -2,14 +2,13 @@ import type { Rule } from 'eslint'
 import ts from 'typescript'
 
 import { getClientGraphSubTypeForGstsFunctionName } from '../../definitions/client_graph_modes.js'
-import { getSourceCode, requireParserServices } from './parser.js'
 import {
-  DEFAULT_GSTS_SERVER_PREFIX,
   getClientOnCallInfo,
-  isGstsServerName,
   isServerOnCall,
   type ClientOnCallInfo
-} from './ts_matchers.js'
+} from '../../shared/ts_graph_calls.js'
+import { getSourceCode, requireParserServices } from './parser.js'
+import { DEFAULT_GSTS_SERVER_PREFIX, isGstsServerName } from './ts_matchers.js'
 
 type RuleContext = Rule.RuleContext
 

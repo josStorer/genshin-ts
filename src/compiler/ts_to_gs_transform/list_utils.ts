@@ -1,6 +1,5 @@
 import ts from 'typescript'
 
-import { unwrapListSource } from '../../shared/ts_iteration_utils.js'
 import {
   inferListElementTypeFromExpression as inferListElementTypeFromExpressionShared,
   inferListElementTypeFromType as inferListElementTypeFromTypeShared,
@@ -8,7 +7,10 @@ import {
   inferListTypeFromType as inferListTypeFromTypeShared,
   isArrayLikeType as isArrayLikeTypeShared
 } from '../../shared/ts_list_utils.js'
-import { isEntityLikeType as isSharedEntityLikeType } from '../../shared/ts_type_utils.js'
+import {
+  isEntityLikeType as isSharedEntityLikeType,
+  unwrapExpression
+} from '../../shared/ts_type_utils.js'
 import { isCollectionType } from '../../shared/ts_variable_utils.js'
 import { isConstEvaluableExpression, isPureLiteralExpression } from './const_eval.js'
 import { fail } from './errors.js'
@@ -16,8 +18,6 @@ import { type ListType } from './lists.js'
 import { isFMethodCall } from './matcher.js'
 import type { CollectionSourceKind, Env } from './types.js'
 import { isClientFMethodAvailable, makeFCall } from './utils.js'
-
-export { ITERATING_LIST_METHODS, unwrapListSource } from '../../shared/ts_iteration_utils.js'
 
 export type InlineCallbackExpr = {
   fn: ts.ArrowFunction | ts.FunctionExpression
@@ -78,13 +78,13 @@ export function classifyCollectionSource(
     if (expr.expression.name.text !== 'get' && expr.expression.name.text !== 'getCustomVariable') {
       return false
     }
-    const receiver = unwrapListSource(expr.expression.expression)
+    const receiver = unwrapExpression(expr.expression.expression)
     return isEntityReceiverType(env.checker.getTypeAtLocation(receiver), receiver)
   }
 
   const classify = (expr: ts.Expression | undefined): CollectionSourceKind => {
     if (!expr) return 'unknown'
-    const unwrapped = unwrapListSource(expr)
+    const unwrapped = unwrapExpression(expr)
 
     if (ts.isIdentifier(unwrapped)) {
       const sourceSym = env.checker.getSymbolAtLocation(unwrapped)
@@ -105,7 +105,7 @@ export function classifyCollectionSource(
     if (ts.isCallExpression(unwrapped) && ts.isPropertyAccessExpression(unwrapped.expression)) {
       const method = unwrapped.expression.name.text
       if (method === 'asType' || method === 'asDict') {
-        const base = unwrapListSource(unwrapped.expression.expression)
+        const base = unwrapExpression(unwrapped.expression.expression)
         // `getNodeGraphVariable` / `getCustomVariable` 返回 generic, 需要通过 asType/asDict
         // 确认集合类型。这里保留 `get` 仅用于兼容 `f.get(...).asType(...)` 这种冗余写法。
         if (isFMethodCall(env, base, ['getNodeGraphVariable', 'get', 'getCustomVariable'])) {
@@ -146,11 +146,11 @@ export function classifyCollectionSource(
 }
 
 export function isPureCollectionExpression(env: Env, expr: ts.Expression): boolean {
-  let source = unwrapListSource(expr)
+  let source = unwrapExpression(expr)
   if (isListWrapperCall(source)) {
     const items = source.arguments[1]
     if (!items) return source.arguments.length === 1
-    source = unwrapListSource(items)
+    source = unwrapExpression(items)
   }
   if (!ts.isArrayLiteralExpression(source)) return false
   return source.elements.every(
@@ -186,7 +186,7 @@ export function stabilizeListIterationSource(
   source: ts.Expression,
   transformed: ts.Expression
 ): ts.Expression {
-  const unwrapped = unwrapListSource(source)
+  const unwrapped = unwrapExpression(source)
   if (ts.isIdentifier(unwrapped)) {
     const symbol = env.checker.getSymbolAtLocation(unwrapped)
     // Named collections are saved at their declarations or deliberately retain a live reference.
@@ -317,7 +317,7 @@ export function readInlineCallbackBlock(
   return { fn, params, body: fn.body }
 }
 
-function unwrapExpression(expr: ts.Expression): ts.Expression {
+function unwrapEqualityOperand(expr: ts.Expression): ts.Expression {
   let cur = expr
   while (true) {
     if (ts.isParenthesizedExpression(cur)) {
@@ -342,7 +342,7 @@ function unwrapExpression(expr: ts.Expression): ts.Expression {
 
 function isSafeEqualityOperand(expr: ts.Expression, paramName: string): boolean {
   const visit = (node: ts.Expression): boolean => {
-    const cur = unwrapExpression(node)
+    const cur = unwrapEqualityOperand(node)
     if (ts.isIdentifier(cur)) return cur.text !== paramName
     if (ts.isNumericLiteral(cur)) return true
     if (ts.isBigIntLiteral(cur)) return true
@@ -375,7 +375,7 @@ export function extractSimpleEqualityMatch(
   expr: ts.Expression,
   paramName: string
 ): ts.Expression | null {
-  const inner = unwrapExpression(expr)
+  const inner = unwrapEqualityOperand(expr)
   if (!ts.isBinaryExpression(inner)) return null
   if (
     inner.operatorToken.kind !== ts.SyntaxKind.EqualsEqualsToken &&
@@ -384,8 +384,8 @@ export function extractSimpleEqualityMatch(
     return null
   }
 
-  const left = unwrapExpression(inner.left)
-  const right = unwrapExpression(inner.right)
+  const left = unwrapEqualityOperand(inner.left)
+  const right = unwrapEqualityOperand(inner.right)
 
   if (ts.isIdentifier(left) && left.text === paramName) {
     return isSafeEqualityOperand(right, paramName) ? right : null

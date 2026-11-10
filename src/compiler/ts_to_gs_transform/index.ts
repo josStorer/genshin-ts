@@ -4,9 +4,9 @@ import {
   CLIENT_GRAPH_SUB_TYPE_BY_F_GLOBAL_NAME,
   getClientGraphSubTypeForGstsFunctionName
 } from '../../definitions/client_graph_modes.js'
+import { getClientOnCallInfo, isServerOnCall } from '../../shared/ts_graph_calls.js'
 import type { ClientGraphSubType } from '../../thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/client_node_metadata.js'
 import { fail } from './errors.js'
-import { getClientOnCallInfo, isServerOnCall } from './matcher.js'
 import { isAssignmentLikeOperator } from './ops.js'
 import { transformGstsServerFunction, transformHandler } from './stmt.js'
 import { buildFeatureFlags, type EnumImportInfo, type Env, type TransformCtx } from './types.js'

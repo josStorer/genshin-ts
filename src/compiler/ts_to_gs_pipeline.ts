@@ -5,10 +5,10 @@ import { performance } from 'node:perf_hooks'
 import fg from 'fast-glob'
 import ts from 'typescript'
 
+import { isServerOnCall } from '../shared/ts_graph_calls.js'
 import { existsDir, existsFile, loadGstsConfig } from './config_loader.js'
 import type { GstsConfig } from './gsts_config.js'
 import { hasNodeGraphEntryCall, transformToGs } from './ts_to_gs_transform/index.js'
-import { isServerOnCall } from './ts_to_gs_transform/matcher.js'
 
 function toPosixPath(p: string): string {
   return p.replace(/\\/g, '/')

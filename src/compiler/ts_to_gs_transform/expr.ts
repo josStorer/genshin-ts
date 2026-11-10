@@ -2,7 +2,12 @@ import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
 import type { DictValueType } from '../../runtime/value.js'
-import { getTimerKind, isInlineCallback, type TimerKind } from '../../shared/ts_iteration_utils.js'
+import {
+  getTimerKind,
+  isInlineCallback,
+  isServerOnCall,
+  type TimerKind
+} from '../../shared/ts_graph_calls.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { isEntityLikeType } from '../../shared/ts_type_utils.js'
 import { canHaveLocalVariable, isBranchedAssignment } from '../../shared/ts_variable_utils.js'
@@ -17,7 +22,7 @@ import {
   makeEmptyListExpr,
   type ListType
 } from './lists.js'
-import { getFMethodCall, isFMethodCall, isServerOnCall } from './matcher.js'
+import { getFMethodCall, isFMethodCall } from './matcher.js'
 import {
   getBinaryOpInfo,
   getCompoundAssignmentMethod,

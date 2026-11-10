@@ -5,12 +5,6 @@ import { getClientFMethodNameFromAlias } from '../../definitions/client_zh_alias
 import { SERVER_F_ZH_TO_EN } from '../../definitions/zh_aliases.js'
 import type { Env } from './types.js'
 
-export {
-  getClientOnCallInfo,
-  isServerOnCall,
-  type ClientOnCallInfo
-} from '../../shared/ts_graph_calls.js'
-
 export function isGstsRootExpression(env: Env, expr: ts.Expression): boolean {
   if (ts.isIdentifier(expr)) return expr.text === env.gstsIdent || expr.text === 'gsts'
   return (

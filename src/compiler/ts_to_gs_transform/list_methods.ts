@@ -1,5 +1,6 @@
 import ts from 'typescript'
 
+import { ITERATING_LIST_METHODS } from '../../shared/ts_iteration_utils.js'
 import { fail } from './errors.js'
 import {
   assertBoolResult,
@@ -11,7 +12,6 @@ import {
   inferListTypeFromExpression,
   inferReduceAccumulatorType,
   isArrayLikeExpression,
-  ITERATING_LIST_METHODS,
   makeConst,
   makeDefaultValueExpr,
   makeIife,

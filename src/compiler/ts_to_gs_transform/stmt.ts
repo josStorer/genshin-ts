@@ -2,8 +2,12 @@ import ts from 'typescript'
 
 import { CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE } from '../../definitions/client_method_modes.js'
 import { t } from '../../i18n/index.js'
-import { findIterationSourceReassignment } from '../../shared/ts_iteration_utils.js'
+import {
+  findIterationSourceReassignment,
+  ITERATING_LIST_METHODS
+} from '../../shared/ts_iteration_utils.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
+import { unwrapExpression } from '../../shared/ts_type_utils.js'
 import { inferBasicType, isCollectionType } from '../../shared/ts_variable_utils.js'
 import {
   isConstEvaluableExpression,
@@ -25,9 +29,7 @@ import {
   isArrayLikeExpression,
   isListWrapperCall,
   isPureCollectionExpression,
-  ITERATING_LIST_METHODS,
-  SUPPORTED_LIST_METHODS,
-  unwrapListSource
+  SUPPORTED_LIST_METHODS
 } from './list_utils.js'
 import { inferListTypeFromTypeNode, inferListTypeFromTypeString, type ListType } from './lists.js'
 import {
@@ -54,7 +56,7 @@ function inferListConcreteType(env: Env, t: ts.Type, declTypeNode?: ts.TypeNode)
 }
 
 function needsCollectionRebindSnapshot(env: Env, expr: ts.Expression): boolean {
-  const unwrapped = unwrapListSource(expr)
+  const unwrapped = unwrapExpression(expr)
   if (isListWrapperCall(unwrapped)) return true
   if (isFMethodCall(env, unwrapped, ['copyList', 'assemblyList'])) return true
   if (ts.isArrayLiteralExpression(unwrapped)) return true
@@ -124,7 +126,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
   const usage = new Map<ts.Symbol, Usage>()
   const iterationSources = new Set<ts.Symbol>()
   const markIterationSource = (expr: ts.Expression) => {
-    const source = unwrapListSource(expr)
+    const source = unwrapExpression(expr)
     if (!ts.isIdentifier(source)) return
     const symbol = env.checker.getSymbolAtLocation(source)
     if (symbol && decls.has(symbol)) iterationSources.add(symbol)
@@ -481,7 +483,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
   // Only stable bindings can share storage. Rebinding inside a loop is diagnosed by ESLint.
   const aliasSources = new Map<ts.Symbol, ts.Symbol>()
   for (const [symbol, decl] of decls) {
-    const init = decl.decl.initializer && unwrapListSource(decl.decl.initializer)
+    const init = decl.decl.initializer && unwrapExpression(decl.decl.initializer)
     if (!init || !ts.isIdentifier(init)) continue
     const source = env.checker.getSymbolAtLocation(init)
     const sourceUsage = source && usage.get(source)

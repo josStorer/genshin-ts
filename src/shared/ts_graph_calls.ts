@@ -2,34 +2,7 @@ import ts from 'typescript'
 
 import { CLIENT_GRAPH_SUB_TYPE_BY_METHOD } from '../definitions/client_graph_modes.js'
 import type { ClientGraphSubType } from '../thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/client_node_metadata.js'
-import { isGraphFactory } from './ts_type_utils.js'
-
-function unwrapExpression(expr: ts.Expression): ts.Expression {
-  let current = expr
-  while (true) {
-    if (ts.isParenthesizedExpression(current)) {
-      current = current.expression
-      continue
-    }
-    if (ts.isAsExpression(current)) {
-      current = current.expression
-      continue
-    }
-    if (ts.isTypeAssertionExpression(current)) {
-      current = current.expression
-      continue
-    }
-    if (ts.isNonNullExpression(current)) {
-      current = current.expression
-      continue
-    }
-    if (ts.isSatisfiesExpression(current)) {
-      current = current.expression
-      continue
-    }
-    return current
-  }
-}
+import { isGraphFactory, unwrapExpression } from './ts_type_utils.js'
 
 function isGServerCall(expr: ts.Expression, checker: ts.TypeChecker): boolean {
   const target = unwrapExpression(expr)
@@ -123,4 +96,35 @@ export function getClientOnCallInfo(
     return undefined
   }
   return { ...info, handler }
+}
+
+export type TimerKind = 'timeout' | 'interval'
+
+export function getTimerKind(expr: ts.CallExpression): TimerKind | null {
+  const callee = expr.expression
+  if (ts.isIdentifier(callee)) {
+    if (callee.text === 'setTimeout') return 'timeout'
+    if (callee.text === 'setInterval') return 'interval'
+  }
+  if (
+    ts.isPropertyAccessExpression(callee) &&
+    ts.isIdentifier(callee.expression) &&
+    callee.expression.text === 'globalThis'
+  ) {
+    if (callee.name.text === 'setTimeout') return 'timeout'
+    if (callee.name.text === 'setInterval') return 'interval'
+  }
+  return null
+}
+
+/** Branch and list callbacks share a flow; timers and event handlers start another one. */
+export function isInlineCallback(fn: ts.Node, checker: ts.TypeChecker): boolean {
+  if (!ts.isArrowFunction(fn) && !ts.isFunctionExpression(fn)) return false
+  const call = fn.parent
+  return !(
+    ts.isCallExpression(call) &&
+    (getTimerKind(call) !== null ||
+      isServerOnCall(call, checker) ||
+      getClientOnCallInfo(call, checker))
+  )
 }
