@@ -9,12 +9,12 @@ import {
   type TimerKind
 } from '../../shared/ts_graph_calls.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
-import { isEntityLikeType } from '../../shared/ts_type_utils.js'
+import { isEntityLikeType, unwrapExpression } from '../../shared/ts_type_utils.js'
 import { canHaveLocalVariable, isBranchedAssignment } from '../../shared/ts_variable_utils.js'
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
 import { fail, warn } from './errors.js'
 import { tryTransformListMethodCall } from './list_methods.js'
-import { isArrayLikeExpression, isListWrapperCall } from './list_utils.js'
+import { classifyCollectionSource, isArrayLikeExpression, isListWrapperCall } from './list_utils.js'
 import {
   inferArrayListType,
   inferConcreteTypeFromString,
@@ -1671,6 +1671,57 @@ function transformTimerCall(
   )
 }
 
+function validateNativeBranchListAccess(env: Env, call: ts.CallExpression) {
+  const isNodeList = (input: ts.Expression, seen = new Set<ts.Symbol>()): boolean => {
+    const source = unwrapExpression(input)
+    if (!isArrayLikeExpression(env, source)) return false
+    if (
+      classifyCollectionSource(
+        env,
+        source,
+        (symbol) => env.varPlan?.get(symbol)?.collectionSourceKind
+      ) === 'liveRef'
+    )
+      return true
+    if (ts.isCallExpression(source)) {
+      return getFMethodCall(env, source) !== null || isListWrapperCall(source)
+    }
+    if (!ts.isIdentifier(source)) return false
+    const symbol = env.checker.getSymbolAtLocation(source)
+    if (!symbol || seen.has(symbol)) return false
+    if (env.varPlan?.get(symbol)?.needsLocalVar || env.timerCaptureMap?.get(symbol)?.useLocalVar)
+      return true
+    seen.add(symbol)
+    const decl = symbol.valueDeclaration
+    if (!decl || !ts.isVariableDeclaration(decl) || !decl.initializer) return false
+    const initializer = unwrapExpression(decl.initializer)
+    if (env.varPlan?.get(symbol)?.isCollection && ts.isArrayLiteralExpression(initializer))
+      return true
+    return isNodeList(initializer, seen)
+  }
+  const visit = (node: ts.Node) => {
+    if (ts.isTypeNode(node) || ts.isFunctionLike(node)) return
+    if (ts.isCallExpression(node) && isRawWrapperCall(node)) return
+    if (
+      (ts.isElementAccessExpression(node) ||
+        (ts.isPropertyAccessExpression(node) && node.name.text === 'length')) &&
+      isNodeList(node.expression)
+    ) {
+      fail(env, node, t('nativeBranchListAccess'))
+    }
+    ts.forEachChild(node, visit)
+  }
+  for (const arg of call.arguments.slice(1, 3)) {
+    const callback = unwrapExpression(arg)
+    // Block callbacks remain native JavaScript; expression callbacks follow expression lowering.
+    if (
+      (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) &&
+      ts.isBlock(callback.body)
+    )
+      visit(callback.body)
+  }
+}
+
 export function transformExpression(
   env: Env,
   context: ts.TransformationContext,
@@ -1689,6 +1740,10 @@ export function transformExpression(
   const timerKind = ts.isCallExpression(expr) ? getTimerKind(expr) : null
   if (timerKind && ts.isCallExpression(expr)) {
     return transformTimerCall(env, context, expr, timerKind)
+  }
+
+  if (isFMethodCall(env, expr, ['doubleBranch'])) {
+    validateNativeBranchListAccess(env, expr)
   }
 
   if (
