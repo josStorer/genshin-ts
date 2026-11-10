@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-import { getClientOnCallInfo, isServerOnCall } from '../compiler/ts_to_gs_transform/matcher.js'
+import { getClientOnCallInfo, isServerOnCall } from './ts_graph_calls.js'
 import { isArrayLikeType } from './ts_list_utils.js'
 
 export type TimerKind = 'timeout' | 'interval'
