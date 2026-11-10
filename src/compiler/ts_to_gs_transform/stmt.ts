@@ -1545,6 +1545,8 @@ export function transformBlock(
 }
 
 function validateIterationSourceAssignments(env: Env, body: ts.Node) {
+  const checked = (env.checkedIterationBodies ??= new WeakSet<ts.Node>())
+  if (checked.has(body)) return
   const visit = (node: ts.Node) => {
     if (ts.isTypeNode(node)) return
     if (ts.isBinaryExpression(node) && isAssignmentLikeOperator(node.operatorToken.kind)) {
@@ -1552,8 +1554,17 @@ function validateIterationSourceAssignments(env: Env, body: ts.Node) {
       if (target) fail(env, node, t('iterationSourceReassignment', { name: target.text }))
     }
     ts.forEachChild(node, visit)
+    if (
+      (ts.isArrowFunction(node) ||
+        ts.isFunctionExpression(node) ||
+        ts.isFunctionDeclaration(node)) &&
+      node.body
+    ) {
+      checked.add(node.body)
+    }
   }
   visit(body)
+  checked.add(body)
 }
 
 export function transformGstsServerFunction<

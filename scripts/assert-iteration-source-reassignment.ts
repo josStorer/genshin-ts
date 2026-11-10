@@ -15,7 +15,8 @@ const invalid = [
   'values.forEach(() => { values = [9n] })',
   'for (const value of values) { f.doubleBranch(true, () => { values = [9n] }, () => {}) }',
   'for (const value of values) { f.multipleBranches(1n, { 1: () => { values = [9n] } }) }',
-  'values.forEach(() => { f.doubleBranch(true, () => { values = [9n] }, () => {}) })'
+  'values.forEach(() => { f.doubleBranch(true, () => { values = [9n] }, () => {}) })',
+  'setTimeout(() => { let values = [1n]; values.forEach(() => { values = [9n] }) }, 100)'
 ]
 const valid = [
   'for (const value of values) { values[0] = value; values.push(3n); values.pop() }',

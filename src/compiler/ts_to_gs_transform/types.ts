@@ -93,6 +93,8 @@ export type Env = {
   timerCounterRef: { value: number }
   features: GstsFeatureFlags
   varPlan?: VarPlan
+  /** Function bodies already checked during this transform, shared with nested callbacks. */
+  checkedIterationBodies?: WeakSet<ts.Node>
   eventName?: string
   timerHandleMeta?: Map<ts.Symbol, TimerHandleMeta>
   /**
