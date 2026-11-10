@@ -205,7 +205,7 @@ function graph(id: number) {
 }
 
 for (const id of [
-  1073741910, 1073741911, 1073741912, 1073741919, 1073741920, 1073742409, 1073742416
+  1073741910, 1073741911, 1073741912, 1073741919, 1073742423, 1073742409, 1073742416
 ]) {
   const document = graph(id)
   const actual = execute(document)
@@ -235,7 +235,7 @@ const printCases: [number, string[]][] = [
   [1073741916, ['1', '9', '3']],
   [1073741917, ['1', '2', '11', '12']],
   [1073741918, ['1', '3', 'done']],
-  [1073741921, ['1', '9', '3']],
+  [1073742424, ['1', '9', '3']],
   [1073741924, ['1', '2']],
   [1073741925, ['1', '2']]
 ]
@@ -243,7 +243,7 @@ for (const [id, expected] of printCases) {
   assert.deepEqual(execute(graph(id)).printed, expected, `${id}: unexpected iteration values`)
 }
 for (const id of [
-  1073741914, 1073741921, 1073742404, 1073742405, 1073742413, 1073742414, 1073742415
+  1073741914, 1073742424, 1073742404, 1073742405, 1073742413, 1073742414, 1073742415
 ]) {
   assert.equal(
     graph(id).nodes?.filter((node) => node.type === 'set_local_variable').length,
@@ -270,7 +270,7 @@ for (const id of [1073742417, 1073742419]) {
   assert.deepEqual(actual.printed, ['5'])
   assert.equal(actual.queryCount, 1)
 }
-const native = execute(graph(1073741922))
+const native = execute(graph(1073742425))
 assert.deepEqual(native.destroyed, [2, 4, 6], 'native node API should still reproduce issue #22')
 assert.ok(native.queryCount > 1)
 const mapped = execute(graph(1073741923))

@@ -26,6 +26,7 @@
   "optLang": "语言：auto|zh-CN|en-US（默认 auto）",
   "argFile": "编译单文件（.ts/.json/.gia）",
   "cmdDev": "监控文件变更并自动编译",
+  "cmdAnalyze": "分析节点图 IR JSON 的静态节点与连线数量（不编译或注入）",
   "cmdMaps": "列出地图 .gil 文件（用于辅助填写 mapId）",
   "cmdOpen": "打开目录：map|backup|data",
   "cmdHelp": "显示帮助",

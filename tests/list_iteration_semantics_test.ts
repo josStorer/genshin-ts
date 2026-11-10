@@ -92,14 +92,14 @@ g.server({ id: 1073741919 }).on('whenEntityIsCreated', (_evt, f) => {
   })
 })
 
-g.server({ id: 1073741920 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073742423 }).on('whenEntityIsCreated', (_evt, f) => {
   const targets = f.getEntityListByUnitTag(1073741825n)
   targets.forEach((target) => {
     f.destroyEntity(target)
   })
 })
 
-g.server({ id: 1073741921 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073742424 }).on('whenEntityIsCreated', (_evt, f) => {
   const values = f.copyList(f.assemblyList([1n, 2n, 3n], 'int'))
   for (const value of values) {
     f.printString(str(value))
@@ -108,7 +108,7 @@ g.server({ id: 1073741921 }).on('whenEntityIsCreated', (_evt, f) => {
 })
 
 // Direct node calls retain the engine's repeated-input evaluation behavior.
-g.server({ id: 1073741922 }).on('whenEntityIsCreated', (_evt, f) => {
+g.server({ id: 1073742425 }).on('whenEntityIsCreated', (_evt, f) => {
   f.listIterationLoop(f.getEntityListByUnitTag(1073741825n), (target) => {
     f.destroyEntity(target)
   })

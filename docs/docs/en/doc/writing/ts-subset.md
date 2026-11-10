@@ -85,31 +85,7 @@ array literals, and function return values whose source cannot be proven.
 
 ### List Iteration And Evaluation Timing
 
-`for...of` and list iteration methods such as `forEach()` save the result of an inline list
-expression before iterating. For example, destroying entities returned by a tag query does
-not rerun the query and skip other entities:
-
-```ts
-for (const target of f.getEntityListByUnitTag(1073741825n)) {
-  f.destroyEntity(target)
-}
-```
-
-When you declare `const targets = f.getEntityListByUnitTag(...)` before iterating, the query
-result is saved at the declaration. Array literals are also saved at their declarations;
-changing a variable used to initialize the array does not rebuild it. An iterated list and
-simple aliases whose bindings are not reassigned, such as `const alias = targets`, share the
-same list. Existing local-variable storage is reused, so element updates during iteration
-still affect that list.
-
-Named live references, such as `const items = f.get('items')`, still read and modify the
-original variable. Writing `for (const item of f.get('items'))` directly instead saves a
-snapshot at loop entry. Declare a live reference first when iteration should observe
-element updates to the original list.
-
-Do not reassign the iteration source variable to another list during iteration; assign
-after the loop instead. The recommended ESLint configuration warns about directly detectable
-reassignments through `gsts/no-iteration-source-reassignment`. Element assignments and
-`push()` / `pop()` are allowed. The native `f.listIterationLoop()` API retains the node's
-behavior; use `f.initLocalVariable('entity_list', expression).value` explicitly when its input
-needs a snapshot.
+For list types supported by local variables, non-pure `const` lists such as query results are saved at their declaration when read repeatedly or iterated. Inline queries and temporary arrays containing mutable values are saved before iteration.
+Live references such as `f.get()` and existing local lists keep their references, so iteration observes element updates; literal-only lists are not copied again.
+Reassign the source variable after the loop, not during iteration. Element updates and `push()` / `pop()` remain allowed.
+The native `f.listIterationLoop()` retains the node's evaluation behavior; save its input to a local variable explicitly when a snapshot is needed.

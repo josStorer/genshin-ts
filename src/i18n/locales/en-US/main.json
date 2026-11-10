@@ -26,6 +26,7 @@
   "optLang": "Language: auto|zh-CN|en-US (default: auto)",
   "argFile": "Compile a single file (.ts/.json/.gia)",
   "cmdDev": "Watch files and recompile on change",
+  "cmdAnalyze": "Report static node and connection counts from IR JSON (no compilation or injection)",
   "cmdMaps": "List .gil map files (for helping configure mapId)",
   "cmdOpen": "Open directories: map|backup|data",
   "cmdHelp": "Show help",
