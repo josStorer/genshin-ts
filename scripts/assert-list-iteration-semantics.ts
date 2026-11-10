@@ -205,7 +205,7 @@ function graph(id: number) {
 }
 
 for (const id of [
-  1073741910, 1073741911, 1073741912, 1073741919, 1073742423, 1073742409, 1073742416
+  1073741910, 1073741911, 1073741912, 1073741919, 1073742423, 1073742409, 1073742416, 1073742434
 ]) {
   const document = graph(id)
   const actual = execute(document)
@@ -268,12 +268,16 @@ for (const id of [1073741916, 1073742406, 1073742407, 1073742408, 1073742410]) {
     false
   )
 }
-for (const id of [1073742417, 1073742419]) {
+for (const id of [1073742417, 1073742419, 1073742435]) {
   const actual = execute(graph(id))
   assert.deepEqual(actual.destroyed, [2])
   assert.deepEqual(actual.printed, ['5'])
   assert.equal(actual.queryCount, 1)
 }
+const rebound = execute(graph(1073742436))
+assert.deepEqual(rebound.destroyed, [2])
+assert.deepEqual(rebound.printed, ['0'])
+assert.equal(rebound.queryCount, 1)
 const native = execute(graph(1073742425))
 assert.deepEqual(native.destroyed, [2, 4, 6], 'native node API should still reproduce issue #22')
 assert.ok(native.queryCount > 1)

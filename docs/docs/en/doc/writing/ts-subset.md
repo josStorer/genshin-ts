@@ -85,7 +85,7 @@ array literals, and function return values whose source cannot be proven.
 
 ### List Iteration And Evaluation Timing
 
-For list types supported by local variables, non-pure `const` lists such as query results are saved at their declaration when read repeatedly or iterated. Inline queries and temporary arrays containing mutable values are saved before iteration.
+For list types supported by local variables, non-pure lists such as query results bound with `const` or a `let` that is never reassigned are saved at their declaration when read repeatedly or iterated. Inline queries and temporary arrays containing mutable values are saved before iteration.
 Live references such as `f.get()` and existing local lists keep their references, so iteration observes element updates; literal-only lists are not copied again.
 Reassign the source variable after the loop, not during iteration. Element updates and `push()` / `pop()` remain allowed.
 The native `f.listIterationLoop()` retains the node's evaluation behavior; save its input to a local variable explicitly when a snapshot is needed.

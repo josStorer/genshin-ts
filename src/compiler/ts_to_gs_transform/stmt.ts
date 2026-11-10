@@ -540,8 +540,9 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
         // 根据实际分支结果决定指向哪个集合, 只能用 LocalVariable 作为统一状态承载。
         needsLocalVar = u.modified && u.hasBindingWrite && u.wroteInExec
       } else {
+        const stableBinding = decl.isConst || (decl.isLet && !u.hasBindingWrite)
         const promoteReads =
-          !isPureInit && ((decl.isConst && readsMultiple) || iteratedRoots.has(root))
+          !isPureInit && ((stableBinding && readsMultiple) || iteratedRoots.has(root))
         needsLocalVar =
           u.modified ||
           (promoteReads &&
