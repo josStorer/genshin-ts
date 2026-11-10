@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint'
 import ts from 'typescript'
 
+import { t } from '../../i18n/index.js'
 import { findIterationSourceReassignment } from '../../shared/ts_iteration_utils.js'
 import { formatMessage } from '../utils/messages.js'
 import { readBaseOptions } from '../utils/options.js'
@@ -51,8 +52,8 @@ const rule: Rule.RuleModule = {
           node,
           message: formatMessage(
             options.lang,
-            `遍历“${target.text}”时不要给它重新赋值为另一份列表；节点图不能保证继续遍历原列表。请在循环结束后赋值。修改元素或 push/pop 不受此限制。`,
-            `Do not reassign “${target.text}” to another list while iterating it; the node graph cannot guarantee that iteration stays on the original list. Assign after the loop. Element updates and push/pop are allowed.`
+            t('iterationSourceReassignment', { name: target.text, lng: 'zh-CN' }),
+            t('iterationSourceReassignment', { name: target.text, lng: 'en-US' })
           )
         })
       }
