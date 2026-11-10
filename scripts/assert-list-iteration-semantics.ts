@@ -233,3 +233,17 @@ console.log(
   '[ok] emitted IR: live references, nested loops, empty lists, break/continue and native API'
 )
 console.log('[ok] all list iteration regression graphs serialize to GIA')
+
+const structs = await compileTsToGs({
+  cfgDir: root,
+  cfg: {
+    compileRoot: '.',
+    entries: ['./tests/manual/graph-features/struct-list-iteration.ts'],
+    outDir: path.join(root, 'dist/struct-list-iteration')
+  }
+})
+const structOutput = structs.entryOutFiles[0]
+assert.ok(structOutput)
+assert.doesNotMatch(fs.readFileSync(structOutput, 'utf8'), /initLocalVariable/)
+assert.match(fs.readFileSync(structOutput, 'utf8'), /listIterationLoop\(xs,/)
+console.log('[ok] inline, parameter and named struct lists keep direct iteration')

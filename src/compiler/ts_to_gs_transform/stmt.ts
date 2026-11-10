@@ -19,6 +19,7 @@ import {
   transformExpression
 } from './expr.js'
 import {
+  inferSnapshotListType,
   isArrayLikeExpression,
   ITERATING_LIST_METHODS,
   SUPPORTED_LIST_METHODS,
@@ -592,7 +593,10 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
   for (const [symbol, decl] of decls) {
     const u = ensureUsage(symbol)
     const root = collectionRoot(symbol)
-    const iterated = iteratedRoots.has(root) && isClientFMethodAvailable(env, 'initLocalVariable')
+    const iterated =
+      iteratedRoots.has(root) &&
+      isClientFMethodAvailable(env, 'initLocalVariable') &&
+      inferSnapshotListType(env, decl.decl.name as ts.Identifier) !== null
     let needsLocalVar = false
     if (u.isCollection) {
       if (u.collectionSourceKind === 'copy') {

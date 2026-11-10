@@ -70,6 +70,18 @@ export function unwrapListSource(expr: ts.Expression): ts.Expression {
   return expr
 }
 
+export function inferSnapshotListType(env: Env, source: ts.Expression): ListType | null {
+  const type = env.checker.getTypeAtLocation(source)
+  const element = env.checker.getIndexTypeOfType(type, ts.IndexKind.Number)
+  const unsupported = (item: ts.Type): boolean =>
+    (item.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.Never)) !== 0 ||
+    !!env.checker.getPropertyOfType(item, '__brandStruct') ||
+    (item.isUnionOrIntersection() && item.types.some(unsupported))
+  // Struct lists have no local-variable node; unresolved element types cannot select one either.
+  if (!element || unsupported(element)) return null
+  return inferListTypeFromExpression(env, source)
+}
+
 export function stabilizeListIterationSource(
   env: Env,
   source: ts.Expression,
@@ -82,8 +94,8 @@ export function stabilizeListIterationSource(
     if (symbol && env.varPlan?.get(symbol)?.isCollection) return transformed
   }
   if (!isClientFMethodAvailable(env, 'initLocalVariable')) return transformed
-  const type = inferListTypeFromExpression(env, source)
-  if (!type) fail(env, source, 'cannot infer iteration list type, please add type annotation')
+  const type = inferSnapshotListType(env, source)
+  if (!type) return transformed
   return ts.factory.createPropertyAccessExpression(
     makeFCall(env, 'initLocalVariable', [
       ts.factory.createStringLiteral(`${type}_list`),
