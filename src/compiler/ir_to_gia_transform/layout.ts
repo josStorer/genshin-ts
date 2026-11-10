@@ -110,8 +110,22 @@ export function buildExecutionGraph(irNodes: IRNode[]) {
   }
 }
 
-type OccupiedBox = { x: number; y: number; width: number; height: number }
-type Occupancy = { cells: Map<string, OccupiedBox[]>; count: number; base?: Occupancy }
+type OccupiedBox = Readonly<{ x: number; y: number; width: number; height: number }>
+type OccupancyIndex = {
+  readonly cells: ReadonlyMap<string, readonly OccupiedBox[]>
+  readonly count: number
+  readonly base?: OccupancyIndex
+}
+type Occupancy = { cells: Map<string, OccupiedBox[]>; count: number; base?: OccupancyIndex }
+type DataPlacementState = Pick<
+  ReturnType<typeof createLayoutState>,
+  | 'occupied'
+  | 'positions'
+  | 'unplacedNodes'
+  | 'consumerStackCount'
+  | 'nodeToEventIndex'
+  | 'eventMaxYCoord'
+> & { nodesById: ReadonlyMap<NodeId, IRNode> }
 // A cell is close to one node footprint; rectangles spanning cells reserve every touched cell.
 const CELL_SIZE = 400
 function cellsFor(box: OccupiedBox) {
@@ -120,13 +134,15 @@ function cellsFor(box: OccupiedBox) {
     let x = Math.floor(box.x / CELL_SIZE);
     x <= Math.floor((box.x + box.width + 40) / CELL_SIZE);
     x++
-  )
+  ) {
     for (
       let y = Math.floor(box.y / CELL_SIZE);
       y <= Math.floor((box.y + box.height + 40) / CELL_SIZE);
       y++
-    )
+    ) {
       cells.push(`${x},${y}`)
+    }
+  }
   return cells
 }
 function occupy(index: Occupancy, box: OccupiedBox) {
@@ -137,11 +153,16 @@ function occupy(index: Occupancy, box: OccupiedBox) {
     bucket.push(box)
   }
 }
-function nearby(index: Occupancy, box: OccupiedBox) {
+function nearby(index: OccupancyIndex, box: OccupiedBox) {
   const boxes = new Set<OccupiedBox>()
   const keys = cellsFor(box)
-  for (let current: Occupancy | undefined = index; current; current = current.base)
-    for (const key of keys) for (const item of current.cells.get(key) ?? []) boxes.add(item)
+  for (let current: OccupancyIndex | undefined = index; current; current = current.base) {
+    for (const key of keys) {
+      for (const item of current.cells.get(key) ?? []) {
+        boxes.add(item)
+      }
+    }
+  }
   return boxes
 }
 
@@ -183,7 +204,7 @@ function nodeFootprint(node: IRNode) {
 }
 
 function occupyNextFreeY(
-  state: ReturnType<typeof createLayoutState>,
+  state: Pick<DataPlacementState, 'occupied' | 'nodesById'>,
   nodeId: NodeId,
   x: number,
   y: number,
@@ -210,7 +231,7 @@ function occupyNextFreeY(
 }
 
 function updateEventHeight(
-  state: ReturnType<typeof createLayoutState>,
+  state: Pick<DataPlacementState, 'eventMaxYCoord'>,
   eventIndex: number,
   y: number
 ) {
@@ -267,7 +288,7 @@ function layoutExecutionChain(
 function placeDataNearConsumers(
   dataConsumersMap: Map<NodeId, NodeId[]>,
   execNodes: Set<NodeId>,
-  state: ReturnType<typeof createLayoutState>
+  state: DataPlacementState
 ): boolean {
   let placedAny = false
   const toDelete: NodeId[] = []
@@ -329,18 +350,19 @@ function placeDetachedGrid(state: ReturnType<typeof createLayoutState>, config: 
   state.unplacedNodes.clear()
 }
 
-function measureEventBottom(
+function createPreviewState(
   state: ReturnType<typeof createLayoutState>,
   eventIndex: number,
-  dataConsumersMap: Map<NodeId, NodeId[]>,
-  execNodes: Set<NodeId>,
-  maxBottom: number
-) {
-  // Preview only this event's inputs, in the same order as final placement.
-  // The shared base index still reserves every pinned and already placed execution node.
+  dataConsumersMap: Map<NodeId, NodeId[]>
+): DataPlacementState {
+  // Only this event's inputs and their placed consumers are visible, in final placement order.
+  // Writable placement maps and position tuples are owned by the preview; node metadata and
+  // base occupancy are shared read-only so pinned and already placed nodes remain reserved.
   const candidates = new Set<NodeId>()
   const pending: NodeId[] = []
-  for (const [id, owner] of state.nodeToEventIndex) if (owner === eventIndex) pending.push(id)
+  for (const [id, owner] of state.nodeToEventIndex) {
+    if (owner === eventIndex) pending.push(id)
+  }
   while (pending.length) {
     const id = pending.pop()!
     for (const arg of state.nodesById.get(id)?.args ?? []) {
@@ -353,16 +375,17 @@ function measureEventBottom(
   }
   const positions = new Map<NodeId, Position>()
   const nodeToEventIndex = new Map<NodeId, number>()
-  for (const id of candidates)
+  for (const id of candidates) {
     for (const consumer of dataConsumersMap.get(id) ?? []) {
       const position = state.positions.get(consumer)
       if (!position) continue
-      positions.set(consumer, position)
+      positions.set(consumer, [position[0], position[1]])
       const owner = state.nodeToEventIndex.get(consumer)
       if (owner !== undefined) nodeToEventIndex.set(consumer, owner)
     }
-  const preview = {
-    ...state,
+  }
+  return {
+    nodesById: state.nodesById,
     occupied: { cells: new Map(), count: state.occupied.count, base: state.occupied },
     positions,
     unplacedNodes: new Map(
@@ -374,6 +397,16 @@ function measureEventBottom(
     nodeToEventIndex,
     eventMaxYCoord: new Map([[eventIndex, state.eventMaxYCoord.get(eventIndex)!]])
   }
+}
+
+function measureEventBottom(
+  state: ReturnType<typeof createLayoutState>,
+  eventIndex: number,
+  dataConsumersMap: Map<NodeId, NodeId[]>,
+  execNodes: Set<NodeId>,
+  maxBottom: number
+) {
+  const preview = createPreviewState(state, eventIndex, dataConsumersMap)
   while (
     preview.eventMaxYCoord.get(eventIndex)! < maxBottom &&
     placeDataNearConsumers(dataConsumersMap, execNodes, preview)
