@@ -153,8 +153,8 @@ try {
   assert.match(output, /\.finiteLoop\(/)
   assert.match(output, /\.multipleBranches\(/)
   assert.match(output, /\.dataTypeConversion\(/)
-  assert.match(output, /\.getCorrespondingValueFromList\(0, indexedValues\)/)
-  assert.match(output, /\.getCorrespondingValueFromList\(idx\(1n\), indexedValues\)/)
+  assert.match(output, /\.getCorrespondingValueFromList\(0, indexedValues\.value\)/)
+  assert.match(output, /\.getCorrespondingValueFromList\(idx\(1n\), indexedValues\.value\)/)
   assert.doesNotMatch(output, /\.getCorrespondingValueFromList\(indexedValues,/)
   assert.match(output, /gsts\.fCreationStatus\.doubleBranch\(/)
   assert.doesNotMatch(output, /gsts\.f\.(?:doubleBranch|finiteLoop|addition)/)
@@ -276,15 +276,31 @@ try {
   assert.strictEqual(
     new Set(indexedListNodeIds).size,
     1,
-    'all three list reads must share one assembled list'
+    'all three list reads must share one saved list'
   )
   const indexedListNodeId = indexedListNodeIds[0]
   const indexedListNode = characterSkillDocument?.nodes?.find(
     (node) => node.id === indexedListNodeId
   )
-  assert.strictEqual(indexedListNode?.type, 'assembly_list')
+  assert.strictEqual(indexedListNode?.type, 'get_local_variable')
+  const listName = indexedListNode?.args?.[0]
+  assert.strictEqual(listName?.type, 'str')
+  const listWrites = characterSkillDocument?.nodes?.filter(
+    (node) =>
+      node.type === 'set_local_variable' &&
+      node.args?.[0]?.type === 'str' &&
+      node.args[0].value === listName?.value
+  )
+  assert.strictEqual(listWrites?.length, 1, 'save the dynamic list once at its declaration')
+  const listValue = listWrites?.[0].args?.[1]
+  assert.strictEqual(listValue?.type, 'conn')
+  if (listValue?.type !== 'conn') throw new Error('expected initial list connection')
+  const initialListNode = characterSkillDocument?.nodes?.find(
+    (node) => node.id === listValue.value.node_id
+  )
+  assert.strictEqual(initialListNode?.type, 'assembly_list')
   assert.deepStrictEqual(
-    indexedListNode?.args?.map((arg) => arg?.type),
+    initialListNode?.args?.map((arg) => arg?.type),
     ['conn', 'int', 'int', 'int'],
     'list(dynamic, literal...) must preserve one connection and three literal slots'
   )
@@ -438,7 +454,7 @@ try {
     }
     if (subTypes[index] === 'character_skill') {
       const indexedList = clientGraph.nodes?.find(
-        (node) => Number(node.nodeIndex) === indexedListNodeId
+        (node) => Number(node.nodeIndex) === initialListNode?.id
       )
       assert.ok(indexedList, 'indexed values must emit one assembly_list node')
       const indexedCountPin = indexedList.pins?.find(
@@ -473,7 +489,7 @@ try {
         assert.strictEqual(
           Number(listInput?.connects?.[0]?.id),
           indexedListNodeId,
-          `list reader ${valueNode.id} must connect to the assembled list`
+          `list reader ${valueNode.id} must connect to the saved list`
         )
       }
 
@@ -676,14 +692,28 @@ g.characterSkill({ id: ${clientEntityListInferenceGraphId} }).on('start', (_evt,
     4,
     'direct, alias, inherited, and conditional client entity lists must lower length'
   )
-  for (const lengthNode of clientEntityLengthNodes) {
+  const savedEntityListNode = clientEntityListInferenceDocument.nodes?.find(
+    (node) => node.type === 'get_local_variable'
+  )
+  assert.ok(savedEntityListNode, 'the named query and its aliases must share saved storage')
+  const entityListWrites = clientEntityListInferenceDocument.nodes?.filter(
+    (node) =>
+      node.type === 'set_local_variable' &&
+      node.args?.[0]?.value === savedEntityListNode.args?.[0]?.value
+  )
+  assert.strictEqual(entityListWrites?.length, 1)
+  assert.deepStrictEqual(entityListWrites?.[0].args?.[1], {
+    type: 'conn',
+    value: { node_id: cursorHitResultNode.id, index: 0, type: 'entity_list' }
+  })
+  for (const [index, lengthNode] of clientEntityLengthNodes.entries()) {
     const input = lengthNode.args?.[0]
     assert.strictEqual(input?.type, 'conn', `get_list_length #${lengthNode.id}: input connection`)
     if (input?.type !== 'conn') continue
     assert.strictEqual(input.value.type, 'entity_list', `get_list_length #${lengthNode.id}: type`)
     assert.strictEqual(
       input.value.node_id,
-      cursorHitResultNode.id,
+      index === 0 ? cursorHitResultNode.id : savedEntityListNode.id,
       `get_list_length #${lengthNode.id}: source node`
     )
     assert.strictEqual(input.value.index, 0, `get_list_length #${lengthNode.id}: source pin`)
