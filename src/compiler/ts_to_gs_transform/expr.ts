@@ -655,6 +655,26 @@ function isPropertyNameIdentifier(node: ts.Identifier): boolean {
   )
 }
 
+const timerSourceIdentifiers = new WeakMap<ts.SourceFile, Set<string>>()
+
+function defaultTimerEventName(file: ts.SourceFile) {
+  let names = timerSourceIdentifiers.get(file)
+  if (!names) {
+    const collected = new Set<string>()
+    const visit = (node: ts.Node) => {
+      if (ts.isIdentifier(node)) collected.add(node.text)
+      ts.forEachChild(node, visit)
+    }
+    visit(file)
+    names = collected
+    timerSourceIdentifiers.set(file, names)
+  }
+  const prefix = '__gstsTimerEvt'
+  let name = prefix
+  for (let index = 1; names.has(name); index++) name = `${prefix}_${index}`
+  return name
+}
+
 function resolveTimerParamNames(
   env: Env,
   fn: ts.ArrowFunction | ts.FunctionExpression
@@ -680,7 +700,7 @@ function resolveTimerParamNames(
 
   // A fresh name, so a callback without parameters never shadows an outer identifier such as the
   // handler's evt or a forEach item
-  const defaultEvt = '__gstsTimerEvt'
+  const defaultEvt = defaultTimerEventName(env.file)
   const defaultF = env.fIdent ?? 'f'
 
   let evtName = getParamName(p0) ?? defaultEvt

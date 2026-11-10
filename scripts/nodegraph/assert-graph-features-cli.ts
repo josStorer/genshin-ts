@@ -60,6 +60,20 @@ try {
     ])
     assert.equal(checks.code, 0, checks.output)
   }
+  const collisionOutput = `${dir}/timer-parameter-collision`
+  const collisionResult = compile(
+    ['tests/manual/graph-features/timer-parameter-collision.ts'],
+    collisionOutput
+  )
+  assert.equal(collisionResult.code, 0, collisionResult.output)
+  const collisionGs = fs.readFileSync(
+    `${collisionOutput}/tests/manual/graph-features/timer-parameter-collision.gs.ts`,
+    'utf8'
+  )
+  assert.match(collisionGs, /\(__gstsTimerEvt_2, f\)/)
+  assert.match(collisionGs, /\(customEvt, f\)/)
+  assert.match(collisionGs, /EXPECTED_CAPTURE/)
+
   const negative = `${dir}/cross-event.ts`
   fs.writeFileSync(
     negative,
