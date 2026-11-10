@@ -509,6 +509,9 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     }
     return symbol
   }
+  for (const symbol of aliasSources.keys()) {
+    if (ensureUsage(symbol).modified) ensureUsage(collectionRoot(symbol)).modified = true
+  }
   const iteratedRoots = new Set([...iterationSources].map(collectionRoot))
 
   const out = new Map<ts.Symbol, VarPlanEntry>()
@@ -536,7 +539,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
       } else {
         needsLocalVar = u.modified || iterated
       }
-      if (iterated && root !== symbol) needsLocalVar = false
+      if (root !== symbol) needsLocalVar = false
     } else if (u.isBasic) {
       if (decl.isLet || u.wroteInExec) {
         needsLocalVar = true

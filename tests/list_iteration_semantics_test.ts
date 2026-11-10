@@ -195,3 +195,28 @@ g.server({ id: 1073742410 }).on('whenEntityIsCreated', (_evt, f) => {
 g.server({ id: 1073742411 }).on('whenEntityIsCreated', (_evt, f) => {
   f.printString(str([1n, 2n, 3n].find((value) => value === 2n)!))
 })
+
+g.server({ id: 1073742413 }).on('whenEntityIsCreated', (_evt, f) => {
+  const values = [1n, 2n, 3n]
+  const alias = values
+  alias[0] = 9n
+  f.printString(str(values[0]))
+})
+
+g.server({ id: 1073742414 }).on('whenEntityIsCreated', (_evt, f) => {
+  const values = [1n, 2n, 3n]
+  const alias = values
+  alias[0] = 9n
+  f.printString(str(values[0]))
+  for (const value of values) f.printString(str(value))
+})
+
+g.server({ id: 1073742415 }).on('whenEntityIsCreated', (_evt, f) => {
+  const values = [1n, 2n, 3n]
+  const alias = values
+  const second = alias
+  second[0] = 9n
+  values[1] = 8n
+  f.printString(str(values[0]))
+  f.printString(str(second[1]))
+})

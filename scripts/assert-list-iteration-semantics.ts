@@ -79,6 +79,11 @@ function execute(document: IRDocument) {
         assert.ok(Array.isArray(list))
         return list.length
       }
+      case 'get_corresponding_value_from_list': {
+        const list = read(args[0])
+        assert.ok(Array.isArray(list))
+        return list[Number(read(args[1]))]
+      }
       case 'list_includes_this_value': {
         const list = read(args[0])
         assert.ok(Array.isArray(list))
@@ -200,6 +205,9 @@ const printCases: [number, string[]][] = [
     id,
     ['1', '9', '3']
   ]),
+  [1073742413, ['9']],
+  [1073742414, ['9', '9', '2', '3']],
+  [1073742415, ['9', '8']],
   [1073742410, ['1', '2', '3']],
   [1073742411, ['2']],
   [1073741913, ['1', '2']],
@@ -215,7 +223,9 @@ const printCases: [number, string[]][] = [
 for (const [id, expected] of printCases) {
   assert.deepEqual(execute(graph(id)).printed, expected, `${id}: unexpected iteration values`)
 }
-for (const id of [1073741914, 1073741921, 1073742404, 1073742405]) {
+for (const id of [
+  1073741914, 1073741921, 1073742404, 1073742405, 1073742413, 1073742414, 1073742415
+]) {
   assert.equal(
     graph(id).nodes?.filter((node) => node.type === 'set_local_variable').length,
     1,
