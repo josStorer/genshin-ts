@@ -8,7 +8,11 @@ import { getClientOnCallInfo, isServerOnCall } from '../../shared/ts_graph_calls
 import type { ClientGraphSubType } from '../../thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/client_node_metadata.js'
 import { fail } from './errors.js'
 import { isAssignmentLikeOperator } from './ops.js'
-import { transformGstsServerFunction, transformHandler } from './stmt.js'
+import {
+  transformGstsServerFunction,
+  transformHandler,
+  validateIterationSourceAssignments
+} from './stmt.js'
 import { buildFeatureFlags, type EnumImportInfo, type Env, type TransformCtx } from './types.js'
 
 function hasTopLevelDeclName(block: ts.Block, name: string): boolean {
@@ -685,6 +689,7 @@ export function transformToGs(sf: ts.SourceFile, ctx: TransformCtx): ts.SourceFi
               ? eventArg.text
               : undefined
           const env = makeEnv(gstsIdent, eventName, { graphDocumentType: 'server' })
+          validateIterationSourceAssignments(env, handler.body)
           const newHandler = transformHandler(env, context, handler)
           const newArgs = [...node.arguments]
           newArgs[1] = newHandler
@@ -709,6 +714,7 @@ export function transformToGs(sf: ts.SourceFile, ctx: TransformCtx): ts.SourceFi
             graphDocumentType: 'client',
             clientSubType: clientInfo.subType
           })
+          validateIterationSourceAssignments(env, handler.body)
           const newHandler = transformHandler(env, context, handler)
           const newArgs = [...node.arguments]
           newArgs[1] = newHandler

@@ -51,6 +51,31 @@ for (const lang of ['en-US', 'zh-CN'] as const) {
     } else await compile()
   }
 }
+const entryBodies = [
+  "g.creationSkill().on('start', () => { BODY })",
+  "g.server().on('whenEntityIsCreated', () => values.forEach(() => { values = [9n] }))",
+  'function gstsServerValidate() { BODY return 1n }',
+  'const gstsServerValidate = () => { BODY return 1n }',
+  'function gstsCreationSkillValidate() { BODY return 1n }',
+  'const gstsCreationSkillValidate = () => { BODY return 1n }'
+]
+for (const [index, entry] of entryBodies.entries()) {
+  const file = path.join(dir, `entry-${index}.ts`)
+  fs.writeFileSync(
+    file,
+    `import { g } from 'genshin-ts/runtime/core';
+    let values = [1n, 2n];
+    ${entry.replace('BODY', 'let values = [1n, 2n]; values.forEach(() => { values = [9n] })')}`
+  )
+  await assert.rejects(
+    compileTsToGs({
+      cfgDir: root,
+      cfg: { compileRoot: '.', entries: [file], outDir: path.join(dir, 'out') },
+      programCache: cache
+    }),
+    /遍历“values”时不要给它重新赋值/
+  )
+}
 console.log(
   '[ok] iteration rebind diagnostics: branches, callbacks, shadowing, timers and both languages'
 )
