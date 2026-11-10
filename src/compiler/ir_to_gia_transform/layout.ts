@@ -7,6 +7,7 @@ type LayoutConfig = {
   maxColumns: number
   wrapHeight: number
   eventGap: number
+  maxEventGap: number
 }
 
 const asArray = <T>(value: T | T[] | undefined): T[] => {
@@ -292,6 +293,32 @@ function placeDetachedGrid(state: ReturnType<typeof createLayoutState>, config: 
   state.unplacedNodes.clear()
 }
 
+function measureEventBottom(
+  state: ReturnType<typeof createLayoutState>,
+  eventIndex: number,
+  dataConsumersMap: Map<NodeId, NodeId[]>,
+  execNodes: Set<NodeId>,
+  maxBottom: number
+) {
+  // 试排数据节点只用于计算间距，不占用后续执行流的位置。
+  const preview = {
+    ...state,
+    occupied: [...state.occupied],
+    positions: new Map(state.positions),
+    unplacedNodes: new Map(state.unplacedNodes),
+    consumerStackCount: new Map(state.consumerStackCount),
+    nodeToEventIndex: new Map(state.nodeToEventIndex),
+    eventMaxYCoord: new Map(state.eventMaxYCoord)
+  }
+  while (
+    preview.eventMaxYCoord.get(eventIndex)! < maxBottom &&
+    placeDataNearConsumers(dataConsumersMap, execNodes, preview)
+  ) {
+    // 已达到间距上限后，无需继续试排更深的数据依赖。
+  }
+  return preview.eventMaxYCoord.get(eventIndex)!
+}
+
 export function layoutPositions(
   irNodes: IRNode[],
   graphInfo: ReturnType<typeof buildExecutionGraph>
@@ -301,7 +328,8 @@ export function layoutPositions(
     rowHeight: 600,
     maxColumns: 50,
     wrapHeight: 600,
-    eventGap: 600
+    eventGap: 600,
+    maxEventGap: 1800
   }
 
   const { execNodes, roots, execChildrenMap, dataConsumersMap } = graphInfo
@@ -309,16 +337,27 @@ export function layoutPositions(
 
   let currentBaseY = 0
   roots.forEach((root, eventIndex) => {
-    currentBaseY = state.eventMaxYCoord.size
-      ? Math.max(...state.eventMaxYCoord.values()) + config.eventGap
-      : 0
     layoutExecutionChain(root.id, 0, currentBaseY, eventIndex, 0, execChildrenMap, state, config)
+    if (eventIndex === roots.length - 1) return
 
-    // 使用 while 循环，只有当放置了新节点时才继续
-    while (placeDataNearConsumers(dataConsumersMap, execNodes, state)) {
-      // 继续迭代直到无法放置更多节点
-    }
+    const executionBottom = state.eventMaxYCoord.get(eventIndex)!
+    const dataBottom = measureEventBottom(
+      state,
+      eventIndex,
+      dataConsumersMap,
+      execNodes,
+      executionBottom + config.maxEventGap - config.eventGap
+    )
+    const neededGap = dataBottom - executionBottom + config.eventGap
+    const gap = Math.min(neededGap, config.maxEventGap)
+    currentBaseY = Math.max(currentBaseY, executionBottom + gap)
   })
+
+  // 先保留全部执行流的位置，避免数据依赖的高度把后续事件不断向下推。
+  // 数据节点仍按占用矩形避让，可能延伸到其他事件旁边或执行流下方。
+  while (placeDataNearConsumers(dataConsumersMap, execNodes, state)) {
+    // 继续迭代直到无法放置更多节点
+  }
 
   // 剩余游离节点（无消费者或无关联）统一放到左上角网格
   placeDetachedGrid(state, config)
