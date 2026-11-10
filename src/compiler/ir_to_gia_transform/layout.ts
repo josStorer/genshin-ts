@@ -110,6 +110,41 @@ export function buildExecutionGraph(irNodes: IRNode[]) {
   }
 }
 
+type OccupiedBox = { x: number; y: number; width: number; height: number }
+type Occupancy = { cells: Map<string, OccupiedBox[]>; count: number; base?: Occupancy }
+// A cell is close to one node footprint; rectangles spanning cells reserve every touched cell.
+const CELL_SIZE = 400
+function cellsFor(box: OccupiedBox) {
+  const cells: string[] = []
+  for (
+    let x = Math.floor(box.x / CELL_SIZE);
+    x <= Math.floor((box.x + box.width + 40) / CELL_SIZE);
+    x++
+  )
+    for (
+      let y = Math.floor(box.y / CELL_SIZE);
+      y <= Math.floor((box.y + box.height + 40) / CELL_SIZE);
+      y++
+    )
+      cells.push(`${x},${y}`)
+  return cells
+}
+function occupy(index: Occupancy, box: OccupiedBox) {
+  index.count++
+  for (const key of cellsFor(box)) {
+    let bucket = index.cells.get(key)
+    if (!bucket) index.cells.set(key, (bucket = []))
+    bucket.push(box)
+  }
+}
+function nearby(index: Occupancy, box: OccupiedBox) {
+  const boxes = new Set<OccupiedBox>()
+  const keys = cellsFor(box)
+  for (let current: Occupancy | undefined = index; current; current = current.base)
+    for (const key of keys) for (const item of current.cells.get(key) ?? []) boxes.add(item)
+  return boxes
+}
+
 function createLayoutState(irNodes: IRNode[]) {
   // 未放置位置的节点集合（初始包含所有节点，放置后从中删除）
   const unplacedNodes = new Map<NodeId, IRNode>()
@@ -117,8 +152,9 @@ function createLayoutState(irNodes: IRNode[]) {
 
   const state = {
     // Conservative IR-space footprints, shared by execution, data and detached nodes.
-    occupied: [] as Array<{ x: number; y: number; width: number; height: number }>,
+    occupied: { cells: new Map(), count: 0 } as Occupancy,
     nodesById: new Map(irNodes.map((node) => [node.id, node])),
+    nodeOrder: new Map(irNodes.map((node, index) => [node.id, index])),
     visitedExec: new Set<NodeId>(),
     // 节点ID -> [x, y] 坐标位置（最终布局结果）
     positions: new Map<NodeId, Position>(),
@@ -136,7 +172,7 @@ function createLayoutState(irNodes: IRNode[]) {
     if (!node.position) continue
     state.positions.set(node.id, node.position)
     state.unplacedNodes.delete(node.id)
-    state.occupied.push({ x: node.position[0], y: node.position[1], ...nodeFootprint(node) })
+    occupy(state.occupied, { x: node.position[0], y: node.position[1], ...nodeFootprint(node) })
   }
   return state
 }
@@ -156,8 +192,8 @@ function occupyNextFreeY(
   let yy = y
   const size = nodeFootprint(state.nodesById.get(nodeId)!)
   // Each collision moves below at least one occupied rectangle; no fixed graph-size limit.
-  for (let i = 0; i <= state.occupied.length; i++) {
-    const collisions = state.occupied.filter(
+  for (let i = 0; i <= state.occupied.count; i++) {
+    const collisions = [...nearby(state.occupied, { x, y: yy, ...size })].filter(
       (box) =>
         x < box.x + box.width + 40 &&
         x + size.width + 40 > box.x &&
@@ -165,7 +201,7 @@ function occupyNextFreeY(
         yy + size.height + 40 > box.y
     )
     if (!collisions.length) {
-      state.occupied.push({ x, y: yy, ...size })
+      occupy(state.occupied, { x, y: yy, ...size })
       return yy
     }
     yy = Math.max(yy + stepY, ...collisions.map((box) => box.y + box.height + 40))
@@ -300,15 +336,43 @@ function measureEventBottom(
   execNodes: Set<NodeId>,
   maxBottom: number
 ) {
-  // 试排数据节点只用于计算间距，不占用后续执行流的位置。
+  // Preview only this event's inputs, in the same order as final placement.
+  // The shared base index still reserves every pinned and already placed execution node.
+  const candidates = new Set<NodeId>()
+  const pending: NodeId[] = []
+  for (const [id, owner] of state.nodeToEventIndex) if (owner === eventIndex) pending.push(id)
+  while (pending.length) {
+    const id = pending.pop()!
+    for (const arg of state.nodesById.get(id)?.args ?? []) {
+      if (!isConnectionArgument(arg)) continue
+      const source = arg.value.node_id
+      if (state.positions.has(source) || candidates.has(source)) continue
+      candidates.add(source)
+      pending.push(source)
+    }
+  }
+  const positions = new Map<NodeId, Position>()
+  const nodeToEventIndex = new Map<NodeId, number>()
+  for (const id of candidates)
+    for (const consumer of dataConsumersMap.get(id) ?? []) {
+      const position = state.positions.get(consumer)
+      if (!position) continue
+      positions.set(consumer, position)
+      const owner = state.nodeToEventIndex.get(consumer)
+      if (owner !== undefined) nodeToEventIndex.set(consumer, owner)
+    }
   const preview = {
     ...state,
-    occupied: [...state.occupied],
-    positions: new Map(state.positions),
-    unplacedNodes: new Map(state.unplacedNodes),
-    consumerStackCount: new Map(state.consumerStackCount),
-    nodeToEventIndex: new Map(state.nodeToEventIndex),
-    eventMaxYCoord: new Map(state.eventMaxYCoord)
+    occupied: { cells: new Map(), count: state.occupied.count, base: state.occupied },
+    positions,
+    unplacedNodes: new Map(
+      [...candidates]
+        .sort((a, b) => state.nodeOrder.get(a)! - state.nodeOrder.get(b)!)
+        .map((id) => [id, state.nodesById.get(id)!])
+    ),
+    consumerStackCount: new Map<NodeId, number>(),
+    nodeToEventIndex,
+    eventMaxYCoord: new Map([[eventIndex, state.eventMaxYCoord.get(eventIndex)!]])
   }
   while (
     preview.eventMaxYCoord.get(eventIndex)! < maxBottom &&
