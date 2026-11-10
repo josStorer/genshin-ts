@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
+import { performance } from 'node:perf_hooks'
 import { pathToFileURL } from 'node:url'
 
 import { buildExecutionGraph, layoutPositions } from '../src/compiler/ir_to_gia_transform/layout.js'
