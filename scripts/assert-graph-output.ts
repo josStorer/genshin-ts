@@ -262,6 +262,107 @@ for (let i = 0; i < layoutNodes.length; i++) {
   }
 }
 
+// Wrapped events reserve a bounded gap even when their data trees extend much further down.
+const wrappedNodes: ServerNode[] = []
+for (const [start, actions] of [
+  [1, 200],
+  [1000, 300]
+]) {
+  for (let offset = 0; offset <= actions; offset++) {
+    wrappedNodes.push({
+      id: start + offset,
+      type: offset === 0 ? 'event' : 'exec',
+      next: offset < actions ? [start + offset + 1] : []
+    })
+  }
+}
+wrappedNodes[1].args = Array.from({ length: 40 }, (_, index) => conn(2000 + index))
+for (let index = 0; index < 40; index++) {
+  wrappedNodes.push({
+    id: 2000 + index,
+    type: 'data',
+    args: Array.from({ length: 16 }, () => conn(3000))
+  })
+}
+wrappedNodes.push({ id: 3000, type: 'data' })
+const wrappedOriginal = globalThis.structuredClone(wrappedNodes)
+const wrappedPositions = layoutPositions(wrappedNodes, buildExecutionGraph(wrappedNodes))
+assert.deepEqual(wrappedNodes, wrappedOriginal)
+assert.equal(wrappedPositions.size, wrappedNodes.length)
+const firstExecutionBottom = Math.max(
+  ...wrappedNodes
+    .filter((node) => node.id <= 201)
+    .map((node) => wrappedPositions.get(node.id)![1] + 200 + (node.args?.length ?? 0) * 40)
+)
+assert.equal(wrappedPositions.get(1000)![1] - firstExecutionBottom, 1800)
+assert.equal(wrappedPositions.get(51)![0], 0, 'execution still wraps after 50 columns')
+for (let i = 0; i < wrappedNodes.length; i++) {
+  const a = wrappedNodes[i]
+  const [ax, ay] = wrappedPositions.get(a.id)!
+  for (const b of wrappedNodes.slice(i + 1)) {
+    const [bx, by] = wrappedPositions.get(b.id)!
+    assert.ok(
+      !(
+        ax < bx + 340 &&
+        ax + 340 > bx &&
+        ay < by + 240 + (b.args?.length ?? 0) * 40 &&
+        ay + 240 + (a.args?.length ?? 0) * 40 > by
+      ),
+      `wrapped events overlap or lose clearance: ${a.id}, ${b.id}`
+    )
+  }
+}
+const shortEvents: ServerNode[] = [
+  { id: 1, type: 'event', next: [2] },
+  { id: 2, type: 'exec' },
+  { id: 3, type: 'event', next: [4] },
+  { id: 4, type: 'exec' }
+]
+const shortPositions = layoutPositions(shortEvents, buildExecutionGraph(shortEvents))
+assert.equal(shortPositions.get(3)![1], 800, 'short events keep the 600-unit gap')
+const shortTallData: ServerNode[] = [
+  { id: 1, type: 'event', next: [2] },
+  { id: 2, type: 'exec', args: [conn(5)] },
+  { id: 3, type: 'event', next: [4] },
+  { id: 4, type: 'exec' },
+  { id: 5, type: 'data', args: Array.from({ length: 40 }, () => ({ type: 'int', value: 1 })) }
+]
+const shortTallPositions = layoutPositions(shortTallData, buildExecutionGraph(shortTallData))
+assert.equal(
+  shortTallPositions.get(3)![1] - (shortTallPositions.get(2)![1] + 240),
+  1800,
+  'the cap applies between events even when the execution chain fits within 50 columns'
+)
+
+for (const [dataPins, expectedGap] of [
+  [-1, 600],
+  [5, 1010],
+  [20, 1610],
+  [30, 1800]
+]) {
+  const nodes: ServerNode[] = Array.from({ length: 201 }, (_, index) => ({
+    id: index + 1,
+    type: index === 0 ? 'event' : 'exec',
+    next: index < 200 ? [index + 2] : []
+  }))
+  if (dataPins >= 0) {
+    nodes[200].args = [conn(2000)]
+    nodes.push({
+      id: 2000,
+      type: 'data',
+      args: Array.from({ length: dataPins }, () => ({ type: 'int' as const, value: 1 }))
+    })
+  }
+  nodes.push({ id: 1000, type: 'event', next: [1001] }, { id: 1001, type: 'exec' })
+  const positions = layoutPositions(nodes, buildExecutionGraph(nodes))
+  const executionBottom = positions.get(201)![1] + 200 + (nodes[200].args?.length ?? 0) * 40
+  assert.equal(
+    positions.get(1000)![1] - executionBottom,
+    expectedGap,
+    `wrapped event with ${dataPins} data pins uses only the needed gap, capped at 1800`
+  )
+}
+
 const report = analyzeGraphDocuments(after)
 assert.equal(report.graphs[0].totals.nodes, 2)
 assert.equal(report.graphs[0].totals.flowConnections, 1)
