@@ -1,5 +1,6 @@
 import ts from 'typescript'
 
+import { unwrapListSource } from '../../shared/ts_iteration_utils.js'
 import {
   inferListElementTypeFromExpression as inferListElementTypeFromExpressionShared,
   inferListElementTypeFromType as inferListElementTypeFromTypeShared,
@@ -15,6 +16,8 @@ import { type ListType } from './lists.js'
 import { isFMethodCall } from './matcher.js'
 import type { CollectionSourceKind, Env } from './types.js'
 import { isClientFMethodAvailable, makeFCall } from './utils.js'
+
+export { ITERATING_LIST_METHODS, unwrapListSource } from '../../shared/ts_iteration_utils.js'
 
 export type InlineCallbackExpr = {
   fn: ts.ArrowFunction | ts.FunctionExpression
@@ -47,32 +50,6 @@ export const SUPPORTED_LIST_METHODS = new Set<string>([
   'slice',
   'splice'
 ])
-
-export const ITERATING_LIST_METHODS = new Set([
-  'forEach',
-  'indexOf',
-  'map',
-  'filter',
-  'reduce',
-  'some',
-  'every',
-  'find',
-  'findIndex',
-  'slice'
-])
-
-export function unwrapListSource(expr: ts.Expression): ts.Expression {
-  while (
-    ts.isParenthesizedExpression(expr) ||
-    ts.isAsExpression(expr) ||
-    ts.isTypeAssertionExpression(expr) ||
-    ts.isSatisfiesExpression(expr) ||
-    ts.isNonNullExpression(expr)
-  ) {
-    expr = expr.expression
-  }
-  return expr
-}
 
 export function classifyCollectionSource(
   env: Env,

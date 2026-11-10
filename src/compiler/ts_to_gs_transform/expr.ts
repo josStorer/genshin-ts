@@ -2,6 +2,7 @@ import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
 import type { DictValueType } from '../../runtime/value.js'
+import { getTimerKind, isInlineCallback, type TimerKind } from '../../shared/ts_iteration_utils.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { isEntityLikeType } from '../../shared/ts_type_utils.js'
 import { canHaveLocalVariable, isBranchedAssignment } from '../../shared/ts_variable_utils.js'
@@ -39,7 +40,6 @@ type EnumTypeInfo = {
   isEnum: boolean
   name: string | null
 }
-type TimerKind = 'timeout' | 'interval'
 type TimerCaptureDictMeta = { name: string; valueType: DictValueType }
 type TimerCaptureSpec = {
   name: string
@@ -613,23 +613,6 @@ function assertStraightLineAssignment(
   }
 }
 
-function getTimerKind(expr: ts.CallExpression): TimerKind | null {
-  const callee = expr.expression
-  if (ts.isIdentifier(callee)) {
-    if (callee.text === 'setTimeout') return 'timeout'
-    if (callee.text === 'setInterval') return 'interval'
-  }
-  if (
-    ts.isPropertyAccessExpression(callee) &&
-    ts.isIdentifier(callee.expression) &&
-    callee.expression.text === 'globalThis'
-  ) {
-    if (callee.name.text === 'setTimeout') return 'timeout'
-    if (callee.name.text === 'setInterval') return 'interval'
-  }
-  return null
-}
-
 function getParamName(param: ts.ParameterDeclaration | undefined): string | null {
   if (!param) return null
   return ts.isIdentifier(param.name) ? param.name.text : null
@@ -760,7 +743,7 @@ function isInLoop(env: Env, node: ts.Node): boolean {
     }
     if (ts.isFunctionLike(cur)) {
       if (isLoopCallback(env, cur)) return true
-      if (!isInlineCallback(env, cur)) return false
+      if (!isInlineCallback(cur, env.checker)) return false
     }
     cur = cur.parent
   }
@@ -774,19 +757,6 @@ function isLoopCallback(env: Env, fn: ts.Node): boolean {
   const callee = call.expression
   if (isFMethodCall(env, call, ['finiteLoop', 'listIterationLoop'])) return true
   return ts.isPropertyAccessExpression(callee) && isArrayLikeExpression(env, callee.expression)
-}
-
-/**
- * A callback such as a branch of f.multipleBranches runs in the same flow, so an enclosing loop still
- * applies; a timer callback, an event handler or a function declaration starts its own flow.
- */
-function isInlineCallback(env: Env, fn: ts.Node): boolean {
-  if (!ts.isArrowFunction(fn) && !ts.isFunctionExpression(fn)) return false
-  const call = fn.parent
-  return !(
-    ts.isCallExpression(call) &&
-    (getTimerKind(call) !== null || isServerOnCall(call, env.checker))
-  )
 }
 
 function resolveTimerPoolSize(env: Env, node: ts.Node, kind: TimerKind): number {

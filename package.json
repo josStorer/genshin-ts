@@ -70,7 +70,7 @@
     "test": "npm run build && tsx scripts/generate-node-gia-tests.ts && tsx scripts/generate-enum-gia-tests.ts && node ./bin/gsts.mjs -c gsts.test.config.ts && tsx scripts/nodegraph/assert-enum-combinations.ts",
     "quicktest": "npm run build && node ./bin/gsts.mjs -c gsts.test.config.ts",
     "test:eslint": "tsx tests/eslint/node-graph-rules.test.ts",
-    "test:list-iteration": "npm run build && tsx scripts/assert-list-iteration-semantics.ts && tsx scripts/assert-list-iteration-semantics.ts --optimize",
+    "test:list-iteration": "npm run build && tsx scripts/assert-list-iteration-semantics.ts && tsx scripts/assert-list-iteration-semantics.ts --optimize && tsx scripts/assert-iteration-source-reassignment.ts",
     "test:graph-features": "npm run build && tsx scripts/nodegraph/assert-graph-features-cli.ts",
     "test:injector": "tsx tests/injector/gil-paths.test.ts && tsx tests/injector/client-graph-injection.test.ts && tsx tests/injector/batch-injection.test.ts && tsx tests/injector/gil-file-transaction.test.ts && tsx tests/injector/gil-artifacts.test.ts && tsx tests/injector/prefab-extraction-equivalence.test.ts && tsx tests/injector/lua-signal-nodes.test.ts",
     "test:gia-pipeline": "tsx scripts/assert-gia-worker-and-graph-index.ts",

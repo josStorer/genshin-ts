@@ -1,6 +1,8 @@
 import ts from 'typescript'
 
 import { CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE } from '../../definitions/client_method_modes.js'
+import { t } from '../../i18n/index.js'
+import { findIterationSourceReassignment } from '../../shared/ts_iteration_utils.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
 import { inferBasicType, isCollectionType } from '../../shared/ts_variable_utils.js'
 import {
@@ -1542,6 +1544,18 @@ export function transformBlock(
   return ts.factory.updateBlock(block, stmts)
 }
 
+function validateIterationSourceAssignments(env: Env, body: ts.Node) {
+  const visit = (node: ts.Node) => {
+    if (ts.isTypeNode(node)) return
+    if (ts.isBinaryExpression(node) && isAssignmentLikeOperator(node.operatorToken.kind)) {
+      const target = findIterationSourceReassignment(node, env.checker)
+      if (target) fail(env, node, t('iterationSourceReassignment', { name: target.text }))
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(body)
+}
+
 export function transformGstsServerFunction<
   T extends ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction
 >(env: Env, context: ts.TransformationContext, fn: T): T {
@@ -1586,6 +1600,7 @@ export function transformGstsServerFunction<
     returnMode: 'value',
     returnDepth: 0
   }
+  validateIterationSourceAssignments(env2, bodyBlock)
   validateNoMutableOuterCaptures(env2, bodyBlock)
   const varPlan = buildVarPlan(env2, bodyBlock)
   const localNames = collectLocalNames(bodyBlock, fn.parameters)
@@ -1678,6 +1693,7 @@ export function transformHandler(
   }
 ) {
   const originalBody = fn.body
+  validateIterationSourceAssignments(env, originalBody)
   const paramFIdent =
     fn.parameters.length >= 2 && ts.isIdentifier(fn.parameters[1].name)
       ? fn.parameters[1].name.text

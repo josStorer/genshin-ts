@@ -50,6 +50,17 @@ ruleTester.run('no-iteration-source-reassignment', noIterationSourceReassignment
     {
       filename,
       code: `${importG}
+g.server().on('whenEntityIsCreated', (_evt, f) => {
+  let values = [1n, 2n]
+  for (const value of values) {
+    f.doubleBranch(true, () => { setTimeout(() => { values = [9n] }, 100) }, () => {})
+    function later() { values = [9n] }
+  }
+})`
+    },
+    {
+      filename,
+      code: `${importG}
 g.server().on('whenEntityIsCreated', () => {
   let values = [1n, 2n]
   for (const value of values) { values[0] = value; values.push(3n); values.pop() }
@@ -78,6 +89,16 @@ g.server().on('whenEntityIsCreated', () => {
     }
   ],
   invalid: [
+    ...[
+      `for (const value of values) { f.doubleBranch(true, () => { values = [9n] }, () => {}) }`,
+      `for (const value of values) { f.multipleBranches(1n, { 1: () => { values = [9n] } }) }`,
+      `values.forEach(() => { f.doubleBranch(true, () => { values = [9n] }, () => {}) })`
+    ].map((body) => ({
+      filename,
+      code: `${importG}
+g.server().on('whenEntityIsCreated', (_evt, f) => { let values = [1n, 2n]; ${body} })`,
+      errors: [{ message: /Do not reassign.*values.*while iterating/ }]
+    })),
     {
       filename,
       code: `${importG}
