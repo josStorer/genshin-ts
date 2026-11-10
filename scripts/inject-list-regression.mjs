@@ -41,6 +41,12 @@ async function main() {
     )
     console.log('Builds the current compiler and graph. Without --go, validates in memory only.')
     console.log(
+      'Creates five test entities using prefab 20001224 and unit tag 1073741825 by default. The prefab must exist in your map; use --prefab ID to choose one that can be spawned and destroyed. Use --tag ID for an unused unit tag.'
+    )
+    console.log(
+      'SETUP FAIL: expected five tagged boxes means setup did not create/find five entities. Check the prefab and tag before judging the regression result.'
+    )
+    console.log(
       'Save your map and open another map before --go. Backups: .tmp/in-game-list/backups'
     )
     return
@@ -52,6 +58,9 @@ async function main() {
   if (values.region !== undefined && !['China', 'Global'].includes(values.region)) {
     throw new Error('--region must be China or Global')
   }
+  console.log(
+    `Test setup: prefab ${prefabId}, unit tag ${tagId}. Ensure the prefab exists in the map and the tag is unused; override with --prefab ID / --tag ID.`
+  )
 
   if (process.platform === 'win32')
     run(process.env.ComSpec ?? 'cmd.exe', ['/d', '/c', 'npm run build'])
