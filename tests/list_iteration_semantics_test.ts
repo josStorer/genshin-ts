@@ -220,3 +220,29 @@ g.server({ id: 1073742415 }).on('whenEntityIsCreated', (_evt, f) => {
   f.printString(str(values[0]))
   f.printString(str(second[1]))
 })
+
+g.server({ id: 1073742416 }).on('whenEntityIsCreated', (_evt, f) => {
+  const targets = f.getEntityListByUnitTag(1073741825n)
+  for (let i = 0; i < targets.length; i++) f.destroyEntity(targets[i])
+})
+
+g.server({ id: 1073742417 }).on('whenEntityIsCreated', (_evt, f) => {
+  const targets = f.getEntityListByUnitTag(1073741825n)
+  f.destroyEntity(targets[0])
+  f.printString(str(targets.length))
+})
+
+g.server({ id: 1073742418 }).on('whenEntityIsCreated', (_evt, f) => {
+  let n = 1n
+  const values = [n, n + 1n]
+  n = 10n
+  f.printString(str(values[0]))
+  f.printString(str(values[1]))
+})
+
+g.server({ id: 1073742419 }).on('whenEntityIsCreated', (_evt, f) => {
+  const targets = f.getEntityListByUnitTag(1073741825n)
+  const alias = targets
+  f.destroyEntity(alias[0])
+  f.printString(str(targets.length))
+})

@@ -66,6 +66,7 @@ function execute(document: IRDocument) {
         return locals.get(node.id)
       case 'get_node_graph_variable':
         return variables.get(String(read(args[0])))
+      case 'finite_loop':
       case 'list_iteration_loop':
         assert.ok(iterations.has(node.id), 'iteration value read outside its loop')
         return iterations.get(node.id)
@@ -89,6 +90,8 @@ function execute(document: IRDocument) {
         assert.ok(Array.isArray(list))
         return list.includes(read(args[1]))
       }
+      case 'subtraction':
+        return Number(read(args[0])) - Number(read(args[1]))
       case 'addition':
         return Number(read(args[0])) + Number(read(args[1]))
       case 'equal':
@@ -124,6 +127,19 @@ function execute(document: IRDocument) {
           // Local-variable list assignment saves the list contents, not the producer connection.
           locals.set(local, globalThis.structuredClone(read(args[1])))
           break
+        }
+        case 'finite_loop': {
+          for (let index = Number(read(args[0])); index <= Number(read(args[1])); index++) {
+            iterations.set(node.id, index)
+            const brokenLoop = run(next(node))
+            if (brokenLoop !== undefined) {
+              if (brokenLoop !== node.id) return brokenLoop
+              break
+            }
+          }
+          iterations.delete(node.id)
+          id = next(node, 1)
+          continue
         }
         case 'list_iteration_loop': {
           for (let index = 0; ; index++) {
@@ -188,7 +204,9 @@ function graph(id: number) {
   return document
 }
 
-for (const id of [1073741910, 1073741911, 1073741912, 1073741919, 1073741920, 1073742409]) {
+for (const id of [
+  1073741910, 1073741911, 1073741912, 1073741919, 1073741920, 1073742409, 1073742416
+]) {
   const document = graph(id)
   const actual = execute(document)
   assert.deepEqual(
@@ -205,6 +223,7 @@ const printCases: [number, string[]][] = [
     id,
     ['1', '9', '3']
   ]),
+  [1073742418, ['1', '2']],
   [1073742413, ['9']],
   [1073742414, ['9', '9', '2', '3']],
   [1073742415, ['9', '8']],
@@ -244,6 +263,12 @@ for (const id of [1073741916, 1073742406, 1073742407, 1073742408, 1073742410]) {
     graph(id).nodes?.some((node) => node.type === 'set_local_variable'),
     false
   )
+}
+for (const id of [1073742417, 1073742419]) {
+  const actual = execute(graph(id))
+  assert.deepEqual(actual.destroyed, [2])
+  assert.deepEqual(actual.printed, ['5'])
+  assert.equal(actual.queryCount, 1)
 }
 const native = execute(graph(1073741922))
 assert.deepEqual(native.destroyed, [2, 4, 6], 'native node API should still reproduce issue #22')

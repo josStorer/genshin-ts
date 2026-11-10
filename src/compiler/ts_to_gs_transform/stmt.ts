@@ -21,6 +21,7 @@ import {
   classifyCollectionSource,
   inferSnapshotListType,
   isArrayLikeExpression,
+  isPureCollectionExpression,
   ITERATING_LIST_METHODS,
   SUPPORTED_LIST_METHODS,
   unwrapListSource
@@ -510,7 +511,11 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     return symbol
   }
   for (const symbol of aliasSources.keys()) {
-    if (ensureUsage(symbol).modified) ensureUsage(collectionRoot(symbol)).modified = true
+    const alias = ensureUsage(symbol)
+    const root = ensureUsage(collectionRoot(symbol))
+    if (alias.modified) root.modified = true
+    root.readCount += alias.readCount
+    root.readInLoop ||= alias.readInLoop
   }
   const iteratedRoots = new Set([...iterationSources].map(collectionRoot))
 
@@ -518,10 +523,14 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
   for (const [symbol, decl] of decls) {
     const u = ensureUsage(symbol)
     const root = collectionRoot(symbol)
-    const iterated =
-      iteratedRoots.has(root) &&
-      isClientFMethodAvailable(env, 'initLocalVariable') &&
-      inferSnapshotListType(env, decl.decl.name as ts.Identifier) !== null
+    const initExpr = decl.decl.initializer
+    const isPureInit = initExpr
+      ? isPureLiteralExpression(initExpr) ||
+        isConstEvaluableExpression(env, initExpr) ||
+        isPureCollectionExpression(env, initExpr)
+      : false
+    const readsMultiple =
+      u.readCount > 1 || (u.readInLoop && !decl.inLoop) || iteratedRoots.has(root)
     let needsLocalVar = false
     if (u.isCollection) {
       if (u.collectionSourceKind === 'copy') {
@@ -537,18 +546,19 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
         // 根据实际分支结果决定指向哪个集合, 只能用 LocalVariable 作为统一状态承载。
         needsLocalVar = u.modified && u.hasBindingWrite && u.wroteInExec
       } else {
-        needsLocalVar = u.modified || iterated
+        const promoteReads =
+          !isPureInit && ((decl.isConst && readsMultiple) || iteratedRoots.has(root))
+        needsLocalVar =
+          u.modified ||
+          (promoteReads &&
+            isClientFMethodAvailable(env, 'initLocalVariable') &&
+            inferSnapshotListType(env, decl.decl.name as ts.Identifier) !== null)
       }
       if (root !== symbol) needsLocalVar = false
     } else if (u.isBasic) {
       if (decl.isLet || u.wroteInExec) {
         needsLocalVar = true
       } else {
-        const initExpr = decl.decl.initializer
-        const isPureInit = initExpr
-          ? isPureLiteralExpression(initExpr) || isConstEvaluableExpression(env, initExpr)
-          : false
-        const readsMultiple = u.readCount > 1 || (u.readInLoop && !decl.inLoop)
         const promoteConstReads = decl.isConst && readsMultiple && !isPureInit
         const promoteRandom = u.hasRandomWrite && readsMultiple
         // 不支持局部变量的客户端图无法保存一次求值快照。这里保留直接节点连线，
