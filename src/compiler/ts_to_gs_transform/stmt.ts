@@ -93,7 +93,7 @@ function makeLocalVarTypeString(
 function buildVarPlan(env: Env, body: ts.Block): VarPlan {
   type Decl = {
     decl: ts.VariableDeclaration
-    symbol: ts.Symbol
+    name: ts.Identifier
     isLet: boolean
     isConst: boolean
     inLoop: boolean
@@ -250,7 +250,7 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
         const symbol = getSymbol(d.name)
         if (!symbol) continue
         if (decls.has(symbol)) continue
-        decls.set(symbol, { decl: d, symbol, isLet, isConst, inLoop })
+        decls.set(symbol, { decl: d, name: d.name, isLet, isConst, inLoop })
         const t = env.checker.getTypeAtLocation(d.name)
         const u = ensureUsage(symbol)
         u.isCollection = isCollectionType(env, t)
@@ -525,8 +525,8 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
         isConstEvaluableExpression(env, initExpr) ||
         isPureCollectionExpression(env, initExpr)
       : false
-    const readsMultiple =
-      u.readCount > 1 || (u.readInLoop && !decl.inLoop) || iteratedRoots.has(root)
+    const isIterated = iteratedRoots.has(root)
+    const hasRepeatedReads = u.readCount > 1 || (u.readInLoop && !decl.inLoop)
     let needsLocalVar = false
     if (u.isCollection) {
       if (u.collectionSourceKind === 'copy') {
@@ -543,16 +543,16 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
         needsLocalVar = u.modified && u.hasBindingWrite && u.wroteInExec
       } else {
         const stableBinding = decl.isConst || (decl.isLet && !u.hasBindingWrite)
-        const promoteReads =
-          !isPureInit && ((stableBinding && readsMultiple) || iteratedRoots.has(root))
+        const promoteReads = !isPureInit && (isIterated || (stableBinding && hasRepeatedReads))
         needsLocalVar =
           u.modified ||
           (promoteReads &&
             isClientFMethodAvailable(env, 'initLocalVariable') &&
-            inferSnapshotListType(env, decl.decl.name as ts.Identifier) !== null)
+            inferSnapshotListType(env, decl.name) !== null)
       }
       if (root !== symbol) needsLocalVar = false
     } else if (u.isBasic) {
+      const readsMultiple = hasRepeatedReads || isIterated
       if (decl.isLet || u.wroteInExec) {
         needsLocalVar = true
       } else {

@@ -60,7 +60,7 @@ export function isListWrapperCall(expr: ts.Expression): expr is ts.CallExpressio
 export function classifyCollectionSource(
   env: Env,
   expr: ts.Expression | undefined,
-  sourceKindForSymbol?: (symbol: ts.Symbol) => CollectionSourceKind | undefined
+  sourceKindForSymbol: (symbol: ts.Symbol) => CollectionSourceKind | undefined
 ): CollectionSourceKind {
   const isEntityReceiverType = (t: ts.Type, location: ts.Node): boolean => {
     if (t.flags & ts.TypeFlags.Union) {
@@ -82,67 +82,59 @@ export function classifyCollectionSource(
     return isEntityReceiverType(env.checker.getTypeAtLocation(receiver), receiver)
   }
 
-  const classify = (expr: ts.Expression | undefined): CollectionSourceKind => {
-    if (!expr) return 'unknown'
-    const unwrapped = unwrapExpression(expr)
+  if (!expr) return 'unknown'
+  const unwrapped = unwrapExpression(expr)
 
-    if (ts.isIdentifier(unwrapped)) {
-      const sourceSym = env.checker.getSymbolAtLocation(unwrapped)
-      const sourceKind = sourceSym
-        ? sourceKindForSymbol
-          ? sourceKindForSymbol(sourceSym)
-          : env.varPlan?.get(sourceSym)?.collectionSourceKind
-        : undefined
-      if (sourceKind) return sourceKind
-    }
-
-    if (isLocalListRead(env, unwrapped)) return 'liveRef'
-
-    // `f.get(...)` 已经带有节点图变量元数据推断, 裸调用就应视为实时引用,
-    // 不应依赖用户再手动追加 `.asType(...)` / `.asDict(...)`。
-    if (isFMethodCall(env, unwrapped, ['get'])) return 'liveRef'
-
-    if (ts.isCallExpression(unwrapped) && ts.isPropertyAccessExpression(unwrapped.expression)) {
-      const method = unwrapped.expression.name.text
-      if (method === 'asType' || method === 'asDict') {
-        const base = unwrapExpression(unwrapped.expression.expression)
-        // `getNodeGraphVariable` / `getCustomVariable` 返回 generic, 需要通过 asType/asDict
-        // 确认集合类型。这里保留 `get` 仅用于兼容 `f.get(...).asType(...)` 这种冗余写法。
-        if (isFMethodCall(env, base, ['getNodeGraphVariable', 'get', 'getCustomVariable'])) {
-          return 'liveRef'
-        }
-        if (isEntityCustomVariableGetCall(base)) return 'liveRef'
-      }
-    }
-
-    if (isFMethodCall(env, unwrapped, ['copyList'])) {
-      return 'copy'
-    }
-
-    if (isFMethodCall(env, unwrapped, ['assemblyList'])) {
-      const firstArg = unwrapped.arguments[0]
-      if (firstArg) {
-        const firstArgType = env.checker.getTypeAtLocation(firstArg)
-        if (isCollectionType(env, firstArgType)) return 'copy'
-      }
-      return 'temporary'
-    }
-
-    if (isFMethodCall(env, unwrapped, ['createDictionary', 'assemblyDictionary'])) {
-      return 'temporary'
-    }
-    if (
-      isListWrapperCall(unwrapped) ||
-      ts.isArrayLiteralExpression(unwrapped) ||
-      ts.isObjectLiteralExpression(unwrapped)
-    ) {
-      return 'temporary'
-    }
-
-    return 'unknown'
+  if (ts.isIdentifier(unwrapped)) {
+    const sourceSym = env.checker.getSymbolAtLocation(unwrapped)
+    const sourceKind = sourceSym ? sourceKindForSymbol(sourceSym) : undefined
+    if (sourceKind) return sourceKind
   }
 
-  return classify(expr)
+  if (isLocalListRead(env, unwrapped)) return 'liveRef'
+
+  // `f.get(...)` 已经带有节点图变量元数据推断, 裸调用就应视为实时引用,
+  // 不应依赖用户再手动追加 `.asType(...)` / `.asDict(...)`。
+  if (isFMethodCall(env, unwrapped, ['get'])) return 'liveRef'
+
+  if (ts.isCallExpression(unwrapped) && ts.isPropertyAccessExpression(unwrapped.expression)) {
+    const method = unwrapped.expression.name.text
+    if (method === 'asType' || method === 'asDict') {
+      const base = unwrapExpression(unwrapped.expression.expression)
+      // `getNodeGraphVariable` / `getCustomVariable` 返回 generic, 需要通过 asType/asDict
+      // 确认集合类型。这里保留 `get` 仅用于兼容 `f.get(...).asType(...)` 这种冗余写法。
+      if (isFMethodCall(env, base, ['getNodeGraphVariable', 'get', 'getCustomVariable'])) {
+        return 'liveRef'
+      }
+      if (isEntityCustomVariableGetCall(base)) return 'liveRef'
+    }
+  }
+
+  if (isFMethodCall(env, unwrapped, ['copyList'])) {
+    return 'copy'
+  }
+
+  if (isFMethodCall(env, unwrapped, ['assemblyList'])) {
+    const firstArg = unwrapped.arguments[0]
+    if (firstArg) {
+      const firstArgType = env.checker.getTypeAtLocation(firstArg)
+      if (isCollectionType(env, firstArgType)) return 'copy'
+    }
+    return 'temporary'
+  }
+
+  if (isFMethodCall(env, unwrapped, ['createDictionary', 'assemblyDictionary'])) {
+    return 'temporary'
+  }
+  if (
+    isListWrapperCall(unwrapped) ||
+    ts.isArrayLiteralExpression(unwrapped) ||
+    ts.isObjectLiteralExpression(unwrapped)
+  ) {
+    return 'temporary'
+  }
+
+  return 'unknown'
 }
 
 export function isPureCollectionExpression(env: Env, expr: ts.Expression): boolean {
@@ -181,11 +173,7 @@ export function inferSnapshotListType(env: Env, source: ts.Expression): ListType
   return inferListTypeFromExpression(env, source)
 }
 
-export function stabilizeListIterationSource(
-  env: Env,
-  source: ts.Expression,
-  transformed: ts.Expression
-): ts.Expression {
+function getIterationSnapshotType(env: Env, source: ts.Expression): ListType | null {
   const unwrapped = unwrapExpression(source)
   if (ts.isIdentifier(unwrapped)) {
     const symbol = env.checker.getSymbolAtLocation(unwrapped)
@@ -194,16 +182,27 @@ export function stabilizeListIterationSource(
       symbol &&
       (env.varPlan?.get(symbol)?.isCollection || env.timerCaptureMap?.get(symbol)?.useLocalVar)
     )
-      return transformed
+      return null
   }
   if (
-    classifyCollectionSource(env, source) === 'liveRef' ||
-    isLocalListRead(env, unwrapped) ||
+    classifyCollectionSource(
+      env,
+      source,
+      (symbol) => env.varPlan?.get(symbol)?.collectionSourceKind
+    ) === 'liveRef' ||
     isPureCollectionExpression(env, unwrapped)
   )
-    return transformed
-  if (!isClientFMethodAvailable(env, 'initLocalVariable')) return transformed
-  const type = inferSnapshotListType(env, source)
+    return null
+  if (!isClientFMethodAvailable(env, 'initLocalVariable')) return null
+  return inferSnapshotListType(env, source)
+}
+
+export function stabilizeListIterationSource(
+  env: Env,
+  source: ts.Expression,
+  transformed: ts.Expression
+): ts.Expression {
+  const type = getIterationSnapshotType(env, source)
   if (!type) return transformed
   return ts.factory.createPropertyAccessExpression(
     makeFCall(env, 'initLocalVariable', [
