@@ -4,11 +4,14 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { buildServerGraphRegistriesIRDocuments } from 'genshin-ts/runtime/core'
+import { setRuntimeOptions } from 'genshin-ts/runtime/runtime_config'
 
 import { irToGia } from '../src/compiler/ir_to_gia_transform/index.js'
 import { compileTsToGs } from '../src/compiler/ts_to_gs_pipeline.js'
 import type { Argument, IRDocument, ServerNode } from '../src/runtime/IR.js'
 
+const optimize = process.argv.includes('--optimize')
+setRuntimeOptions({ optimize: { precompileExpression: optimize, removeUnusedNodes: optimize } })
 const root = process.cwd()
 const result = await compileTsToGs({
   cfgDir: root,
@@ -16,7 +19,7 @@ const result = await compileTsToGs({
     compileRoot: '.',
     entries: ['./tests/list_iteration_semantics_test.ts'],
     outDir: path.join(root, 'dist/list-iteration-semantics'),
-    options: { optimize: { precompileExpression: false, removeUnusedNodes: false } }
+    options: { optimize: { precompileExpression: optimize, removeUnusedNodes: optimize } }
   }
 })
 const output = result.outFiles.find((file) => file.endsWith('list_iteration_semantics_test.gs.ts'))
@@ -75,6 +78,11 @@ function execute(document: IRDocument) {
         const list = read(args[0])
         assert.ok(Array.isArray(list))
         return list.length
+      }
+      case 'list_includes_this_value': {
+        const list = read(args[0])
+        assert.ok(Array.isArray(list))
+        return list.includes(read(args[1]))
       }
       case 'addition':
         return Number(read(args[0])) + Number(read(args[1]))
@@ -175,7 +183,7 @@ function graph(id: number) {
   return document
 }
 
-for (const id of [1073741910, 1073741911, 1073741912, 1073741919, 1073741920]) {
+for (const id of [1073741910, 1073741911, 1073741912, 1073741919, 1073741920, 1073742409]) {
   const document = graph(id)
   const actual = execute(document)
   assert.deepEqual(
@@ -188,10 +196,16 @@ for (const id of [1073741910, 1073741911, 1073741912, 1073741919, 1073741920]) {
 }
 
 const printCases: [number, string[]][] = [
+  ...[1073742404, 1073742405, 1073742406, 1073742407, 1073742408].map((id): [number, string[]] => [
+    id,
+    ['1', '9', '3']
+  ]),
+  [1073742410, ['1', '2', '3']],
+  [1073742411, ['2']],
   [1073741913, ['1', '2']],
   [1073741914, ['1', '9', '3']],
   [1073741915, ['1', '9', '3']],
-  [1073741916, ['1', '2', '3']],
+  [1073741916, ['1', '9', '3']],
   [1073741917, ['1', '2', '11', '12']],
   [1073741918, ['1', '3', 'done']],
   [1073741921, ['1', '9', '3']],
@@ -201,7 +215,7 @@ const printCases: [number, string[]][] = [
 for (const [id, expected] of printCases) {
   assert.deepEqual(execute(graph(id)).printed, expected, `${id}: unexpected iteration values`)
 }
-for (const id of [1073741914, 1073741921]) {
+for (const id of [1073741914, 1073741921, 1073742404, 1073742405]) {
   assert.equal(
     graph(id).nodes?.filter((node) => node.type === 'set_local_variable').length,
     1,
@@ -215,6 +229,12 @@ assert.equal(
 assert.deepEqual(execute(graph(1073741915)).variables.get('items'), [1, 9, 3])
 assert.deepEqual(execute(graph(1073741916)).variables.get('items'), [1, 9, 3])
 
+for (const id of [1073741916, 1073742406, 1073742407, 1073742408, 1073742410]) {
+  assert.equal(
+    graph(id).nodes?.some((node) => node.type === 'set_local_variable'),
+    false
+  )
+}
 const native = execute(graph(1073741922))
 assert.deepEqual(native.destroyed, [2, 4, 6], 'native node API should still reproduce issue #22')
 assert.ok(native.queryCount > 1)
@@ -247,3 +267,25 @@ assert.ok(structOutput)
 assert.doesNotMatch(fs.readFileSync(structOutput, 'utf8'), /initLocalVariable/)
 assert.match(fs.readFileSync(structOutput, 'utf8'), /listIterationLoop\(xs,/)
 console.log('[ok] inline, parameter and named struct lists keep direct iteration')
+
+const captured = await compileTsToGs({
+  cfgDir: root,
+  cfg: {
+    compileRoot: '.',
+    entries: ['./tests/manual/graph-features/list-timer-capture.ts'],
+    outDir: path.join(root, 'dist/list-timer-capture')
+  }
+})
+const captureOutput = captured.entryOutFiles[0]
+assert.ok(captureOutput)
+assert.doesNotMatch(
+  fs.readFileSync(captureOutput, 'utf8'),
+  /initLocalVariable\("int_list", values\.value\)/
+)
+await import(pathToFileURL(captureOutput).href)
+const captureGraph = buildServerGraphRegistriesIRDocuments().find(
+  (item) => item.graph.id === 1073742412
+)
+assert.ok(captureGraph)
+assert.ok(irToGia(captureGraph, { protoPath }).length > 0)
+console.log('[ok] captured list iteration reuses the callback local variable')

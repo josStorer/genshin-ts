@@ -7,9 +7,13 @@ import {
   inferListTypeFromType as inferListTypeFromTypeShared,
   isArrayLikeType as isArrayLikeTypeShared
 } from '../../shared/ts_list_utils.js'
+import { isEntityLikeType as isSharedEntityLikeType } from '../../shared/ts_type_utils.js'
+import { isCollectionType } from '../../shared/ts_variable_utils.js'
+import { isConstEvaluableExpression, isPureLiteralExpression } from './const_eval.js'
 import { fail } from './errors.js'
 import { type ListType } from './lists.js'
-import type { Env } from './types.js'
+import { isFMethodCall } from './matcher.js'
+import type { CollectionSourceKind, Env } from './types.js'
 import { isClientFMethodAvailable, makeFCall } from './utils.js'
 
 export type InlineCallbackExpr = {
@@ -70,6 +74,121 @@ export function unwrapListSource(expr: ts.Expression): ts.Expression {
   return expr
 }
 
+export function classifyCollectionSource(
+  env: Env,
+  expr: ts.Expression | undefined,
+  sourceKindForSymbol?: (symbol: ts.Symbol) => CollectionSourceKind | undefined
+): CollectionSourceKind {
+  const isEntityReceiverType = (t: ts.Type, location: ts.Node): boolean => {
+    if (t.flags & ts.TypeFlags.Union) {
+      return (t as ts.UnionType).types.some((tt) => isEntityReceiverType(tt, location))
+    }
+    if (t.flags & ts.TypeFlags.Intersection) {
+      return (t as ts.IntersectionType).types.some((tt) => isEntityReceiverType(tt, location))
+    }
+    return isSharedEntityLikeType(env.checker, t, location)
+  }
+
+  const isEntityCustomVariableGetCall = (expr: ts.Expression): expr is ts.CallExpression => {
+    if (!ts.isCallExpression(expr)) return false
+    if (!ts.isPropertyAccessExpression(expr.expression)) return false
+    if (expr.expression.name.text !== 'get' && expr.expression.name.text !== 'getCustomVariable') {
+      return false
+    }
+    const receiver = unwrapListSource(expr.expression.expression)
+    return isEntityReceiverType(env.checker.getTypeAtLocation(receiver), receiver)
+  }
+
+  const isListWrapperCall = (expr: ts.Expression): expr is ts.CallExpression => {
+    return (
+      ts.isCallExpression(expr) &&
+      ts.isIdentifier(expr.expression) &&
+      expr.expression.text === 'list'
+    )
+  }
+
+  const classify = (expr: ts.Expression | undefined): CollectionSourceKind => {
+    if (!expr) return 'unknown'
+    const unwrapped = unwrapListSource(expr)
+
+    if (ts.isIdentifier(unwrapped)) {
+      const sourceSym = env.checker.getSymbolAtLocation(unwrapped)
+      const sourceKind = sourceSym
+        ? sourceKindForSymbol
+          ? sourceKindForSymbol(sourceSym)
+          : env.varPlan?.get(sourceSym)?.collectionSourceKind
+        : undefined
+      if (sourceKind) return sourceKind
+    }
+
+    if (isLocalListRead(env, unwrapped)) return 'liveRef'
+
+    // `f.get(...)` 已经带有节点图变量元数据推断, 裸调用就应视为实时引用,
+    // 不应依赖用户再手动追加 `.asType(...)` / `.asDict(...)`。
+    if (isFMethodCall(env, unwrapped, ['get'])) return 'liveRef'
+
+    if (ts.isCallExpression(unwrapped) && ts.isPropertyAccessExpression(unwrapped.expression)) {
+      const method = unwrapped.expression.name.text
+      if (method === 'asType' || method === 'asDict') {
+        const base = unwrapListSource(unwrapped.expression.expression)
+        // `getNodeGraphVariable` / `getCustomVariable` 返回 generic, 需要通过 asType/asDict
+        // 确认集合类型。这里保留 `get` 仅用于兼容 `f.get(...).asType(...)` 这种冗余写法。
+        if (isFMethodCall(env, base, ['getNodeGraphVariable', 'get', 'getCustomVariable'])) {
+          return 'liveRef'
+        }
+        if (isEntityCustomVariableGetCall(base)) return 'liveRef'
+      }
+    }
+
+    if (isFMethodCall(env, unwrapped, ['copyList'])) {
+      return 'copy'
+    }
+
+    if (isFMethodCall(env, unwrapped, ['assemblyList'])) {
+      const firstArg = unwrapped.arguments[0]
+      if (firstArg) {
+        const firstArgType = env.checker.getTypeAtLocation(firstArg)
+        if (isCollectionType(env, firstArgType)) return 'copy'
+      }
+      return 'temporary'
+    }
+
+    if (isFMethodCall(env, unwrapped, ['createDictionary', 'assemblyDictionary'])) {
+      return 'temporary'
+    }
+    if (
+      isListWrapperCall(unwrapped) ||
+      ts.isArrayLiteralExpression(unwrapped) ||
+      ts.isObjectLiteralExpression(unwrapped)
+    ) {
+      return 'temporary'
+    }
+
+    return 'unknown'
+  }
+
+  return classify(expr)
+}
+
+export function isPureCollectionExpression(env: Env, expr: ts.Expression): boolean {
+  const source = unwrapListSource(expr)
+  if (!ts.isArrayLiteralExpression(source)) return false
+  return source.elements.every(
+    (element) =>
+      !ts.isSpreadElement(element) &&
+      (isPureLiteralExpression(element) || isConstEvaluableExpression(env, element))
+  )
+}
+
+function isLocalListRead(env: Env, source: ts.Expression): boolean {
+  if (!ts.isPropertyAccessExpression(source) || source.name.text !== 'value') return false
+  const receiver = env.checker.getTypeAtLocation(source.expression)
+  const handle = env.checker.getPropertyOfType(receiver, 'localVariable')
+  if (!handle) return false
+  const type = env.checker.getTypeOfSymbolAtLocation(handle, source.expression)
+  return !!env.checker.getPropertyOfType(type, '__brandLocalVariable')
+}
+
 export function inferSnapshotListType(env: Env, source: ts.Expression): ListType | null {
   const type = env.checker.getTypeAtLocation(source)
   const element = env.checker.getIndexTypeOfType(type, ts.IndexKind.Number)
@@ -91,8 +210,18 @@ export function stabilizeListIterationSource(
   if (ts.isIdentifier(unwrapped)) {
     const symbol = env.checker.getSymbolAtLocation(unwrapped)
     // Named collections are saved at their declarations or deliberately retain a live reference.
-    if (symbol && env.varPlan?.get(symbol)?.isCollection) return transformed
+    if (
+      symbol &&
+      (env.varPlan?.get(symbol)?.isCollection || env.timerCaptureMap?.get(symbol)?.useLocalVar)
+    )
+      return transformed
   }
+  if (
+    classifyCollectionSource(env, source) === 'liveRef' ||
+    isLocalListRead(env, unwrapped) ||
+    isPureCollectionExpression(env, unwrapped)
+  )
+    return transformed
   if (!isClientFMethodAvailable(env, 'initLocalVariable')) return transformed
   const type = inferSnapshotListType(env, source)
   if (!type) return transformed

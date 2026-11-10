@@ -138,3 +138,60 @@ g.server({ id: 1073741925 }).on('whenEntityIsCreated', (_evt, f) => {
     f.printString(str(value))
   }
 })
+
+g.server({ id: 1073742404 }).on('whenEntityIsCreated', (_evt, f) => {
+  const stored = f.initLocalVariable('int_list', [1n, 2n, 3n])
+  for (const value of stored.value) {
+    f.printString(str(value))
+    stored.value[1] = 9n
+  }
+})
+
+g.server({ id: 1073742405 }).on('whenEntityIsCreated', (_evt, f) => {
+  const stored = f.initLocalVariable('int_list', [1n, 2n, 3n])
+  stored.value.forEach((value) => {
+    f.printString(str(value))
+    stored.value[1] = 9n
+  })
+})
+
+g.server({ id: 1073742406 }).on('whenEntityIsCreated', (_evt, f) => {
+  const stored = f.getLocalVariable([1n, 2n, 3n])
+  for (const value of stored.value) {
+    f.printString(str(value))
+    stored.value[1] = 9n
+  }
+})
+
+g.server({ id: 1073742407, variables: { items: list('int', [1n, 2n, 3n]) } }).on(
+  'whenEntityIsCreated',
+  (_evt, f) => {
+    f.get('items').forEach((value) => {
+      f.printString(str(value))
+      f.get('items')[1] = 9n
+    })
+  }
+)
+
+g.server({ id: 1073742408, variables: { items: list('int', [1n, 2n, 3n]) } }).on(
+  'whenEntityIsCreated',
+  (_evt, f) => {
+    for (const value of f.getNodeGraphVariable('items').asType('int_list')) {
+      f.printString(str(value))
+      f.get('items')[1] = 9n
+    }
+  }
+)
+
+g.server({ id: 1073742409 }).on('whenEntityIsCreated', (_evt, f) => {
+  const object = { value: f.getEntityListByUnitTag(1073741825n) }
+  for (const target of object.value) f.destroyEntity(target)
+})
+
+g.server({ id: 1073742410 }).on('whenEntityIsCreated', (_evt, f) => {
+  for (const value of [1n, 2n, 3n]) f.printString(str(value))
+})
+
+g.server({ id: 1073742411 }).on('whenEntityIsCreated', (_evt, f) => {
+  f.printString(str([1n, 2n, 3n].find((value) => value === 2n)!))
+})

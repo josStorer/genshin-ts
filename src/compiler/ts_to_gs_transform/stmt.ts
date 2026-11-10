@@ -2,7 +2,6 @@ import ts from 'typescript'
 
 import { CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE } from '../../definitions/client_method_modes.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
-import { isEntityLikeType as isSharedEntityLikeType } from '../../shared/ts_type_utils.js'
 import { inferBasicType, isCollectionType } from '../../shared/ts_variable_utils.js'
 import {
   isConstEvaluableExpression,
@@ -19,6 +18,7 @@ import {
   transformExpression
 } from './expr.js'
 import {
+  classifyCollectionSource,
   inferSnapshotListType,
   isArrayLikeExpression,
   ITERATING_LIST_METHODS,
@@ -217,88 +217,6 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
     return false
   }
 
-  const isEntityReceiverType = (t: ts.Type, location: ts.Node): boolean => {
-    if (t.flags & ts.TypeFlags.Union) {
-      return (t as ts.UnionType).types.some((tt) => isEntityReceiverType(tt, location))
-    }
-    if (t.flags & ts.TypeFlags.Intersection) {
-      return (t as ts.IntersectionType).types.some((tt) => isEntityReceiverType(tt, location))
-    }
-    return isSharedEntityLikeType(env.checker, t, location)
-  }
-
-  const isEntityCustomVariableGetCall = (expr: ts.Expression): expr is ts.CallExpression => {
-    if (!ts.isCallExpression(expr)) return false
-    if (!ts.isPropertyAccessExpression(expr.expression)) return false
-    if (expr.expression.name.text !== 'get' && expr.expression.name.text !== 'getCustomVariable') {
-      return false
-    }
-    const receiver = unwrapListSource(expr.expression.expression)
-    return isEntityReceiverType(env.checker.getTypeAtLocation(receiver), receiver)
-  }
-
-  const isListWrapperCall = (expr: ts.Expression): expr is ts.CallExpression => {
-    return (
-      ts.isCallExpression(expr) &&
-      ts.isIdentifier(expr.expression) &&
-      expr.expression.text === 'list'
-    )
-  }
-
-  const classifyCollectionSource = (expr: ts.Expression | undefined): CollectionSourceKind => {
-    if (!expr) return 'unknown'
-    const unwrapped = unwrapListSource(expr)
-
-    if (ts.isIdentifier(unwrapped)) {
-      const sourceSym = env.checker.getSymbolAtLocation(unwrapped)
-      const sourceKind = sourceSym ? usage.get(sourceSym)?.collectionSourceKind : undefined
-      if (sourceKind) return sourceKind
-    }
-
-    // `f.get(...)` 已经带有节点图变量元数据推断, 裸调用就应视为实时引用,
-    // 不应依赖用户再手动追加 `.asType(...)` / `.asDict(...)`。
-    if (isFMethodCall(env, unwrapped, ['get'])) return 'liveRef'
-
-    if (ts.isCallExpression(unwrapped) && ts.isPropertyAccessExpression(unwrapped.expression)) {
-      const method = unwrapped.expression.name.text
-      if (method === 'asType' || method === 'asDict') {
-        const base = unwrapListSource(unwrapped.expression.expression)
-        // `getNodeGraphVariable` / `getCustomVariable` 返回 generic, 需要通过 asType/asDict
-        // 确认集合类型。这里保留 `get` 仅用于兼容 `f.get(...).asType(...)` 这种冗余写法。
-        if (isFMethodCall(env, base, ['getNodeGraphVariable', 'get', 'getCustomVariable'])) {
-          return 'liveRef'
-        }
-        if (isEntityCustomVariableGetCall(base)) return 'liveRef'
-      }
-    }
-
-    if (isFMethodCall(env, unwrapped, ['copyList'])) {
-      return 'copy'
-    }
-
-    if (isFMethodCall(env, unwrapped, ['assemblyList'])) {
-      const firstArg = unwrapped.arguments[0]
-      if (firstArg) {
-        const firstArgType = env.checker.getTypeAtLocation(firstArg)
-        if (isCollectionType(env, firstArgType)) return 'copy'
-      }
-      return 'temporary'
-    }
-
-    if (isFMethodCall(env, unwrapped, ['createDictionary', 'assemblyDictionary'])) {
-      return 'temporary'
-    }
-    if (
-      isListWrapperCall(unwrapped) ||
-      ts.isArrayLiteralExpression(unwrapped) ||
-      ts.isObjectLiteralExpression(unwrapped)
-    ) {
-      return 'temporary'
-    }
-
-    return 'unknown'
-  }
-
   const hasRandomCall = (expr: ts.Expression): boolean => {
     let found = false
     const visitExpr = (node: ts.Node) => {
@@ -340,7 +258,11 @@ function buildVarPlan(env: Env, body: ts.Block): VarPlan {
         const u = ensureUsage(symbol)
         u.isCollection = isCollectionType(env, t)
         if (u.isCollection) {
-          u.collectionSourceKind = classifyCollectionSource(d.initializer)
+          u.collectionSourceKind = classifyCollectionSource(
+            env,
+            d.initializer,
+            (symbol) => usage.get(symbol)?.collectionSourceKind
+          )
         }
         u.isBasic = inferBasicType(env, t) !== null
         if (d.initializer) {
