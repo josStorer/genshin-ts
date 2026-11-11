@@ -1,5 +1,6 @@
 import ts from 'typescript'
 
+import { unwrapExpression } from '../../shared/ts_ast_utils.js'
 import {
   inferListElementTypeFromExpression as inferListElementTypeFromExpressionShared,
   inferListElementTypeFromType as inferListElementTypeFromTypeShared,
@@ -7,10 +8,7 @@ import {
   inferListTypeFromType as inferListTypeFromTypeShared,
   isArrayLikeType as isArrayLikeTypeShared
 } from '../../shared/ts_list_utils.js'
-import {
-  isEntityLikeType as isSharedEntityLikeType,
-  unwrapExpression
-} from '../../shared/ts_type_utils.js'
+import { isEntityLikeType as isSharedEntityLikeType } from '../../shared/ts_type_utils.js'
 import { isCollectionType } from '../../shared/ts_variable_utils.js'
 import { isConstEvaluableExpression, isPureLiteralExpression } from './const_eval.js'
 import { fail } from './errors.js'

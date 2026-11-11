@@ -2,12 +2,12 @@ import ts from 'typescript'
 
 import { CLIENT_LITERAL_ARGUMENT_INDEXES_BY_SUB_TYPE } from '../../definitions/client_method_modes.js'
 import { t } from '../../i18n/index.js'
+import { unwrapExpression } from '../../shared/ts_ast_utils.js'
 import {
   findIterationSourceReassignment,
   ITERATING_LIST_METHODS
 } from '../../shared/ts_iteration_utils.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
-import { unwrapExpression } from '../../shared/ts_type_utils.js'
 import { inferBasicType, isCollectionType } from '../../shared/ts_variable_utils.js'
 import {
   isConstEvaluableExpression,

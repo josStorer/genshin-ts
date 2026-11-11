@@ -2,6 +2,7 @@ import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
 import type { DictValueType } from '../../runtime/value.js'
+import { unwrapExpression } from '../../shared/ts_ast_utils.js'
 import {
   getClientOnCallInfo,
   getTimerKind,
@@ -10,7 +11,7 @@ import {
   type TimerKind
 } from '../../shared/ts_graph_calls.js'
 import { inferConcreteTypeFromType, inferListTypeFromType } from '../../shared/ts_list_utils.js'
-import { isEntityLikeType, unwrapExpression } from '../../shared/ts_type_utils.js'
+import { isEntityLikeType } from '../../shared/ts_type_utils.js'
 import { canHaveLocalVariable, isBranchedAssignment } from '../../shared/ts_variable_utils.js'
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
 import { fail, warn } from './errors.js'

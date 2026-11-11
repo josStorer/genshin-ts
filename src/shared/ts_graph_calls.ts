@@ -2,7 +2,8 @@ import ts from 'typescript'
 
 import { CLIENT_GRAPH_SUB_TYPE_BY_METHOD } from '../definitions/client_graph_modes.js'
 import type { ClientGraphSubType } from '../thirdparty/Genshin-Impact-Miliastra-Wonderland-Code-Node-Editor-Pack/node_data/client_node_metadata.js'
-import { isGraphFactory, unwrapExpression } from './ts_type_utils.js'
+import { unwrapExpression } from './ts_ast_utils.js'
+import { isGraphFactory } from './ts_type_utils.js'
 
 function isGServerCall(expr: ts.Expression, checker: ts.TypeChecker): boolean {
   const target = unwrapExpression(expr)

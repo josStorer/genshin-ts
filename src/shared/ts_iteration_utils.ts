@@ -1,8 +1,8 @@
 import ts from 'typescript'
 
+import { unwrapExpression } from './ts_ast_utils.js'
 import { isInlineCallback } from './ts_graph_calls.js'
 import { isArrayLikeType } from './ts_list_utils.js'
-import { unwrapExpression } from './ts_type_utils.js'
 
 export const ITERATING_LIST_METHODS = new Set([
   'forEach',

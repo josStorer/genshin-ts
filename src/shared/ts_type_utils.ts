@@ -2,19 +2,6 @@ import ts from 'typescript'
 
 import { looksLikeEntityTypeString } from './type_string_utils.js'
 
-export function unwrapExpression(expr: ts.Expression): ts.Expression {
-  while (
-    ts.isParenthesizedExpression(expr) ||
-    ts.isAsExpression(expr) ||
-    ts.isTypeAssertionExpression(expr) ||
-    ts.isSatisfiesExpression(expr) ||
-    ts.isNonNullExpression(expr)
-  ) {
-    expr = expr.expression
-  }
-  return expr
-}
-
 const CORE_RUNTIME_FILE = /[\\/]runtime[\\/]core\.(?:d\.)?ts$/
 const CORE_RUNTIME_MODULE = /^genshin-ts\/runtime\/core(?:\.js)?$/
 
