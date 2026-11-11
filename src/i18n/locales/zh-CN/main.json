@@ -52,7 +52,7 @@
   "warn_timerIntervalHighFrequency": "setInterval 间隔 {{ms}}ms 过短，高频定时器可能导致高负载并被移出游戏；运动控制请用运动器，检测类请用碰撞盒。",
   "timerCallbackOuterEvent": "定时器回调里不能直接读外层事件参数 {{name}}：回调执行时那个事件已经结束。请在 setTimeout/setInterval 之前先把要用的值存进常量（例如 const source = {{name}}.eventSourceEntity），回调里改用这个常量；要读定时器事件本身的参数，请给回调声明参数，例如 (timer) => timer.timerName",
   "iterationSourceReassignment": "遍历“{{name}}”时不要给它重新赋值为另一份列表。请在循环结束后赋值；修改元素和 push/pop 不受限制",
-  "nativeBranchSyntax": "f.doubleBranch 的块回调中，节点图值只能传给函数、用于节点 API 调用、读取属性（不含 .length）或保存到块内变量。条件判断、字符串插值、遍历及其他语法请改用普通 if/else 语句",
+  "nativeBranchSyntax": "f.doubleBranch 的块回调不支持这种图值用法。图值及包含它们的数组、对象可以传给节点 API 或用户函数，不能传给 JavaScript 标准库函数；其他语法请改用普通 if/else 语句",
   "assignmentNeedsLocalVariable": "{{name}} 没有对应的节点图局部变量，在分支、循环或回调里给它赋值，编译时会对所有路径都生效。请先复制到一个新的 let 变量再修改，例如 let value = {{name}}",
   "assignmentTypeHasNoLocalVariable": "{{name}} 的类型不能存进节点图局部变量，在分支、循环或回调里给它赋值，编译时会对所有路径都生效。请不要给它重新赋值，改为在各个分支里直接使用需要的值",
   "startCompile": "开始编译…",

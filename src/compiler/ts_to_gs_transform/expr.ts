@@ -1716,16 +1716,27 @@ function validateNativeBranchSyntax(env: Env, call: ts.CallExpression) {
       }
       let usesGraphValue = false
       if (ts.isIdentifier(node) && shouldCaptureIdentifier(node)) {
-        const symbol = env.checker.getSymbolAtLocation(node)
+        const symbol = ts.isShorthandPropertyAssignment(node.parent)
+          ? env.checker.getShorthandAssignmentValueSymbol(node.parent)
+          : env.checker.getSymbolAtLocation(node)
         usesGraphValue = !!symbol && (isOuterGraphBinding(symbol) || graphBindings.has(symbol))
       }
       ts.forEachChild(node, (child) => {
         if (visit(child)) usesGraphValue = true
       })
       if (ts.isCallExpression(node) && getFMethodCall(env, node)) usesGraphValue = true
-      if (!usesGraphValue || !ts.isExpression(node)) return false
+      if (!usesGraphValue) return false
+      // Property values carry graph dependencies to their containing object literal.
+      if (ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node)) return true
+      if (!ts.isExpression(node)) return false
 
       const parent = node.parent
+      if (
+        ts.isArrayLiteralExpression(parent) ||
+        (ts.isPropertyAssignment(parent) && parent.initializer === node) ||
+        ts.isShorthandPropertyAssignment(parent)
+      )
+        return true
       if (ts.isExpression(parent) && unwrapExpression(parent) !== parent) return true
       if (
         ts.isPropertyAccessExpression(parent) &&
@@ -1733,12 +1744,20 @@ function validateNativeBranchSyntax(env: Env, call: ts.CallExpression) {
         parent.name.text !== 'length'
       )
         return true
-      if (
-        ts.isCallExpression(parent) &&
-        (parent.arguments.includes(node) ||
-          (parent.expression === node && getFMethodCall(env, parent)))
-      )
-        return true
+      if (ts.isCallExpression(parent)) {
+        if (parent.expression === node && getFMethodCall(env, parent)) return true
+        if (parent.arguments.includes(node)) {
+          // Graph globals augment Math's overloads without replacing its native implementation.
+          const isStandardLibrary = env.checker
+            .getTypeAtLocation(parent.expression)
+            .getCallSignatures()
+            .some((signature) => {
+              const source = signature.declaration?.getSourceFile()
+              return source?.isDeclarationFile && source.hasNoDefaultLib
+            })
+          if (!isStandardLibrary) return true
+        }
+      }
       if (
         ts.isVariableDeclaration(parent) &&
         parent.initializer === node &&

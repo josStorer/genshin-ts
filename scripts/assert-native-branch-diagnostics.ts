@@ -73,7 +73,26 @@ const invalid: (string | Probe)[] = [
   `${query} f.doubleBranch(true, () => {
      const k = f.getListLength(targets);
      f.doubleBranch(true, () => { if (k) f.printString('yes') }, () => {})
-   }, () => {})`
+   }, () => {})`,
+  `${query} const n = f.getCorrespondingValueFromList(targets, 0n);
+   f.doubleBranch(true, () => { const xs = [n]; f.destroyEntity(xs[0]) }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => {
+     const obj = { value: n }; f.printString(str(obj.value + 1n))
+   }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => {
+     const obj = { n }; f.printString(str(obj.n + 1n))
+   }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => {
+     const obj = { nested: { values: [n] } }; f.printString(str(obj.nested.values[0]))
+   }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { f.printString(String(n)) }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { f.printString(str(Number(n))) }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { f.printString(JSON.stringify({ n })) }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { f.printString(str(Math.abs(float(n)))) }, () => {})`,
+  {
+    prelude: 'const stringify = JSON.stringify;',
+    body: `${graphValues} f.doubleBranch(true, () => { f.printString(stringify(n)) }, () => {})`
+  }
 ]
 const valid: (string | Probe)[] = [
   `f.doubleBranch(true, () => { const values = [1n, 2n]; f.printString(str(values[0])); f.printString(str(values.length)); return }, () => {});
@@ -120,6 +139,39 @@ const valid: (string | Probe)[] = [
       let count = f.getListLength(tags);
       f.printString(str(count))
     }, () => {})`
+  },
+  `${graphValues} f.doubleBranch(cond, () => {
+     f.printString(str(f.getListLength(f.assemblyList([n, n]))))
+   }, () => {})`,
+  `${graphValues} f.doubleBranch(cond, () => {
+     const xs = [n, n]; f.printString(str(f.getListLength(f.assemblyList(xs))))
+   }, () => {})`,
+  {
+    prelude: 'function readValue(input: { value: bigint }) { return input.value }',
+    body: `${graphValues} f.doubleBranch(cond, () => { f.printString(str(readValue({ value: n }))) }, () => {})`
+  },
+  `${graphValues} f.doubleBranch(cond, () => {
+     const obj = { n }; f.printString(str(obj.n));
+     f.printString(str(f.getListLength(list('int', [n, n]))))
+   }, () => {})`,
+  {
+    prelude: 'function String(value: bigint) { return str(value) }',
+    body: `${graphValues} f.doubleBranch(cond, () => { f.printString(String(n)) }, () => {})`
+  },
+  {
+    prelude:
+      'function readValues(input: { nested: { values: bigint[] } }) { return input.nested.values }',
+    body: `${graphValues} f.doubleBranch(cond, () => {
+      f.printString(str(f.getListLength(f.assemblyList(readValues({ nested: { values: [n, n] } })))))
+    }, () => {})`
+  },
+  {
+    prelude: 'function gstsServerIdentity(value: bigint) { return value }',
+    body: `${graphValues} f.doubleBranch(cond, () => { print(str(gstsServerIdentity(n))) }, () => {})`
+  },
+  {
+    prelude: 'const Math = { abs: (value: bigint) => value };',
+    body: `${graphValues} f.doubleBranch(cond, () => { f.printString(str(Math.abs(n))) }, () => {})`
   }
 ]
 
