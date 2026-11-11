@@ -1703,42 +1703,56 @@ function validateNativeBranchSyntax(env: Env, call: ts.CallExpression) {
     const visit = (node: ts.Node): boolean => {
       if (ts.isTypeNode(node) || ts.isFunctionLike(node)) return false
       if (ts.isCallExpression(node) && isRawWrapperCall(node)) return false
-      if (ts.isIdentifier(node)) {
-        const symbol = shouldCaptureIdentifier(node) && env.checker.getSymbolAtLocation(node)
-        return !!symbol && (isOuterGraphBinding(symbol) || graphBindings.has(symbol))
+      if (ts.isCallExpression(node) && isFMethodCall(env, node, ['doubleBranch'])) {
+        // Nested native blocks share the same graph bindings, not a new compiled graph scope.
+        for (const arg of node.arguments.slice(1, 3)) {
+          const nested = unwrapExpression(arg)
+          if (
+            (ts.isArrowFunction(nested) || ts.isFunctionExpression(nested)) &&
+            ts.isBlock(nested.body)
+          )
+            visit(nested.body)
+        }
       }
       let usesGraphValue = false
+      if (ts.isIdentifier(node) && shouldCaptureIdentifier(node)) {
+        const symbol = env.checker.getSymbolAtLocation(node)
+        usesGraphValue = !!symbol && (isOuterGraphBinding(symbol) || graphBindings.has(symbol))
+      }
       ts.forEachChild(node, (child) => {
         if (visit(child)) usesGraphValue = true
       })
+      if (ts.isCallExpression(node) && getFMethodCall(env, node)) usesGraphValue = true
+      if (!usesGraphValue || !ts.isExpression(node)) return false
+
+      const parent = node.parent
+      if (ts.isExpression(parent) && unwrapExpression(parent) !== parent) return true
       if (
-        usesGraphValue &&
-        (ts.isElementAccessExpression(node) ||
-          (ts.isPropertyAccessExpression(node) && node.name.text === 'length') ||
-          (ts.isBinaryExpression(node) &&
-            node.operatorToken.kind !== ts.SyntaxKind.EqualsToken &&
-            node.operatorToken.kind !== ts.SyntaxKind.CommaToken) ||
-          ts.isPrefixUnaryExpression(node) ||
-          ts.isPostfixUnaryExpression(node))
+        ts.isPropertyAccessExpression(parent) &&
+        parent.expression === node &&
+        parent.name.text !== 'length'
       )
-        fail(env, node, t('nativeBranchSyntax'))
-      if (ts.isCallExpression(node) && getFMethodCall(env, node)) return true
-      // Containers created in the callback are JavaScript containers, even if they hold pins.
-      if (ts.isArrayLiteralExpression(node) || ts.isObjectLiteralExpression(node)) return false
-      const binding = ts.isVariableDeclaration(node)
-        ? node.name
-        : ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken
-          ? node.left
-          : undefined
-      if (binding && ts.isIdentifier(binding)) {
-        const symbol = env.checker.getSymbolAtLocation(binding)
-        if (symbol && usesGraphValue) {
-          if (ts.isBinaryExpression(node) && isOuterGraphBinding(symbol))
-            fail(env, node, t('nativeBranchSyntax'))
-          graphBindings.add(symbol)
-        }
+        return true
+      if (
+        ts.isCallExpression(parent) &&
+        (parent.arguments.includes(node) ||
+          (parent.expression === node && getFMethodCall(env, parent)))
+      )
+        return true
+      if (
+        ts.isVariableDeclaration(parent) &&
+        parent.initializer === node &&
+        ts.isIdentifier(parent.name) &&
+        ts.isVariableDeclarationList(parent.parent) &&
+        parent.parent.flags & (ts.NodeFlags.Const | ts.NodeFlags.Let)
+      ) {
+        const symbol = env.checker.getSymbolAtLocation(parent.name)
+        if (symbol) graphBindings.add(symbol)
+        return true
       }
-      return usesGraphValue
+      // Calling a node API for its side effect does not consume its result.
+      if (ts.isCallExpression(node) && ts.isExpressionStatement(parent)) return true
+      fail(env, parent, t('nativeBranchSyntax'))
     }
     visit(callback.body)
   }

@@ -14,6 +14,7 @@ const dir = path.join(root, '.tmp/native-branch-diagnostics')
 fs.mkdirSync(dir, { recursive: true })
 const cache = createTsToGsProgramCache()
 const query = 'const targets = f.getEntityListByUnitTag(1073741825n);'
+const graphValues = `${query} const n = f.getListLength(targets); const cond = f.greaterThan(n, 0n);`
 type Probe = { body: string; event?: string; prelude?: string }
 const invalid: (string | Probe)[] = [
   `${query} f.doubleBranch(true, () => { f.destroyEntity(targets[0]) }, () => {})`,
@@ -58,6 +59,20 @@ const invalid: (string | Probe)[] = [
    f.doubleBranch(true, () => { n++ }, () => {})`,
   `${query} f.doubleBranch(true, () => {
      let k = 0n; k = f.getListLength(targets); f.printString(str(k + 1n))
+   }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { if (cond) f.printString('yes') }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { f.printString(cond ? 'a' : 'b') }, () => {})`,
+  graphValues + 'f.doubleBranch(true, () => { f.printString(`n=${n}`) }, () => {})',
+  `${graphValues} f.doubleBranch(true, () => { for (const t of targets) f.destroyEntity(t) }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { targets.forEach((t) => f.destroyEntity(t)) }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => {
+     f.doubleBranch(true, () => { f.destroyEntity(targets[0]) }, () => {})
+   }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { while (cond) f.printString('yes') }, () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { if (f.greaterThan(n, 0n)) f.printString('yes') }, () => {})`,
+  `${query} f.doubleBranch(true, () => {
+     const k = f.getListLength(targets);
+     f.doubleBranch(true, () => { if (k) f.printString('yes') }, () => {})
    }, () => {})`
 ]
 const valid: (string | Probe)[] = [
@@ -89,7 +104,23 @@ const valid: (string | Probe)[] = [
      f.destroyEntity(targets[0]); f.printString(str(targets.length + 1n))
    } })`,
   `${query} const n = f.getListLength(targets);
-   f.doubleBranch(true, () => f.printString(str(n + 1n)), () => {})`
+   f.doubleBranch(true, () => f.printString(str(n + 1n)), () => {})`,
+  `${graphValues} f.doubleBranch(true, () => { f.printString(raw(cond ? 'a' : 'b')) }, () => {})`,
+  `${query} f.doubleBranch(true, () => {
+     const values = [1n];
+     f.doubleBranch(true, () => {
+       f.printString(str(values[0]));
+       f.destroyEntity(f.getCorrespondingValueFromList(targets, 0n))
+     }, () => {})
+   }, () => {})`,
+  {
+    event: 'whenHpIsRecovered',
+    body: `f.doubleBranch(true, () => {
+      const tags = (_evt.recoverTagList);
+      let count = f.getListLength(tags);
+      f.printString(str(count))
+    }, () => {})`
+  }
 ]
 
 function compile(name: string, input: string | Probe, id = 1073742450) {
@@ -125,7 +156,7 @@ for (const lang of ['en-US', 'zh-CN'] as const) {
       )
       assert.match(
         error.message,
-        /at invalid-.*\.ts:\d+:\d+ \((ElementAccessExpression|PropertyAccessExpression|BinaryExpression|PrefixUnaryExpression|PostfixUnaryExpression)\)/
+        /at invalid-.*\.ts:\d+:\d+ \((ElementAccessExpression|PropertyAccessExpression|BinaryExpression|PrefixUnaryExpression|PostfixUnaryExpression|IfStatement|ConditionalExpression|TemplateSpan|ForOfStatement|CallExpression|WhileStatement)\)/
       )
       return true
     })
