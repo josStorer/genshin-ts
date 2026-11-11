@@ -2,9 +2,7 @@ import ts from 'typescript'
 
 import { t } from '../../i18n/index.js'
 import type { DictValueType } from '../../runtime/value.js'
-import { unwrapExpression } from '../../shared/ts_ast_utils.js'
 import {
-  getClientOnCallInfo,
   getTimerKind,
   isInlineCallback,
   isServerOnCall,
@@ -25,6 +23,7 @@ import {
   type ListType
 } from './lists.js'
 import { getFMethodCall, isFMethodCall } from './matcher.js'
+import { validateNativeBranchSyntax } from './native_branch_validation.js'
 import {
   getBinaryOpInfo,
   getCompoundAssignmentMethod,
@@ -358,7 +357,7 @@ function shouldWrapLoopIndexByContext(env: Env, id: ts.Identifier): boolean {
   return getNumericKind(env, ctxType) === 'float'
 }
 
-function isRawWrapperCall(expr: ts.CallExpression): boolean {
+export function isRawWrapperCall(expr: ts.CallExpression): boolean {
   const callee = expr.expression
   return ts.isIdentifier(callee) && callee.text === 'raw'
 }
@@ -1671,110 +1670,6 @@ function transformTimerCall(
     ts.factory.updateCallExpression(expr, expr.expression, expr.typeArguments, newArgs),
     expr
   )
-}
-
-function validateNativeBranchSyntax(env: Env, call: ts.CallExpression) {
-  const graphScopes = new Set<ts.Node>()
-  for (let node: ts.Node | undefined = call.parent; node; node = node.parent) {
-    if (!ts.isFunctionLike(node)) continue
-    graphScopes.add(node)
-    const parent = node.parent
-    if (
-      ts.isCallExpression(parent) &&
-      (isServerOnCall(parent, env.checker) || getClientOnCallInfo(parent, env.checker))
-    )
-      break
-  }
-  const isOuterGraphBinding = (symbol: ts.Symbol): boolean => {
-    for (let node = symbol.valueDeclaration?.parent; node; node = node.parent) {
-      if (ts.isFunctionLike(node)) return graphScopes.has(node)
-    }
-    return false
-  }
-  for (const arg of call.arguments.slice(1, 3)) {
-    const callback = unwrapExpression(arg)
-    // Block callbacks remain native JavaScript; expression callbacks follow expression lowering.
-    if (
-      (!ts.isArrowFunction(callback) && !ts.isFunctionExpression(callback)) ||
-      !ts.isBlock(callback.body)
-    )
-      continue
-    const graphBindings = new Set<ts.Symbol>()
-    const visit = (node: ts.Node): boolean => {
-      if (ts.isTypeNode(node) || ts.isFunctionLike(node)) return false
-      if (ts.isCallExpression(node) && isRawWrapperCall(node)) return false
-      if (ts.isCallExpression(node) && isFMethodCall(env, node, ['doubleBranch'])) {
-        // Nested native blocks share the same graph bindings, not a new compiled graph scope.
-        for (const arg of node.arguments.slice(1, 3)) {
-          const nested = unwrapExpression(arg)
-          if (
-            (ts.isArrowFunction(nested) || ts.isFunctionExpression(nested)) &&
-            ts.isBlock(nested.body)
-          )
-            visit(nested.body)
-        }
-      }
-      let usesGraphValue = false
-      if (ts.isIdentifier(node) && shouldCaptureIdentifier(node)) {
-        const symbol = ts.isShorthandPropertyAssignment(node.parent)
-          ? env.checker.getShorthandAssignmentValueSymbol(node.parent)
-          : env.checker.getSymbolAtLocation(node)
-        usesGraphValue = !!symbol && (isOuterGraphBinding(symbol) || graphBindings.has(symbol))
-      }
-      ts.forEachChild(node, (child) => {
-        if (visit(child)) usesGraphValue = true
-      })
-      if (ts.isCallExpression(node) && getFMethodCall(env, node)) usesGraphValue = true
-      if (!usesGraphValue) return false
-      // Property values carry graph dependencies to their containing object literal.
-      if (ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node)) return true
-      if (!ts.isExpression(node)) return false
-
-      const parent = node.parent
-      if (
-        ts.isArrayLiteralExpression(parent) ||
-        (ts.isPropertyAssignment(parent) && parent.initializer === node) ||
-        ts.isShorthandPropertyAssignment(parent)
-      )
-        return true
-      if (ts.isExpression(parent) && unwrapExpression(parent) !== parent) return true
-      if (
-        ts.isPropertyAccessExpression(parent) &&
-        parent.expression === node &&
-        parent.name.text !== 'length'
-      )
-        return true
-      if (ts.isCallExpression(parent)) {
-        if (parent.expression === node && getFMethodCall(env, parent)) return true
-        if (parent.arguments.includes(node)) {
-          // Graph globals augment Math's overloads without replacing its native implementation.
-          const isStandardLibrary = env.checker
-            .getTypeAtLocation(parent.expression)
-            .getCallSignatures()
-            .some((signature) => {
-              const source = signature.declaration?.getSourceFile()
-              return source?.isDeclarationFile && source.hasNoDefaultLib
-            })
-          if (!isStandardLibrary) return true
-        }
-      }
-      if (
-        ts.isVariableDeclaration(parent) &&
-        parent.initializer === node &&
-        ts.isIdentifier(parent.name) &&
-        ts.isVariableDeclarationList(parent.parent) &&
-        parent.parent.flags & (ts.NodeFlags.Const | ts.NodeFlags.Let)
-      ) {
-        const symbol = env.checker.getSymbolAtLocation(parent.name)
-        if (symbol) graphBindings.add(symbol)
-        return true
-      }
-      // Calling a node API for its side effect does not consume its result.
-      if (ts.isCallExpression(node) && ts.isExpressionStatement(parent)) return true
-      fail(env, parent, t('nativeBranchSyntax'))
-    }
-    visit(callback.body)
-  }
 }
 
 export function transformExpression(
