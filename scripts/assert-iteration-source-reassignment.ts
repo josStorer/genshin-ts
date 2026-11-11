@@ -57,7 +57,11 @@ const entryBodies = [
   'function gstsServerValidate() { BODY return 1n }',
   'const gstsServerValidate = () => { BODY return 1n }',
   'function gstsCreationSkillValidate() { BODY return 1n }',
-  'const gstsCreationSkillValidate = () => { BODY return 1n }'
+  'const gstsCreationSkillValidate = () => { BODY return 1n }',
+  'const gstsServerValidate = function () { BODY return 1n }',
+  'const gstsCreationSkillValidate = function () { BODY return 1n }',
+  'const gstsServerValidate = () => values.forEach(() => { values = [9n] })',
+  'const gstsCreationSkillValidate = () => values.forEach(() => { values = [9n] })'
 ]
 for (const [index, entry] of entryBodies.entries()) {
   const file = path.join(dir, `entry-${index}.ts`)

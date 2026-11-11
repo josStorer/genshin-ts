@@ -1595,7 +1595,6 @@ export function transformGstsServerFunction<
     returnMode: 'value',
     returnDepth: 0
   }
-  validateIterationSourceAssignments(env2, bodyBlock)
   validateNoMutableOuterCaptures(env2, bodyBlock)
   const varPlan = buildVarPlan(env2, bodyBlock)
   const localNames = collectLocalNames(bodyBlock, fn.parameters)

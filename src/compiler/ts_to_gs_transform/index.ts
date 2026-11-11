@@ -727,6 +727,7 @@ export function transformToGs(sf: ts.SourceFile, ctx: TransformCtx): ts.SourceFi
         const gstsIdent =
           ts.isBlock(node.body) && hasTopLevelDeclName(node.body, 'gsts') ? '__gsts' : 'gsts'
         const env = makeEnv(gstsIdent, undefined, { graphDocumentType: 'server' })
+        validateIterationSourceAssignments(env, node.body)
         return transformGstsServerFunction(env, context, node)
       }
       if (ts.isFunctionDeclaration(node) && node.name) {
@@ -738,6 +739,7 @@ export function transformToGs(sf: ts.SourceFile, ctx: TransformCtx): ts.SourceFi
             graphDocumentType: 'client',
             clientSubType
           })
+          validateIterationSourceAssignments(env, node.body)
           return transformGstsServerFunction(env, context, node)
         }
       }
@@ -758,6 +760,7 @@ export function transformToGs(sf: ts.SourceFile, ctx: TransformCtx): ts.SourceFi
                 graphDocumentType: 'client',
                 clientSubType
               })
+          validateIterationSourceAssignments(env, init.body)
           const nextInit = transformGstsServerFunction(env, context, init)
           changed = true
           return ts.factory.updateVariableDeclaration(
