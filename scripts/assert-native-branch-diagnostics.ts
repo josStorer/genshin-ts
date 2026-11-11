@@ -14,7 +14,8 @@ const dir = path.join(root, '.tmp/native-branch-diagnostics')
 fs.mkdirSync(dir, { recursive: true })
 const cache = createTsToGsProgramCache()
 const query = 'const targets = f.getEntityListByUnitTag(1073741825n);'
-const invalid = [
+type Probe = { body: string; event?: string; prelude?: string }
+const invalid: (string | Probe)[] = [
   `${query} f.doubleBranch(true, () => { f.destroyEntity(targets[0]) }, () => {})`,
   `${query} f.doubleBranch(true, () => { f.printString(str(targets.length)) }, () => {})`,
   'f.doubleBranch(true, () => { f.destroyEntity(f.getEntityListByUnitTag(1073741825n)[0]) }, () => {})',
@@ -27,9 +28,39 @@ const invalid = [
   `let values = [1n]; values[0] = 2n;
    f.doubleBranch(true, () => { f.printString(str(values[0])) }, () => {})`,
   `const values = [1n, 2n];
-   f.doubleBranch(true, () => { f.printString(str(values[0])) }, () => {})`
+   f.doubleBranch(true, () => { f.printString(str(values[0])) }, () => {})`,
+  {
+    event: 'whenHpIsRecovered',
+    body: 'f.doubleBranch(true, () => { f.printString(str(_evt.recoverTagList.length)) }, () => {})'
+  },
+  {
+    event: 'whenHpIsRecovered',
+    body: 'f.doubleBranch(true, () => { f.printString(_evt.recoverTagList[0]) }, () => {})'
+  },
+  {
+    prelude: `function gstsServerProbe(xs: entity[]) {
+      gsts.f.doubleBranch(true, () => { gsts.f.destroyEntity(xs[0]) }, () => {})
+    }`,
+    body: `${query} gstsServerProbe(targets)`
+  },
+  `${query} const n = f.getListLength(targets);
+   f.doubleBranch(true, () => { f.printString(str(n + 1n)) }, () => {})`,
+  `${query} const n = f.getListLength(targets);
+   f.doubleBranch(true, () => { f.printString(str(n > 0n)) }, () => {})`,
+  `${query} f.doubleBranch(true, () => {
+     const k = f.getListLength(targets); f.printString(str(k + 1n))
+   }, () => {})`,
+  `${query} const n = f.getListLength(targets);
+   f.doubleBranch(true, () => { f.printString(str(-n)) }, () => {})`,
+  `${query} let n = f.getListLength(targets);
+   f.doubleBranch(true, () => { n += 1n }, () => {})`,
+  `${query} let n = f.getListLength(targets);
+   f.doubleBranch(true, () => { n++ }, () => {})`,
+  `${query} f.doubleBranch(true, () => {
+     let k = 0n; k = f.getListLength(targets); f.printString(str(k + 1n))
+   }, () => {})`
 ]
-const valid = [
+const valid: (string | Probe)[] = [
   `f.doubleBranch(true, () => { const values = [1n, 2n]; f.printString(str(values[0])); f.printString(str(values.length)); return }, () => {});
    f.printString('tail')`,
   `${query} f.doubleBranch(true, () => {
@@ -41,15 +72,38 @@ const valid = [
   `${query} f.doubleBranch(true, () => { const targets = [1n]; f.printString(str(targets[0])) }, () => {})`,
   `f.doubleBranch(true, () => {
      const values = (() => [1n, 2n])(); f.printString(str(values[0]))
-   }, () => {})`
+   }, () => {})`,
+  {
+    prelude: 'const OFFSET = 2n; const VALUES = [1n, 2n];',
+    body: `f.doubleBranch(true, () => {
+      f.printString(str(OFFSET + 1n)); f.printString(str(VALUES[0]));
+      f.printString(str(VALUES.length))
+    }, () => {})`
+  },
+  `${query} const n = f.getListLength(targets);
+   f.doubleBranch(true, () => { const n = 2n; f.printString(str(n + 1n)) }, () => {})`,
+  `f.doubleBranch(true, () => {
+     let n = 2n; n += 1n; n++; f.printString(str(-n)); f.printString(str(n > 0n))
+   }, () => {})`,
+  `${query} f.multipleBranches(1n, { 1: () => {
+     f.destroyEntity(targets[0]); f.printString(str(targets.length + 1n))
+   } })`,
+  `${query} const n = f.getListLength(targets);
+   f.doubleBranch(true, () => f.printString(str(n + 1n)), () => {})`
 ]
 
-function compile(name: string, body: string, id = 1073742450) {
+function compile(name: string, input: string | Probe, id = 1073742450) {
+  const {
+    body,
+    event = 'whenEntityIsCreated',
+    prelude = ''
+  } = typeof input === 'string' ? { body: input } : input
   const file = path.join(dir, `${name}.ts`)
   fs.writeFileSync(
     file,
     `import { g } from 'genshin-ts/runtime/core';
-     g.server({id:${id}}).on('whenEntityIsCreated', (_evt,f) => { ${body} })`
+     ${prelude}
+     g.server({id:${id}}).on('${event}', (_evt,f) => { ${body} })`
   )
   return compileTsToGs({
     cfgDir: root,
@@ -61,10 +115,20 @@ function compile(name: string, body: string, id = 1073742450) {
 for (const lang of ['en-US', 'zh-CN'] as const) {
   initCliI18n(lang)
   for (const [index, body] of invalid.entries()) {
-    await assert.rejects(
-      compile(`invalid-${lang}-${index}`, body),
-      lang === 'en-US' ? /f\.doubleBranch.*regular if\/else/ : /f\.doubleBranch.*普通 if\/else/
-    )
+    await assert.rejects(compile(`invalid-${lang}-${index}`, body), (error: unknown) => {
+      assert.ok(error instanceof Error)
+      assert.match(
+        error.message,
+        lang === 'en-US'
+          ? /f\.doubleBranch block callback.*regular if\/else/
+          : /f\.doubleBranch.*块回调.*普通 if\/else/
+      )
+      assert.match(
+        error.message,
+        /at invalid-.*\.ts:\d+:\d+ \((ElementAccessExpression|PropertyAccessExpression|BinaryExpression|PrefixUnaryExpression|PostfixUnaryExpression)\)/
+      )
+      return true
+    })
   }
 }
 initCliI18n('en-US')
@@ -82,5 +146,7 @@ const protoPath = path.join(
 for (const document of documents) {
   assert.ok(irToGia(document, { protoPath }).length > 0)
 }
-console.log('[ok] native branch list reads fail during TS compilation with actionable diagnostics')
+console.log(
+  '[ok] native branch graph operations fail during TS compilation with actionable diagnostics'
+)
 console.log('[ok] native API, plain arrays, expression callbacks, shadowing and if/else emit GIA')

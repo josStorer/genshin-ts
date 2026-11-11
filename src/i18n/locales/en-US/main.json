@@ -52,7 +52,7 @@
   "warn_timerIntervalHighFrequency": "setInterval interval {{ms}}ms is very short. High-frequency timers may cause performance issues and could be removed from the game; use motion controllers for movement and collision boxes for detection.",
   "timerCallbackOuterEvent": "A timer callback cannot read the outer event parameter {{name}}: that event is over by the time the callback runs. Store the value you need in a constant before setTimeout/setInterval (for example const source = {{name}}.eventSourceEntity) and use that constant in the callback; to read the timer event itself, declare the callback parameter, for example (timer) => timer.timerName",
   "iterationSourceReassignment": "Do not reassign {{name}} to another list while iterating it. Assign after the loop; element updates and push/pop are allowed",
-  "nativeBranchListAccess": "Node-list indexing and .length are not compiled inside an f.doubleBranch block callback. Use a regular if/else statement instead",
+  "nativeBranchSyntax": "Operations on graph values are not compiled inside an f.doubleBranch block callback. Use a regular if/else statement instead; expression callbacks and native node APIs are also supported",
   "assignmentNeedsLocalVariable": "{{name}} has no node graph local variable, so assigning it inside a branch, loop or callback would apply to every path at compile time. Copy it into a new let first and change that, for example let value = {{name}}",
   "assignmentTypeHasNoLocalVariable": "{{name}} has a type that node graph local variables cannot hold, so assigning it inside a branch, loop or callback would apply to every path at compile time. Do not reassign it; use the value you need directly in each branch instead",
   "startCompile": "Starting compilation...",

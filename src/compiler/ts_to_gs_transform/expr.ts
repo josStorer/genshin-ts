@@ -3,6 +3,7 @@ import ts from 'typescript'
 import { t } from '../../i18n/index.js'
 import type { DictValueType } from '../../runtime/value.js'
 import {
+  getClientOnCallInfo,
   getTimerKind,
   isInlineCallback,
   isServerOnCall,
@@ -14,7 +15,7 @@ import { canHaveLocalVariable, isBranchedAssignment } from '../../shared/ts_vari
 import { tryTransformBuiltinCall, tryTransformBuiltinPropertyAccess } from './builtins.js'
 import { fail, warn } from './errors.js'
 import { tryTransformListMethodCall } from './list_methods.js'
-import { classifyCollectionSource, isArrayLikeExpression, isListWrapperCall } from './list_utils.js'
+import { isArrayLikeExpression, isListWrapperCall } from './list_utils.js'
 import {
   inferArrayListType,
   inferConcreteTypeFromString,
@@ -1671,54 +1672,74 @@ function transformTimerCall(
   )
 }
 
-function validateNativeBranchListAccess(env: Env, call: ts.CallExpression) {
-  const isNodeList = (input: ts.Expression, seen = new Set<ts.Symbol>()): boolean => {
-    const source = unwrapExpression(input)
-    if (!isArrayLikeExpression(env, source)) return false
+function validateNativeBranchSyntax(env: Env, call: ts.CallExpression) {
+  const graphScopes = new Set<ts.Node>()
+  for (let node: ts.Node | undefined = call.parent; node; node = node.parent) {
+    if (!ts.isFunctionLike(node)) continue
+    graphScopes.add(node)
+    const parent = node.parent
     if (
-      classifyCollectionSource(
-        env,
-        source,
-        (symbol) => env.varPlan?.get(symbol)?.collectionSourceKind
-      ) === 'liveRef'
+      ts.isCallExpression(parent) &&
+      (isServerOnCall(parent, env.checker) || getClientOnCallInfo(parent, env.checker))
     )
-      return true
-    if (ts.isCallExpression(source)) {
-      return getFMethodCall(env, source) !== null || isListWrapperCall(source)
-    }
-    if (!ts.isIdentifier(source)) return false
-    const symbol = env.checker.getSymbolAtLocation(source)
-    if (!symbol || seen.has(symbol)) return false
-    if (env.varPlan?.get(symbol)?.needsLocalVar || env.timerCaptureMap?.get(symbol)?.useLocalVar)
-      return true
-    seen.add(symbol)
-    const decl = symbol.valueDeclaration
-    if (!decl || !ts.isVariableDeclaration(decl) || !decl.initializer) return false
-    const initializer = unwrapExpression(decl.initializer)
-    if (env.varPlan?.get(symbol)?.isCollection && ts.isArrayLiteralExpression(initializer))
-      return true
-    return isNodeList(initializer, seen)
+      break
   }
-  const visit = (node: ts.Node) => {
-    if (ts.isTypeNode(node) || ts.isFunctionLike(node)) return
-    if (ts.isCallExpression(node) && isRawWrapperCall(node)) return
-    if (
-      (ts.isElementAccessExpression(node) ||
-        (ts.isPropertyAccessExpression(node) && node.name.text === 'length')) &&
-      isNodeList(node.expression)
-    ) {
-      fail(env, node, t('nativeBranchListAccess'))
+  const isOuterGraphBinding = (symbol: ts.Symbol): boolean => {
+    for (let node = symbol.valueDeclaration?.parent; node; node = node.parent) {
+      if (ts.isFunctionLike(node)) return graphScopes.has(node)
     }
-    ts.forEachChild(node, visit)
+    return false
   }
   for (const arg of call.arguments.slice(1, 3)) {
     const callback = unwrapExpression(arg)
     // Block callbacks remain native JavaScript; expression callbacks follow expression lowering.
     if (
-      (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) &&
-      ts.isBlock(callback.body)
+      (!ts.isArrowFunction(callback) && !ts.isFunctionExpression(callback)) ||
+      !ts.isBlock(callback.body)
     )
-      visit(callback.body)
+      continue
+    const graphBindings = new Set<ts.Symbol>()
+    const visit = (node: ts.Node): boolean => {
+      if (ts.isTypeNode(node) || ts.isFunctionLike(node)) return false
+      if (ts.isCallExpression(node) && isRawWrapperCall(node)) return false
+      if (ts.isIdentifier(node)) {
+        const symbol = shouldCaptureIdentifier(node) && env.checker.getSymbolAtLocation(node)
+        return !!symbol && (isOuterGraphBinding(symbol) || graphBindings.has(symbol))
+      }
+      let usesGraphValue = false
+      ts.forEachChild(node, (child) => {
+        if (visit(child)) usesGraphValue = true
+      })
+      if (
+        usesGraphValue &&
+        (ts.isElementAccessExpression(node) ||
+          (ts.isPropertyAccessExpression(node) && node.name.text === 'length') ||
+          (ts.isBinaryExpression(node) &&
+            node.operatorToken.kind !== ts.SyntaxKind.EqualsToken &&
+            node.operatorToken.kind !== ts.SyntaxKind.CommaToken) ||
+          ts.isPrefixUnaryExpression(node) ||
+          ts.isPostfixUnaryExpression(node))
+      )
+        fail(env, node, t('nativeBranchSyntax'))
+      if (ts.isCallExpression(node) && getFMethodCall(env, node)) return true
+      // Containers created in the callback are JavaScript containers, even if they hold pins.
+      if (ts.isArrayLiteralExpression(node) || ts.isObjectLiteralExpression(node)) return false
+      const binding = ts.isVariableDeclaration(node)
+        ? node.name
+        : ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken
+          ? node.left
+          : undefined
+      if (binding && ts.isIdentifier(binding)) {
+        const symbol = env.checker.getSymbolAtLocation(binding)
+        if (symbol && usesGraphValue) {
+          if (ts.isBinaryExpression(node) && isOuterGraphBinding(symbol))
+            fail(env, node, t('nativeBranchSyntax'))
+          graphBindings.add(symbol)
+        }
+      }
+      return usesGraphValue
+    }
+    visit(callback.body)
   }
 }
 
@@ -1743,7 +1764,7 @@ export function transformExpression(
   }
 
   if (isFMethodCall(env, expr, ['doubleBranch'])) {
-    validateNativeBranchListAccess(env, expr)
+    validateNativeBranchSyntax(env, expr)
   }
 
   if (
