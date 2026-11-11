@@ -1,5 +1,42 @@
 # Changelog
 
+## v0.3.0
+
+** This release contains potentially breaking changes. Please read the changelog before updating. ** - Thanks to @yanyvpingsheng for code contributions to this release.
+
+- Added support for the client-side Lua widget scripts introduced in 7.1, with complete compilation, type system and documentation comment support, plus a set of convenience helpers. You can now write client widget scripts in TypeScript and compile them to Lua, defining an entry with `g.clientControlScript(...)`. Scripts can import TypeScript modules as usual, and native Lua scripts can be imported directly once they have TypeScript type declarations. Compiled scripts can be injected into the map's Lua script directory automatically. See https://gsts.moe/en/doc/lua for details. You can create a new Lua project from the template with `npm create genshin-ts`; to add Lua to a project created from an older template, follow the steps at https://gsts.moe/en/doc/lua#add-lua
+- Lua scripts can exchange signals with server node graphs, listen to custom variables and key and cursor events, use timers, read script variables, and call public methods of other mounted scripts. The server node function `sendLua()` and the Lua function `send()` provide fully typed communication between the two sides. Inside the entry callback, the `lua` parameter gives direct access to features such as key listening through `lua.onKey`/`lua.onSignal`, `lua.helper.xx` and the like, all written in TypeScript style.
+- Added the `gsts lua locate` command, which maps Lua errors from the in-game log back to TypeScript source lines. You can copy the whole log in game and run the command: it reads the clipboard automatically, or takes a file path. Added the `gsts lua check` command for a full type and rule check of Lua projects.
+- Redesigned project creation with `npm create genshin-ts`. It is now a guided setup offering two templates, node graphs only or node graphs plus Lua, and it can pick the map to inject from your local saves and complete the configuration automatically.
+- Server node graphs can send signals to client Lua scripts with `sendLua(player, ...)`, `sendLuaAll(...)` and `player.sendLua(...)`. Note that the existing `f.sendSignal` does not reach Lua.
+- Added and updated a range of nodes and events from the 7.1 and 7.2 game updates, including the Creation Disruptor Device, Extra Push Collision and the Combat Text Filter Template. Nodes with new parameters mainly include When Attacked, Initiate Attack and Get Creation Attribute.
+- Added short entity method names `openGiftBoxUi`, `setSkillInstanceCd`/`addSkillInstanceCd` and `switchCombatTextTemplate`. Client node graphs can also use `hasUnitStatus`.
+- The documentation comments of many nodes and events have been synchronized with the latest official 7.2 text.
+- `CharacterPrefab` now includes the Classic Mode character IDs up to 7.2.
+- Added `exposed(...)` for node graph variables. It exposes a node graph variable on entities, so each entity can be given a different value in the editor. This suits a node graph attached to several entities that each need their own configuration, such as monster parameters or text. Since 7.2, text filled in on entities is also collected by the multilingual text tool.
+- Fixed `setCharacterSkillCd` (Set Character Skill CD) generating the Increase Character Skill CD node instead. This bug exists in v0.2.3 and all earlier versions; if you use this method, it will correctly set the cooldown after updating.
+- Note: in client node graphs, the `scaleOfCuboidHitbox` parameter (scale of a cuboid hitbox) of the 4 hitbox nodes (`triggerHitboxAtSpecificLocation` and others) only accepts a literal in the 7.2 editor. Code that connected a value to this parameter will fail to compile after updating.
+- Added a series of compile checks that reject code which used to compile but behaved incorrectly in game. Each error message explains how to fix the code. Some existing code may fail to compile after updating:
+  - Assigning a node result to an outer variable in one event and reading it in another event creates a data wire across events. This is now a compile error, and ESLint warns about it as well.
+  - Reading the outer event parameter `evt` directly inside a timer callback is now a compile error. Store the value in a constant first and use it in the callback. ESLint already warned about this before, but compilation still succeeded.
+  - Reassigning a function parameter or a loop variable inside a branch, a loop body or a callback is now a compile error. Copy the value into a new `let` variable and modify that instead. ESLint has a matching new warning.
+  - Reassigning the list being iterated inside a `for...of` loop is now a compile error.
+  - Unsupported operations inside the callbacks of native branch nodes such as `f.doubleBranch`, for example reading the index or length of a node list, are now compile errors that suggest using `if`/`else` instead.
+  - More than 100 node graph variables in a single node graph, the editor limit, is now a compile error. Variables generated by gsts count toward the limit. This limit comes from the editor itself; gsts now only reports it.
+- Timer fixes:
+  - Fixed `clearTimeout(h)` after `const h = setTimeout(...)` failing to cancel the timer in events such as When Attacked or signal events, and possibly stopping a different timer instead.
+  - Fixed only the last timer taking effect when `setTimeout` was used inside list callbacks such as `forEach`.
+  - Timer names now carry the last 5 digits of the node graph ID, so different node graphs attached to the same entity no longer share timers of the same name and trigger each other. If your code compares timer name strings directly, it needs to be adjusted; this is rare and usually not a concern.
+  - Timers with no delay or a delay of 0, such as `setTimeout(() => {})`, now use at least 10ms. Previously such timers never ran.
+- Fixed #22, where modifying a list inside the loop body, or a data source changing at run time, made list iteration behave differently from JavaScript. Results such as entity queries are now stored in a local variable when they are read more than once, instead of being queried again on each read, which fixes cases like indices shifting when reading by index after destroying entities.
+- Node call parameters now accept the mode-specific (Beyond Mode / Classic Mode) entity types provided by event parameters, so passing them no longer causes type errors.
+- Applying JavaScript operations to runtime values inside an ordinary compile-time function now produces a clear message suggesting a `gstsServer` function, instead of the obscure "Generic parameter not matched" error later on.
+- With optimization enabled, branches whose condition is a boolean literal are now simplified directly. Thanks to @yanyvpingsheng.
+- Added the `gsts analyze` command for inspecting the counts of each kind of node and wire in generated node graphs. Thanks to @yanyvpingsheng.
+- Improved automatic layout: nodes are no longer stacked at fixed intervals, and are now placed around each other based on their estimated sizes. Thanks to @yanyvpingsheng.
+- ESLint now reports destructuring in node graphs, #19.
+- Other subtle fixes and adjustments.
+
 ## v0.2.3
 
 - Map injection now supports the new map directory structure introduced in Genshin Impact 7.1.
